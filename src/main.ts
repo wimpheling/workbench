@@ -8,13 +8,24 @@ import {
   TABLE_WIDTH,
   VIGA_HEIGHT,
   VIGA_WIDTH,
+  SMALL_VIGA_HEIGHT,
 } from "./consts";
 import {
   CSS2DObject,
   CSS2DRenderer,
 } from "three/addons/renderers/CSS2DRenderer.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-
+type MakeShapeProps = {
+  x: number;
+  y: number;
+  z: number;
+  height: number;
+  width: number;
+  depth: number;
+  scene: THREE.Scene;
+  color?: string;
+  dimensions?: boolean;
+};
 const makeShape = ({
   x,
   y,
@@ -25,17 +36,7 @@ const makeShape = ({
   color,
   scene,
   dimensions,
-}: {
-  x: number;
-  y: number;
-  z: number;
-  height: number;
-  width: number;
-  depth: number;
-  scene: THREE.Scene;
-  color?: string;
-  dimensions?: boolean;
-}) => {
+}: MakeShapeProps) => {
   const geometry = new THREE.BoxGeometry(width, height, depth);
   const material = new THREE.MeshBasicMaterial({ color: color || 0xa1662f });
   // const material = new THREE.MeshLambertMaterial({ color: color || 0xa1662f });
@@ -57,27 +58,27 @@ const makeShape = ({
   group.add(line);
   group.position.set(x, y, z);
 
-  scene.add(group);
   if (dimensions) {
     createLabel({
       label: `${width * 10} mm`,
-      x: x + width / 2,
-      y,
-      z,
+      x: width / 2,
+      y: 0,
+      z: 0,
     });
     createLabel({
       label: `${height * 10} mm`,
-      x: x,
-      y: y + height / 2,
-      z,
+      x: 0,
+      y: height / 2,
+      z: 0,
     });
     createLabel({
       label: `${depth * 10} mm`,
-      x,
-      y: y,
-      z: z + depth / 2,
+      x: 0,
+      y: 0 - height / 2,
+      z: depth / 2,
     });
   }
+  scene.add(group);
   return group;
 
   function createLabel({
@@ -105,48 +106,48 @@ const makeShape = ({
   }
 };
 
+class ShapeMaker {
+  xCounter = 0;
+
+  makeShape(props: Omit<MakeShapeProps, "x" | "y" | "z">) {
+    const shape = makeShape({ ...props, x: this.xCounter, y: 0, z: 0 });
+    this.xCounter += props.width + 5;
+    if (props.dimensions) {
+      this.xCounter += 35;
+    }
+    return shape;
+  }
+}
+
+const shapeMaker = new ShapeMaker();
+
 const makeFoot = ({
-  x,
-  y,
-  z,
   color,
+  dimensions,
 }: {
-  x: number;
-  y: number;
-  z: number;
   color?: string;
+  dimensions?: boolean;
 }) => {
-  return makeShape({
-    x,
-    y,
-    z,
+  return shapeMaker.makeShape({
     height: FOOT_HEIGHT,
     width: FOOT_WIDTH,
     depth: FOOT_DEPTH,
     scene,
     color,
+    dimensions,
   });
 };
 
 const makeViga = ({
-  x,
-  y,
-  z,
   height,
   color,
   dimensions,
 }: {
-  x: number;
-  y: number;
-  z: number;
   height: number;
   color?: string;
   dimensions?: boolean;
 }) => {
-  return makeShape({
-    x,
-    y,
-    z,
+  return shapeMaker.makeShape({
     height,
     width: VIGA_WIDTH,
     depth: VIGA_HEIGHT,
@@ -189,7 +190,9 @@ const saveControls = () => {
   console.log({ state: JSON.stringify(state) });
   localStorage.setItem(`orbitControls`, JSON.stringify(state));
 };
+// @ts-ignore
 globalThis.saveControls = saveControls;
+// @ts-ignore
 globalThis.loadControls = loadControls;
 
 document.body.appendChild(renderer.domElement);
@@ -201,116 +204,70 @@ labelRenderer.domElement.style.top = "0px";
 labelRenderer.domElement.style.pointerEvents = "none";
 document.body.appendChild(labelRenderer.domElement);
 
-const tableTop = makeShape({
-  x: 580,
-  y: 0,
-  z: 0,
+const tableTop = shapeMaker.makeShape({
   height: TABLE_TOP_THICKNESS,
   width: TABLE_WIDTH,
   depth: TABLE_DEPTH,
   scene,
   dimensions: true,
-  color: "blue",
 });
 
-const foot1 = makeFoot({ x: 200, y: 0, z: 0, color: "red" });
-const foot2 = makeFoot({ x: 215, y: 0, z: 0 });
-const foot3 = makeFoot({ x: 230, y: 0, z: 0 });
-const foot4 = makeFoot({ x: 245, y: 0, z: 0 });
-
-const feet = [foot1, foot2, foot3, foot4];
-
-const viga1 = makeViga({
-  x: 260,
-  y: 0,
-  z: 0,
-  height: TABLE_WIDTH - VIGA_HEIGHT * 2,
-  color: "red",
+const foot1 = makeFoot({});
+const foot2 = makeFoot({});
+const foot3 = makeFoot({});
+const foot4 = makeFoot({
   dimensions: true,
 });
-const viga2 = makeViga({
-  x: 275,
-  y: 0,
-  z: 0,
-  height: TABLE_WIDTH - VIGA_HEIGHT * 2,
-  color: "blue",
-  dimensions: true,
-});
-const viga3 = makeViga({
-  x: 290,
-  y: 0,
-  z: 0,
+
+const bigViga1 = makeViga({
   height: TABLE_WIDTH,
-});
-const viga4 = makeViga({
-  x: 305,
-  y: 0,
-  z: 0,
-  height: TABLE_WIDTH,
-});
-// make 4 others vigas
-const viga5 = makeViga({
-  x: 320,
-  y: 0,
-  z: 0,
-  height: TABLE_WIDTH - VIGA_HEIGHT * 2,
-});
-const viga6 = makeViga({
-  x: 335,
-  y: 0,
-  z: 0,
-  height: TABLE_WIDTH - VIGA_HEIGHT * 2,
-});
-const viga7 = makeViga({
-  x: 350,
-  y: 0,
-  z: 0,
-  height: TABLE_WIDTH - VIGA_HEIGHT * 2,
 });
 
-const vigasTop = [viga1, viga2, viga3, viga4, viga5, viga6, viga7];
+const bigViga2 = makeViga({
+  height: TABLE_WIDTH,
+});
 
 const viga8 = makeViga({
-  x: 365,
-  y: 0,
-  z: 0,
   height: TABLE_WIDTH,
 });
 const viga9 = makeViga({
-  x: 380,
-  y: 0,
-  z: 0,
   height: TABLE_WIDTH,
+  dimensions: true,
 });
+const viga1 = makeViga({
+  height: SMALL_VIGA_HEIGHT,
+});
+const viga2 = makeViga({
+  height: SMALL_VIGA_HEIGHT,
+});
+// make 4 others vigas
+const viga5 = makeViga({
+  height: SMALL_VIGA_HEIGHT,
+});
+const viga6 = makeViga({
+  height: SMALL_VIGA_HEIGHT,
+});
+const viga7 = makeViga({
+  height: SMALL_VIGA_HEIGHT,
+});
+
+const vigasTop = [viga1, viga2, bigViga1, bigViga2, viga5, viga6, viga7];
+
 const viga10 = makeViga({
-  x: 395,
-  y: 0,
-  z: 0,
-  height: TABLE_WIDTH - VIGA_HEIGHT * 2,
+  height: SMALL_VIGA_HEIGHT,
 });
 const viga11 = makeViga({
-  x: 410,
-  y: 0,
-  z: 0,
-  height: TABLE_WIDTH - VIGA_HEIGHT * 2,
+  height: SMALL_VIGA_HEIGHT,
 });
 const viga12 = makeViga({
-  x: 425,
-  y: 0,
-  z: 0,
-  height: TABLE_WIDTH - VIGA_HEIGHT * 2,
+  height: SMALL_VIGA_HEIGHT,
 });
 const viga13 = makeViga({
-  x: 440,
-  y: 0,
-  z: 0,
-  height: TABLE_WIDTH - VIGA_HEIGHT * 2,
+  height: SMALL_VIGA_HEIGHT,
 });
 const viga14 = makeViga({
-  x: 455,
-  y: 0,
-  z: 0,
-  height: TABLE_WIDTH - VIGA_HEIGHT * 2,
+  height: SMALL_VIGA_HEIGHT,
+  dimensions: true,
 });
 
 const vigasBottom = [viga8, viga9, viga10, viga11, viga12, viga13, viga14];
@@ -325,7 +282,7 @@ const camera_offset = { x: 500, y: 500, z: 500 };
 const camera_speed = 1;
 
 // assemble base
-function assembleBase() {
+function assembleBase(animFactor = 0) {
   function tableTopPosition() {
     tableTop.rotation.z = 0;
     tableTop.position.x = 0;
@@ -419,7 +376,7 @@ function assembleBase() {
   scene.add(axesHelper);
 }
 
-assembleBase();
+// assembleBase();
 
 // controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
 // controls.dampingFactor = 0.05;
