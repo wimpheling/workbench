@@ -10,117 +10,11 @@ import {
   VIGA_WIDTH,
   SMALL_VIGA_HEIGHT,
 } from "./consts";
-import {
-  CSS2DObject,
-  CSS2DRenderer,
-} from "three/addons/renderers/CSS2DRenderer.js";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-type MakeShapeProps = {
-  x: number;
-  y: number;
-  z: number;
-  height: number;
-  width: number;
-  depth: number;
-  scene: THREE.Scene;
-  color?: string;
-  dimensions?: boolean;
-};
-const makeShape = ({
-  x,
-  y,
-  z,
-  height,
-  width,
-  depth,
-  color,
-  scene,
-  dimensions,
-}: MakeShapeProps) => {
-  const geometry = new THREE.BoxGeometry(width, height, depth);
-  const material = new THREE.MeshBasicMaterial({ color: color || 0xa1662f });
-  // const material = new THREE.MeshLambertMaterial({ color: color || 0xa1662f });
-  const mesh = new THREE.Mesh(geometry, material);
-
-  // line
-  const edges = new THREE.EdgesGeometry(
-    new THREE.BoxGeometry(width, height, depth)
-  );
-  const line = new THREE.LineSegments(
-    edges,
-    new THREE.LineBasicMaterial({ color: "black" })
-  );
-  line.castShadow = true;
-  line.receiveShadow = true;
-
-  const group = new THREE.Group();
-  group.add(mesh);
-  group.add(line);
-  group.position.set(x, y, z);
-
-  if (dimensions) {
-    createLabel({
-      label: `${width * 10} mm`,
-      x: width / 2,
-      y: 0,
-      z: 0,
-    });
-    createLabel({
-      label: `${height * 10} mm`,
-      x: 0,
-      y: height / 2,
-      z: 0,
-    });
-    createLabel({
-      label: `${depth * 10} mm`,
-      x: 0,
-      y: 0 - height / 2,
-      z: depth / 2,
-    });
-  }
-  scene.add(group);
-  return group;
-
-  function createLabel({
-    label,
-    x,
-    y,
-    z,
-  }: {
-    label: string;
-    x: number;
-    y: number;
-    z: number;
-  }) {
-    const labelDiv = document.createElement("div");
-    labelDiv.className = "label";
-    labelDiv.textContent = label;
-    labelDiv.style.backgroundColor = "transparent";
-    labelDiv.style.color = "red";
-
-    const cssObject = new CSS2DObject(labelDiv);
-    cssObject.position.set(x, y, z);
-    cssObject.center.set(0, 1);
-    group.add(cssObject);
-    cssObject.layers.set(0);
-  }
-};
-
-class ShapeMaker {
-  xCounter = 0;
-
-  makeShape(props: Omit<MakeShapeProps, "x" | "y" | "z">) {
-    const shape = makeShape({ ...props, x: this.xCounter, y: 0, z: 0 });
-    this.xCounter += props.width + 5;
-    if (props.dimensions) {
-      this.xCounter += 35;
-    }
-    return shape;
-  }
-}
+import { ShapeMaker } from "./shapeMaker";
+import { init } from "./threeConfig";
 
 const shapeMaker = new ShapeMaker();
-
+const { scene, camera, setAnimateCallback } = init();
 const makeFoot = ({
   color,
   dimensions,
@@ -157,53 +51,6 @@ const makeViga = ({
   });
 };
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color("black");
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
-
-const renderer = new THREE.WebGLRenderer();
-renderer.shadowMap.enabled = true;
-renderer.setSize(window.innerWidth, window.innerHeight);
-const controls = new OrbitControls(camera, renderer.domElement);
-const loadControls = () => {
-  const stateJSON = localStorage.getItem(`orbitControls`);
-
-  if (stateJSON) {
-    console.log({ stateJSON });
-    const { target0, position0, zoom0 } = JSON.parse(stateJSON);
-    controls.target0.copy(target0);
-    controls.position0.copy(position0);
-    controls.zoom0 = zoom0;
-    controls.reset();
-  }
-};
-
-const saveControls = () => {
-  controls.saveState();
-  const { target0, position0, zoom0 } = controls;
-  const state = { target0, position0, zoom0 };
-  console.log({ state: JSON.stringify(state) });
-  localStorage.setItem(`orbitControls`, JSON.stringify(state));
-};
-// @ts-ignore
-globalThis.saveControls = saveControls;
-// @ts-ignore
-globalThis.loadControls = loadControls;
-
-document.body.appendChild(renderer.domElement);
-
-const labelRenderer = new CSS2DRenderer();
-labelRenderer.setSize(window.innerWidth, window.innerHeight);
-labelRenderer.domElement.style.position = "absolute";
-labelRenderer.domElement.style.top = "0px";
-labelRenderer.domElement.style.pointerEvents = "none";
-document.body.appendChild(labelRenderer.domElement);
-
 const tableTop = shapeMaker.makeShape({
   height: TABLE_TOP_THICKNESS,
   width: TABLE_WIDTH,
@@ -218,7 +65,7 @@ const foot3 = makeFoot({});
 const foot4 = makeFoot({
   dimensions: true,
 });
-
+shapeMaker.newRow();
 const bigViga1 = makeViga({
   height: TABLE_WIDTH,
 });
@@ -272,14 +119,7 @@ const viga14 = makeViga({
 
 const vigasBottom = [viga8, viga9, viga10, viga11, viga12, viga13, viga14];
 
-camera.position.z = 500;
-camera.position.y = 500;
-camera.position.x = 500;
 camera.lookAt(tableTop.position.x, tableTop.position.y, tableTop.position.z);
-let time = 0;
-const clock = new THREE.Clock();
-const camera_offset = { x: 500, y: 500, z: 500 };
-const camera_speed = 1;
 
 // assemble base
 function assembleBase(animFactor = 0) {
@@ -378,30 +218,10 @@ function assembleBase(animFactor = 0) {
 
 // assembleBase();
 
-// controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-// controls.dampingFactor = 0.05;
-
-// controls.screenSpacePanning = false;
-
-// controls.minDistance = 100;
-// controls.maxDistance = 500;
-
-// controls.maxPolarAngle = Math.PI / 2;
-controls.update();
 const rotate = false;
-function animate() {
-  requestAnimationFrame(animate);
-  // cube.rotation.x += 0.01;
-  // cube.rotation.y += 0.01;
-
-  clock.getDelta();
-  time = parseFloat(clock.elapsedTime.toFixed(2));
-
-  // tableTop.mesh.rotation.x += 0.01;
-  // tableTop.mesh.rotation.y += 0.01;
-  // tableTop.line.rotation.x += 0.01;
-  // tableTop.line.rotation.y += 0.01;
-
+const camera_offset = { x: 500, y: 500, z: 500 };
+const camera_speed = 1;
+setAnimateCallback(function ({ time }) {
   if (rotate) {
     camera.position.x =
       tableTop.position.x + camera_offset.x * Math.sin(time * camera_speed);
@@ -414,9 +234,4 @@ function animate() {
       tableTop.position.z
     );
   }
-  controls.update();
-  renderer.render(scene, camera);
-  labelRenderer.render(scene, camera);
-}
-animate();
-loadControls();
+});
