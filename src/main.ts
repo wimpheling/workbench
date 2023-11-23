@@ -9,124 +9,174 @@ import {
   VIGA_HEIGHT,
   VIGA_WIDTH,
   SMALL_VIGA_HEIGHT,
+  ENCLOSURE_HEIGHT,
+  ENCLOSURE_FOAM_THICKNESS,
+  ENCLOSURE_WALL_THICKNESS,
+  ENCLOSURE_SOUND_INSULATOR_THICKNESS,
+  ENCLOSURE_DOOR_THICKNESS,
 } from "./consts";
-import { ShapeMaker } from "./shapeMaker";
 import { init } from "./threeConfig";
+import { ShapeMakerSpecific } from "./makers";
 
-const shapeMaker = new ShapeMaker();
 const { scene, camera, setAnimateCallback } = init();
-const makeFoot = ({
-  color,
-  dimensions,
-}: {
-  color?: string;
-  dimensions?: boolean;
-}) => {
-  return shapeMaker.makeShape({
-    height: FOOT_HEIGHT,
-    width: FOOT_WIDTH,
-    depth: FOOT_DEPTH,
-    scene,
-    color,
-    dimensions,
-  });
-};
-
-const makeViga = ({
-  height,
-  color,
-  dimensions,
-}: {
-  height: number;
-  color?: string;
-  dimensions?: boolean;
-}) => {
-  return shapeMaker.makeShape({
-    height,
-    width: VIGA_WIDTH,
-    depth: VIGA_HEIGHT,
-    scene,
-    color,
-    dimensions,
-  });
-};
+const shapeMaker = new ShapeMakerSpecific(scene);
 
 const tableTop = shapeMaker.makeShape({
   height: TABLE_TOP_THICKNESS,
   width: TABLE_WIDTH,
   depth: TABLE_DEPTH,
-  scene,
-  dimensions: true,
+  // dimensions: true,
+  // opacity: 0.8,
 });
 
-const foot1 = makeFoot({});
-const foot2 = makeFoot({});
-const foot3 = makeFoot({});
-const foot4 = makeFoot({
-  dimensions: true,
+const foot1 = shapeMaker.foot({
+  name: "foot1",
 });
+const foot2 = shapeMaker.foot({
+  name: "foot2",
+});
+const foot3 = shapeMaker.foot({
+  name: "foot3",
+});
+const foot4 = shapeMaker.foot({
+  name: "foot4",
+  // dimensions: true,
+});
+
 shapeMaker.newRow();
-const bigViga1 = makeViga({
+
+const bigViga1 = shapeMaker.viga({
   height: TABLE_WIDTH,
+  name: "bigViga1",
 });
 
-const bigViga2 = makeViga({
+const bigViga2 = shapeMaker.viga({
   height: TABLE_WIDTH,
+  name: "bigViga2",
 });
 
-const viga8 = makeViga({
+const viga8 = shapeMaker.viga({
   height: TABLE_WIDTH,
+  name: "viga8",
 });
-const viga9 = makeViga({
+const viga9 = shapeMaker.viga({
   height: TABLE_WIDTH,
-  dimensions: true,
+  name: "viga9",
+  // dimensions: true,
 });
-const viga1 = makeViga({
+const viga1 = shapeMaker.viga({
   height: SMALL_VIGA_HEIGHT,
+  name: "viga1",
 });
-const viga2 = makeViga({
+const viga2 = shapeMaker.viga({
   height: SMALL_VIGA_HEIGHT,
+  name: "viga2",
 });
 // make 4 others vigas
-const viga5 = makeViga({
+const viga5 = shapeMaker.viga({
   height: SMALL_VIGA_HEIGHT,
+  name: "viga5",
 });
-const viga6 = makeViga({
+const viga6 = shapeMaker.viga({
   height: SMALL_VIGA_HEIGHT,
+  name: "viga6",
 });
-const viga7 = makeViga({
+const viga7 = shapeMaker.viga({
   height: SMALL_VIGA_HEIGHT,
+  name: "viga7",
 });
 
 const vigasTop = [viga1, viga2, bigViga1, bigViga2, viga5, viga6, viga7];
 
-const viga10 = makeViga({
+const viga10 = shapeMaker.viga({
   height: SMALL_VIGA_HEIGHT,
+  name: "viga10",
 });
-const viga11 = makeViga({
+const viga11 = shapeMaker.viga({
   height: SMALL_VIGA_HEIGHT,
+  name: "viga11",
 });
-const viga12 = makeViga({
+const viga12 = shapeMaker.viga({
   height: SMALL_VIGA_HEIGHT,
+  name: "viga12",
 });
-const viga13 = makeViga({
+const viga13 = shapeMaker.viga({
   height: SMALL_VIGA_HEIGHT,
+  name: "viga13",
 });
-const viga14 = makeViga({
+const viga14 = shapeMaker.viga({
   height: SMALL_VIGA_HEIGHT,
-  dimensions: true,
+  name: "viga14",
+  // dimensions: true,
 });
 
 const vigasBottom = [viga8, viga9, viga10, viga11, viga12, viga13, viga14];
 
-camera.lookAt(tableTop.position.x, tableTop.position.y, tableTop.position.z);
+// enclosure
+shapeMaker.newRow();
+
+const enclosureThicknessWithoutInner =
+  ENCLOSURE_FOAM_THICKNESS +
+  ENCLOSURE_SOUND_INSULATOR_THICKNESS +
+  ENCLOSURE_WALL_THICKNESS;
+const innerLateralEnclosureWallWidth =
+  TABLE_WIDTH - enclosureThicknessWithoutInner - ENCLOSURE_DOOR_THICKNESS;
+const innerLateralEnclosureWallHeight =
+  ENCLOSURE_HEIGHT - enclosureThicknessWithoutInner;
+
+const enclosureWallInnerLeft = shapeMaker.enclosureWall({
+  height: innerLateralEnclosureWallHeight,
+  width: innerLateralEnclosureWallWidth,
+  name: "enclosureWallInnerLeft",
+  dimensions: true,
+});
+
+const enclosureWallInnerRight = shapeMaker.enclosureWall({
+  height: innerLateralEnclosureWallHeight,
+  width: innerLateralEnclosureWallWidth,
+  name: "enclosureWallInnerRight",
+});
+const enclosureWallInnerTopWidth =
+  TABLE_WIDTH - 2 * enclosureThicknessWithoutInner;
+
+const enclosureWallInnerTop = shapeMaker.enclosureWall({
+  height: innerLateralEnclosureWallWidth,
+  width: enclosureWallInnerTopWidth,
+  dimensions: true,
+  name: "enclosureWallInnerTop",
+});
+
+const enclosureWallInnerBack = shapeMaker.enclosureWall({
+  height: innerLateralEnclosureWallHeight,
+  width: enclosureWallInnerTopWidth - 2 * ENCLOSURE_WALL_THICKNESS,
+  name: "enclosureWallInnerBack",
+  color: "red",
+  dimensions: true,
+});
+
+const enclosureWallOuterLeft = shapeMaker.enclosureWall({
+  height: ENCLOSURE_HEIGHT,
+  width: TABLE_WIDTH - ENCLOSURE_DOOR_THICKNESS,
+  name: "enclosureWallOuterLeft",
+});
+const enclosureWallOuterRight = shapeMaker.enclosureWall({
+  height: ENCLOSURE_HEIGHT,
+  width: TABLE_WIDTH - ENCLOSURE_DOOR_THICKNESS,
+  name: "enclosureWallOuterRight",
+});
+const enclosureWallOuterTop = shapeMaker.enclosureWall({
+  height: TABLE_WIDTH,
+  width: TABLE_WIDTH - ENCLOSURE_DOOR_THICKNESS,
+  name: "enclosureWallOuterTop",
+});
 
 // assemble base
 function assembleBase(animFactor = 0) {
+  const tableTopY = FOOT_HEIGHT + TABLE_TOP_THICKNESS / 2;
   function tableTopPosition() {
     tableTop.rotation.z = 0;
     tableTop.position.x = 0;
-    tableTop.position.y = FOOT_HEIGHT + TABLE_TOP_THICKNESS / 2;
+    tableTop.position.y = tableTopY;
     tableTop.position.z = 0;
   }
 
@@ -163,7 +213,6 @@ function assembleBase(animFactor = 0) {
     for (let i = 0; i < 4; i++) {
       const viga = vigas[i];
       viga.position.y = y + FOOT_HEIGHT - VIGA_WIDTH / 2;
-      console.log(y + FOOT_HEIGHT);
       viga.position.z = 0;
       viga.rotation.x = THREE.MathUtils.degToRad(90);
       viga.rotation.y = THREE.MathUtils.degToRad(90);
@@ -187,8 +236,8 @@ function assembleBase(animFactor = 0) {
         );
       }
 
-      const bbox = new THREE.Box3().setFromObject(viga);
-      console.log(bbox.min.y, bbox.max.y);
+      // const bbox = new THREE.Box3().setFromObject(viga);
+      // console.log(bbox.min.y, bbox.max.y);
     }
 
     for (let i = 0; i < 3; i++) {
@@ -201,8 +250,59 @@ function assembleBase(animFactor = 0) {
     }
   }
 
-  // Turn on the lights
-  const light = new THREE.PointLight("blue", 1, 0);
+  // enclosure
+  function enclosure() {
+    const enclosureY =
+      tableTopY + TABLE_TOP_THICKNESS + innerLateralEnclosureWallHeight / 2;
+
+    enclosureWallInnerLeft.rotation.y = THREE.MathUtils.degToRad(90);
+    enclosureWallInnerLeft.position.x =
+      TABLE_WIDTH / 2 -
+      enclosureThicknessWithoutInner -
+      ENCLOSURE_WALL_THICKNESS / 2;
+    enclosureWallInnerLeft.position.y = enclosureY;
+    enclosureWallInnerLeft.position.z = 0;
+
+    enclosureWallInnerRight.rotation.y = THREE.MathUtils.degToRad(90);
+    enclosureWallInnerRight.position.x =
+      0 -
+      TABLE_WIDTH / 2 +
+      enclosureThicknessWithoutInner +
+      ENCLOSURE_WALL_THICKNESS / 2;
+    enclosureWallInnerRight.position.y = enclosureY;
+    enclosureWallInnerRight.position.z = 0;
+
+    // enclosureWallInnerTop.rotation.y = THREE.MathUtils.degToRad(90);
+    enclosureWallInnerTop.rotation.x = THREE.MathUtils.degToRad(90);
+    enclosureWallInnerTop.position.x =
+      0 -
+      TABLE_WIDTH / 2 +
+      enclosureWallInnerTopWidth / 2 +
+      enclosureThicknessWithoutInner;
+    enclosureWallInnerTop.position.y =
+      tableTopY +
+      TABLE_TOP_THICKNESS +
+      innerLateralEnclosureWallHeight +
+      ENCLOSURE_WALL_THICKNESS / 2;
+
+    // enclosureWallInnerBack.rotation.y = THREE.MathUtils.degToRad(90);
+    enclosureWallInnerBack.rotation.x = THREE.MathUtils.degToRad(90);
+    enclosureWallInnerBack.rotateOnAxis(
+      new THREE.Vector3(1, 0, 0),
+      THREE.MathUtils.degToRad(90)
+    );
+    enclosureWallInnerBack.position.x = 0;
+    enclosureWallInnerBack.position.y = enclosureY;
+    enclosureWallInnerBack.position.z =
+      0 -
+      TABLE_WIDTH / 2 +
+      enclosureThicknessWithoutInner +
+      ENCLOSURE_WALL_THICKNESS * 2;
+  }
+
+  // Turn on the  s
+  const light = new THREE.AmbientLight("white", 1);
+  // const light = new THREE.PointLight("blue", 1, 0);
   light.castShadow = true;
   light.position.set(0, 100, 0);
   scene.add(light);
@@ -211,16 +311,19 @@ function assembleBase(animFactor = 0) {
   feetPosition();
   vigasPlane(vigasTop, { y: 0 });
   vigasPlane(vigasBottom, { y: -50 });
+  enclosure();
 
   const axesHelper = new THREE.AxesHelper(200);
   scene.add(axesHelper);
 }
 
-// assembleBase();
+assembleBase();
+camera.lookAt(tableTop.position.x, tableTop.position.y, tableTop.position.z);
 
 const rotate = false;
 const camera_offset = { x: 500, y: 500, z: 500 };
 const camera_speed = 1;
+
 setAnimateCallback(function ({ time }) {
   if (rotate) {
     camera.position.x =

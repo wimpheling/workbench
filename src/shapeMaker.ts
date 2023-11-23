@@ -12,6 +12,8 @@ type MakeShapeProps = {
   scene: THREE.Scene;
   color?: string;
   dimensions?: boolean;
+  opacity?: number;
+  name?: string;
 };
 
 const makeShape = ({
@@ -24,9 +26,16 @@ const makeShape = ({
   color,
   scene,
   dimensions,
+  opacity = 1,
+  name,
 }: MakeShapeProps) => {
   const geometry = new THREE.BoxGeometry(width, height, depth);
-  const material = new THREE.MeshBasicMaterial({ color: color || 0xa1662f });
+  const material = new THREE.MeshLambertMaterial({
+    color: color || 0xa1662f,
+    opacity,
+    transparent: opacity < 1,
+    name,
+  });
   // const material = new THREE.MeshLambertMaterial({ color: color || 0xa1662f });
   const mesh = new THREE.Mesh(geometry, material);
 
@@ -36,12 +45,15 @@ const makeShape = ({
   );
   const line = new THREE.LineSegments(
     edges,
-    new THREE.LineBasicMaterial({ color: "black" })
+    new THREE.LineBasicMaterial({ color: "black", opacity })
   );
   line.castShadow = true;
   line.receiveShadow = true;
 
   const group = new THREE.Group();
+  if (name) {
+    group.name = name;
+  }
   group.add(mesh);
   group.add(line);
   group.position.set(x, y, z);
@@ -86,10 +98,16 @@ export class ShapeMaker {
   private xCounter = 0;
   private yCounter = 0;
   private maxYForThisRow = 0;
+  private scene: THREE.Scene;
 
-  makeShape(props: Omit<MakeShapeProps, "x" | "y" | "z">) {
+  constructor(scene: THREE.Scene) {
+    this.scene = scene;
+  }
+
+  makeShape(props: Omit<MakeShapeProps, "x" | "y" | "z" | "scene">) {
     const shape = makeShape({
       ...props,
+      scene: this.scene,
       x: this.xCounter + props.width / 2,
       y: this.yCounter - props.height / 2,
       z: 0,
@@ -108,5 +126,3 @@ export class ShapeMaker {
     this.maxYForThisRow = 0;
   }
 }
-
-const shapeMaker = new ShapeMaker();
