@@ -4,7 +4,7 @@ import { Specs } from "./Specs";
 import { Assembly } from "./Assembly";
 
 function App() {
-  const [showAssembled, setShowAssembled] = createSignal(false);
+  const [showAssembled, setShowAssembled] = createSignal(true);
 
   return (
     <>
