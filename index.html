@@ -6,19 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Workbench</title>
     <base href=".">
+    <link rel="stylesheet" href="./style.css" />
+    <style>
+      .tech-draw {
+        display: flex;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    .tech-draw > * {
+      margin-right: 10px;
+    }
+    </style>
   </head>
   <body>
     <div id="app">
-      <button style="z-index: 100000;" onclick="loadControls()">Load controls</button>
-      <button onclick="saveControls()">Save controls</button>
-      <button onclick="dimensions()">Dimensions</button>
-      <div style="position: absolute;z-index: 100000;">
-        <div id="controls">
-          
-        </div>
-        <div id="dimensions"></div>
-      </div>
+      
     </div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/v2/main.tsx"></script>
   </body>
 </html>

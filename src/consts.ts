@@ -21,3 +21,25 @@ export const ENCLOSURE_FOAM_THICKNESS = 5;
 export const ENCLOSURE_SOUND_INSULATOR_THICKNESS = 1;
 
 export const ENCLOSURE_DOOR_THICKNESS = 10;
+
+export const enclosureThicknessWithoutInnerWall =
+  ENCLOSURE_FOAM_THICKNESS +
+  ENCLOSURE_SOUND_INSULATOR_THICKNESS +
+  ENCLOSURE_WALL_THICKNESS;
+export const innerLateralEnclosureDepth =
+  TABLE_DEPTH - enclosureThicknessWithoutInnerWall - ENCLOSURE_DOOR_THICKNESS;
+export const innerLateralEnclosureWallHeight =
+  ENCLOSURE_HEIGHT - enclosureThicknessWithoutInnerWall;
+export const enclosureWallInnerTopWidth =
+  TABLE_WIDTH - 2 * enclosureThicknessWithoutInnerWall;
+export const enclouseOuterDepth = TABLE_DEPTH - ENCLOSURE_DOOR_THICKNESS;
+export const enclosureInnerY =
+  FOOT_HEIGHT + TABLE_TOP_THICKNESS + innerLateralEnclosureWallHeight / 2;
+export const enclosureOuterY =
+  FOOT_HEIGHT + TABLE_TOP_THICKNESS + ENCLOSURE_HEIGHT / 2;
+export const enclosureInnerZ =
+  0 -
+  TABLE_DEPTH / 2 +
+  innerLateralEnclosureDepth / 2 +
+  enclosureThicknessWithoutInnerWall;
+export const tableTopY = FOOT_HEIGHT + TABLE_TOP_THICKNESS / 2;

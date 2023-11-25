@@ -14,6 +14,12 @@ import {
   ENCLOSURE_SOUND_INSULATOR_THICKNESS,
   ENCLOSURE_DOOR_THICKNESS,
   SMALL_VIGA_SIZE_DEPTH,
+  innerLateralEnclosureWallHeight,
+  innerLateralEnclosureDepth,
+  enclosureThicknessWithoutInnerWall,
+  enclosureWallInnerTopWidth,
+  enclouseOuterDepth,
+  tableTopY,
 } from "./consts";
 import { init } from "./threeConfig";
 import { ShapeMakerSpecific } from "./makers";
@@ -120,15 +126,6 @@ const vigasBottom = [viga8, viga9, viga10, viga11, viga12, viga13, viga14];
 // enclosure
 shapeMaker.newRow();
 
-const enclosureThicknessWithoutInnerWall =
-  ENCLOSURE_FOAM_THICKNESS +
-  ENCLOSURE_SOUND_INSULATOR_THICKNESS +
-  ENCLOSURE_WALL_THICKNESS;
-const innerLateralEnclosureDepth =
-  TABLE_DEPTH - enclosureThicknessWithoutInnerWall - ENCLOSURE_DOOR_THICKNESS;
-const innerLateralEnclosureWallHeight =
-  ENCLOSURE_HEIGHT - enclosureThicknessWithoutInnerWall;
-
 const enclosureWallInnerRight = shapeMaker.enclosureWall({
   height: innerLateralEnclosureWallHeight,
   width: innerLateralEnclosureDepth,
@@ -142,8 +139,6 @@ const enclosureWallInnerLeft = shapeMaker.enclosureWall({
   width: innerLateralEnclosureDepth,
   name: "enclosureWallInnerLeft",
 });
-const enclosureWallInnerTopWidth =
-  TABLE_WIDTH - 2 * enclosureThicknessWithoutInnerWall;
 
 const enclosureWallInnerTop = shapeMaker.enclosureWall({
   height: innerLateralEnclosureDepth,
@@ -168,7 +163,6 @@ const enclosureDoorDraft = shapeMaker.makeShape({
   color: "darkgreen",
   opacity: 0.5,
 });
-const enclouseOuterDepth = TABLE_DEPTH - ENCLOSURE_DOOR_THICKNESS;
 
 const enclosureWallOuterLeft = shapeMaker.enclosureWall({
   height: ENCLOSURE_HEIGHT,
@@ -201,7 +195,6 @@ const enclosureWallOuterTop = shapeMaker.enclosureWall({
 
 // assemble base
 function assembleBase() {
-  const tableTopY = FOOT_HEIGHT + TABLE_TOP_THICKNESS / 2;
   function tableTopPosition() {
     tableTop.rotation.z = 0;
     tableTop.position.x = 0;
@@ -308,7 +301,6 @@ function assembleBase() {
     enclosureWallInnerLeft.position.y = enclosureInnerY;
     enclosureWallInnerLeft.position.z = enclosureInnerZ;
 
-    // enclosureWallInnerTop.rotation.y = THREE.MathUtils.degToRad(90);
     enclosureWallInnerTop.rotation.x = THREE.MathUtils.degToRad(90);
     enclosureWallInnerTop.position.x =
       0 -
@@ -322,7 +314,6 @@ function assembleBase() {
       ENCLOSURE_WALL_THICKNESS / 2;
     enclosureWallInnerTop.position.z = enclosureInnerZ;
 
-    // enclosureWallInnerBack.rotation.y = THREE.MathUtils.degToRad(90);
     enclosureWallInnerBack.rotation.x = THREE.MathUtils.degToRad(90);
     enclosureWallInnerBack.rotateOnAxis(
       new THREE.Vector3(1, 0, 0),
