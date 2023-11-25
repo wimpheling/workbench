@@ -477,6 +477,8 @@ render(
       enclosureOuter={enclosureOuter}
       enclosureInner={enclosureInner}
       tableTop={tableTop}
+      shapeMaker={shapeMaker}
+      assembleBase={assembleBase}
     />
   ),
   document.getElementById("controls") as HTMLElement

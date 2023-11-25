@@ -100,16 +100,20 @@ export class ShapeMaker {
   private maxYForThisRow = 0;
   private scene: THREE.Scene;
 
+  private objects: { shape: THREE.Object3D; x: number; y: number }[] = [];
+
   constructor(scene: THREE.Scene) {
     this.scene = scene;
   }
 
   makeShape(props: Omit<MakeShapeProps, "x" | "y" | "z" | "scene">) {
+    const x = this.xCounter + props.width / 2;
+    const y = this.yCounter - props.height / 2;
     const shape = makeShape({
       ...props,
       scene: this.scene,
-      x: this.xCounter + props.width / 2,
-      y: this.yCounter - props.height / 2,
+      x,
+      y,
       z: 0,
     });
     this.xCounter += props.width + 5;
@@ -117,7 +121,16 @@ export class ShapeMaker {
     if (props.dimensions) {
       this.xCounter += 35;
     }
+    this.objects.push({ x, y, shape });
     return shape;
+  }
+
+  reinit() {
+    this.objects.forEach(({ shape, x, y }) => {
+      shape.position.set(x, y, 0);
+      shape.rotation.set(0, 0, 0);
+      shape.rotateOnAxis(new THREE.Vector3(0, 0, 0), 0);
+    });
   }
   newRow() {
     this.xCounter = 0;

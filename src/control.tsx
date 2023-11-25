@@ -1,6 +1,7 @@
 import { createEffect, createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Obj } from "./constraints";
+import { ShapeMakerSpecific } from "./makers";
 
 export const Control = (props: {
   legs: Obj;
@@ -9,6 +10,8 @@ export const Control = (props: {
   enclosureOuter: Obj;
   enclosureInner: Obj;
   tableTop: Obj;
+  shapeMaker: ShapeMakerSpecific;
+  assembleBase: () => void;
 }) => {
   const [isAssembled, setIsAssembled] = createSignal(true);
   const [config, setConfig] = createStore({
@@ -34,6 +37,14 @@ export const Control = (props: {
   });
   createEffect(() => {
     props.enclosureOuter.visible = config.enclosureOuter;
+  });
+
+  createEffect(() => {
+    if (isAssembled()) {
+      props.assembleBase();
+    } else {
+      props.shapeMaker.reinit();
+    }
   });
 
   return (
