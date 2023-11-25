@@ -55,7 +55,6 @@ export function init() {
   document.body.appendChild(labelRenderer.domElement);
 
   controls.update();
-  const rotate = false;
 
   let time = 0;
   const clock = new THREE.Clock();
