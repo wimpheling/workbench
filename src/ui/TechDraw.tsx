@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { Piece } from "./AbstractShapeMaker";
+import { Piece } from "../lib/AbstractShapeMaker";
 import { onMount } from "solid-js";
 
 export const TechDraw = (props: { piece: Piece }) => {

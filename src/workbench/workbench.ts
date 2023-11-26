@@ -23,7 +23,7 @@ import {
   enclosureInnerY,
   enclosureInnerZ,
   enclosureOuterY,
-} from "../consts";
+} from "./consts";
 
 const vigaHelper = (i: number, y: number) => (viga: THREE.Object3D) => {
   viga.position.y = y + FOOT_HEIGHT - VIGA_WIDTH / 2;

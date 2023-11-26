@@ -1,6 +1,6 @@
 import { For } from "solid-js";
-import { WorkBench } from "./workbench";
-import { Piece } from "./AbstractShapeMaker";
+import { WorkBench } from "../workbench/workbench";
+import { Piece } from "../lib/AbstractShapeMaker";
 import { TechDraw } from "./TechDraw";
 
 // A little bit simplified version

@@ -1,6 +1,6 @@
 import { For } from "solid-js/web";
 import { init } from "./threeConfig";
-import { WorkBench } from "./workbench";
+import { WorkBench } from "../workbench/workbench";
 import { createSignal, onCleanup, onMount } from "solid-js";
 
 export const Assembly = () => {

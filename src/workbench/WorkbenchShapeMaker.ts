@@ -1,4 +1,4 @@
-import { AbstractShapeMaker } from "./AbstractShapeMaker";
+import { AbstractShapeMaker } from "../lib/AbstractShapeMaker";
 import {
   ENCLOSURE_VIGA_THICKNESS,
   ENCLOSURE_VIGA_WIDTH,
@@ -8,7 +8,7 @@ import {
   FOOT_WIDTH,
   VIGA_HEIGHT,
   VIGA_WIDTH,
-} from "../consts";
+} from "./consts";
 
 export class WorkBenchShapeMaker extends AbstractShapeMaker {
   foot({
