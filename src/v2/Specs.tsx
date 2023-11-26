@@ -31,6 +31,7 @@ export const Specs = () => {
                   <>
                     {key}
                     <br />
+                    {pieces.length} piece{pieces.length === 1 ? "" : "s"}
                     <div class="tech-draw">
                       <For each={pieces}>
                         {(piece) => (
@@ -44,6 +45,7 @@ export const Specs = () => {
                 );
               }}
             </For>
+            <hr />
           </>
         );
       }}

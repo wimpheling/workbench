@@ -22,12 +22,12 @@ export const TechDraw = (props: { piece: Piece }) => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(canvasWidth, canvasHeight);
 
-    const ambientLight = new THREE.AmbientLight("white", 0.2);
+    const ambientLight = new THREE.AmbientLight("white", 1);
     scene.add(ambientLight);
 
-    const light = new THREE.DirectionalLight("white", 0.8);
-    light.position.set(1, 1, 1);
-    scene.add(light);
+    // const light = new THREE.DirectionalLight("white", 0.8);
+    // light.position.set(1, 1, 1);
+    // scene.add(light);
 
     const group = new THREE.Group();
     scene.add(group);
@@ -39,17 +39,31 @@ export const TechDraw = (props: { piece: Piece }) => {
       new THREE.LineBasicMaterial({
         color: "black",
         opacity: 1,
-        linewidth: 10,
       })
     );
-    line.rotation.z = THREE.MathUtils.degToRad(0);
-    line.rotateOnAxis(
-      new THREE.Vector3(1, 0, 0),
-      THREE.MathUtils.degToRad(-25)
+    const material = new THREE.MeshBasicMaterial({
+      color: "white",
+      transparent: true,
+      opacity: 1,
+    });
+    const geometry = new THREE.BoxGeometry(
+      piece.width,
+      piece.height,
+      piece.depth
     );
-    line.rotateOnAxis(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(5));
-    line.rotateOnAxis(new THREE.Vector3(0, 0, 1), THREE.MathUtils.degToRad(-1));
+    const mesh = new THREE.Mesh(geometry, material);
+    group.add(mesh);
     group.add(line);
+    // group.rotation.z = THREE.MathUtils.degToRad(0);
+    group.rotateOnAxis(
+      new THREE.Vector3(1, 0, 0),
+      THREE.MathUtils.degToRad(-5)
+    );
+    group.rotateOnAxis(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(5));
+    group.rotateOnAxis(
+      new THREE.Vector3(0, 0, 1),
+      THREE.MathUtils.degToRad(-1)
+    );
 
     const center = new THREE.Vector3(),
       size = new THREE.Vector3(),

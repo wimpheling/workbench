@@ -43,7 +43,7 @@ export const Assembly = () => {
 
   return (
     <div
-      style={{ position: "absolute", top: "20px", left: 0, "z-index": 1000 }}
+      style={{ position: "absolute", top: "30px", left: 0, "z-index": 1000 }}
     >
       <h1>Controls</h1>
       <For each={Object.keys(threeGroups())}>
