@@ -1,7 +1,12 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-export function init() {
+export function init(
+  onSelectCallback: (params?: {
+    groupName: string;
+    vector: THREE.Vector3;
+  }) => void
+) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf5faf6);
   const camera = new THREE.PerspectiveCamera(
@@ -15,6 +20,9 @@ export function init() {
   camera.position.y = 500;
   camera.position.x = 500;
 
+  const raycaster = new THREE.Raycaster();
+  raycaster.layers.enableAll();
+  const pointer = new THREE.Vector2();
   const renderer = new THREE.WebGLRenderer();
   renderer.shadowMap.enabled = true;
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -63,10 +71,80 @@ export function init() {
       animateCallback({ time });
     }
     controls.update();
+
     renderer.render(scene, camera);
   }
   animate();
   loadControls();
+  renderer.domElement.addEventListener("mousemove", onPointerMove, false);
+  let intersectState:
+    | {
+        object: THREE.LineSegments;
+        color: string;
+      }
+    | undefined;
+  function onPointerMove(event: MouseEvent) {
+    event.preventDefault();
+    pointer.x = (event.offsetX / renderer.domElement.clientWidth) * 2 - 1;
+    pointer.y = -(event.offsetY / renderer.domElement.clientHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+
+    const meshes: THREE.Mesh[] = [];
+    function findMeshesInSceneChildrenRecursively(children: THREE.Object3D[]) {
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        if (child instanceof THREE.Mesh) {
+          meshes.push(child);
+        } else {
+          findMeshesInSceneChildrenRecursively(child.children);
+        }
+      }
+    }
+    findMeshesInSceneChildrenRecursively(scene.children);
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    if (intersects.length > 0) {
+      const intersect = intersects.find((intersect) => {
+        const parentGroup = intersect.object.parent as THREE.Group;
+        const parentParentGroup = parentGroup.parent as THREE.Group;
+        return parentParentGroup.visible;
+      });
+      if (!intersect) {
+        onSelectCallback();
+        if (intersectState) {
+          // @ts-ignore
+          intersectState.object.material.color.set(intersectState.color);
+          intersectState = undefined;
+        }
+        return;
+      }
+      const parentGroup = intersect.object.parent as THREE.Group;
+      const lineChild = parentGroup.children[1] as THREE.LineSegments;
+      if (lineChild && lineChild !== intersectState?.object) {
+        if (intersectState) {
+          // @ts-ignore
+          intersectState.object.material.color.set(intersectState.color);
+        }
+        intersectState = {
+          object: lineChild,
+          // @ts-ignore
+          color: lineChild.material.color.getHex(),
+        };
+        // @ts-ignore
+        lineChild.material.color.set("red");
+        const bbox = new THREE.Box3().setFromObject(lineChild);
+        const vector = new THREE.Vector3();
+        bbox.getSize(vector);
+        onSelectCallback({ groupName: parentGroup.name, vector });
+      }
+    } else {
+      onSelectCallback();
+      if (intersectState) {
+        // @ts-ignore
+        intersectState.object.material.color.set(intersectState.color);
+        intersectState = undefined;
+      }
+    }
+  }
 
   return {
     scene,

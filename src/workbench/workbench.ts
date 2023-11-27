@@ -120,7 +120,6 @@ export class WorkBench {
   viga1 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga1",
-    color: "green",
     group: "vigaTop",
     assemble: vigaHelper(0, 0),
   });
@@ -134,7 +133,6 @@ export class WorkBench {
   bigViga1 = this.sm.viga({
     height: TABLE_WIDTH,
     name: "bigViga1",
-    color: "red",
     group: "vigaTop",
     assemble: vigaHelper(2, 0),
   });
