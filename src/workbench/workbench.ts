@@ -25,33 +25,46 @@ import {
   enclosureOuterY,
 } from "./consts";
 
-const vigaHelper = (i: number, y: number) => (viga: THREE.Object3D) => {
-  viga.position.y = y + FOOT_HEIGHT - VIGA_WIDTH / 2;
-  viga.position.z = 0;
-  viga.rotation.x = THREE.MathUtils.degToRad(90);
-  viga.rotation.y = THREE.MathUtils.degToRad(90);
-  if (i === 0) {
-    viga.position.x = 0 - TABLE_WIDTH / 2 + VIGA_HEIGHT / 2;
-  } else if (i === 1) {
-    viga.position.x = TABLE_WIDTH / 2 - VIGA_HEIGHT / 2;
-  } else if (i === 2) {
-    viga.position.x = 0;
-    viga.position.z = 0 - TABLE_DEPTH / 2 + VIGA_HEIGHT / 2;
-    viga.rotateOnAxis(new THREE.Vector3(1, 0, 0), THREE.MathUtils.degToRad(90));
-  } else if (i === 3) {
-    viga.position.x = 0;
-    viga.position.z = TABLE_DEPTH / 2 - VIGA_HEIGHT / 2;
-    viga.rotateOnAxis(new THREE.Vector3(1, 0, 0), THREE.MathUtils.degToRad(90));
-  }
-};
+const vigaHelper =
+  (i: number, y: number, xModificator = 0) =>
+  (viga: THREE.Object3D) => {
+    viga.position.y = y + FOOT_HEIGHT - VIGA_WIDTH / 2;
+    viga.position.z = 0;
+    viga.rotation.x = THREE.MathUtils.degToRad(90);
+    viga.rotation.y = THREE.MathUtils.degToRad(90);
+    if (i === 0) {
+      viga.position.x = 0 - TABLE_WIDTH / 2 + VIGA_HEIGHT / 2 + xModificator;
+    } else if (i === 1) {
+      viga.position.x = TABLE_WIDTH / 2 - VIGA_HEIGHT / 2 - xModificator;
+    } else if (i === 2) {
+      viga.position.x = 0;
+      viga.position.z = 0 - TABLE_DEPTH / 2 + VIGA_HEIGHT / 2;
+      viga.rotateOnAxis(
+        new THREE.Vector3(1, 0, 0),
+        THREE.MathUtils.degToRad(90)
+      );
+    } else if (i === 3) {
+      viga.position.x = 0;
+      viga.position.z = TABLE_DEPTH / 2 - VIGA_HEIGHT / 2;
+      viga.rotateOnAxis(
+        new THREE.Vector3(1, 0, 0),
+        THREE.MathUtils.degToRad(90)
+      );
+    }
+  };
 
-const vigaHelper2 = (i: number, y: number) => (viga: THREE.Object3D) => {
-  viga.position.y = y + FOOT_HEIGHT - VIGA_WIDTH / 2;
-  viga.position.z = 0;
-  viga.rotation.x = THREE.MathUtils.degToRad(90);
-  viga.rotation.y = THREE.MathUtils.degToRad(90);
-  viga.position.x = TABLE_WIDTH / 2 - ((i + 1) * TABLE_WIDTH) / 4;
-};
+const vigaHelper2 =
+  (i: number, y: number, xModificator = 0) =>
+  (viga: THREE.Object3D) => {
+    viga.position.y = y + FOOT_HEIGHT - VIGA_WIDTH / 2;
+    viga.position.z = 0;
+    viga.rotation.x = THREE.MathUtils.degToRad(90);
+    viga.rotation.y = THREE.MathUtils.degToRad(90);
+    viga.position.x =
+      TABLE_WIDTH / 2 -
+      xModificator -
+      ((i + 1) * (TABLE_WIDTH - xModificator * 2)) / 4;
+  };
 
 export class WorkBench {
   sm = new WorkBenchShapeMaker();
@@ -153,47 +166,49 @@ export class WorkBench {
     assemble: vigaHelper2(2, 0),
   });
 
+  // second platform
+
   viga8 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga8",
     group: "vigaBottom",
-    assemble: vigaHelper(0, -50),
+    assemble: vigaHelper(0, -50, FOOT_WIDTH + VIGA_HEIGHT),
   });
   viga9 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga9",
     group: "vigaBottom",
-    assemble: vigaHelper(1, -50),
+    assemble: vigaHelper(1, -50, FOOT_WIDTH + VIGA_HEIGHT),
   });
   viga10 = this.sm.viga({
     height: TABLE_WIDTH,
     name: "viga10",
     group: "vigaBottom",
-    assemble: vigaHelper(2, -50),
+    assemble: vigaHelper(2, -50, FOOT_WIDTH + VIGA_HEIGHT),
   });
   viga11 = this.sm.viga({
     height: TABLE_WIDTH,
     name: "viga11",
     group: "vigaBottom",
-    assemble: vigaHelper(3, -50),
+    assemble: vigaHelper(3, -50, FOOT_WIDTH + VIGA_HEIGHT),
   });
   viga12 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga12",
     group: "vigaBottom",
-    assemble: vigaHelper2(0, -50),
+    assemble: vigaHelper2(0, -50, FOOT_WIDTH + VIGA_HEIGHT / 2),
   });
   viga13 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga13",
     group: "vigaBottom",
-    assemble: vigaHelper2(1, -50),
+    assemble: vigaHelper2(1, -50, FOOT_WIDTH + VIGA_HEIGHT / 2),
   });
   viga14 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga14",
     group: "vigaBottom",
-    assemble: vigaHelper2(2, -50),
+    assemble: vigaHelper2(2, -50, FOOT_WIDTH + VIGA_HEIGHT / 2),
   });
 
   // enclosure
