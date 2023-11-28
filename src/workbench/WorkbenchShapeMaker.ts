@@ -29,7 +29,7 @@ export class WorkBenchShapeMaker extends AbstractShapeMaker {
       color,
       dimensions,
       name,
-      group: "legs",
+      group: "Legs",
       material: "wood",
       assemble,
     });

@@ -8,13 +8,17 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy" : "tsc && vite build && gh-pages -d dist"
+    "deploy": "tsc && vite build && gh-pages -d dist",
+    "publish": "tsc && vite build && tsx src/build/package.ts"
   },
   "devDependencies": {
+    "@types/node": "^20.10.0",
     "@types/three": "^0.158.2",
     "gh-pages": "^6.1.0",
+    "tsx": "^4.6.0",
     "typescript": "^5.0.2",
     "vite": "^4.4.5",
+    "vite-plugin-singlefile": "^0.13.5",
     "vite-plugin-solid": "^2.7.2"
   },
   "dependencies": {

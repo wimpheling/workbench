@@ -23,6 +23,7 @@ import {
   enclosureInnerY,
   enclosureInnerZ,
   enclosureOuterY,
+  SPACE_BETWEEN_SHELVES,
 } from "./consts";
 
 const vigaHelper =
@@ -73,8 +74,8 @@ export class WorkBench {
     height: TABLE_TOP_THICKNESS,
     width: TABLE_WIDTH,
     depth: TABLE_DEPTH,
-    name: "tableTop",
-    group: "tableTop",
+    name: "Table Top",
+    group: "Table Top",
     material: "MDF",
     assemble: (obj) => {
       obj.rotation.z = 0;
@@ -84,8 +85,24 @@ export class WorkBench {
     },
   });
 
+  bottomShelf = this.sm.makeShape({
+    height: TABLE_DEPTH,
+    width: TABLE_WIDTH - 2 * FOOT_WIDTH - 2 * VIGA_HEIGHT,
+    depth: TABLE_TOP_THICKNESS,
+    name: "Bottom Shelf",
+    group: "Bottom Shelf",
+    assemble: (bottomShelf) => {
+      bottomShelf.rotation.x = THREE.MathUtils.degToRad(90);
+      bottomShelf.position.x = 0;
+      bottomShelf.position.y =
+        0 + FOOT_HEIGHT - SPACE_BETWEEN_SHELVES + TABLE_TOP_THICKNESS / 2;
+      bottomShelf.position.z = 0;
+    },
+    material: "OSB",
+  });
+
   foot1 = this.sm.foot({
-    name: "foot1",
+    name: "Leg 1",
     assemble: (obj) => {
       obj.position.x = 0 - TABLE_WIDTH / 2 + FOOT_WIDTH / 2 + VIGA_HEIGHT;
       obj.position.y = 0 + FOOT_HEIGHT / 2;
@@ -93,7 +110,7 @@ export class WorkBench {
     },
   });
   foot2 = this.sm.foot({
-    name: "foot2",
+    name: "Leg 2",
     assemble: (obj) => {
       obj.position.x = TABLE_WIDTH / 2 - FOOT_WIDTH / 2 - VIGA_HEIGHT;
       obj.position.y = 0 + FOOT_HEIGHT / 2;
@@ -101,7 +118,7 @@ export class WorkBench {
     },
   });
   foot3 = this.sm.foot({
-    name: "foot3",
+    name: "Leg 3",
     assemble: (obj) => {
       obj.position.x = TABLE_WIDTH / 2 - FOOT_WIDTH / 2 - VIGA_HEIGHT;
       obj.position.y = 0 + FOOT_HEIGHT / 2;
@@ -109,7 +126,7 @@ export class WorkBench {
     },
   });
   foot4 = this.sm.foot({
-    name: "foot4",
+    name: "Leg 4",
     assemble: (obj) => {
       obj.position.x = 0 - TABLE_WIDTH / 2 + FOOT_WIDTH / 2 + VIGA_HEIGHT;
       obj.position.y = 0 + FOOT_HEIGHT / 2;
@@ -120,27 +137,27 @@ export class WorkBench {
   viga1 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga1",
-    group: "vigaTop",
+    group: "Top Shelf Structure",
     assemble: vigaHelper(0, 0),
   });
   viga2 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga2",
-    group: "vigaTop",
+    group: "Top Shelf Structure",
     assemble: vigaHelper(1, 0),
   });
 
   bigViga1 = this.sm.viga({
     height: TABLE_WIDTH,
     name: "bigViga1",
-    group: "vigaTop",
+    group: "Top Shelf Structure",
     assemble: vigaHelper(2, 0),
   });
 
   bigViga2 = this.sm.viga({
     height: TABLE_WIDTH,
     name: "bigViga2",
-    group: "vigaTop",
+    group: "Top Shelf Structure",
     assemble: vigaHelper(3, 0),
   });
 
@@ -148,19 +165,19 @@ export class WorkBench {
   viga5 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga5",
-    group: "vigaTop",
+    group: "Top Shelf Structure",
     assemble: vigaHelper2(0, 0),
   });
   viga6 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga6",
-    group: "vigaTop",
+    group: "Top Shelf Structure",
     assemble: vigaHelper2(1, 0),
   });
   viga7 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga7",
-    group: "vigaTop",
+    group: "Top Shelf Structure",
     assemble: vigaHelper2(2, 0),
   });
 
@@ -169,44 +186,56 @@ export class WorkBench {
   viga8 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga8",
-    group: "vigaBottom",
-    assemble: vigaHelper(0, -50, FOOT_WIDTH + VIGA_HEIGHT),
+    group: "Bottom Shelf Structure",
+    assemble: vigaHelper(0, -SPACE_BETWEEN_SHELVES, FOOT_WIDTH + VIGA_HEIGHT),
   });
   viga9 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga9",
-    group: "vigaBottom",
-    assemble: vigaHelper(1, -50, FOOT_WIDTH + VIGA_HEIGHT),
+    group: "Bottom Shelf Structure",
+    assemble: vigaHelper(1, -SPACE_BETWEEN_SHELVES, FOOT_WIDTH + VIGA_HEIGHT),
   });
   viga10 = this.sm.viga({
     height: TABLE_WIDTH,
     name: "viga10",
-    group: "vigaBottom",
-    assemble: vigaHelper(2, -50, FOOT_WIDTH + VIGA_HEIGHT),
+    group: "Bottom Shelf Structure",
+    assemble: vigaHelper(2, -SPACE_BETWEEN_SHELVES, FOOT_WIDTH + VIGA_HEIGHT),
   });
   viga11 = this.sm.viga({
     height: TABLE_WIDTH,
     name: "viga11",
-    group: "vigaBottom",
-    assemble: vigaHelper(3, -50, FOOT_WIDTH + VIGA_HEIGHT),
+    group: "Bottom Shelf Structure",
+    assemble: vigaHelper(3, -SPACE_BETWEEN_SHELVES, FOOT_WIDTH + VIGA_HEIGHT),
   });
   viga12 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga12",
-    group: "vigaBottom",
-    assemble: vigaHelper2(0, -50, FOOT_WIDTH + VIGA_HEIGHT / 2),
+    group: "Bottom Shelf Structure",
+    assemble: vigaHelper2(
+      0,
+      -SPACE_BETWEEN_SHELVES,
+      FOOT_WIDTH + VIGA_HEIGHT / 2
+    ),
   });
   viga13 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga13",
-    group: "vigaBottom",
-    assemble: vigaHelper2(1, -50, FOOT_WIDTH + VIGA_HEIGHT / 2),
+    group: "Bottom Shelf Structure",
+    assemble: vigaHelper2(
+      1,
+      -SPACE_BETWEEN_SHELVES,
+      FOOT_WIDTH + VIGA_HEIGHT / 2
+    ),
   });
   viga14 = this.sm.viga({
     height: SMALL_VIGA_SIZE_DEPTH,
     name: "viga14",
-    group: "vigaBottom",
-    assemble: vigaHelper2(2, -50, FOOT_WIDTH + VIGA_HEIGHT / 2),
+    group: "Bottom Shelf Structure",
+    assemble: vigaHelper2(
+      2,
+      -SPACE_BETWEEN_SHELVES,
+      FOOT_WIDTH + VIGA_HEIGHT / 2
+    ),
   });
 
   // enclosure
@@ -214,10 +243,10 @@ export class WorkBench {
   enclosureWallInnerRight = this.sm.enclosureWall({
     height: innerLateralEnclosureWallHeight,
     width: innerLateralEnclosureDepth,
-    name: "enclosureWallInnerRight",
+    name: "Enclosure Wall Inner Right",
     dimensions: true,
     color: "yellow",
-    group: "enclosure inner",
+    group: "Enclosure Inner",
     assemble: (obj) => {
       obj.rotation.y = THREE.MathUtils.degToRad(90);
       obj.position.x =
@@ -232,8 +261,8 @@ export class WorkBench {
   enclosureWallInnerLeft = this.sm.enclosureWall({
     height: innerLateralEnclosureWallHeight,
     width: innerLateralEnclosureDepth,
-    name: "enclosureWallInnerLeft",
-    group: "enclosure inner",
+    name: "Enclosure Wall Inner Left",
+    group: "Enclosure Inner",
     assemble: (enclosureWallInnerLeft) => {
       enclosureWallInnerLeft.rotation.y = THREE.MathUtils.degToRad(90);
       enclosureWallInnerLeft.position.x =
@@ -250,8 +279,8 @@ export class WorkBench {
     height: innerLateralEnclosureDepth,
     width: enclosureWallInnerTopWidth,
     dimensions: true,
-    name: "enclosureWallInnerTop",
-    group: "enclosure inner",
+    name: "Enclosure Wall Inner Top",
+    group: "Enclosure Inner",
     assemble: (enclosureWallInnerTop) => {
       enclosureWallInnerTop.rotation.x = THREE.MathUtils.degToRad(90);
       enclosureWallInnerTop.position.x =
@@ -271,10 +300,10 @@ export class WorkBench {
   enclosureWallInnerBack = this.sm.enclosureWall({
     height: innerLateralEnclosureWallHeight,
     width: enclosureWallInnerTopWidth - 2 * ENCLOSURE_WALL_THICKNESS,
-    name: "enclosureWallInnerBack",
+    name: "Enclosure Wall Inner Back",
     color: "red",
     dimensions: true,
-    group: "enclosure inner",
+    group: "Enclosure Inner",
     assemble: (enclosureWallInnerBack) => {
       enclosureWallInnerBack.rotation.x = THREE.MathUtils.degToRad(90);
       enclosureWallInnerBack.rotateOnAxis(
@@ -295,10 +324,10 @@ export class WorkBench {
     height: ENCLOSURE_HEIGHT,
     depth: ENCLOSURE_DOOR_THICKNESS,
     width: TABLE_WIDTH,
-    name: "enclosureDoorDraft",
+    name: "Enclosure Door",
     color: "darkgreen",
     opacity: 0.5,
-    group: "enclosure Door",
+    group: "Enclosure Door",
     material: "TEMP",
     assemble: (enclosureDoorDraft) => {
       enclosureDoorDraft.rotation.x = THREE.MathUtils.degToRad(90);
@@ -316,10 +345,10 @@ export class WorkBench {
   enclosureWallOuterLeft = this.sm.enclosureWall({
     height: ENCLOSURE_HEIGHT,
     width: enclouseOuterDepth,
-    name: "enclosureWallOuterLeft",
+    name: "Enclosure Wall Outer Left",
     color: "black",
     opacity: 0.8,
-    group: "enclosure outer",
+    group: "Enclosure Outer",
     assemble: (enclosureWallOuterLeft) => {
       enclosureWallOuterLeft.rotation.y = THREE.MathUtils.degToRad(90);
       enclosureWallOuterLeft.position.x =
@@ -332,10 +361,10 @@ export class WorkBench {
   enclosureWallOuterRight = this.sm.enclosureWall({
     height: ENCLOSURE_HEIGHT,
     width: enclouseOuterDepth,
-    name: "enclosureWallOuterRight",
+    name: "Enclosure Wall Outer Right",
     color: "black",
     opacity: 0.8,
-    group: "enclosure outer",
+    group: "Enclosure Outer",
     assemble: (enclosureWallOuterRight) => {
       enclosureWallOuterRight.rotation.y = THREE.MathUtils.degToRad(90);
       enclosureWallOuterRight.position.x =
@@ -348,10 +377,10 @@ export class WorkBench {
   enclosureWallOuterBack = this.sm.enclosureWall({
     height: ENCLOSURE_HEIGHT,
     width: TABLE_WIDTH - 2 * ENCLOSURE_WALL_THICKNESS,
-    name: "enclosureWallOuterBack",
+    name: "Enclosure Wall Outer Back",
     color: "black",
     opacity: 0.8,
-    group: "enclosure outer",
+    group: "Enclosure Outer",
     assemble: (enclosureWallOuterBack) => {
       enclosureWallOuterBack.rotation.x = THREE.MathUtils.degToRad(90);
       enclosureWallOuterBack.rotateOnAxis(
@@ -367,10 +396,10 @@ export class WorkBench {
   enclosureWallOuterTop = this.sm.enclosureWall({
     height: TABLE_DEPTH,
     width: TABLE_WIDTH,
-    name: "enclosureWallOuterTop",
+    name: "Enclosure Wall Outer Top",
     color: "pink",
     opacity: 0.5,
-    group: "enclosure outer",
+    group: "Enclosure Outer",
     assemble: (enclosureWallOuterTop) => {
       enclosureWallOuterTop.rotation.x = THREE.MathUtils.degToRad(90);
       enclosureWallOuterTop.position.x = 0;

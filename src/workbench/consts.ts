@@ -1,5 +1,5 @@
 export const TABLE_WIDTH = 183;
-export const TABLE_DEPTH = 183;
+export const TABLE_DEPTH = 203;
 export const TABLE_TOP_THICKNESS = 1.9;
 
 export const FOOT_DEPTH = 16;
@@ -8,6 +8,8 @@ export const FOOT_WIDTH = 16;
 
 export const VIGA_HEIGHT = 2;
 export const VIGA_WIDTH = 10;
+
+export const SPACE_BETWEEN_SHELVES = 50;
 
 export const ENCLOSURE_VIGA_WIDTH = 6;
 export const ENCLOSURE_VIGA_THICKNESS = 1;
