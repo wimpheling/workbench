@@ -88,11 +88,14 @@ export const Assembly = () => {
             <p>
               <b>{select()!.groupName}</b>
               <br />
-              Width: {Math.round(select()!.vector.x * 10)}mm
+              Width: {Math.round(select()!.vector.x * 10)}mm /{" "}
+              {Math.round(((select()!.vector.x * 10) / 25.4) * 10) / 10} inches
               <br />
-              Height: {Math.round(select()!.vector.y * 10)}mm
+              Height: {Math.round(select()!.vector.y * 10)}mm /{" "}
+              {Math.round(((select()!.vector.y * 10) / 25.4) * 10) / 10} inches
               <br />
-              Depth: {Math.round(select()!.vector.z * 10)}mm
+              Depth: {Math.round(select()!.vector.z * 10)}mm /{" "}
+              {Math.round(((select()!.vector.z * 10) / 25.4) * 10) / 10} inches
             </p>
           </Show>
         </div>
