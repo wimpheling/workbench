@@ -37,7 +37,9 @@ export const Assembly = () => {
     setLoadControls(loadControls);
     // @ts-ignore
     setSaveControls(saveControls);
-    workbench.sm.assemble(scene);
+    workbench.sm.assemble(scene, {
+      hiddenGroups: workbench.hiddenGroups,
+    });
     setThreeGroups(workbench.sm.threeGroups);
     setRenderer(renderer);
   }
@@ -86,11 +88,11 @@ export const Assembly = () => {
             <p>
               <b>{select()!.groupName}</b>
               <br />
-              Width: {Math.round(select()!.vector.x)}
+              Width: {Math.round(select()!.vector.x * 10)}mm
               <br />
-              Height: {Math.round(select()!.vector.y)}
+              Height: {Math.round(select()!.vector.y * 10)}mm
               <br />
-              Depth: {Math.round(select()!.vector.z)}
+              Depth: {Math.round(select()!.vector.z * 10)}mm
             </p>
           </Show>
         </div>

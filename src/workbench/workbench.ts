@@ -407,4 +407,5 @@ export class WorkBench {
       enclosureWallOuterTop.position.z = 0;
     },
   });
+  hiddenGroups = ["Enclosure Outer", "Enclosure Door", "Enclosure Inner"];
 }

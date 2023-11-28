@@ -30,12 +30,20 @@ export class AbstractShapeMaker {
     this.objectsByGroup[props.group]?.push(props);
   }
 
-  assemble(scene: THREE.Scene) {
+  assemble(
+    scene: THREE.Scene,
+    conf: {
+      hiddenGroups?: string[];
+    }
+  ) {
     this.threeGroups = {};
     Object.keys(this.objectsByGroup).forEach((group) => {
       const pieces = this.objectsByGroup[group];
       const groupObj = new THREE.Group();
+      const visible = !conf?.hiddenGroups?.includes(group);
+      groupObj.visible = visible;
       groupObj.name = group;
+      scene.add(groupObj);
       this.threeGroups[group] = groupObj;
       pieces.forEach((piece) => {
         // Mesh
@@ -74,7 +82,6 @@ export class AbstractShapeMaker {
         scene.add(group);
 
         groupObj.add(group);
-        scene.add(groupObj);
 
         piece.assemble(group);
       });
