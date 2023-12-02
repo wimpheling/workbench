@@ -22,12 +22,26 @@ export type Piece = Omit<MakeShapeProps, "x" | "y" | "z" | "scene"> & {
 export class AbstractShapeMaker {
   objectsByGroup: Record<string, Piece[]> = {};
   threeGroups: Record<string, THREE.Group> = {};
+  piecesBySpecs: Record<string, Piece[]> = {};
+  hiddenGroupsInSpecs: string[] = [];
+
+  constructor(hiddenGroupsInSpecs: string[] = []) {
+    this.hiddenGroupsInSpecs = hiddenGroupsInSpecs;
+  }
 
   makeShape(props: Piece) {
     if (!this.objectsByGroup[props.group]) {
       this.objectsByGroup[props.group] = [];
     }
     this.objectsByGroup[props.group]?.push(props);
+
+    if (!this.hiddenGroupsInSpecs.includes(props.group)) {
+      const specs = `${props.material} ${props.height}x${props.width}x${props.depth}`;
+      if (!this.piecesBySpecs[specs]) {
+        this.piecesBySpecs[specs] = [];
+      }
+      this.piecesBySpecs[specs]?.push(props);
+    }
   }
 
   assemble(

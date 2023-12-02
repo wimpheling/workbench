@@ -13,9 +13,9 @@ const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
 export const Specs = () => {
   const workbench = new WorkBench();
   return (
-    <For each={Object.keys(workbench.sm.objectsByGroup)}>
+    <For each={Object.keys(workbench.sm.piecesBySpecs)}>
       {(key) => {
-        const pieces = workbench.sm.objectsByGroup[key] as Piece[];
+        const pieces = workbench.sm.piecesBySpecs[key] as Piece[];
         const grouped: Record<string, Piece[]> = groupBy(
           pieces,
           (piece) => `${piece.width}x${piece.height}x${piece.depth}`

@@ -4,10 +4,8 @@ import { WorkBench } from "../workbench/workbench";
 import { Show, createSignal, onCleanup, onMount } from "solid-js";
 
 export const Assembly = () => {
-  // @ts-ignore
-  const [loadControls, setLoadControls] = createSignal(() => {});
-  // @ts-ignore
-  const [saveControls, setSaveControls] = createSignal(() => {});
+  let loadControls: () => void;
+  let saveControls: () => void;
   const [renderer, setRenderer] = createSignal<THREE.WebGLRenderer>();
   const workbench = new WorkBench();
   const [threeGroups, setThreeGroups] = createSignal<
@@ -17,9 +15,14 @@ export const Assembly = () => {
   const [select, setSelect] = createSignal<{
     groupName: string;
     vector: THREE.Vector3;
+    position: THREE.Vector3;
   }>();
 
-  const onSelect = (params?: { groupName: string; vector: THREE.Vector3 }) => {
+  const onSelect = (params?: {
+    groupName: string;
+    vector: THREE.Vector3;
+    position: THREE.Vector3;
+  }) => {
     setSelect(params);
   };
 
@@ -32,11 +35,17 @@ export const Assembly = () => {
 
   function render() {
     removeRenderer();
-    const { scene, loadControls, saveControls, renderer } = init(onSelect);
+    const {
+      scene,
+      loadControls: lc,
+      saveControls: sc,
+      renderer,
+    } = init(onSelect);
     // @ts-ignore
-    setLoadControls(loadControls);
+    loadControls = lc;
     // @ts-ignore
-    setSaveControls(saveControls);
+    saveControls = sc;
+    console.log(saveControls, sc);
     workbench.sm.assemble(scene, {
       hiddenGroups: workbench.hiddenGroups,
     });
@@ -49,6 +58,9 @@ export const Assembly = () => {
   onCleanup(() => {
     removeRenderer();
   });
+  const a = () => {
+    console.log({ saveControls, loadControls });
+  };
   const switchGroupVisibility = (key: string, visible: boolean) => {
     const group = threeGroups()[key] as THREE.Group;
     group.visible = visible;
@@ -96,14 +108,20 @@ export const Assembly = () => {
               <br />
               Depth: {Math.round(select()!.vector.z * 10)}mm /{" "}
               {Math.round(((select()!.vector.z * 10) / 25.4) * 10) / 10} inches
+              <br />
+              X: {Math.round(select()!.position.x * 10)}mm
+              <br />
+              Y: {Math.round(select()!.position.y * 10)}mm
+              <br />
+              Z: {Math.round(select()!.position.z * 10)}mm
             </p>
           </Show>
         </div>
       </div>
 
-      {/* <button onClick={() => saveControls()()}>Save</button>
-      <button onClick={() => loadControls()()}>Load</button>
-      <button onClick={() => render()}>Render</button> */}
+      <button onClick={() => saveControls()}>Save</button>
+      <button onClick={() => loadControls()}>Load</button>
+      <button onClick={() => a()}>Load</button>
     </div>
   );
 };

@@ -5,6 +5,7 @@ export function init(
   onSelectCallback: (params?: {
     groupName: string;
     vector: THREE.Vector3;
+    position: THREE.Vector3;
   }) => void
 ) {
   const scene = new THREE.Scene();
@@ -134,7 +135,13 @@ export function init(
         const bbox = new THREE.Box3().setFromObject(lineChild);
         const vector = new THREE.Vector3();
         bbox.getSize(vector);
-        onSelectCallback({ groupName: parentGroup.name, vector });
+        const positionVector = new THREE.Vector3();
+        bbox.getCenter(positionVector);
+        onSelectCallback({
+          groupName: parentGroup.name,
+          vector,
+          position: positionVector,
+        });
       }
     } else {
       onSelectCallback();
