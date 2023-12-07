@@ -2,9 +2,9 @@ export const TABLE_WIDTH = 183;
 export const TABLE_DEPTH = 193;
 export const TABLE_TOP_THICKNESS = 1.9;
 
-export const FOOT_DEPTH = 7.5;
+export const FOOT_DEPTH = 9.5;
 export const FOOT_HEIGHT = 90;
-export const FOOT_WIDTH = 7.5;
+export const FOOT_WIDTH = 9.5;
 
 export const VIGA_HEIGHT = 2;
 export const VIGA_WIDTH = 10;
