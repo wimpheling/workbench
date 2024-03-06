@@ -44,4 +44,4 @@ export const enclosureInnerZ =
   TABLE_DEPTH / 2 +
   innerLateralEnclosureDepth / 2 +
   enclosureThicknessWithoutInnerWall;
-export const tableTopY = FOOT_HEIGHT + TABLE_TOP_THICKNESS / 2;
+export const TABLE_TOP_Y = FOOT_HEIGHT + TABLE_TOP_THICKNESS / 2;

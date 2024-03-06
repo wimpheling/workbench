@@ -13,7 +13,7 @@ import {
   innerLateralEnclosureDepth,
   enclosureWallInnerTopWidth,
   enclouseOuterDepth,
-  tableTopY,
+  TABLE_TOP_Y,
   FOOT_HEIGHT,
   FOOT_WIDTH,
   VIGA_HEIGHT,
@@ -94,7 +94,7 @@ export class WorkBench {
       assemble: (obj) => {
         obj.rotation.x = THREE.MathUtils.degToRad(90);
         obj.position.x = 0;
-        obj.position.y = tableTopY;
+        obj.position.y = TABLE_TOP_Y;
         obj.position.z = 0;
       },
     });
@@ -355,7 +355,7 @@ export class WorkBench {
           enclosureWallInnerTopWidth / 2 +
           enclosureThicknessWithoutInnerWall;
         enclosureWallInnerTop.position.y =
-          tableTopY +
+          TABLE_TOP_Y +
           TABLE_TOP_THICKNESS +
           innerLateralEnclosureWallHeight +
           ENCLOSURE_WALL_THICKNESS / 2;

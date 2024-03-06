@@ -2,12 +2,14 @@ import { For } from "solid-js/web";
 import { init } from "./threeConfig";
 import { WorkBench } from "../workbench/workbench";
 import { Show, createSignal, onCleanup, onMount } from "solid-js";
+import { Enclosure } from "../workbench/enclosure";
 
 export const Assembly = () => {
   let loadControls: () => void;
   let saveControls: () => void;
   const [renderer, setRenderer] = createSignal<THREE.WebGLRenderer>();
   const workbench = new WorkBench();
+  const enclosure = new Enclosure();
   const [threeGroups, setThreeGroups] = createSignal<
     Record<string, THREE.Group>
   >({});
@@ -48,6 +50,9 @@ export const Assembly = () => {
     console.log(saveControls, sc);
     workbench.sm.assemble(scene, {
       hiddenGroups: workbench.hiddenGroups,
+    });
+    enclosure.sm.assemble(scene, {
+      // hiddenGroups: enclosure.hiddenGroups,
     });
     setThreeGroups(workbench.sm.threeGroups);
     setRenderer(renderer);
