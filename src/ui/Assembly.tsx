@@ -1,15 +1,19 @@
 import { For } from "solid-js/web";
 import { init } from "./threeConfig";
-import { WorkBench } from "../workbench/workbench";
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
-import { Enclosure } from "../workbench/enclosure";
+import { Show, createSignal, onCleanup } from "solid-js";
+import { MyObject3D } from "../lib/MyObject3D";
+import { DisposableItem } from "./interfaces";
 
-export const Assembly = () => {
+export const Assembly = ({ item }: { item: MyObject3D }) => {
   let loadControls: () => void;
   let saveControls: () => void;
   const [renderer, setRenderer] = createSignal<THREE.WebGLRenderer>();
-  const workbench = new WorkBench();
-  const enclosure = new Enclosure();
+  const [itemsToDispose, setItemsToDispose] = createSignal<DisposableItem[]>(
+    []
+  );
+  const [itemsToDisposeInit, setItemsToDisposeInit] = createSignal<
+    DisposableItem[]
+  >([]);
   const [threeGroups, setThreeGroups] = createSignal<
     Record<string, THREE.Group>
   >({});
@@ -32,6 +36,8 @@ export const Assembly = () => {
     const r = renderer();
     r?.domElement.remove();
     r?.dispose();
+    itemsToDispose().forEach((i) => i.dispose());
+    itemsToDisposeInit().forEach((i) => i.dispose());
     setRenderer(undefined);
   }
 
@@ -42,34 +48,31 @@ export const Assembly = () => {
       loadControls: lc,
       saveControls: sc,
       renderer,
+      itemsToDispose: itemsToInit,
     } = init(onSelect);
+    setItemsToDisposeInit(itemsToInit);
     // @ts-ignore
     loadControls = lc;
     // @ts-ignore
     saveControls = sc;
-    console.log(saveControls, sc);
-    workbench.sm.assemble(scene, {
-      hiddenGroups: workbench.hiddenGroups,
+    const itemsTo = item.sm.assemble(scene, {
+      hiddenGroups: item.hiddenGroups,
     });
-    enclosure.sm.assemble(scene, {
-      // hiddenGroups: enclosure.hiddenGroups,
-    });
-    setThreeGroups(workbench.sm.threeGroups);
+    setItemsToDispose(itemsTo);
+    // enclosure.sm.assemble(scene, {
+    //   // hiddenGroups: enclosure.hiddenGroups,
+    // });
+    setThreeGroups(item.sm.threeGroups);
     setRenderer(renderer);
   }
-  onMount(() => {
-    render();
-  });
   onCleanup(() => {
     removeRenderer();
   });
-  const a = () => {
-    console.log({ saveControls, loadControls });
-  };
   const switchGroupVisibility = (key: string, visible: boolean) => {
     const group = threeGroups()[key] as THREE.Group;
     group.visible = visible;
   };
+  render();
 
   return (
     <div
@@ -126,7 +129,6 @@ export const Assembly = () => {
 
       <button onClick={() => saveControls()}>Save</button>
       <button onClick={() => loadControls()}>Load</button>
-      <button onClick={() => a()}>Load</button>
     </div>
   );
 };

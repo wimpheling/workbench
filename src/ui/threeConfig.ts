@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { DisposableItem } from "./interfaces";
 
 export function init(
   onSelectCallback: (params?: {
@@ -8,6 +9,7 @@ export function init(
     position: THREE.Vector3;
   }) => void
 ) {
+  const itemsToDispose: DisposableItem[] = [];
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf5faf6);
   const camera = new THREE.PerspectiveCamera(
@@ -28,6 +30,7 @@ export function init(
   renderer.shadowMap.enabled = true;
   renderer.setSize(window.innerWidth, window.innerHeight);
   const controls = new OrbitControls(camera, renderer.domElement);
+  itemsToDispose.push(controls);
   const loadControls: () => void = () => {
     const stateJSON = localStorage.getItem(`orbitControls`);
 
@@ -49,8 +52,9 @@ export function init(
 
   const light = new THREE.AmbientLight("white", 1);
   // const light = new THREE.PointLight("blue", 1, 0);
-  light.castShadow = true;
+  // light.castShadow = true;
   light.position.set(0, 100, 0);
+  itemsToDispose.push(light);
   scene.add(light);
 
   document.body.appendChild(renderer.domElement);
@@ -160,5 +164,6 @@ export function init(
     loadControls,
     saveControls,
     renderer,
+    itemsToDispose,
   };
 }

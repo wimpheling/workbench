@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { DisposableItem } from "../ui/interfaces";
 
 type MakeShapeProps = {
   x: number;
@@ -50,6 +51,7 @@ export class AbstractShapeMaker {
       hiddenGroups?: string[];
     }
   ) {
+    const itemsToDispose: DisposableItem[] = [];
     this.threeGroups = {};
     Object.keys(this.objectsByGroup).forEach((group) => {
       const pieces = this.objectsByGroup[group];
@@ -61,31 +63,43 @@ export class AbstractShapeMaker {
       this.threeGroups[group] = groupObj;
       pieces.forEach((piece) => {
         // Mesh
-        const obj = new THREE.Mesh(
-          new THREE.BoxGeometry(piece.width, piece.height, piece.depth),
-          new THREE.MeshLambertMaterial({
-            color: piece.color || 0xa1662f,
-            opacity: piece.opacity || 1,
-            transparent: Boolean(piece.opacity && piece.opacity < 1),
-            name: piece.name,
-          })
+        const geo = new THREE.BoxGeometry(
+          piece.width,
+          piece.height,
+          piece.depth
         );
+        const mat = new THREE.MeshLambertMaterial({
+          color: piece.color || 0xa1662f,
+          opacity: piece.opacity || 1,
+          transparent: Boolean(piece.opacity && piece.opacity < 1),
+          name: piece.name,
+        });
+
+        const obj = new THREE.Mesh(geo, mat);
         obj.castShadow = true;
         obj.receiveShadow = true;
 
+        itemsToDispose.push(mat);
+        itemsToDispose.push(geo);
+
         // line
-        const edges = new THREE.EdgesGeometry(
-          new THREE.BoxGeometry(piece.width, piece.height, piece.depth)
+        const lineBox = new THREE.BoxGeometry(
+          piece.width,
+          piece.height,
+          piece.depth
         );
+        const edges = new THREE.EdgesGeometry(lineBox);
         const line = new THREE.LineSegments(
           edges,
           new THREE.LineBasicMaterial({
             color: "black",
-            opacity: piece.opacity,
+            opacity: piece.opacity || 0.4,
           })
         );
         line.castShadow = true;
         line.receiveShadow = true;
+        itemsToDispose.push(edges);
+        itemsToDispose.push(lineBox);
 
         const group = new THREE.Group();
         if (piece.name) {
@@ -100,5 +114,6 @@ export class AbstractShapeMaker {
         piece.assemble(group);
       });
     });
+    return itemsToDispose;
   }
 }

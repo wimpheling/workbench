@@ -25,6 +25,7 @@ import {
   enclosureOuterY,
   SPACE_BETWEEN_SHELVES,
 } from "./consts";
+import { MyObject3D } from "../lib/MyObject3D";
 
 const vigaHelper =
   (i: number, y: number, xModificator = 0) =>
@@ -67,7 +68,7 @@ const vigaHelper2 =
       ((i + 1) * (TABLE_WIDTH - xModificator * 2)) / 4;
   };
 
-export class WorkBench {
+export class WorkBench implements MyObject3D {
   hiddenGroups = [
     "Enclosure Outer",
     "Enclosure Door",

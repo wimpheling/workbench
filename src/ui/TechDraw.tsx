@@ -2,10 +2,15 @@ import * as THREE from "three";
 import { Piece } from "../lib/AbstractShapeMaker";
 import { onMount } from "solid-js";
 
-export const TechDraw = (props: { piece: Piece }) => {
-  let d: HTMLDivElement | undefined;
+export const TechDraw = ({
+  piece,
+  renderer,
+}: {
+  piece: Piece;
+  renderer: THREE.WebGLRenderer;
+}) => {
+  let drx: HTMLDivElement | undefined;
   onMount(() => {
-    const { piece } = props;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("white");
     const canvasWidth = piece.width * 2;
@@ -19,7 +24,6 @@ export const TechDraw = (props: { piece: Piece }) => {
       1000
     );
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(canvasWidth, canvasHeight);
 
     const ambientLight = new THREE.AmbientLight("white", 1);
@@ -98,23 +102,24 @@ export const TechDraw = (props: { piece: Piece }) => {
 
       // update the camera projection matrix
       camera.updateProjectionMatrix();
-
-      // draw the scene
-      renderer.render(scene, camera);
     }
     adjustCamera(0, 0, 1, size.x, size.y);
     renderer.render(scene, camera);
+    const image = renderer.domElement.toDataURL();
+    var oImg = document.createElement("img");
+    oImg.setAttribute("src", image);
+    drx?.appendChild(oImg);
 
-    d?.appendChild(renderer.domElement);
+    // drx?.appendChild(renderer.domElement);
   });
 
   return (
     <span
       style={{
-        width: `${props.piece.width * 2}px`,
-        height: `${props.piece.height * 2}px`,
+        width: `${piece.width * 2}px`,
+        height: `${piece.height * 2}px`,
       }}
-      ref={d}
+      ref={drx}
     />
   );
 };
