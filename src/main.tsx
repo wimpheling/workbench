@@ -1,5 +1,5 @@
 import { render } from "solid-js/web";
-import { WorkBench } from "./workbench/workbench";
+import { WorkBench } from "./projects/workbench/workbench";
 import { Renderer3D } from "./lib/Renderer3D";
 
 function App() {

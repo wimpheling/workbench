@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { AbstractShapeMaker } from "../lib/AbstractShapeMaker";
+import { AbstractShapeMaker } from "../../lib/AbstractShapeMaker";
 import {
   ENCLOSURE_HEIGHT,
   TABLE_DEPTH,

@@ -1,4 +1,4 @@
-import { AbstractShapeMaker } from "../lib/AbstractShapeMaker";
+import { AbstractShapeMaker } from "../../lib/AbstractShapeMaker";
 import {
   ENCLOSURE_VIGA_THICKNESS,
   ENCLOSURE_VIGA_WIDTH,

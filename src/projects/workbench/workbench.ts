@@ -25,7 +25,7 @@ import {
   enclosureOuterY,
   SPACE_BETWEEN_SHELVES,
 } from "./consts";
-import { MyObject3D } from "../lib/MyObject3D";
+import { MyObject3D } from "../../lib/MyObject3D";
 
 const vigaHelper =
   (i: number, y: number, xModificator = 0) =>
