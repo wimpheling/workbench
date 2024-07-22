@@ -1,9 +1,9 @@
-import { AbstractShapeMaker } from "../../lib/AbstractShapeMaker";
 import { MyObject3D } from "../../lib/MyObject3D";
 import { renderObject3D } from "../../lib/render";
+import { EnclosureShapeMaker } from "./enclosureShapeMaker";
 
-class MontessoriLibrary implements MyObject3D {
-  sm: AbstractShapeMaker = new AbstractShapeMaker();
+class Enclosure implements MyObject3D {
+  sm = new EnclosureShapeMaker();
 
   hiddenGroups = [];
   hiddenGroupsInSpecs = [];
@@ -23,4 +23,4 @@ class MontessoriLibrary implements MyObject3D {
   }
 }
 
-renderObject3D(MontessoriLibrary);
+renderObject3D(Enclosure);
