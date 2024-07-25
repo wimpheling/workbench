@@ -26,6 +26,9 @@ class Enclosure implements MyObject3D {
         obj.position.set(0, 0, 0);
       },
       geometry: {
+        depth: 100,
+        height: 10,
+        width: 100,
         type: "shape",
       },
       name: "Sideleft",

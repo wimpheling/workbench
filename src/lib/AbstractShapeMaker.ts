@@ -2,18 +2,24 @@ import * as THREE from "three";
 import { DisposableItem } from "../ui/interfaces";
 import { getGeometry, specsKey } from "./pieceHelpers";
 
-type BoxGeometryProps = {
-  height: number;
-  width: number;
-  depth: number;
-  type: "box";
-};
+type BoxJoint = {
+  numberOfJoints: number;
+  jointHeight: number;
+  male: boolean;
+  jointType: "box";
+}
 
-enum SIDES {
-  LEFT = "left",
-  RIGHT = "right",
-  FRONT = "front",
-  BACK = "back",
+type Joint = BoxJoint;
+
+type Side = {
+  joint?: Joint;
+}
+
+type Sides = {
+  left: Side;
+  right: Side;
+  front: Side;
+  back: Side;
 }
 
 type ShapeGeometryProps = {
@@ -21,8 +27,15 @@ type ShapeGeometryProps = {
   height: number;
   width: number;
   depth: number;
-  male: boolean;
-  sides: SIDES[];
+  sides: Sides;
+};
+
+type BoxGeometryProps = {
+  height: number;
+  width: number;
+  depth: number;
+  type: "box";
+  sides: Sides;
 };
 
 type GeometryProps = BoxGeometryProps | ShapeGeometryProps;
