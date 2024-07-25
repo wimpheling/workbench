@@ -15,9 +15,12 @@ class MontessoriLibrary implements MyObject3D {
       assemble: (obj) => {
         obj.position.set(0, 0, 0);
       },
-      height: 10,
-      width: 100,
-      depth: 100,
+      geometry: {
+        height: 10,
+        width: 100,
+        depth: 100,
+        type: "box",
+      },
       name: "Sideleft",
     });
   }

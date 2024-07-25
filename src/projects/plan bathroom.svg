@@ -1,0 +1,24 @@
+<svg width="330" height="300" viewBox="0 0 165 150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bathroom walls -->
+  <polygon points="20,0 165,0 165,150 0,150 0,20" fill="none" stroke="black" stroke-width="2"/>
+  
+  <!-- Door -->
+  <rect x="0" y="145" width="70" height="5" fill="black" />
+  <text x="10" y="143" font-size="5" fill="black">Door</text>
+
+  <!-- Window -->
+  <rect x="57.5" y="0" width="50" height="5" fill="lightblue" />
+  <text x="65" y="10" font-size="5" fill="black">Window</text>
+  
+  <!-- Shower -->
+  <rect x="90" y="75" width="75" height="75" fill="lightgrey" stroke="black" stroke-width="1" />
+  <text x="105" y="112" font-size="5" fill="black">Shower</text>
+
+  <!-- Toilet -->
+  <rect x="130" y="15" width="35" height="50" fill="white" stroke="black" stroke-width="1" />
+  <text x="110" y="55" font-size="5" fill="black">Toilet</text>
+
+  <!-- Sink -->
+  <rect x="0" y="55" width="50" height="45" fill="white" stroke="black" stroke-width="1" />
+  <text x="15" y="75" font-size="5" fill="black">Sink</text>
+</svg>

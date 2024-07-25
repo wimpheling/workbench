@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Piece } from "../lib/AbstractShapeMaker";
 import { onMount } from "solid-js";
+import { getGeometry } from "../lib/pieceHelpers";
 
 export const TechDraw = ({
   piece,
@@ -10,11 +11,19 @@ export const TechDraw = ({
   renderer: THREE.WebGLRenderer;
 }) => {
   let drx: HTMLDivElement | undefined;
+  const geometryItem = getGeometry(piece);
+  geometryItem.computeBoundingBox();
+  const width = geometryItem
+    .boundingBox!.max.clone()
+    .sub(geometryItem.boundingBox!.min)
+    .multiplyScalar(1.2);
   onMount(() => {
+    console.log({ width });
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("white");
-    const canvasWidth = piece.width * 2;
-    const canvasHeight = piece.height * 2;
+    const canvasWidth = width.x * 2;
+    const canvasHeight = width.y * 2;
     const camera = new THREE.OrthographicCamera(
       -canvasWidth / 2,
       canvasWidth / 2,
@@ -35,9 +44,7 @@ export const TechDraw = ({
 
     const group = new THREE.Group();
     scene.add(group);
-    const edges = new THREE.EdgesGeometry(
-      new THREE.BoxGeometry(piece.width, piece.height, piece.depth)
-    );
+    const edges = new THREE.EdgesGeometry(geometryItem);
     const line = new THREE.LineSegments(
       edges,
       new THREE.LineBasicMaterial({
@@ -50,11 +57,7 @@ export const TechDraw = ({
       transparent: true,
       opacity: 1,
     });
-    const geometry = new THREE.BoxGeometry(
-      piece.width,
-      piece.height,
-      piece.depth
-    );
+    const geometry = getGeometry(piece);
     const mesh = new THREE.Mesh(geometry, material);
     group.add(mesh);
     group.add(line);
@@ -116,8 +119,8 @@ export const TechDraw = ({
   return (
     <span
       style={{
-        width: `${piece.width * 2}px`,
-        height: `${piece.height * 2}px`,
+        width: `${width.x * 2}px`,
+        height: `${width.y * 2}px`,
       }}
       ref={drx}
     />

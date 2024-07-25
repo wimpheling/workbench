@@ -1,13 +1,36 @@
 import * as THREE from "three";
 import { DisposableItem } from "../ui/interfaces";
+import { getGeometry, specsKey } from "./pieceHelpers";
 
-type MakeShapeProps = {
-  x: number;
-  y: number;
-  z: number;
+type BoxGeometryProps = {
   height: number;
   width: number;
   depth: number;
+  type: "box";
+};
+
+enum SIDES {
+  LEFT = "left",
+  RIGHT = "right",
+  FRONT = "front",
+  BACK = "back",
+}
+
+type ShapeGeometryProps = {
+  type: "shape";
+  height: number;
+  width: number;
+  depth: number;
+  male: boolean;
+  sides: SIDES[];
+};
+
+type GeometryProps = BoxGeometryProps | ShapeGeometryProps;
+type MakeShapeProps = {
+  geometry: GeometryProps;
+  x: number;
+  y: number;
+  z: number;
   scene: THREE.Scene;
   color?: string;
   dimensions?: boolean;
@@ -37,7 +60,7 @@ export class AbstractShapeMaker {
     this.objectsByGroup[props.group]?.push(props);
 
     if (!this.hiddenGroupsInSpecs.includes(props.group)) {
-      const specs = `${props.material} ${props.height}x${props.width}x${props.depth}`;
+      const specs = specsKey(props);
       if (!this.piecesBySpecs[specs]) {
         this.piecesBySpecs[specs] = [];
       }
@@ -63,11 +86,7 @@ export class AbstractShapeMaker {
       this.threeGroups[group] = groupObj;
       pieces.forEach((piece) => {
         // Mesh
-        const geo = new THREE.BoxGeometry(
-          piece.width,
-          piece.height,
-          piece.depth
-        );
+        const geo = getGeometry(piece);
         const mat = new THREE.MeshLambertMaterial({
           color: piece.color || 0xa1662f,
           opacity: piece.opacity || 1,
@@ -83,11 +102,7 @@ export class AbstractShapeMaker {
         itemsToDispose.push(geo);
 
         // line
-        const lineBox = new THREE.BoxGeometry(
-          piece.width,
-          piece.height,
-          piece.depth
-        );
+        const lineBox = getGeometry(piece);
         const edges = new THREE.EdgesGeometry(lineBox);
         const line = new THREE.LineSegments(
           edges,

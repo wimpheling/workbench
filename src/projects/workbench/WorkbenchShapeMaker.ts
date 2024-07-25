@@ -23,9 +23,12 @@ export class WorkBenchShapeMaker extends AbstractShapeMaker {
     assemble: (obj: THREE.Object3D) => void;
   }) {
     return this.makeShape({
-      height: FOOT_HEIGHT,
-      width: FOOT_WIDTH,
-      depth: FOOT_DEPTH,
+      geometry: {
+        height: FOOT_HEIGHT,
+        width: FOOT_WIDTH,
+        depth: FOOT_DEPTH,
+        type: "box",
+      },
       color,
       dimensions,
       name,
@@ -51,9 +54,7 @@ export class WorkBenchShapeMaker extends AbstractShapeMaker {
     assemble: (obj: THREE.Object3D) => void;
   }) {
     return this.makeShape({
-      height,
-      width: VIGA_WIDTH,
-      depth: VIGA_HEIGHT,
+      geometry: { height, width: VIGA_WIDTH, depth: VIGA_HEIGHT, type: "box" },
       color,
       dimensions,
       name,
@@ -77,9 +78,12 @@ export class WorkBenchShapeMaker extends AbstractShapeMaker {
     assemble: (obj: THREE.Object3D) => void;
   }) {
     return this.makeShape({
-      height,
-      width: ENCLOSURE_VIGA_WIDTH,
-      depth: ENCLOSURE_VIGA_THICKNESS,
+      geometry: {
+        height,
+        width: ENCLOSURE_VIGA_WIDTH,
+        depth: ENCLOSURE_VIGA_THICKNESS,
+        type: "box",
+      },
       color,
       dimensions,
       name,
@@ -109,9 +113,12 @@ export class WorkBenchShapeMaker extends AbstractShapeMaker {
     group: string;
   }) {
     return this.makeShape({
-      height,
-      width,
-      depth: ENCLOSURE_WALL_THICKNESS,
+      geometry: {
+        height,
+        width,
+        depth: ENCLOSURE_WALL_THICKNESS,
+        type: "box",
+      },
       color,
       dimensions,
       opacity,

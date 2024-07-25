@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { For } from "solid-js";
 import { AbstractShapeMaker, Piece } from "../lib/AbstractShapeMaker";
 import { TechDraw } from "./TechDraw";
+import { specsKey } from "../lib/pieceHelpers";
 
 // A little bit simplified version
 const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
@@ -17,14 +18,9 @@ export const Specs = ({ shapeMaker }: { shapeMaker: AbstractShapeMaker }) => {
     <For each={Object.keys(shapeMaker.piecesBySpecs)}>
       {(key) => {
         const pieces = shapeMaker.piecesBySpecs[key] as Piece[];
-        const grouped: Record<string, Piece[]> = groupBy(
-          pieces,
-          (piece) => `${piece.width}x${piece.height}x${piece.depth}`
-        );
+        const grouped: Record<string, Piece[]> = groupBy(pieces, specsKey);
         return (
           <>
-            {key}
-            <br />
             <For each={Object.keys(grouped)}>
               {(key) => {
                 const pieces = grouped[key] as Piece[];

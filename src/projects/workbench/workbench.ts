@@ -87,9 +87,12 @@ class WorkBench implements MyObject3D {
 
   constructor() {
     this.sm.makeShape({
-      height: TABLE_DEPTH,
-      width: TABLE_WIDTH,
-      depth: TABLE_TOP_THICKNESS,
+      geometry: {
+        height: TABLE_DEPTH,
+        width: TABLE_WIDTH,
+        depth: TABLE_TOP_THICKNESS,
+        type: "box",
+      },
       name: "Table Top",
       group: "Table Top",
       material: "MDF",
@@ -102,9 +105,12 @@ class WorkBench implements MyObject3D {
     });
 
     this.sm.makeShape({
-      height: TABLE_DEPTH,
-      width: TABLE_WIDTH - 2 * FOOT_WIDTH - 2 * VIGA_HEIGHT,
-      depth: TABLE_TOP_THICKNESS,
+      geometry: {
+        height: TABLE_DEPTH,
+        width: TABLE_WIDTH - 2 * FOOT_WIDTH - 2 * VIGA_HEIGHT,
+        depth: TABLE_TOP_THICKNESS,
+        type: "box",
+      },
       name: "Bottom Shelf",
       group: "Bottom Shelf",
       assemble: (bottomShelf) => {
@@ -389,9 +395,12 @@ class WorkBench implements MyObject3D {
     });
 
     this.sm.makeShape({
-      height: ENCLOSURE_HEIGHT,
-      depth: ENCLOSURE_DOOR_THICKNESS,
-      width: TABLE_WIDTH,
+      geometry: {
+        height: ENCLOSURE_HEIGHT,
+        depth: ENCLOSURE_DOOR_THICKNESS,
+        width: TABLE_WIDTH,
+        type: "box",
+      },
       name: "Enclosure Door",
       color: "darkgreen",
       opacity: 0.5,
