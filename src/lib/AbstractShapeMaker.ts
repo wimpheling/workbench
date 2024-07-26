@@ -16,10 +16,10 @@ type Side = {
 }
 
 type Sides = {
-  left: Side;
-  right: Side;
-  front: Side;
-  back: Side;
+  left?: Side;
+  right?: Side;
+  front?: Side;
+  back?: Side;
 }
 
 type ShapeGeometryProps = {
@@ -27,7 +27,7 @@ type ShapeGeometryProps = {
   height: number;
   width: number;
   depth: number;
-  sides: Sides;
+  sides?: Sides;
 };
 
 type BoxGeometryProps = {
@@ -35,7 +35,7 @@ type BoxGeometryProps = {
   width: number;
   depth: number;
   type: "box";
-  sides: Sides;
+  sides?: Sides;
 };
 
 type GeometryProps = BoxGeometryProps | ShapeGeometryProps;

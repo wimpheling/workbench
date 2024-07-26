@@ -18,8 +18,6 @@ export const TechDraw = ({
     .sub(geometryItem.boundingBox!.min)
     .multiplyScalar(1.2);
   onMount(() => {
-    console.log({ width });
-
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("white");
     const canvasWidth = width.x * 2;

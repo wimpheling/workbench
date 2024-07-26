@@ -5,7 +5,7 @@ import { MyObject3D } from "./MyObject3D";
 import projects from "./projects";
 
 export function Renderer3D({ object3D }: { object3D: MyObject3D }) {
-  const [showAssembled, setShowAssembled] = createSignal(false);
+  const [showAssembled, setShowAssembled] = createSignal(true);
   return (
     <>
       <div style={{ top: 0, left: 0, "z-index": 1004, display: "flex" }}>
