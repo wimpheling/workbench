@@ -30,55 +30,55 @@ import { renderObject3D } from "../../lib/render";
 
 const vigaHelper =
   (i: number, y: number, xModificator = 0) =>
-    (viga: THREE.Object3D) => {
-      viga.position.y = y + FOOT_HEIGHT - VIGA_WIDTH / 2;
-      viga.position.z = 0;
-      viga.rotation.x = THREE.MathUtils.degToRad(90);
-      viga.rotation.y = THREE.MathUtils.degToRad(90);
-      if (i === 0) {
-        viga.position.x = 0 - TABLE_WIDTH / 2 + VIGA_HEIGHT / 2 + xModificator;
-      } else if (i === 1) {
-        viga.position.x = TABLE_WIDTH / 2 - VIGA_HEIGHT / 2 - xModificator;
-      } else if (i === 2) {
-        viga.position.x = 0;
-        viga.position.z = 0 - TABLE_DEPTH / 2 + VIGA_HEIGHT / 2;
-        viga.rotateOnAxis(
-          new THREE.Vector3(1, 0, 0),
-          THREE.MathUtils.degToRad(90)
-        );
-      } else if (i === 3) {
-        viga.position.x = 0;
-        viga.position.z = TABLE_DEPTH / 2 - VIGA_HEIGHT / 2;
-        viga.rotateOnAxis(
-          new THREE.Vector3(1, 0, 0),
-          THREE.MathUtils.degToRad(90)
-        );
-      }
-    };
+  (viga: THREE.Object3D) => {
+    viga.position.y = y + FOOT_HEIGHT - VIGA_WIDTH / 2;
+    viga.position.z = 0;
+    viga.rotation.x = THREE.MathUtils.degToRad(90);
+    viga.rotation.y = THREE.MathUtils.degToRad(90);
+    if (i === 0) {
+      viga.position.x = 0 - TABLE_WIDTH / 2 + VIGA_HEIGHT / 2 + xModificator;
+    } else if (i === 1) {
+      viga.position.x = TABLE_WIDTH / 2 - VIGA_HEIGHT / 2 - xModificator;
+    } else if (i === 2) {
+      viga.position.x = 0;
+      viga.position.z = 0 - TABLE_DEPTH / 2 + VIGA_HEIGHT / 2;
+      viga.rotateOnAxis(
+        new THREE.Vector3(1, 0, 0),
+        THREE.MathUtils.degToRad(90)
+      );
+    } else if (i === 3) {
+      viga.position.x = 0;
+      viga.position.z = TABLE_DEPTH / 2 - VIGA_HEIGHT / 2;
+      viga.rotateOnAxis(
+        new THREE.Vector3(1, 0, 0),
+        THREE.MathUtils.degToRad(90)
+      );
+    }
+  };
 
 const vigaHelper2 =
   (i: number, y: number, xModificator = 0) =>
-    (viga: THREE.Object3D) => {
-      viga.position.y = y + FOOT_HEIGHT - VIGA_WIDTH / 2;
-      viga.position.z = 0;
-      viga.rotation.x = THREE.MathUtils.degToRad(90);
-      viga.rotation.y = THREE.MathUtils.degToRad(90);
-      viga.position.x =
-        TABLE_WIDTH / 2 -
-        xModificator -
-        ((i + 1) * (TABLE_WIDTH - xModificator * 2)) / 4;
-    };
+  (viga: THREE.Object3D) => {
+    viga.position.y = y + FOOT_HEIGHT - VIGA_WIDTH / 2;
+    viga.position.z = 0;
+    viga.rotation.x = THREE.MathUtils.degToRad(90);
+    viga.rotation.y = THREE.MathUtils.degToRad(90);
+    viga.position.x =
+      TABLE_WIDTH / 2 -
+      xModificator -
+      ((i + 1) * (TABLE_WIDTH - xModificator * 2)) / 4;
+  };
 
 class WorkBench implements MyObject3D {
   hiddenGroups = [
-    "Enclosure Outer",
-    "Enclosure Door",
-    "Enclosure Inner",
-    "Bottom Shelf",
-    "Bottom Shelf Structure",
-    "Legs",
-    "Top Shelf Structure",
-    "Top Shelf Structure Joins",
+    // "Enclosure Outer",
+    // "Enclosure Door",
+    // "Enclosure Inner",
+    // "Bottom Shelf",
+    // "Bottom Shelf Structure",
+    // "Legs",
+    // "Top Shelf Structure",
+    // "Top Shelf Structure Joins",
   ];
   hiddenGroupsInSpecs = [
     "Enclosure Outer",
@@ -92,19 +92,19 @@ class WorkBench implements MyObject3D {
     this.sm.makeShape({
       geometry: {
         height: TABLE_DEPTH,
-        width: 100,
+        width: TABLE_WIDTH,
         depth: TABLE_TOP_THICKNESS,
         type: "box",
-        sides: {
-          left: {
-            joint: {
-              jointHeight: 10,
-              jointType: "box",
-              male: true,
-              numberOfJoints: 2,
-            }
-          }
-        }
+        // sides: {
+        //   left: {
+        //     joint: {
+        //       jointHeight: 10,
+        //       jointType: "box",
+        //       male: true,
+        //       numberOfJoints: 2,
+        //     },
+        //   },
+        // },
       },
       name: "Table Top",
       group: "Table Top",

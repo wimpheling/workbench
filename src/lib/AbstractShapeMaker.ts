@@ -7,20 +7,20 @@ type BoxJoint = {
   jointHeight: number;
   male: boolean;
   jointType: "box";
-}
+};
 
 type Joint = BoxJoint;
 
 type Side = {
   joint?: Joint;
-}
+};
 
 type Sides = {
   left?: Side;
   right?: Side;
   front?: Side;
   back?: Side;
-}
+};
 
 type ShapeGeometryProps = {
   type: "shape";
