@@ -2,20 +2,20 @@ import * as THREE from "three";
 import { DisposableItem } from "../ui/interfaces";
 import { getGeometry, specsKey } from "./pieceHelpers";
 
-type BoxJoint = {
+export type BoxJoint = {
   numberOfJoints: number;
   jointHeight: number;
   male: boolean;
   jointType: "box";
 };
 
-type Joint = BoxJoint;
+export type Joint = BoxJoint;
 
-type Side = {
+export type Side = {
   joint?: Joint;
 };
 
-type Sides = {
+export type Sides = {
   left?: Side;
   right?: Side;
   front?: Side;

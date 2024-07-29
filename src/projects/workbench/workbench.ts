@@ -95,16 +95,6 @@ class WorkBench implements MyObject3D {
         width: TABLE_WIDTH,
         depth: TABLE_TOP_THICKNESS,
         type: "box",
-        // sides: {
-        //   left: {
-        //     joint: {
-        //       jointHeight: 10,
-        //       jointType: "box",
-        //       male: true,
-        //       numberOfJoints: 2,
-        //     },
-        //   },
-        // },
       },
       name: "Table Top",
       group: "Table Top",
