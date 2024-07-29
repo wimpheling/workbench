@@ -16,6 +16,20 @@ function getJointWidthSeries(
   ];
 }
 
+function getJointWidthSeries2(
+  value: number,
+  jointWidth: number,
+  order: 1 | -1
+) {
+  const valueI = value + jointWidth * order;
+  return [
+    valueI,
+    valueI + (jointWidth / 2) * order,
+    valueI + (jointWidth / 2) * order,
+    valueI + jointWidth * order,
+  ];
+}
+
 function getJointHeightSeries(
   value: number,
   jointHeight: number,
@@ -79,7 +93,7 @@ function handleJoint({
   }
 }
 
-export function getGeometry(props: Piece): THREE.BufferGeometry {
+export function getGeometry(props: Piece<a): THREE.BufferGeometry {
   if (props.geometry.type === "box") {
     const shape = new THREE.Shape();
     const xCenter = props.geometry.width / 2;
@@ -123,14 +137,14 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
       shape,
       jointWidthOrder: 1,
       jointHeightOrder: -1,
-      orientation: "horizontal",
+      orientatioen: "horizontal",
       xCenter,
       yCenter,
     });
 
     // right side
     handleJoint({
-      joint: props.geometry.sides?.right?.joint,
+      joint: r.geometry.sides?.right?.joint,
       x: 0 + xCenter,
       y: 0 - yCenter,
       width: props.geometry.width,
@@ -154,6 +168,6 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
   throw new Error("TODO: shapes not implemented yet");
 }
 
-export function specsKey(props: Piece) {
+export function specsKey(props: Piece<any, any>) {
   return `${props.material} ${props.geometry.height}x${props.geometry.width}x${props.geometry.depth}`;
 }

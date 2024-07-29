@@ -42,23 +42,26 @@ type MakeShapeProps = {
   opacity?: number;
   name: string;
 };
-export type Piece = Omit<MakeShapeProps, "x" | "y" | "z" | "scene"> & {
-  material: string;
-  group: string;
+export type Piece<Material extends string, Group extends string> = Omit<
+  MakeShapeProps,
+  "x" | "y" | "z" | "scene"
+> & {
+  material: Material;
+  group: Group;
   assemble: (obj: THREE.Object3D) => void;
 };
 
-export class AbstractShapeMaker {
-  objectsByGroup: Record<string, Piece[]> = {};
+export class AbstractShapeMaker<Material extends string, Group extends string> {
+  objectsByGroup: Record<string, Piece<Material, Group>[]> = {};
   threeGroups: Record<string, THREE.Group> = {};
-  piecesBySpecs: Record<string, Piece[]> = {};
+  piecesBySpecs: Record<string, Piece<Material, Group>[]> = {};
   hiddenGroupsInSpecs: string[] = [];
 
   constructor(hiddenGroupsInSpecs: string[] = []) {
     this.hiddenGroupsInSpecs = hiddenGroupsInSpecs;
   }
 
-  makeShape(props: Piece) {
+  makeShape(props: Piece<Material, Group>) {
     if (!this.objectsByGroup[props.group]) {
       this.objectsByGroup[props.group] = [];
     }
