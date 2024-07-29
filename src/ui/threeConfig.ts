@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { DisposableItem } from "./interfaces";
+import { ViewportGizmo } from "three-viewport-gizmo";
 
 export function init(
   onSelectCallback: (params?: {
@@ -8,6 +10,7 @@ export function init(
     position: THREE.Vector3;
   }) => void
 ) {
+  const itemsToDispose: DisposableItem[] = [];
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf5faf6);
   const camera = new THREE.PerspectiveCamera(
@@ -27,7 +30,19 @@ export function init(
   const renderer = new THREE.WebGLRenderer();
   renderer.shadowMap.enabled = true;
   renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const viewportGizmo = new ViewportGizmo(camera, renderer, {});
   const controls = new OrbitControls(camera, renderer.domElement);
+
+  // listeners
+  viewportGizmo.addEventListener("start", () => (controls.enabled = false));
+  viewportGizmo.addEventListener("end", () => (controls.enabled = true));
+
+  controls.addEventListener("change", () => {
+    viewportGizmo.update();
+  });
+
+  itemsToDispose.push(controls);
   const loadControls: () => void = () => {
     const stateJSON = localStorage.getItem(`orbitControls`);
 
@@ -49,12 +64,16 @@ export function init(
 
   const light = new THREE.AmbientLight("white", 1);
   // const light = new THREE.PointLight("blue", 1, 0);
-  light.castShadow = true;
+  // light.castShadow = true;
   light.position.set(0, 100, 0);
+  itemsToDispose.push(light);
   scene.add(light);
-
+  var axesHelper = new THREE.AxesHelper(500);
+  scene.add(axesHelper);
   document.body.appendChild(renderer.domElement);
   controls.update();
+  viewportGizmo.target = controls.target;
+  viewportGizmo.render();
 
   let time = 0;
   const clock = new THREE.Clock();
@@ -72,8 +91,8 @@ export function init(
       animateCallback({ time });
     }
     controls.update();
-
     renderer.render(scene, camera);
+    viewportGizmo.render();
   }
   animate();
   loadControls();
@@ -160,5 +179,6 @@ export function init(
     loadControls,
     saveControls,
     renderer,
+    itemsToDispose,
   };
 }

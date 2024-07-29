@@ -1,7 +1,8 @@
+import * as THREE from "three";
 import { For } from "solid-js";
-import { WorkBench } from "../workbench/workbench";
-import { Piece } from "../lib/AbstractShapeMaker";
+import { AbstractShapeMaker, Piece } from "../lib/AbstractShapeMaker";
 import { TechDraw } from "./TechDraw";
+import { specsKey } from "../lib/pieceHelpers";
 
 // A little bit simplified version
 const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
@@ -10,20 +11,16 @@ const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
     return groups;
   }, {} as Record<K, T[]>);
 
-export const Specs = () => {
-  const workbench = new WorkBench();
+export const Specs = ({ shapeMaker }: { shapeMaker: AbstractShapeMaker }) => {
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+
   return (
-    <For each={Object.keys(workbench.sm.piecesBySpecs)}>
+    <For each={Object.keys(shapeMaker.piecesBySpecs)}>
       {(key) => {
-        const pieces = workbench.sm.piecesBySpecs[key] as Piece[];
-        const grouped: Record<string, Piece[]> = groupBy(
-          pieces,
-          (piece) => `${piece.width}x${piece.height}x${piece.depth}`
-        );
+        const pieces = shapeMaker.piecesBySpecs[key] as Piece[];
+        const grouped: Record<string, Piece[]> = groupBy(pieces, specsKey);
         return (
           <>
-            {key}
-            <br />
             <For each={Object.keys(grouped)}>
               {(key) => {
                 const pieces = grouped[key] as Piece[];
@@ -36,7 +33,7 @@ export const Specs = () => {
                       <For each={pieces}>
                         {(piece) => (
                           <>
-                            <TechDraw piece={piece} />
+                            <TechDraw piece={piece} renderer={renderer} />
                           </>
                         )}
                       </For>

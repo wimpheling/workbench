@@ -25,6 +25,8 @@ import {
   enclosureOuterY,
   SPACE_BETWEEN_SHELVES,
 } from "./consts";
+import { MyObject3D } from "../../lib/MyObject3D";
+import { renderObject3D } from "../../lib/render";
 
 const vigaHelper =
   (i: number, y: number, xModificator = 0) =>
@@ -67,13 +69,16 @@ const vigaHelper2 =
       ((i + 1) * (TABLE_WIDTH - xModificator * 2)) / 4;
   };
 
-export class WorkBench {
+class WorkBench implements MyObject3D {
   hiddenGroups = [
-    "Enclosure Outer",
-    "Enclosure Door",
-    "Enclosure Inner",
-    "Bottom Shelf",
-    "Bottom Shelf Structure",
+    // "Enclosure Outer",
+    // "Enclosure Door",
+    // "Enclosure Inner",
+    // "Bottom Shelf",
+    // "Bottom Shelf Structure",
+    // "Legs",
+    // "Top Shelf Structure",
+    // "Top Shelf Structure Joins",
   ];
   hiddenGroupsInSpecs = [
     "Enclosure Outer",
@@ -85,9 +90,12 @@ export class WorkBench {
 
   constructor() {
     this.sm.makeShape({
-      height: TABLE_DEPTH,
-      width: TABLE_WIDTH,
-      depth: TABLE_TOP_THICKNESS,
+      geometry: {
+        height: TABLE_DEPTH,
+        width: TABLE_WIDTH,
+        depth: TABLE_TOP_THICKNESS,
+        type: "box",
+      },
       name: "Table Top",
       group: "Table Top",
       material: "MDF",
@@ -100,9 +108,12 @@ export class WorkBench {
     });
 
     this.sm.makeShape({
-      height: TABLE_DEPTH,
-      width: TABLE_WIDTH - 2 * FOOT_WIDTH - 2 * VIGA_HEIGHT,
-      depth: TABLE_TOP_THICKNESS,
+      geometry: {
+        height: TABLE_DEPTH,
+        width: TABLE_WIDTH - 2 * FOOT_WIDTH - 2 * VIGA_HEIGHT,
+        depth: TABLE_TOP_THICKNESS,
+        type: "box",
+      },
       name: "Bottom Shelf",
       group: "Bottom Shelf",
       assemble: (bottomShelf) => {
@@ -387,9 +398,12 @@ export class WorkBench {
     });
 
     this.sm.makeShape({
-      height: ENCLOSURE_HEIGHT,
-      depth: ENCLOSURE_DOOR_THICKNESS,
-      width: TABLE_WIDTH,
+      geometry: {
+        height: ENCLOSURE_HEIGHT,
+        depth: ENCLOSURE_DOOR_THICKNESS,
+        width: TABLE_WIDTH,
+        type: "box",
+      },
       name: "Enclosure Door",
       color: "darkgreen",
       opacity: 0.5,
@@ -476,3 +490,5 @@ export class WorkBench {
     });
   }
 }
+
+renderObject3D(WorkBench);

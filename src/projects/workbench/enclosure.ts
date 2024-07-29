@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { AbstractShapeMaker } from "../lib/AbstractShapeMaker";
+import { AbstractShapeMaker } from "../../lib/AbstractShapeMaker";
 import {
   ENCLOSURE_HEIGHT,
   TABLE_DEPTH,
@@ -13,23 +13,40 @@ const ENCLOSURE_STRUCTURE_DEPTH = 1;
 export class Enclosure {
   sm = new AbstractShapeMaker();
 
-  createStructure(props: {
+  createStructure({
+    height,
+    name,
+    group,
+    assemble,
+  }: {
     height: number;
     name: string;
     group: string;
     assemble: (obj: THREE.Object3D) => void;
   }) {
     this.sm.makeShape({
-      ...props,
-      width: ENCLOSURE_STRUCTURE_WIDTH,
-      depth: ENCLOSURE_STRUCTURE_DEPTH,
+      geometry: {
+        width: ENCLOSURE_STRUCTURE_WIDTH,
+        depth: ENCLOSURE_STRUCTURE_DEPTH,
+        height,
+        type: "box",
+      },
+      name,
+      group,
+      assemble,
       material: "Madeira",
       color: "blue",
       opacity: 0.5,
     });
   }
 
-  createPanel(props: {
+  createPanel({
+    height,
+    width,
+    name,
+    group,
+    assemble,
+  }: {
     height: number;
     width: number;
     name: string;
@@ -37,8 +54,15 @@ export class Enclosure {
     assemble: (obj: THREE.Object3D) => void;
   }) {
     this.sm.makeShape({
-      ...props,
-      depth: ENCLOSURE_STRUCTURE_DEPTH,
+      geometry: {
+        depth: ENCLOSURE_STRUCTURE_DEPTH,
+        height,
+        width,
+        type: "box",
+      },
+      name,
+      group,
+      assemble,
       material: "Madeira",
       color: "yellow",
       opacity: 0.6,

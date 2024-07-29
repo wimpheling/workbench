@@ -1,12 +1,41 @@
 import * as THREE from "three";
+import { DisposableItem } from "../ui/interfaces";
+import { getGeometry, specsKey } from "./pieceHelpers";
 
-type MakeShapeProps = {
-  x: number;
-  y: number;
-  z: number;
+export type BoxJoint = {
+  numberOfJoints: number;
+  jointHeight: number;
+  male: boolean;
+  jointType: "box";
+};
+
+export type Joint = BoxJoint;
+
+export type Side = {
+  joint?: Joint;
+};
+
+export type Sides = {
+  left?: Side;
+  right?: Side;
+  front?: Side;
+  back?: Side;
+};
+
+type BoxGeometryProps = {
   height: number;
   width: number;
   depth: number;
+  type: "box";
+  sides?: Sides;
+};
+
+type GeometryProps = BoxGeometryProps;
+type MakeShapeProps = {
+  geometry: GeometryProps;
+  x: number;
+  y: number;
+  z: number;
   scene: THREE.Scene;
   color?: string;
   dimensions?: boolean;
@@ -36,7 +65,7 @@ export class AbstractShapeMaker {
     this.objectsByGroup[props.group]?.push(props);
 
     if (!this.hiddenGroupsInSpecs.includes(props.group)) {
-      const specs = `${props.material} ${props.height}x${props.width}x${props.depth}`;
+      const specs = specsKey(props);
       if (!this.piecesBySpecs[specs]) {
         this.piecesBySpecs[specs] = [];
       }
@@ -50,6 +79,7 @@ export class AbstractShapeMaker {
       hiddenGroups?: string[];
     }
   ) {
+    const itemsToDispose: DisposableItem[] = [];
     this.threeGroups = {};
     Object.keys(this.objectsByGroup).forEach((group) => {
       const pieces = this.objectsByGroup[group];
@@ -61,31 +91,35 @@ export class AbstractShapeMaker {
       this.threeGroups[group] = groupObj;
       pieces.forEach((piece) => {
         // Mesh
-        const obj = new THREE.Mesh(
-          new THREE.BoxGeometry(piece.width, piece.height, piece.depth),
-          new THREE.MeshLambertMaterial({
-            color: piece.color || 0xa1662f,
-            opacity: piece.opacity || 1,
-            transparent: Boolean(piece.opacity && piece.opacity < 1),
-            name: piece.name,
-          })
-        );
+        const geo = getGeometry(piece);
+        const mat = new THREE.MeshLambertMaterial({
+          color: piece.color || 0xa1662f,
+          opacity: piece.opacity || 1,
+          transparent: Boolean(piece.opacity && piece.opacity < 1),
+          name: piece.name,
+        });
+
+        const obj = new THREE.Mesh(geo, mat);
         obj.castShadow = true;
         obj.receiveShadow = true;
 
+        itemsToDispose.push(mat);
+        itemsToDispose.push(geo);
+
         // line
-        const edges = new THREE.EdgesGeometry(
-          new THREE.BoxGeometry(piece.width, piece.height, piece.depth)
-        );
+        const lineBox = getGeometry(piece);
+        const edges = new THREE.EdgesGeometry(lineBox);
         const line = new THREE.LineSegments(
           edges,
           new THREE.LineBasicMaterial({
             color: "black",
-            opacity: piece.opacity,
+            opacity: piece.opacity || 0.4,
           })
         );
         line.castShadow = true;
         line.receiveShadow = true;
+        itemsToDispose.push(edges);
+        itemsToDispose.push(lineBox);
 
         const group = new THREE.Group();
         if (piece.name) {
@@ -100,5 +134,6 @@ export class AbstractShapeMaker {
         piece.assemble(group);
       });
     });
+    return itemsToDispose;
   }
 }

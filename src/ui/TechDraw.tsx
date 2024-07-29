@@ -1,15 +1,27 @@
 import * as THREE from "three";
 import { Piece } from "../lib/AbstractShapeMaker";
 import { onMount } from "solid-js";
+import { getGeometry } from "../lib/pieceHelpers";
 
-export const TechDraw = (props: { piece: Piece }) => {
-  let d: HTMLDivElement | undefined;
+export const TechDraw = ({
+  piece,
+  renderer,
+}: {
+  piece: Piece;
+  renderer: THREE.WebGLRenderer;
+}) => {
+  let drx: HTMLDivElement | undefined;
+  const geometryItem = getGeometry(piece);
+  geometryItem.computeBoundingBox();
+  const width = geometryItem
+    .boundingBox!.max.clone()
+    .sub(geometryItem.boundingBox!.min)
+    .multiplyScalar(1.2);
   onMount(() => {
-    const { piece } = props;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("white");
-    const canvasWidth = piece.width * 2;
-    const canvasHeight = piece.height * 2;
+    const canvasWidth = width.x * 2;
+    const canvasHeight = width.y * 2;
     const camera = new THREE.OrthographicCamera(
       -canvasWidth / 2,
       canvasWidth / 2,
@@ -19,7 +31,6 @@ export const TechDraw = (props: { piece: Piece }) => {
       1000
     );
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(canvasWidth, canvasHeight);
 
     const ambientLight = new THREE.AmbientLight("white", 1);
@@ -31,9 +42,7 @@ export const TechDraw = (props: { piece: Piece }) => {
 
     const group = new THREE.Group();
     scene.add(group);
-    const edges = new THREE.EdgesGeometry(
-      new THREE.BoxGeometry(piece.width, piece.height, piece.depth)
-    );
+    const edges = new THREE.EdgesGeometry(geometryItem);
     const line = new THREE.LineSegments(
       edges,
       new THREE.LineBasicMaterial({
@@ -46,11 +55,7 @@ export const TechDraw = (props: { piece: Piece }) => {
       transparent: true,
       opacity: 1,
     });
-    const geometry = new THREE.BoxGeometry(
-      piece.width,
-      piece.height,
-      piece.depth
-    );
+    const geometry = getGeometry(piece);
     const mesh = new THREE.Mesh(geometry, material);
     group.add(mesh);
     group.add(line);
@@ -98,23 +103,24 @@ export const TechDraw = (props: { piece: Piece }) => {
 
       // update the camera projection matrix
       camera.updateProjectionMatrix();
-
-      // draw the scene
-      renderer.render(scene, camera);
     }
     adjustCamera(0, 0, 1, size.x, size.y);
     renderer.render(scene, camera);
+    const image = renderer.domElement.toDataURL();
+    var oImg = document.createElement("img");
+    oImg.setAttribute("src", image);
+    drx?.appendChild(oImg);
 
-    d?.appendChild(renderer.domElement);
+    // drx?.appendChild(renderer.domElement);
   });
 
   return (
     <span
       style={{
-        width: `${props.piece.width * 2}px`,
-        height: `${props.piece.height * 2}px`,
+        width: `${width.x * 2}px`,
+        height: `${width.y * 2}px`,
       }}
-      ref={d}
+      ref={drx}
     />
   );
 };
