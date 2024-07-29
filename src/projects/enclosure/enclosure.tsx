@@ -1,6 +1,5 @@
 import { MyObject3D } from "../../lib/MyObject3D";
 import { renderObject3D } from "../../lib/render";
-import { Materials } from "./enclosureConst";
 import { EnclosureShapeMaker } from "./enclosureShapeMaker";
 
 class Enclosure implements MyObject3D {

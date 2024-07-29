@@ -87,38 +87,6 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
     shape.moveTo(0 + xCenter, 0 + yCenter);
 
     // back side
-    // if (props.geometry.sides?.back?.joint) {
-    //   const side = props.geometry.sides.back.joint;
-    //   const jointWidth = props.geometry.width / (numberOfJoints + 0.5);
-    //   const y = 0 + yCenter;
-    //   for (let i = 0; i < numberOfJoints + 1; i++) {
-    //     const x = 0 + xCenter - i * jointWidth;
-    //     shape.lineTo(x, y + side.jointHeight);
-    //     shape.lineTo(x - jointWidth / 2, y + side.jointHeight);
-    //     shape.lineTo(x - jointWidth / 2, y);
-    //     if (i < numberOfJoints) shape.lineTo(x - jointWidth, y);
-    //   }
-    // } else {
-    //   shape.lineTo(0 - xCenter, 0 + yCenter);
-    // }
-
-    // left side
-    // if (props.geometry.sides?.left?.joint) {
-    //   const side = props.geometry.sides.left.joint;
-    //   const jointWidth = props.geometry.width / (numberOfJoints + 0.5);
-    //   const x = 0 - xCenter;
-    //   for (let i = 0; i < numberOfJoints + 1; i++) {
-    //     const y = 0 + yCenter - i * jointWidth;
-    //     shape.lineTo(x - side.jointHeight, y);
-    //     shape.lineTo(x - side.jointHeight, y - jointWidth / 2);
-    //     shape.lineTo(x, y - jointWidth / 2);
-    //     if (i < numberOfJoints) shape.lineTo(x, y - jointWidth);
-    //   }
-    // } else {
-    //   shape.lineTo(0 - xCenter, 0 - yCenter);
-    // }
-
-    // back side
     handleJoint({
       joint: props.geometry.sides?.back?.joint,
       x: 0 + xCenter,
@@ -147,10 +115,6 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
     });
 
     // front side
-    // if (props.geometry.sides?.front?.joint) {
-    // } else {
-    //   shape.lineTo(0 + xCenter, 0 - yCenter);
-    // }
     handleJoint({
       joint: props.geometry.sides?.front?.joint,
       x: 0 - xCenter,
@@ -165,10 +129,6 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
     });
 
     // right side
-    // if (props.geometry.sides?.right?.joint) {
-    // } else {
-    //   shape.lineTo(0 + xCenter, 0 + yCenter);
-    // }
     handleJoint({
       joint: props.geometry.sides?.right?.joint,
       x: 0 + xCenter,
@@ -182,11 +142,6 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
       yCenter,
     });
 
-    // return new THREE.BoxGeometry(
-    //   props.geometry.width,
-    //   props.geometry.height,
-    //   props.geometry.depth
-    // );
     const geo = new THREE.ExtrudeGeometry(shape, {
       depth: props.geometry.depth,
       bevelEnabled: false,
@@ -200,8 +155,5 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
 }
 
 export function specsKey(props: Piece) {
-  if (props.geometry.type === "shape") {
-    return `${props.material} TODO`;
-  }
   return `${props.material} ${props.geometry.height}x${props.geometry.width}x${props.geometry.depth}`;
 }

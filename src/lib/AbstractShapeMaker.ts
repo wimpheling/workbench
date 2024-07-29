@@ -22,14 +22,6 @@ export type Sides = {
   back?: Side;
 };
 
-type ShapeGeometryProps = {
-  type: "shape";
-  height: number;
-  width: number;
-  depth: number;
-  sides?: Sides;
-};
-
 type BoxGeometryProps = {
   height: number;
   width: number;
@@ -38,7 +30,7 @@ type BoxGeometryProps = {
   sides?: Sides;
 };
 
-type GeometryProps = BoxGeometryProps | ShapeGeometryProps;
+type GeometryProps = BoxGeometryProps;
 type MakeShapeProps = {
   geometry: GeometryProps;
   x: number;
