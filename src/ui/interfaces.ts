@@ -1,3 +1,3 @@
-export type DisposableItem = {
+export interface DisposableItem {
   dispose: () => void;
-};
+}

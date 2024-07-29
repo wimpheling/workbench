@@ -19,7 +19,7 @@ class Enclosure implements MyObject3D {
     //   name: "Bottom",
     // });
     this.sm.makeShape({
-      material: "Wood",
+      material: Materials.Wood,
       group: "Side",
       assemble: (obj) => {
         obj.position.set(0, 0, 0);

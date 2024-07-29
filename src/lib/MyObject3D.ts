@@ -1,7 +1,7 @@
 import { AbstractShapeMaker } from "./AbstractShapeMaker";
 
-export type MyObject3D = {
+export interface MyObject3D {
   sm: AbstractShapeMaker;
   hiddenGroups: string[];
   hiddenGroupsInSpecs: string[];
-};
+}

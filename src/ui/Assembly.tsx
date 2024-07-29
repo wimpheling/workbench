@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { For } from "solid-js/web";
 import { init } from "./threeConfig";
 import { Show, createSignal, onCleanup } from "solid-js";
@@ -51,9 +52,7 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
       itemsToDispose: itemsToInit,
     } = init(onSelect);
     setItemsToDisposeInit(itemsToInit);
-    // @ts-ignore
     loadControls = lc;
-    // @ts-ignore
     saveControls = sc;
     const itemsTo = item.sm.assemble(scene, {
       hiddenGroups: item.hiddenGroups,

@@ -5,6 +5,7 @@ import { TechDraw } from "./TechDraw";
 import { specsKey } from "../lib/pieceHelpers";
 
 // A little bit simplified version
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
   arr.reduce((groups, item) => {
     (groups[key(item)] ||= []).push(item);

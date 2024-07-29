@@ -68,7 +68,7 @@ export function init(
   light.position.set(0, 100, 0);
   itemsToDispose.push(light);
   scene.add(light);
-  var axesHelper = new THREE.AxesHelper(500);
+  const axesHelper = new THREE.AxesHelper(500);
   scene.add(axesHelper);
   document.body.appendChild(renderer.domElement);
   controls.update();
@@ -78,7 +78,7 @@ export function init(
   let time = 0;
   const clock = new THREE.Clock();
 
-  let animateCallback: (args: { time: number }) => void | undefined;
+  let animateCallback: (args: { time: number }) => void;
   const setAnimateCallback = (callback: typeof animateCallback) => {
     animateCallback = callback;
   };
@@ -111,8 +111,7 @@ export function init(
 
     const meshes: THREE.Mesh[] = [];
     function findMeshesInSceneChildrenRecursively(children: THREE.Object3D[]) {
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i];
+      for (const child of children) {
         if (child instanceof THREE.Mesh) {
           meshes.push(child);
         } else {
@@ -131,7 +130,7 @@ export function init(
       if (!intersect) {
         onSelectCallback();
         if (intersectState) {
-          // @ts-ignore
+          // @ts-expect-error color does not exist ?
           intersectState.object.material.color.set(intersectState.color);
           intersectState = undefined;
         }
@@ -141,15 +140,15 @@ export function init(
       const lineChild = parentGroup.children[1] as THREE.LineSegments;
       if (lineChild && lineChild !== intersectState?.object) {
         if (intersectState) {
-          // @ts-ignore
+          // @ts-expect-error color does not exist ?
           intersectState.object.material.color.set(intersectState.color);
         }
         intersectState = {
           object: lineChild,
-          // @ts-ignore
+          // @ts-expect-error color does not exist ?
           color: lineChild.material.color.getHex(),
         };
-        // @ts-ignore
+        // @ts-expect-error color does not exist ?
         lineChild.material.color.set("red");
         const bbox = new THREE.Box3().setFromObject(lineChild);
         const vector = new THREE.Vector3();
@@ -165,7 +164,7 @@ export function init(
     } else {
       onSelectCallback();
       if (intersectState) {
-        // @ts-ignore
+        // @ts-expect-error color does not exist ?
         intersectState.object.material.color.set(intersectState.color);
         intersectState = undefined;
       }

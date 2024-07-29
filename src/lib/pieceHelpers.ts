@@ -16,7 +16,8 @@ function getJointWidthSeries(
   ];
 }
 
-function getJointHeightSeries(
+
+function getJointHeightSeries(  
   value: number,
   jointHeight: number,
   order: 1 | -1
@@ -123,7 +124,7 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
       shape,
       jointWidthOrder: 1,
       jointHeightOrder: -1,
-      orientation: "horizontal",
+      orientation: "horizontal", 
       xCenter,
       yCenter,
     });

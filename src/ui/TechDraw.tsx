@@ -14,9 +14,12 @@ export const TechDraw = ({
   const geometryItem = getGeometry(piece);
   geometryItem.computeBoundingBox();
   const width = geometryItem
-    .boundingBox!.max.clone()
-    .sub(geometryItem.boundingBox!.min)
+    .boundingBox?.max.clone()
+    .sub(geometryItem.boundingBox?.min)
     .multiplyScalar(1.2);
+  if (!width) {
+    return null;
+  }
   onMount(() => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("white");
@@ -107,7 +110,7 @@ export const TechDraw = ({
     adjustCamera(0, 0, 1, size.x, size.y);
     renderer.render(scene, camera);
     const image = renderer.domElement.toDataURL();
-    var oImg = document.createElement("img");
+    const oImg = document.createElement("img");
     oImg.setAttribute("src", image);
     drx?.appendChild(oImg);
 
