@@ -2,28 +2,6 @@ import { MyObject3D } from "../../lib/MyObject3D";
 import { renderObject3D } from "../../lib/render";
 import { EnclosureShapeMaker } from "./enclosureShapeMaker";
 
-type Piece<T extends string> = {
-  group: T;
-};
-
-enum Groups {
-  Side = "Side",
-  Top = "Top",
-  Bottom = "Bottom",
-  Back = "Back",
-}
-
-class ListOfPieces<T extends string> {
-  pieces: Piece<T>[] = [];
-}
-
-const list = new ListOfPieces<Groups>();
-
-list.pieces.push({ group: Groups.Side });
-list.pieces.push({ group: Groups.Top });
-list.pieces.push({ group: Groups.Bottom });
-list.pieces.push({ group: Groups.Back });
-
 class Enclosure implements MyObject3D {
   sm = new EnclosureShapeMaker();
 

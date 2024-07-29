@@ -2,36 +2,36 @@ import * as THREE from "three";
 import { DisposableItem } from "../ui/interfaces";
 import { getGeometry, specsKey } from "./pieceHelpers";
 
-export type BoxJoint = {
+export interface BoxJoint {
   numberOfJoints: number;
   jointHeight: number;
   male: boolean;
   jointType: "box";
-};
+}
 
 export type Joint = BoxJoint;
 
-export type Side = {
+export interface Side {
   joint?: Joint;
-};
+}
 
-export type Sides = {
+export interface Sides {
   left?: Side;
   right?: Side;
   front?: Side;
   back?: Side;
-};
+}
 
-type BoxGeometryProps = {
+interface BoxGeometryProps {
   height: number;
   width: number;
   depth: number;
   type: "box";
   sides?: Sides;
-};
+}
 
 type GeometryProps = BoxGeometryProps;
-type MakeShapeProps = {
+interface MakeShapeProps {
   geometry: GeometryProps;
   x: number;
   y: number;
@@ -41,27 +41,27 @@ type MakeShapeProps = {
   dimensions?: boolean;
   opacity?: number;
   name: string;
-};
-export type Piece<Material extends string, Group extends string> = Omit<
+}
+export type Piece = Omit<
   MakeShapeProps,
   "x" | "y" | "z" | "scene"
 > & {
-  material: Material;
-  group: Group;
+  material: string;
+  group: string;
   assemble: (obj: THREE.Object3D) => void;
 };
 
-export class AbstractShapeMaker<Material extends string, Group extends string> {
-  objectsByGroup: Record<string, Piece<Material, Group>[]> = {};
+export class AbstractShapeMaker {
+  objectsByGroup: Record<string, Piece[]> = {};
   threeGroups: Record<string, THREE.Group> = {};
-  piecesBySpecs: Record<string, Piece<Material, Group>[]> = {};
+  piecesBySpecs: Record<string, Piece[]> = {};
   hiddenGroupsInSpecs: string[] = [];
 
   constructor(hiddenGroupsInSpecs: string[] = []) {
     this.hiddenGroupsInSpecs = hiddenGroupsInSpecs;
   }
 
-  makeShape(props: Piece<Material, Group>) {
+  makeShape(props: Piece) {
     if (!this.objectsByGroup[props.group]) {
       this.objectsByGroup[props.group] = [];
     }
