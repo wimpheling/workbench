@@ -1,4 +1,5 @@
-import { AbstractShapeMaker, Sides } from "../../lib/AbstractShapeMaker";
+import { Brush } from "three-bvh-csg";
+import { AbstractShapeMaker, PostProcessHandler, Sides } from "../../lib/AbstractShapeMaker";
 import { ENCLOSURE_VIGA_THICKNESS, Materials } from "./enclosureConst";
 
 export class EnclosureShapeMaker extends AbstractShapeMaker {
@@ -21,7 +22,7 @@ export class EnclosureShapeMaker extends AbstractShapeMaker {
     assemble: (obj: THREE.Object3D) => void;
     group: string;
     sides?: Sides;
-    postProcess?: (obj: THREE.BufferGeometry) => THREE.BufferGeometry;
+    postProcess?: PostProcessHandler
   }) {
     return this.makeShape({
       geometry: {

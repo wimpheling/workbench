@@ -1,3 +1,4 @@
+import { ADDITION, Brush, Evaluator, SUBTRACTION } from "three-bvh-csg";
 import { MyObject3D } from "../../lib/MyObject3D";
 import { renderObject3D } from "../../lib/render";
 import { EnclosureShapeMaker } from "./enclosureShapeMaker";
@@ -30,9 +31,16 @@ class Enclosure implements MyObject3D {
           }
         }
       },
-      postProcess: (obj) => {
+      postProcess: (obj, mat) => {
+        const brush = new Brush(obj, mat);
+        brush.updateMatrixWorld();
+        const box = new THREE.BoxGeometry(5, 5, 3)
+        const hole = new Brush(box, mat);
+        hole.updateMatrixWorld();
         
-        return obj;
+        const evaluator = new Evaluator();
+        const result = evaluator.evaluate( brush, hole, ADDITION );
+        return result;
       }
     });
 

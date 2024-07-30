@@ -6,7 +6,7 @@ function getJointWidthSeries({
   jointWidth,
   order,
   value,
-}:{
+}: {
   value: number,
   jointWidth: number,
   order: 1 | -1,
@@ -27,17 +27,17 @@ function getJointHeightSeries({
   order,
   value,
   male
-}:{
+}: {
   value: number,
   jointHeight: number,
   order: 1 | -1,
   male: boolean
 }) {
   return [
-    value + (male? jointHeight * order : 0),
-    value + (male? jointHeight * order : 0),
-    value + (male? 0 : jointHeight * order),
-    value + (male? 0 : jointHeight * order),
+    value + (male ? jointHeight * order : 0),
+    value + (male ? jointHeight * order : 0),
+    value + (male ? 0 : jointHeight * order),
+    value + (male ? 0 : jointHeight * order),
   ];
 }
 function handleJoint({
@@ -64,17 +64,17 @@ function handleJoint({
   yCenter: number;
 }) {
   if (joint) {
-    const {jointHeight, numberOfJoints, male} = joint;
+    const { jointHeight, numberOfJoints, male } = joint;
     const jointWidth = width / (numberOfJoints + 0.5);
     for (let i = 0; i < numberOfJoints + 1; i++) {
       let xs = [];
       let ys = [];
-      if (orientation === "horizontal") {  
-        xs = getJointWidthSeries({value: x, jointWidth, order: jointWidthOrder, i});
-        ys = getJointHeightSeries({value: y, jointHeight, order: jointHeightOrder, male});
-      } else {  
-        xs = getJointHeightSeries({value: x, jointHeight, order: jointHeightOrder, male});
-        ys = getJointWidthSeries({value: y, jointWidth, order: jointWidthOrder, i});
+      if (orientation === "horizontal") {
+        xs = getJointWidthSeries({ value: x, jointWidth, order: jointWidthOrder, i });
+        ys = getJointHeightSeries({ value: y, jointHeight, order: jointHeightOrder, male });
+      } else {
+        xs = getJointHeightSeries({ value: x, jointHeight, order: jointHeightOrder, male });
+        ys = getJointWidthSeries({ value: y, jointWidth, order: jointWidthOrder, i });
       }
       shape.lineTo(xs[0], ys[0]);
       shape.lineTo(xs[1], ys[1]);
@@ -137,7 +137,7 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
       shape,
       jointWidthOrder: 1,
       jointHeightOrder: -1,
-      orientation: "horizontal", 
+      orientation: "horizontal",
       xCenter,
       yCenter,
     });
@@ -164,9 +164,6 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
     // center the Z axis
     geo.translate(0, 0, -props.geometry.depth / 2);
 
-    if (props.geometry.postProcess) {
-      return props.geometry.postProcess(geo);
-    }
     return geo;
   }
   throw new Error("TODO: shapes not implemented yet");

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { DisposableItem } from "../ui/interfaces";
 import { getGeometry, specsKey } from "./pieceHelpers";
+import { Brush } from "three-bvh-csg";
 
 export interface BoxJoint {
   numberOfJoints: number;
@@ -21,14 +22,14 @@ export interface Sides {
   front?: Side;
   back?: Side;
 }
-
+export type PostProcessHandler = (obj: THREE.BufferGeometry, mat: THREE.Material) => Brush;
 interface BoxGeometryProps {
   height: number;
   width: number;
   depth: number;
   type: "box";
   sides?: Sides;
-  postProcess?: (obj: THREE.BufferGeometry) => THREE.BufferGeometry;
+  postProcess?: PostProcessHandler;
 }
 
 type GeometryProps = BoxGeometryProps;
@@ -103,7 +104,9 @@ export class AbstractShapeMaker {
           name: piece.name,
         });
 
-        const obj = new THREE.Mesh(geo, mat);
+        const obj =
+          (piece.geometry.postProcess) ?
+            piece.geometry.postProcess(geo, mat) : new THREE.Mesh(geo, mat);
         obj.castShadow = true;
         obj.receiveShadow = true;
 
