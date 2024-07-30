@@ -28,6 +28,7 @@ interface BoxGeometryProps {
   depth: number;
   type: "box";
   sides?: Sides;
+  postProcess?: (obj: THREE.BufferGeometry) => THREE.BufferGeometry;
 }
 
 type GeometryProps = BoxGeometryProps;

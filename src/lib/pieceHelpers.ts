@@ -1,12 +1,17 @@
 import * as THREE from "three";
 import { Joint, Piece } from "./AbstractShapeMaker";
 
-function getJointWidthSeries(
+function getJointWidthSeries({
+  i,
+  jointWidth,
+  order,
+  value,
+}:{
   value: number,
   jointWidth: number,
   order: 1 | -1,
-  i: number
-) {
+  i: number,
+}) {
   const valueI = value + i * jointWidth * order;
   return [
     valueI,
@@ -17,16 +22,22 @@ function getJointWidthSeries(
 }
 
 
-function getJointHeightSeries(  
+function getJointHeightSeries({
+  jointHeight,
+  order,
+  value,
+  male
+}:{
   value: number,
   jointHeight: number,
-  order: 1 | -1
-) {
+  order: 1 | -1,
+  male: boolean
+}) {
   return [
-    value + jointHeight * order,
-    value + jointHeight * order,
-    value,
-    value,
+    value + (male? jointHeight * order : 0),
+    value + (male? jointHeight * order : 0),
+    value + (male? 0 : jointHeight * order),
+    value + (male? 0 : jointHeight * order),
   ];
 }
 function handleJoint({
@@ -53,21 +64,23 @@ function handleJoint({
   yCenter: number;
 }) {
   if (joint) {
-    const jointHeight = joint.jointHeight;
-    const numberOfJoints = joint.numberOfJoints;
+    const {jointHeight, numberOfJoints, male} = joint;
     const jointWidth = width / (numberOfJoints + 0.5);
     for (let i = 0; i < numberOfJoints + 1; i++) {
       let xs = [];
       let ys = [];
-      if (orientation === "horizontal") {
-        xs = getJointWidthSeries(x, jointWidth, jointWidthOrder, i);
-        ys = getJointHeightSeries(y, jointHeight, jointHeightOrder);
-      } else {
-        xs = getJointHeightSeries(x, jointHeight, jointHeightOrder);
-        ys = getJointWidthSeries(y, jointWidth, jointWidthOrder, i);
+      if (orientation === "horizontal") {  
+        xs = getJointWidthSeries({value: x, jointWidth, order: jointWidthOrder, i});
+        ys = getJointHeightSeries({value: y, jointHeight, order: jointHeightOrder, male});
+      } else {  
+        xs = getJointHeightSeries({value: x, jointHeight, order: jointHeightOrder, male});
+        ys = getJointWidthSeries({value: y, jointWidth, order: jointWidthOrder, i});
       }
       shape.lineTo(xs[0], ys[0]);
       shape.lineTo(xs[1], ys[1]);
+      if (i === numberOfJoints && !male) {
+        break;
+      }
       shape.lineTo(xs[2], ys[2]);
       if (i < numberOfJoints) shape.lineTo(xs[3], ys[3]);
     }
@@ -106,7 +119,7 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
       joint: props.geometry.sides?.left?.joint,
       x: 0 - xCenter,
       y: 0 + yCenter,
-      width: props.geometry.width,
+      width: props.geometry.height,
       shape,
       jointWidthOrder: -1,
       jointHeightOrder: -1,
@@ -134,7 +147,7 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
       joint: props.geometry.sides?.right?.joint,
       x: 0 + xCenter,
       y: 0 - yCenter,
-      width: props.geometry.width,
+      width: props.geometry.height,
       shape,
       jointWidthOrder: 1,
       jointHeightOrder: 1,
@@ -150,6 +163,10 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
     });
     // center the Z axis
     geo.translate(0, 0, -props.geometry.depth / 2);
+
+    if (props.geometry.postProcess) {
+      return props.geometry.postProcess(geo);
+    }
     return geo;
   }
   throw new Error("TODO: shapes not implemented yet");

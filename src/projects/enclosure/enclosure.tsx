@@ -1,6 +1,7 @@
 import { MyObject3D } from "../../lib/MyObject3D";
 import { renderObject3D } from "../../lib/render";
 import { EnclosureShapeMaker } from "./enclosureShapeMaker";
+import * as THREE from "three";
 
 class Enclosure implements MyObject3D {
   sm = new EnclosureShapeMaker();
@@ -9,62 +10,52 @@ class Enclosure implements MyObject3D {
   hiddenGroupsInSpecs = [];
 
   constructor() {
-    // this.sm.viga({
-    //   group: "Side",
-    //   assemble: (obj) => {
-    //     obj.position.set(0, 0, 0);
-    //   },
-    //   height: 10,
-    //   depth: 100,
-    //   name: "Bottom",
-    // });
-    this.sm.makeShape({
-      material: Materials.Wood,
-      group: "Side",
+    this.sm.viga({
+      group: "Structure 2",
       assemble: (obj) => {
-        obj.position.set(0, 0, 0);
+        obj.rotateZ(Math.PI / 2);
+        obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+        obj.position.set(100, 0, 0);
       },
-      geometry: {
-        depth: 10,
-        height: 100,
-        width: 100,
-        type: "box",
-        sides: {
-          left: {
-            joint: {
-              jointHeight: 10,
-              jointType: "box",
-              male: true,
-              numberOfJoints: 2,
-            },
-          },
-          front: {
-            joint: {
-              jointHeight: 10,
-              jointType: "box",
-              male: true,
-              numberOfJoints: 12,
-            },
-          },
-          back: {
-            joint: {
-              jointHeight: 3,
-              jointType: "box",
-              male: true,
-              numberOfJoints: 22,
-            },
-          },
-          right: {
-            joint: {
-              jointHeight: 10,
-              jointType: "box",
-              male: true,
-              numberOfJoints: 122,
-            },
-          },
-        },
+      height: 100,
+      width: 10,
+      name: "Left Bottom Part 1",
+      sides: {
+        back: {
+          joint: {
+            jointHeight: 10,
+            jointType: "box",
+            male: true,
+            numberOfJoints: 2,
+          }
+        }
       },
-      name: "Sideleft",
+      postProcess: (obj) => {
+        
+        return obj;
+      }
+    });
+
+    this.sm.viga({
+      group: "Structure",
+      assemble: (obj) => {
+        obj.rotateZ(Math.PI / 2);
+        obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+        obj.position.set(-5, 0, 0);
+      },
+      sides: {
+        front: {
+          joint: {
+            jointHeight: 10,
+            jointType: "box",
+            male: false,
+            numberOfJoints: 2,
+          }
+        }
+      },
+      height: 89,
+      width: 10,
+      name: "Left Bottom Part 2",
     });
   }
 }
