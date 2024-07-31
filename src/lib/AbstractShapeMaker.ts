@@ -10,7 +10,14 @@ export interface BoxJoint {
   jointType: "box";
 }
 
-export type Joint = BoxJoint;
+export interface HalfLapJoint {
+  male: boolean;
+  jointType: "halfLap";
+  size: number;
+  borderSize?: number;
+}
+
+export type Joint = BoxJoint | HalfLapJoint;
 
 export interface Side {
   joint?: Joint;
@@ -22,7 +29,7 @@ export interface Sides {
   front?: Side;
   back?: Side;
 }
-export type PostProcessHandler = (obj: THREE.BufferGeometry, mat: THREE.Material) => Brush;
+export type PostProcessHandler = (obj: Brush, mat: THREE.Material) => Brush;
 interface BoxGeometryProps {
   height: number;
   width: number;
@@ -106,15 +113,13 @@ export class AbstractShapeMaker {
 
         const obj =
           (piece.geometry.postProcess) ?
-            piece.geometry.postProcess(geo, mat) : new THREE.Mesh(geo, mat);
+            piece.geometry.postProcess(geo, mat) : new THREE.Mesh(geo.geometry, mat);
         obj.castShadow = true;
         obj.receiveShadow = true;
 
         itemsToDispose.push(mat);
-        itemsToDispose.push(geo);
 
         // line
-        const lineBox = getGeometry(piece);
         const edges = new THREE.EdgesGeometry(obj.geometry);
         const line = new THREE.LineSegments(
           edges,
@@ -126,7 +131,6 @@ export class AbstractShapeMaker {
         line.castShadow = true;
         line.receiveShadow = true;
         itemsToDispose.push(edges);
-        itemsToDispose.push(lineBox);
 
         const group = new THREE.Group();
         if (piece.name) {

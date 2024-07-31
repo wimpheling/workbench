@@ -11,7 +11,7 @@ export const TechDraw = ({
   renderer: THREE.WebGLRenderer;
 }) => {
   let drx: HTMLDivElement | undefined;
-  const geometryItem = getGeometry(piece);
+  const geometryItem = getGeometry(piece).geometry;
   geometryItem.computeBoundingBox();
   const width = geometryItem
     .boundingBox?.max.clone()
@@ -59,7 +59,7 @@ export const TechDraw = ({
       opacity: 1,
     });
     const geometry = getGeometry(piece);
-    const mesh = new THREE.Mesh(geometry, material);
+    const mesh = new THREE.Mesh(geometry.geometry, material);
     group.add(mesh);
     group.add(line);
     // group.rotation.z = THREE.MathUtils.degToRad(0);

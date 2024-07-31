@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Joint, Piece } from "./AbstractShapeMaker";
+import { Brush, Evaluator, SUBTRACTION } from "three-bvh-csg";
 
 function getJointWidthSeries({
   i,
@@ -63,7 +64,7 @@ function handleJoint({
   xCenter: number;
   yCenter: number;
 }) {
-  if (joint) {
+  if (joint?.jointType === "box") {
     const { jointHeight, numberOfJoints, male } = joint;
     const jointWidth = width / (numberOfJoints + 0.5);
     for (let i = 0; i < numberOfJoints + 1; i++) {
@@ -84,7 +85,7 @@ function handleJoint({
       shape.lineTo(xs[2], ys[2]);
       if (i < numberOfJoints) shape.lineTo(xs[3], ys[3]);
     }
-  } else {
+  }  else {
     if (orientation === "horizontal") {
       shape.lineTo(x + xCenter * 2 * jointWidthOrder, y);
     } else {
@@ -93,7 +94,7 @@ function handleJoint({
   }
 }
 
-export function getGeometry(props: Piece): THREE.BufferGeometry {
+export function getGeometry(props: Piece): Brush {
   if (props.geometry.type === "box") {
     const shape = new THREE.Shape();
     const xCenter = props.geometry.width / 2;
@@ -164,9 +165,65 @@ export function getGeometry(props: Piece): THREE.BufferGeometry {
     // center the Z axis
     geo.translate(0, 0, -props.geometry.depth / 2);
 
-    return geo;
+      let geoBrush = new Brush(geo);
+      geoBrush.updateMatrixWorld();
+
+    // back
+    if (props.geometry.sides?.back?.joint && props.geometry.sides.back.joint.jointType === "halfLap") {
+      geoBrush = handleBrushJoints({
+        geo: geoBrush,
+        sectionWidth: props.geometry.width,
+        sectionHeight: props.geometry.sides.back.joint.size,
+        depth: props.geometry.depth,
+        translateY: 0 + props.geometry.height /2 - props.geometry.sides.back.joint.size / 2,
+        translateX: 0
+      })
+    }
+
+    // front
+    if (props.geometry.sides?.front?.joint && props.geometry.sides.front.joint.jointType === "halfLap") {
+      geoBrush = handleBrushJoints({
+        geo: geoBrush,
+        sectionWidth: props.geometry.width,
+        sectionHeight: props.geometry.sides.front.joint.size,
+        depth: props.geometry.depth,
+        translateY: 0 - props.geometry.height /2 + props.geometry.sides.front.joint.size / 2,
+        translateX: 0
+      })
+    }
+    
+   
+
+    return geoBrush;
   }
   throw new Error("TODO: shapes not implemented yet");
+}
+
+function handleBrushJoints({geo, sectionWidth, depth, sectionHeight, translateY, translateX }: {
+  geo: Brush;
+  sectionWidth: number;
+  sectionHeight: number;
+  depth: number;
+  translateY: number;
+  translateX: number;
+}) {
+
+      const remove = new THREE.BoxGeometry(sectionWidth, sectionHeight, depth / 2);
+      remove.translate(translateX, translateY, depth *.25);
+      const brush = new Brush(remove);
+      brush.updateMatrixWorld();
+
+
+      const evaluator = new Evaluator();
+      const result = evaluator.evaluate(geo, brush, SUBTRACTION );
+      return result;
+      // if (male) {
+        
+      // } else {
+      //   geo.rotateX(Math.PI / 2);
+      // }
+    
+    return geo;
 }
 
 export function specsKey(props: Piece) {

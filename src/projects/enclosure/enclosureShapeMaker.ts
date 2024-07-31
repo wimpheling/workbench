@@ -1,4 +1,3 @@
-import { Brush } from "three-bvh-csg";
 import { AbstractShapeMaker, PostProcessHandler, Sides } from "../../lib/AbstractShapeMaker";
 import { ENCLOSURE_VIGA_THICKNESS, Materials } from "./enclosureConst";
 
