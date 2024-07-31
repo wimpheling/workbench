@@ -115,7 +115,7 @@ export class AbstractShapeMaker {
 
         // line
         const lineBox = getGeometry(piece);
-        const edges = new THREE.EdgesGeometry(lineBox);
+        const edges = new THREE.EdgesGeometry(obj.geometry);
         const line = new THREE.LineSegments(
           edges,
           new THREE.LineBasicMaterial({

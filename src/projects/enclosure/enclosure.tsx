@@ -39,7 +39,7 @@ class Enclosure implements MyObject3D {
         hole.updateMatrixWorld();
         
         const evaluator = new Evaluator();
-        const result = evaluator.evaluate( brush, hole, ADDITION );
+        const result = evaluator.evaluate( brush, hole, SUBTRACTION );
         return result;
       }
     });
