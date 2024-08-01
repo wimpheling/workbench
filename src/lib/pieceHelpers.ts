@@ -192,7 +192,29 @@ export function getGeometry(props: Piece): Brush {
       })
     }
     
-   
+    // right
+    if (props.geometry.sides?.right?.joint && props.geometry.sides.right.joint.jointType === "halfLap") {
+      geoBrush = handleBrushJoints({
+        geo: geoBrush,
+        sectionWidth:  props.geometry.sides.right.joint.size,
+        sectionHeight: props.geometry.height,
+        depth: props.geometry.depth,
+        translateY: 0,
+        translateX: 0 + props.geometry.width /2 - props.geometry.sides.right.joint.size / 2
+      })
+
+      // left
+      if (props.geometry.sides?.left?.joint && props.geometry.sides.left.joint.jointType === "halfLap") {
+        geoBrush = handleBrushJoints({
+          geo: geoBrush,
+          sectionWidth:  props.geometry.sides.left.joint.size,
+          sectionHeight: props.geometry.height,
+          depth: props.geometry.depth,
+          translateY: 0,
+          translateX: 0 - props.geometry.width /2 + props.geometry.sides.left.joint.size / 2
+        })
+      }
+    }
 
     return geoBrush;
   }
