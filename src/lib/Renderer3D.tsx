@@ -4,7 +4,7 @@ import { Assembly } from "../ui/Assembly";
 import { MyObject3D } from "./MyObject3D";
 import projects from "./projects";
 
-export function Renderer3D({ object3D }: { object3D: MyObject3D }) {
+export function Renderer3D({ object3D, ok }: { object3D: MyObject3D; ok: boolean }) {
   const [showAssembled, setShowAssembled] = createSignal(true);
   return (
     <>
