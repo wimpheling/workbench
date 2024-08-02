@@ -8,6 +8,7 @@ import { DisposableItem } from "./interfaces";
 export const Assembly = ({ item }: { item: MyObject3D }) => {
   let loadControls: () => void;
   let saveControls: () => void;
+  let exportStl: () => void;
   const [renderer, setRenderer] = createSignal<THREE.WebGLRenderer>();
   const [itemsToDispose, setItemsToDispose] = createSignal<DisposableItem[]>(
     []
@@ -48,12 +49,14 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
       scene,
       loadControls: lc,
       saveControls: sc,
+      exportStl: es,
       renderer,
       itemsToDispose: itemsToInit,
     } = init(onSelect);
     setItemsToDisposeInit(itemsToInit);
     loadControls = lc;
     saveControls = sc;
+    exportStl = es;
     const itemsTo = item.sm.assemble(scene, {
       hiddenGroups: item.hiddenGroups,
     });
@@ -128,6 +131,7 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
 
       <button onClick={() => saveControls()}>Save</button>
       <button onClick={() => loadControls()}>Load</button>
+      <button onClick={() => exportstl()}>Export</button>
     </div>
   );
 };

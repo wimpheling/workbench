@@ -12,7 +12,8 @@ export function init(
 ) {
   const itemsToDispose: DisposableItem[] = [];
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xf5faf6);
+  // scene.background = new THREE.Color(0xf5faf6);
+  scene.background = new THREE.Color(0x202020);
   const camera = new THREE.PerspectiveCamera(
     55,
     window.innerWidth / window.innerHeight,
@@ -62,10 +63,14 @@ export function init(
     localStorage.setItem(`orbitControls`, JSON.stringify(state));
   };
 
-  const light = new THREE.AmbientLight("white", 1);
-  // const light = new THREE.PointLight("blue", 1, 0);
-  // light.castShadow = true;
-  light.position.set(0, 100, 0);
+  // const light = new THREE.AmbientLight("white", 1);
+  const light = new THREE.DirectionalLight( 0xFFFFFF );
+scene.add( light );
+
+const helper = new THREE.DirectionalLightHelper( light, 5 );
+scene.add( helper );
+  light.castShadow = true;
+  light.position.set(500, 1000, 500);
   itemsToDispose.push(light);
   scene.add(light);
   const axesHelper = new THREE.AxesHelper(500);
