@@ -1,4 +1,3 @@
-import { Brush, Evaluator, SUBTRACTION } from "three-bvh-csg";
 import { MyObject3D } from "../../lib/MyObject3D";
 import { renderObject3D } from "../../lib/render";
 import { EnclosureShapeMaker } from "./enclosureShapeMaker";
@@ -29,13 +28,13 @@ class Enclosure implements MyObject3D {
             jointType: "box",
             male: true,
             numberOfJoints: 2,
-          }
-        }
+          },
+        },
       },
       postProcess: (obj) => {
-        const box = makeBaseBox(5, 5, 3)
+        const box = makeBaseBox(5, 5, 3);
         return obj.cut(box);
-      }
+      },
     });
 
     this.sm.viga({
@@ -52,8 +51,8 @@ class Enclosure implements MyObject3D {
             jointType: "box",
             male: false,
             numberOfJoints: 2,
-          }
-        }
+          },
+        },
       },
       height: 89,
       width: 10,

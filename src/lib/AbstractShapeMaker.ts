@@ -53,10 +53,7 @@ interface MakeShapeProps {
   opacity?: number;
   name: string;
 }
-export type Piece = Omit<
-  MakeShapeProps,
-  "x" | "y" | "z" | "scene"
-> & {
+export type Piece = Omit<MakeShapeProps, "x" | "y" | "z" | "scene"> & {
   material: string;
   group: string;
   assemble: (obj: THREE.Object3D) => void;
@@ -91,7 +88,7 @@ export class AbstractShapeMaker {
     scene: THREE.Scene,
     conf: {
       hiddenGroups?: string[];
-    }
+    },
   ) {
     const itemsToDispose: DisposableItem[] = [];
     this.threeGroups = {};
@@ -105,7 +102,7 @@ export class AbstractShapeMaker {
       this.threeGroups[group] = groupObj;
       pieces.forEach((piece) => {
         // Mesh
-        let shape =  getGeometry(piece);
+        let shape = getGeometry(piece);
         const mat = new THREE.MeshLambertMaterial({
           color: piece.color || 0xa1662f,
           opacity: piece.opacity || 1,
@@ -114,16 +111,16 @@ export class AbstractShapeMaker {
         });
 
         if (piece.geometry.postProcess) {
-            shape = piece.geometry.postProcess(shape);
+          shape = piece.geometry.postProcess(shape);
         }
         const shapeItem = {
           name: piece.name,
           faces: shape.mesh({ tolerance: 0.05, angularTolerance: 30 }),
           edges: shape.meshEdges(),
         };
-        
+
         const geometries = syncGeometries([shapeItem], []);
-        const geo = geometries[0]
+        const geo = geometries[0];
         const obj = new THREE.Mesh(geo.faces, mat);
         obj.castShadow = true;
         obj.receiveShadow = true;
@@ -136,7 +133,7 @@ export class AbstractShapeMaker {
           new THREE.LineBasicMaterial({
             color: "black",
             opacity: piece.opacity || 0.4,
-          })
+          }),
         );
         line.castShadow = true;
         line.receiveShadow = true;

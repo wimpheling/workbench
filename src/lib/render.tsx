@@ -24,12 +24,15 @@ const init = async () => {
 };
 
 export function renderObject3D<A extends MyObject3D>(c: new () => A) {
-    function App() {
-        const object3D = new c();
-        return <Renderer3D object3D={object3D} />
-      }
-      init().then(() =>{
-        console.log(loaded);
-        render(App, document.getElementById("app") as HTMLDivElement)
-      });
-} 
+  function App() {
+    const object3D = new c();
+    return <Renderer3D object3D={object3D} />;
+  }
+  const el = document.getElementById("app");
+  if (!el) return;
+  el.innerHTML = "Loading...";
+  init().then(() => {
+    el.innerHTML = "";
+    render(App, el as HTMLDivElement);
+  });
+}
