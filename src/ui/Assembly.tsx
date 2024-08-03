@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { For } from "solid-js/web";
 import { init } from "./threeConfig";
-import { Show, createSignal, onCleanup } from "solid-js";
+import { Show, createSignal, onCleanup, onMount } from "solid-js";
 import { MyObject3D } from "../lib/MyObject3D";
 import { DisposableItem } from "./interfaces";
+import { getOC } from "replicad";
 
 export const Assembly = ({ item }: { item: MyObject3D }) => {
   let loadControls: () => void;
@@ -49,14 +50,14 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
       scene,
       loadControls: lc,
       saveControls: sc,
-      exportStl: es,
+      // exportStl: es,
       renderer,
       itemsToDispose: itemsToInit,
     } = init(onSelect);
     setItemsToDisposeInit(itemsToInit);
     loadControls = lc;
     saveControls = sc;
-    exportStl = es;
+    // exportStl = es;
     const itemsTo = item.sm.assemble(scene, {
       hiddenGroups: item.hiddenGroups,
     });
@@ -70,11 +71,13 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
   onCleanup(() => {
     removeRenderer();
   });
+  onMount(() => {
+    render();
+  })
   const switchGroupVisibility = (key: string, visible: boolean) => {
     const group = threeGroups()[key] as THREE.Group;
     group.visible = visible;
   };
-  render();
 
   return (
     <div
@@ -131,7 +134,6 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
 
       <button onClick={() => saveControls()}>Save</button>
       <button onClick={() => loadControls()}>Load</button>
-      <button onClick={() => exportstl()}>Export</button>
     </div>
   );
 };

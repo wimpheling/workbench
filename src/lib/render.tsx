@@ -6,7 +6,7 @@ import "replicad-opencascadejs/src/replicad_single.wasm?url";
 import opencascade from "replicad-opencascadejs/src/replicad_single.js";
 import opencascadeWasm from "replicad-opencascadejs/src/replicad_single.wasm?url";
 import { setOC } from "replicad";
-import { expose } from "comlink";
+// import { expose } from "comlink";
 
 let loaded = false;
 const init = async () => {
@@ -22,16 +22,14 @@ const init = async () => {
 
   return true;
 };
-let ok = false;
-const started = init().then(() => {
-  ok = true;
-});
 
 export function renderObject3D<A extends MyObject3D>(c: new () => A) {
     function App() {
         const object3D = new c();
-        return <Renderer3D object3D={object3D} ok={ok} />;
+        return <Renderer3D object3D={object3D} />
       }
-      
-      render(App, document.getElementById("app") as HTMLDivElement);  
-}
+      init().then(() =>{
+        console.log(loaded);
+        render(App, document.getElementById("app") as HTMLDivElement)
+      });
+} 

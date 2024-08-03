@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { DisposableItem } from "../ui/interfaces";
 import { getGeometry, specsKey } from "./pieceHelpers";
 import { Brush } from "three-bvh-csg";
+import { syncGeometries } from "replicad-threejs-helper";
+import { Shape3D } from "replicad";
 
 export interface BoxJoint {
   numberOfJoints: number;
@@ -29,7 +31,7 @@ export interface Sides {
   front?: Side;
   back?: Side;
 }
-export type PostProcessHandler = (obj: Brush, mat: THREE.Material) => Brush;
+export type PostProcessHandler = (obj: Shape3D) => Shape3D;
 interface BoxGeometryProps {
   height: number;
   width: number;
@@ -103,7 +105,7 @@ export class AbstractShapeMaker {
       this.threeGroups[group] = groupObj;
       pieces.forEach((piece) => {
         // Mesh
-        const geo = getGeometry(piece);
+        let shape =  getGeometry(piece);
         const mat = new THREE.MeshLambertMaterial({
           color: piece.color || 0xa1662f,
           opacity: piece.opacity || 1,
@@ -111,18 +113,26 @@ export class AbstractShapeMaker {
           name: piece.name,
         });
 
-        const obj =
-          (piece.geometry.postProcess) ?
-            piece.geometry.postProcess(geo, mat) : new THREE.Mesh(geo.geometry, mat);
+        if (piece.geometry.postProcess) {
+            shape = piece.geometry.postProcess(shape);
+        }
+        const shapeItem = {
+          name: piece.name,
+          faces: shape.mesh({ tolerance: 0.05, angularTolerance: 30 }),
+          edges: shape.meshEdges(),
+        };
+        
+        const geometries = syncGeometries([shapeItem], []);
+        const geo = geometries[0]
+        const obj = new THREE.Mesh(geo.faces, mat);
         obj.castShadow = true;
         obj.receiveShadow = true;
 
         itemsToDispose.push(mat);
 
         // line
-        const edges = new THREE.EdgesGeometry(obj.geometry);
         const line = new THREE.LineSegments(
-          edges,
+          geo.lines,
           new THREE.LineBasicMaterial({
             color: "black",
             opacity: piece.opacity || 0.4,
@@ -130,7 +140,8 @@ export class AbstractShapeMaker {
         );
         line.castShadow = true;
         line.receiveShadow = true;
-        itemsToDispose.push(edges);
+        itemsToDispose.push(geo.faces);
+        itemsToDispose.push(geo.lines);
 
         const group = new THREE.Group();
         if (piece.name) {
