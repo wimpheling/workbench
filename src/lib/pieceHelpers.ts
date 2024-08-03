@@ -1,6 +1,5 @@
-import * as THREE from "three";
 import { Joint, Piece } from "./AbstractShapeMaker";
-import { Brush, Evaluator, SUBTRACTION } from "three-bvh-csg";
+import { draw, DrawingPen, drawRectangle, makePlane, Shape3D } from "replicad";
 
 function getJointWidthSeries({
   i,
@@ -8,10 +7,10 @@ function getJointWidthSeries({
   order,
   value,
 }: {
-  value: number,
-  jointWidth: number,
-  order: 1 | -1,
-  i: number,
+  value: number;
+  jointWidth: number;
+  order: 1 | -1;
+  i: number;
 }) {
   const valueI = value + i * jointWidth * order;
   return [
@@ -22,17 +21,16 @@ function getJointWidthSeries({
   ];
 }
 
-
 function getJointHeightSeries({
   jointHeight,
   order,
   value,
-  male
+  male,
 }: {
-  value: number,
-  jointHeight: number,
-  order: 1 | -1,
-  male: boolean
+  value: number;
+  jointHeight: number;
+  order: 1 | -1;
+  male: boolean;
 }) {
   return [
     value + (male ? jointHeight * order : 0),
@@ -49,7 +47,7 @@ function handleJoint({
   orientation,
   jointWidthOrder,
   jointHeightOrder,
-  shape,
+  drawing,
   xCenter,
   yCenter,
 }: {
@@ -60,7 +58,7 @@ function handleJoint({
   orientation: "horizontal" | "vertical";
   jointWidthOrder: 1 | -1;
   jointHeightOrder: 1 | -1;
-  shape: THREE.Shape;
+  drawing: DrawingPen;
   xCenter: number;
   yCenter: number;
 }) {
@@ -71,35 +69,58 @@ function handleJoint({
       let xs = [];
       let ys = [];
       if (orientation === "horizontal") {
-        xs = getJointWidthSeries({ value: x, jointWidth, order: jointWidthOrder, i });
-        ys = getJointHeightSeries({ value: y, jointHeight, order: jointHeightOrder, male });
+        xs = getJointWidthSeries({
+          value: x,
+          jointWidth,
+          order: jointWidthOrder,
+          i,
+        });
+        ys = getJointHeightSeries({
+          value: y,
+          jointHeight,
+          order: jointHeightOrder,
+          male,
+        });
       } else {
-        xs = getJointHeightSeries({ value: x, jointHeight, order: jointHeightOrder, male });
-        ys = getJointWidthSeries({ value: y, jointWidth, order: jointWidthOrder, i });
+        xs = getJointHeightSeries({
+          value: x,
+          jointHeight,
+          order: jointHeightOrder,
+          male,
+        });
+        ys = getJointWidthSeries({
+          value: y,
+          jointWidth,
+          order: jointWidthOrder,
+          i,
+        });
       }
-      shape.lineTo(xs[0], ys[0]);
-      shape.lineTo(xs[1], ys[1]);
+      if (x !== xs[0] || y !== ys[0]) {
+        drawing.lineTo([xs[0], ys[0]]);
+      }
+      drawing.lineTo([xs[1], ys[1]]);
       if (i === numberOfJoints && !male) {
         break;
       }
-      shape.lineTo(xs[2], ys[2]);
-      if (i < numberOfJoints) shape.lineTo(xs[3], ys[3]);
+      drawing.lineTo([xs[2], ys[2]]);
+      if (i < numberOfJoints) drawing.lineTo([xs[3], ys[3]]);
     }
-  }  else {
+  } else {
     if (orientation === "horizontal") {
-      shape.lineTo(x + xCenter * 2 * jointWidthOrder, y);
+      drawing.lineTo([x + xCenter * 2 * jointWidthOrder, y]);
     } else {
-      shape.lineTo(x, y + yCenter * 2 * jointWidthOrder);
+      drawing.lineTo([x, y + yCenter * 2 * jointWidthOrder]);
     }
   }
 }
 
-export function getGeometry(props: Piece): Brush {
+export function getGeometry(props: Piece): Shape3D {
   if (props.geometry.type === "box") {
-    const shape = new THREE.Shape();
-    const xCenter = props.geometry.width / 2;
+    // const shape = new THREE.Shape();
     const yCenter = props.geometry.height / 2;
-    shape.moveTo(0 + xCenter, 0 + yCenter);
+    const xCenter = props.geometry.width / 2;
+    const drawing = draw([0 + xCenter, 0 + yCenter]);
+    // shape.moveTo(0 + xCenter, 0 + yCenter);
 
     // back side
     handleJoint({
@@ -107,7 +128,7 @@ export function getGeometry(props: Piece): Brush {
       x: 0 + xCenter,
       y: 0 + yCenter,
       width: props.geometry.width,
-      shape,
+      drawing,
       jointWidthOrder: -1,
       jointHeightOrder: 1,
       orientation: "horizontal",
@@ -121,7 +142,7 @@ export function getGeometry(props: Piece): Brush {
       x: 0 - xCenter,
       y: 0 + yCenter,
       width: props.geometry.height,
-      shape,
+      drawing,
       jointWidthOrder: -1,
       jointHeightOrder: -1,
       orientation: "vertical",
@@ -135,7 +156,7 @@ export function getGeometry(props: Piece): Brush {
       x: 0 - xCenter,
       y: 0 - yCenter,
       width: props.geometry.width,
-      shape,
+      drawing,
       jointWidthOrder: 1,
       jointHeightOrder: -1,
       orientation: "horizontal",
@@ -149,7 +170,7 @@ export function getGeometry(props: Piece): Brush {
       x: 0 + xCenter,
       y: 0 - yCenter,
       width: props.geometry.height,
-      shape,
+      drawing,
       jointWidthOrder: 1,
       jointHeightOrder: 1,
       orientation: "vertical",
@@ -157,95 +178,128 @@ export function getGeometry(props: Piece): Brush {
       yCenter,
     });
 
-    const geo = new THREE.ExtrudeGeometry(shape, {
-      depth: props.geometry.depth,
-      bevelEnabled: false,
-      steps: 2,
-    });
-    // center the Z axis
-    geo.translate(0, 0, -props.geometry.depth / 2);
+    const shapez = drawing.close().sketchOnPlane(makePlane("XY"));
 
-      let geoBrush = new Brush(geo);
-      geoBrush.updateMatrixWorld();
+    let geoShape: Shape3D = shapez.extrude(props.geometry.depth) as Shape3D;
 
     // back
-    if (props.geometry.sides?.back?.joint && props.geometry.sides.back.joint.jointType === "halfLap") {
-      geoBrush = handleBrushJoints({
-        geo: geoBrush,
+    if (
+      props.geometry.sides?.back?.joint &&
+      props.geometry.sides.back.joint.jointType === "halfLap"
+    ) {
+      geoShape = halfLapJoint({
+        geo: geoShape,
         sectionWidth: props.geometry.width,
         sectionHeight: props.geometry.sides.back.joint.size,
         depth: props.geometry.depth,
-        translateY: 0 + props.geometry.height /2 - props.geometry.sides.back.joint.size / 2,
-        translateX: 0
-      })
+        translateY:
+          0 +
+          props.geometry.height / 2 -
+          props.geometry.sides.back.joint.size / 2,
+        translateX: 0,
+      });
     }
 
     // front
-    if (props.geometry.sides?.front?.joint && props.geometry.sides.front.joint.jointType === "halfLap") {
-      geoBrush = handleBrushJoints({
-        geo: geoBrush,
+    if (
+      props.geometry.sides?.front?.joint &&
+      props.geometry.sides.front.joint.jointType === "halfLap"
+    ) {
+      geoShape = halfLapJoint({
+        geo: geoShape,
         sectionWidth: props.geometry.width,
         sectionHeight: props.geometry.sides.front.joint.size,
         depth: props.geometry.depth,
-        translateY: 0 - props.geometry.height /2 + props.geometry.sides.front.joint.size / 2,
-        translateX: 0
-      })
+        translateY:
+          0 -
+          props.geometry.height / 2 +
+          props.geometry.sides.front.joint.size / 2,
+        translateX: 0,
+      });
     }
-    
+
     // right
-    if (props.geometry.sides?.right?.joint && props.geometry.sides.right.joint.jointType === "halfLap") {
-      geoBrush = handleBrushJoints({
-        geo: geoBrush,
-        sectionWidth:  props.geometry.sides.right.joint.size,
+    if (
+      props.geometry.sides?.right?.joint &&
+      props.geometry.sides.right.joint.jointType === "halfLap"
+    ) {
+      geoShape = halfLapJoint({
+        geo: geoShape,
+        sectionWidth: props.geometry.sides.right.joint.size,
         sectionHeight: props.geometry.height,
         depth: props.geometry.depth,
         translateY: 0,
-        translateX: 0 + props.geometry.width /2 - props.geometry.sides.right.joint.size / 2
-      })
-
-      // left
-      if (props.geometry.sides?.left?.joint && props.geometry.sides.left.joint.jointType === "halfLap") {
-        geoBrush = handleBrushJoints({
-          geo: geoBrush,
-          sectionWidth:  props.geometry.sides.left.joint.size,
-          sectionHeight: props.geometry.height,
-          depth: props.geometry.depth,
-          translateY: 0,
-          translateX: 0 - props.geometry.width /2 + props.geometry.sides.left.joint.size / 2
-        })
-      }
+        translateX:
+          0 +
+          props.geometry.width / 2 -
+          props.geometry.sides.right.joint.size / 2,
+      });
     }
 
-    return geoBrush;
+    // left
+    if (
+      props.geometry.sides?.left?.joint &&
+      props.geometry.sides.left.joint.jointType === "halfLap"
+    ) {
+      geoShape = halfLapJoint({
+        geo: geoShape,
+        sectionWidth: props.geometry.sides.left.joint.size,
+        sectionHeight: props.geometry.height,
+        depth: props.geometry.depth,
+        translateY: 0,
+        translateX:
+          0 -
+          props.geometry.width / 2 +
+          props.geometry.sides.left.joint.size / 2,
+      });
+    }
+
+    return geoShape;
   }
   throw new Error("TODO: shapes not implemented yet");
 }
 
-function handleBrushJoints({geo, sectionWidth, depth, sectionHeight, translateY, translateX }: {
-  geo: Brush;
+function makeBox({
+  height,
+  width,
+  depth,
+}: {
+  height: number;
+  width: number;
+  depth: number;
+}): Shape3D {
+  const rectangle = drawRectangle(width, height);
+  return rectangle.sketchOnPlane(makePlane("XY")).extrude(depth) as Shape3D;
+}
+
+function halfLapJoint({
+  geo,
+  sectionWidth,
+  depth,
+  sectionHeight,
+  translateY,
+  translateX,
+}: {
+  geo: Shape3D;
   sectionWidth: number;
   sectionHeight: number;
   depth: number;
   translateY: number;
   translateX: number;
 }) {
+  const remove = makeBox({
+    width: sectionWidth,
+    height: sectionHeight,
+    depth: depth / 2,
+  }).translate(translateX, translateY, depth * 0.25);
+  return geo.cut(remove);
+  // if (male) {
 
-      const remove = new THREE.BoxGeometry(sectionWidth, sectionHeight, depth / 2);
-      remove.translate(translateX, translateY, depth *.25);
-      const brush = new Brush(remove);
-      brush.updateMatrixWorld();
+  // } else {
+  //   geo.rotateX(Math.PI / 2);
+  // }
 
-
-      const evaluator = new Evaluator();
-      const result = evaluator.evaluate(geo, brush, SUBTRACTION );
-      return result;
-      // if (male) {
-        
-      // } else {
-      //   geo.rotateX(Math.PI / 2);
-      // }
-    
-    return geo;
+  return geo;
 }
 
 export function specsKey(props: Piece) {

@@ -14,14 +14,14 @@ function isEnclosureInnerWallCorrect({
 }) {
   const tableTopBbox = new THREE.Box3().setFromObject(tableTop);
   const enclosureWallInnerBackBbox = new THREE.Box3().setFromObject(
-    enclosureWallInnerBack
+    enclosureWallInnerBack,
   );
   /* distance between back of tableTop and enclosureWallInnerBack */
   const distanceBetweenBackAndEdge =
     enclosureWallInnerBackBbox.min.z - tableTopBbox.min.z;
 
   const enclosureWallInnerLeftBbox = new THREE.Box3().setFromObject(
-    enclosureWallInnerLeft
+    enclosureWallInnerLeft,
   );
   const distanceBetweenLeftAndEdge =
     enclosureWallInnerLeftBbox.min.x - tableTopBbox.min.x;

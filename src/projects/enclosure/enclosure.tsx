@@ -1,8 +1,8 @@
-import { Brush, Evaluator, SUBTRACTION } from "three-bvh-csg";
 import { MyObject3D } from "../../lib/MyObject3D";
 import { renderObject3D } from "../../lib/render";
 import { EnclosureShapeMaker } from "./enclosureShapeMaker";
 import * as THREE from "three";
+import { makeBaseBox } from "replicad";
 
 class Enclosure implements MyObject3D {
   sm = new EnclosureShapeMaker();
@@ -28,20 +28,13 @@ class Enclosure implements MyObject3D {
             jointType: "box",
             male: true,
             numberOfJoints: 2,
-          }
-        }
+          },
+        },
       },
-      postProcess: (obj, mat) => {
-        const brush = new Brush(obj.geometry, mat);
-        brush.updateMatrixWorld();
-        const box = new THREE.BoxGeometry(5, 5, 3)
-        const hole = new Brush(box, mat);
-        hole.updateMatrixWorld();
-        
-        const evaluator = new Evaluator();
-        const result = evaluator.evaluate( brush, hole, SUBTRACTION );
-        return result;
-      }
+      postProcess: (obj) => {
+        const box = makeBaseBox(5, 5, 3);
+        return obj.cut(box);
+      },
     });
 
     this.sm.viga({
@@ -58,8 +51,8 @@ class Enclosure implements MyObject3D {
             jointType: "box",
             male: false,
             numberOfJoints: 2,
-          }
-        }
+          },
+        },
       },
       height: 89,
       width: 10,

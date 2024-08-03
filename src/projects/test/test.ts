@@ -12,56 +12,55 @@ class Enclosure implements MyObject3D {
     this.sm.makeShape({
       group: "Structure ",
       assemble: (obj) => {
-          console.log(obj)
+        console.log(obj);
       },
       material: "Wood",
       geometry: {
-          depth: 10,
-          height: 100,
-          width: 100,
-          type: "box",
-          sides: {
-            back: {
-              joint: {
-                // jointType: "box",
-                // jointHeight: 10,
-                // male: true,
-                // numberOfJoints: 2,
+        depth: 10,
+        height: 100,
+        width: 100,
+        type: "box",
+        sides: {
+          back: {
+            joint: {
+              // jointType: "box",
+              // jointHeight: 10,
+              // male: true,
+              // numberOfJoints: 2,
 
-                jointType: "halfLap",
-                size: 10,
-                male: true,
-              }
+              jointType: "halfLap",
+              size: 10,
+              male: true,
             },
+          },
 
-            front: {
-              joint: {
-                jointType: "halfLap",
-                size: 25,
-                male: true,
-              }
+          front: {
+            joint: {
+              jointType: "halfLap",
+              size: 25,
+              male: true,
             },
+          },
 
-            right: {
-              joint: {
-                jointType: "halfLap",
-                size: 25,
-                male: true,
-              }
+          right: {
+            joint: {
+              jointType: "halfLap",
+              size: 25,
+              male: true,
             },
+          },
 
-            left: {
-              joint: {
-                jointType: "halfLap",
-                size: 8,
-                male: true,
-              }
+          left: {
+            joint: {
+              jointType: "halfLap",
+              size: 8,
+              male: true,
             },
-          }
+          },
+        },
       },
       name: "Test",
     });
-
   }
 }
 

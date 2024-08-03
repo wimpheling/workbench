@@ -29,7 +29,12 @@
     "vite-plugin-solid": "^2.7.2"
   },
   "dependencies": {
+    "comlink": "^4.4.1",
+    "file-saver": "^2.0.5",
     "lil-gui": "^0.19.2",
+    "replicad": "^0.17.1",
+    "replicad-opencascadejs": "^0.17.1",
+    "replicad-threejs-helper": "^0.17.0",
     "solid-js": "^1.8.6",
     "three": "^0.158.0",
     "three-bvh-csg": "^0.0.16",

@@ -8,7 +8,7 @@ export function init(
     groupName: string;
     vector: THREE.Vector3;
     position: THREE.Vector3;
-  }) => void
+  }) => void,
 ) {
   const itemsToDispose: DisposableItem[] = [];
   const scene = new THREE.Scene();
@@ -18,7 +18,7 @@ export function init(
     55,
     window.innerWidth / window.innerHeight,
     0.1,
-    1000
+    1000,
   );
 
   camera.position.z = 500;
@@ -64,11 +64,11 @@ export function init(
   };
 
   // const light = new THREE.AmbientLight("white", 1);
-  const light = new THREE.DirectionalLight( 0xFFFFFF );
-scene.add( light );
+  const light = new THREE.DirectionalLight(0xffffff);
+  scene.add(light);
 
-const helper = new THREE.DirectionalLightHelper( light, 5 );
-scene.add( helper );
+  const helper = new THREE.DirectionalLightHelper(light, 5);
+  scene.add(helper);
   light.castShadow = true;
   light.position.set(500, 1000, 500);
   itemsToDispose.push(light);
