@@ -12,7 +12,7 @@ let loaded = false;
 const init = async () => {
   if (loaded) return Promise.resolve(true);
 
-  // @ts-ignore
+  // @ts-expect-error: Wrong typings for OC
   const OC = await opencascade({
     locateFile: () => opencascadeWasm,
   });

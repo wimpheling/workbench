@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { DisposableItem } from "../ui/interfaces";
 import { getGeometry, specsKey } from "./pieceHelpers";
-import { Brush } from "three-bvh-csg";
 import { syncGeometries } from "replicad-threejs-helper";
 import { Shape3D } from "replicad";
 

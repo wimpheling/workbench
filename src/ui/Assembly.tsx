@@ -4,12 +4,10 @@ import { init } from "./threeConfig";
 import { Show, createSignal, onCleanup, onMount } from "solid-js";
 import { MyObject3D } from "../lib/MyObject3D";
 import { DisposableItem } from "./interfaces";
-import { getOC } from "replicad";
 
 export const Assembly = ({ item }: { item: MyObject3D }) => {
   let loadControls: () => void;
   let saveControls: () => void;
-  let exportStl: () => void;
   const [renderer, setRenderer] = createSignal<THREE.WebGLRenderer>();
   const [itemsToDispose, setItemsToDispose] = createSignal<DisposableItem[]>(
     [],
