@@ -13,8 +13,8 @@ export const TechDraw = ({
   let drx: HTMLDivElement | undefined;
   const geometryItem = getGeometry(piece).geometry;
   geometryItem.computeBoundingBox();
-  const width = geometryItem
-    .boundingBox?.max.clone()
+  const width = geometryItem.boundingBox?.max
+    .clone()
     .sub(geometryItem.boundingBox?.min)
     .multiplyScalar(1.2);
   if (!width) {
@@ -31,7 +31,7 @@ export const TechDraw = ({
       canvasHeight / 2,
       -canvasHeight / 2,
       1,
-      1000
+      1000,
     );
 
     renderer.setSize(canvasWidth, canvasHeight);
@@ -51,7 +51,7 @@ export const TechDraw = ({
       new THREE.LineBasicMaterial({
         color: "black",
         opacity: 1,
-      })
+      }),
     );
     const material = new THREE.MeshBasicMaterial({
       color: "white",
@@ -65,12 +65,12 @@ export const TechDraw = ({
     // group.rotation.z = THREE.MathUtils.degToRad(0);
     group.rotateOnAxis(
       new THREE.Vector3(1, 0, 0),
-      THREE.MathUtils.degToRad(-5)
+      THREE.MathUtils.degToRad(-5),
     );
     group.rotateOnAxis(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(5));
     group.rotateOnAxis(
       new THREE.Vector3(0, 0, 1),
-      THREE.MathUtils.degToRad(-1)
+      THREE.MathUtils.degToRad(-1),
     );
 
     const center = new THREE.Vector3(),
@@ -89,13 +89,13 @@ export const TechDraw = ({
       dy: number,
       dz: number,
       width: number,
-      height: number
+      height: number,
     ) {
       // set the camera in respect to the group center
       camera.position.set(
         center.x + dx * size.x,
         center.y + dy * size.y,
-        center.z + dz * size.z
+        center.z + dz * size.z,
       );
 
       // turn the camera towards the group center

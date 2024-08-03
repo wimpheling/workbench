@@ -12,7 +12,7 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
   let exportStl: () => void;
   const [renderer, setRenderer] = createSignal<THREE.WebGLRenderer>();
   const [itemsToDispose, setItemsToDispose] = createSignal<DisposableItem[]>(
-    []
+    [],
   );
   const [itemsToDisposeInit, setItemsToDisposeInit] = createSignal<
     DisposableItem[]
@@ -73,7 +73,7 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
   });
   onMount(() => {
     render();
-  })
+  });
   const switchGroupVisibility = (key: string, visible: boolean) => {
     const group = threeGroups()[key] as THREE.Group;
     group.visible = visible;

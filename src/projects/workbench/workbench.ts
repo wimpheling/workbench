@@ -44,14 +44,14 @@ const vigaHelper =
       viga.position.z = 0 - TABLE_DEPTH / 2 + VIGA_HEIGHT / 2;
       viga.rotateOnAxis(
         new THREE.Vector3(1, 0, 0),
-        THREE.MathUtils.degToRad(90)
+        THREE.MathUtils.degToRad(90),
       );
     } else if (i === 3) {
       viga.position.x = 0;
       viga.position.z = TABLE_DEPTH / 2 - VIGA_HEIGHT / 2;
       viga.rotateOnAxis(
         new THREE.Vector3(1, 0, 0),
-        THREE.MathUtils.degToRad(90)
+        THREE.MathUtils.degToRad(90),
       );
     }
   };
@@ -237,7 +237,7 @@ class WorkBench implements MyObject3D {
             obj.rotation.y = THREE.MathUtils.degToRad(90);
             obj.rotateOnAxis(
               new THREE.Vector3(1, 0, 0),
-              THREE.MathUtils.degToRad(90)
+              THREE.MathUtils.degToRad(90),
             );
 
             obj.position.x =
@@ -288,7 +288,7 @@ class WorkBench implements MyObject3D {
       assemble: vigaHelper2(
         0,
         -SPACE_BETWEEN_SHELVES,
-        FOOT_WIDTH + VIGA_HEIGHT / 2
+        FOOT_WIDTH + VIGA_HEIGHT / 2,
       ),
     });
     this.sm.viga({
@@ -298,7 +298,7 @@ class WorkBench implements MyObject3D {
       assemble: vigaHelper2(
         1,
         -SPACE_BETWEEN_SHELVES,
-        FOOT_WIDTH + VIGA_HEIGHT / 2
+        FOOT_WIDTH + VIGA_HEIGHT / 2,
       ),
     });
 
@@ -309,7 +309,7 @@ class WorkBench implements MyObject3D {
       assemble: vigaHelper2(
         2,
         -SPACE_BETWEEN_SHELVES,
-        FOOT_WIDTH + VIGA_HEIGHT / 2
+        FOOT_WIDTH + VIGA_HEIGHT / 2,
       ),
     });
 
@@ -385,7 +385,7 @@ class WorkBench implements MyObject3D {
         enclosureWallInnerBack.rotation.x = THREE.MathUtils.degToRad(90);
         enclosureWallInnerBack.rotateOnAxis(
           new THREE.Vector3(1, 0, 0),
-          THREE.MathUtils.degToRad(90)
+          THREE.MathUtils.degToRad(90),
         );
         enclosureWallInnerBack.position.x = 0;
         enclosureWallInnerBack.position.y = enclosureInnerY;
@@ -413,7 +413,7 @@ class WorkBench implements MyObject3D {
         enclosureDoorDraft.rotation.x = THREE.MathUtils.degToRad(90);
         enclosureDoorDraft.rotateOnAxis(
           new THREE.Vector3(1, 0, 0),
-          THREE.MathUtils.degToRad(90)
+          THREE.MathUtils.degToRad(90),
         );
         enclosureDoorDraft.position.x = 0;
         enclosureDoorDraft.position.y = enclosureOuterY;
@@ -465,7 +465,7 @@ class WorkBench implements MyObject3D {
         enclosureWallOuterBack.rotation.x = THREE.MathUtils.degToRad(90);
         enclosureWallOuterBack.rotateOnAxis(
           new THREE.Vector3(1, 0, 0),
-          THREE.MathUtils.degToRad(90)
+          THREE.MathUtils.degToRad(90),
         );
         enclosureWallOuterBack.position.x = 0;
         enclosureWallOuterBack.position.y = enclosureOuterY;

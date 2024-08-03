@@ -1,4 +1,8 @@
-import { AbstractShapeMaker, PostProcessHandler, Sides } from "../../lib/AbstractShapeMaker";
+import {
+  AbstractShapeMaker,
+  PostProcessHandler,
+  Sides,
+} from "../../lib/AbstractShapeMaker";
 import { ENCLOSURE_VIGA_THICKNESS, Materials } from "./enclosureConst";
 
 export class EnclosureShapeMaker extends AbstractShapeMaker {
@@ -11,7 +15,7 @@ export class EnclosureShapeMaker extends AbstractShapeMaker {
     assemble,
     group,
     sides,
-    postProcess
+    postProcess,
   }: {
     height: number;
     width: number;
@@ -21,7 +25,7 @@ export class EnclosureShapeMaker extends AbstractShapeMaker {
     assemble: (obj: THREE.Object3D) => void;
     group: string;
     sides?: Sides;
-    postProcess?: PostProcessHandler
+    postProcess?: PostProcessHandler;
   }) {
     return this.makeShape({
       geometry: {
@@ -30,7 +34,7 @@ export class EnclosureShapeMaker extends AbstractShapeMaker {
         depth: ENCLOSURE_VIGA_THICKNESS,
         type: "box",
         sides,
-        postProcess
+        postProcess,
       },
       color,
       dimensions,
