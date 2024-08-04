@@ -21,40 +21,21 @@ class Enclosure implements MyObject3D {
         width: 100,
         type: "box",
         sides: {
-          back: {
-            joint: {
-              // jointType: "box",
-              // jointHeight: 10,
-              // male: true,
-              // numberOfJoints: 2,
-
-              jointType: "halfLap",
-              size: 10,
-              male: true,
-            },
-          },
-
-          front: {
-            joint: {
-              jointType: "halfLap",
-              size: 25,
-              male: true,
-            },
-          },
-
           right: {
             joint: {
-              jointType: "halfLap",
-              size: 25,
-              male: true,
+              jointType: "box",
+              jointHeight: 10,
+              male: false,
+              numberOfJoints: 3,
             },
           },
 
           left: {
             joint: {
-              jointType: "halfLap",
-              size: 8,
-              male: true,
+              jointType: "box",
+              jointHeight: 10,
+              male: false,
+              numberOfJoints: 13,
             },
           },
         },
