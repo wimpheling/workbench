@@ -4,6 +4,10 @@ import { EnclosureShapeMaker } from "./enclosureShapeMaker";
 import * as THREE from "three";
 import { makeBaseBox } from "replicad";
 
+enum Groups {
+  Structure = "Structure",
+}
+
 class Enclosure implements MyObject3D {
   sm = new EnclosureShapeMaker();
 
@@ -12,7 +16,7 @@ class Enclosure implements MyObject3D {
 
   constructor() {
     this.sm.viga({
-      group: "Structure 2",
+      group: Groups.Structure,
       assemble: (obj) => {
         obj.rotateZ(Math.PI / 2);
         obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI / 2);
@@ -38,7 +42,7 @@ class Enclosure implements MyObject3D {
     });
 
     this.sm.viga({
-      group: "Structure",
+      group: Groups.Structure,
       assemble: (obj) => {
         obj.rotateZ(Math.PI / 2);
         obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI / 2);

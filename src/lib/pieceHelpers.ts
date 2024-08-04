@@ -62,56 +62,56 @@ function handleJoint({
   xCenter: number;
   yCenter: number;
 }) {
-  if (joint?.jointType === "box") {
-    const { jointHeight, numberOfJoints, male } = joint;
-    const jointWidth = width / (numberOfJoints + 0.5);
-    for (let i = 0; i < numberOfJoints + 1; i++) {
-      let xs = [];
-      let ys = [];
-      if (orientation === "horizontal") {
-        xs = getJointWidthSeries({
-          value: x,
-          jointWidth,
-          order: jointWidthOrder,
-          i,
-        });
-        ys = getJointHeightSeries({
-          value: y,
-          jointHeight,
-          order: jointHeightOrder,
-          male,
-        });
-      } else {
-        xs = getJointHeightSeries({
-          value: x,
-          jointHeight,
-          order: jointHeightOrder,
-          male,
-        });
-        ys = getJointWidthSeries({
-          value: y,
-          jointWidth,
-          order: jointWidthOrder,
-          i,
-        });
-      }
-      if (x !== xs[0] || y !== ys[0]) {
-        drawing.lineTo([xs[0], ys[0]]);
-      }
-      drawing.lineTo([xs[1], ys[1]]);
-      if (i === numberOfJoints && !male) {
-        break;
-      }
-      drawing.lineTo([xs[2], ys[2]]);
-      if (i < numberOfJoints) drawing.lineTo([xs[3], ys[3]]);
-    }
+  // if (joint?.jointType === "box") {
+  //   const { jointHeight, numberOfJoints, male } = joint;
+  //   const jointWidth = width / (numberOfJoints + 0.5);
+  //   for (let i = 0; i < numberOfJoints + 1; i++) {
+  //     let xs = [];
+  //     let ys = [];
+  //     if (orientation === "horizontal") {
+  //       xs = getJointWidthSeries({
+  //         value: x,
+  //         jointWidth,
+  //         order: jointWidthOrder,
+  //         i,
+  //       });
+  //       ys = getJointHeightSeries({
+  //         value: y,
+  //         jointHeight,
+  //         order: jointHeightOrder,
+  //         male,
+  //       });
+  //     } else {
+  //       xs = getJointHeightSeries({
+  //         value: x,
+  //         jointHeight,
+  //         order: jointHeightOrder,
+  //         male,
+  //       });
+  //       ys = getJointWidthSeries({
+  //         value: y,
+  //         jointWidth,
+  //         order: jointWidthOrder,
+  //         i,
+  //       });
+  //     }
+  //     if (x !== xs[0] || y !== ys[0]) {
+  //       drawing.lineTo([xs[0], ys[0]]);
+  //     }
+  //     drawing.lineTo([xs[1], ys[1]]);
+  //     if (i === numberOfJoints && !male) {
+  //       break;
+  //     }
+  //     drawing.lineTo([xs[2], ys[2]]);
+  //     if (i < numberOfJoints) drawing.lineTo([xs[3], ys[3]]);
+  //   }
+  // } else {
+  if (orientation === "horizontal") {
+    drawing.lineTo([x + xCenter * 2 * jointWidthOrder, y]);
   } else {
-    if (orientation === "horizontal") {
-      drawing.lineTo([x + xCenter * 2 * jointWidthOrder, y]);
-    } else {
-      drawing.lineTo([x, y + yCenter * 2 * jointWidthOrder]);
-    }
+    drawing.lineTo([x, y + yCenter * 2 * jointWidthOrder]);
   }
+  // }
 }
 
 export function getGeometry(props: Piece): Shape3D {
@@ -183,22 +183,34 @@ export function getGeometry(props: Piece): Shape3D {
     let geoShape: Shape3D = shapez.extrude(props.geometry.depth) as Shape3D;
 
     // back
-    if (
-      props.geometry.sides?.back?.joint &&
-      props.geometry.sides.back.joint.jointType === "halfLap"
-    ) {
-      geoShape = halfLapJoint({
-        geo: geoShape,
-        sectionWidth: props.geometry.width,
-        sectionHeight: props.geometry.sides.back.joint.size,
-        depth: props.geometry.depth,
-        translateY:
-          0 +
-          props.geometry.height / 2 -
-          props.geometry.sides.back.joint.size / 2,
-        translateX: 0,
-      });
-    }
+    if (props.geometry.sides?.back?.joint)
+      if (props.geometry.sides.back.joint.jointType === "halfLap") {
+        geoShape = halfLapJoint({
+          geo: geoShape,
+          sectionWidth: props.geometry.width,
+          sectionHeight: props.geometry.sides.back.joint.size,
+          depth: props.geometry.depth,
+          translateY:
+            0 +
+            props.geometry.height / 2 -
+            props.geometry.sides.back.joint.size / 2,
+          translateX: 0,
+        });
+      } else if (props.geometry.sides.back.joint.jointType === "box") {
+        geoShape = boxJoint({
+          geo: geoShape,
+          depth: props.geometry.depth,
+          jointHeight: props.geometry.sides.back.joint.jointHeight,
+          jointWidth:
+            props.geometry.width /
+            ((props.geometry.sides.back.joint.numberOfJoints + 0.5) * 2),
+          male: props.geometry.sides.back.joint.male,
+          numberOfJoints: props.geometry.sides.back.joint.numberOfJoints,
+          orientation: "horizontal",
+          width: props.geometry.width,
+          height: props.geometry.height,
+        });
+      }
 
     // front
     if (
@@ -293,13 +305,51 @@ function halfLapJoint({
     depth: depth / 2,
   }).translate(translateX, translateY, depth * 0.25);
   return geo.cut(remove);
-  // if (male) {
+}
 
-  // } else {
-  //   geo.rotateX(Math.PI / 2);
-  // }
+function boxJoint({
+  jointHeight,
+  jointWidth,
+  numberOfJoints,
+  depth,
+  male,
+  orientation,
+  geo,
+  width,
+  height,
+}: {
+  geo: Shape3D;
+  jointHeight: number;
+  jointWidth: number;
+  numberOfJoints: number;
+  depth: number;
+  male: boolean;
+  orientation: "horizontal" | "vertical";
+  width: number;
+  height: number;
+}): Shape3D {
+  let geo2 = geo;
+  for (let i = 0; i < numberOfJoints + (male ? 0 : 1); i++) {
+    const box = makeBox({
+      width: jointWidth,
+      height: jointHeight,
+      depth,
+    });
+    if (orientation === "horizontal") {
+      console.log({ i, j: jointWidth * i });
+      const t = box.translate(
+        jointWidth * (i * 2 + 1.5) - width / 2,
+        0 - jointHeight / 2 + height / 2,
+        0,
+      );
+      geo2 = geo2.cut(t);
+    } else {
+      const t = box.translate(0 - jointWidth, jointHeight * i, 0);
+      geo2 = geo2.cut(t);
+    }
+  }
 
-  return geo;
+  return geo2;
 }
 
 export function specsKey(props: Piece) {
