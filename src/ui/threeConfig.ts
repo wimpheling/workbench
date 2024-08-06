@@ -56,6 +56,10 @@ export function init(
     }
   };
 
+  const reinitControls = () => {
+    controls.reset();
+  };
+
   const saveControls = () => {
     controls.saveState();
     const { target0, position0, zoom0 } = controls;
@@ -182,6 +186,7 @@ export function init(
     setAnimateCallback,
     loadControls,
     saveControls,
+    reinit: reinitControls,
     renderer,
     itemsToDispose,
   };

@@ -16,6 +16,7 @@ export interface HalfLapJoint {
   jointType: "halfLap";
   size: number;
   borderSize?: number;
+  holes?: { numberOfHoles: number; radius: number };
 }
 
 export type Joint = BoxJoint | HalfLapJoint;

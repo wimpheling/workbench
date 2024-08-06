@@ -24,20 +24,17 @@ export function getGeometry(props: Piece): Shape3D {
             props.geometry.height / 2 -
             props.geometry.sides.back.joint.size / 2,
           translateX: 0,
+          holes: props.geometry.sides.back.joint.holes,
+          orientation: "horizontal",
         });
       } else if (props.geometry.sides.back.joint.jointType === "box") {
         geoShape = boxJoint({
           geo: geoShape,
-          depth: props.geometry.depth,
-          jointHeight: props.geometry.sides.back.joint.jointHeight,
-          jointWidth:
-            props.geometry.width /
-            ((props.geometry.sides.back.joint.numberOfJoints + 0.5) * 2),
-          male: props.geometry.sides.back.joint.male,
-          numberOfJoints: props.geometry.sides.back.joint.numberOfJoints,
-          orientation: { axis: "horizontal", cutDirection: "down" },
           width: props.geometry.width,
           height: props.geometry.height,
+          depth: props.geometry.depth,
+          ...props.geometry.sides.back.joint,
+          orientation: { axis: "horizontal", cutDirection: "down" },
         });
       }
 
@@ -54,20 +51,17 @@ export function getGeometry(props: Piece): Shape3D {
             props.geometry.height / 2 +
             props.geometry.sides.front.joint.size / 2,
           translateX: 0,
+          holes: props.geometry.sides.front.joint.holes,
+          orientation: "horizontal",
         });
       } else if (props.geometry.sides.front.joint.jointType === "box") {
         geoShape = boxJoint({
           geo: geoShape,
-          depth: props.geometry.depth,
-          jointHeight: props.geometry.sides.front.joint.jointHeight,
-          jointWidth:
-            props.geometry.width /
-            ((props.geometry.sides.front.joint.numberOfJoints + 0.5) * 2),
-          male: props.geometry.sides.front.joint.male,
-          numberOfJoints: props.geometry.sides.front.joint.numberOfJoints,
-          orientation: { axis: "horizontal", cutDirection: "up" },
           width: props.geometry.width,
           height: props.geometry.height,
+          depth: props.geometry.depth,
+          ...props.geometry.sides.front.joint,
+          orientation: { axis: "horizontal", cutDirection: "up" },
         });
       }
     }
@@ -84,21 +78,17 @@ export function getGeometry(props: Piece): Shape3D {
             0 +
             props.geometry.width / 2 -
             props.geometry.sides.right.joint.size / 2,
+          holes: props.geometry.sides.right.joint.holes,
+          orientation: "vertical",
         });
       } else if (props.geometry.sides.right.joint.jointType === "box") {
         geoShape = boxJoint({
           geo: geoShape,
           depth: props.geometry.depth,
-          jointHeight:
-            props.geometry.height /
-            ((props.geometry.sides.right.joint.numberOfJoints + 0.5) * 2),
-          jointWidth: props.geometry.sides.right.joint.jointHeight,
-
-          male: props.geometry.sides.right.joint.male,
-          numberOfJoints: props.geometry.sides.right.joint.numberOfJoints,
-          orientation: { axis: "vertical", cutDirection: "left" },
           width: props.geometry.width,
           height: props.geometry.height,
+          orientation: { axis: "vertical", cutDirection: "left" },
+          ...props.geometry.sides.right.joint,
         });
       }
 
@@ -115,21 +105,17 @@ export function getGeometry(props: Piece): Shape3D {
             0 -
             props.geometry.width / 2 +
             props.geometry.sides.left.joint.size / 2,
+          holes: props.geometry.sides.left.joint.holes,
+          orientation: "vertical",
         });
       } else if (props.geometry.sides.left.joint.jointType === "box") {
         geoShape = boxJoint({
           geo: geoShape,
           depth: props.geometry.depth,
-          jointHeight:
-            props.geometry.height /
-            ((props.geometry.sides.left.joint.numberOfJoints + 0.5) * 2),
-          jointWidth: props.geometry.sides.left.joint.jointHeight,
-
-          male: props.geometry.sides.left.joint.male,
-          numberOfJoints: props.geometry.sides.left.joint.numberOfJoints,
-          orientation: { axis: "vertical", cutDirection: "right" },
           width: props.geometry.width,
           height: props.geometry.height,
+          orientation: { axis: "vertical", cutDirection: "right" },
+          ...props.geometry.sides.left.joint,
         });
       }
 

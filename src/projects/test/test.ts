@@ -10,7 +10,7 @@ class Enclosure implements MyObject3D {
 
   constructor() {
     this.sm.makeShape({
-      group: "Structure ",
+      group: "Structure",
       assemble: (obj) => {
         console.log(obj);
       },
@@ -23,10 +23,13 @@ class Enclosure implements MyObject3D {
         sides: {
           right: {
             joint: {
-              jointType: "box",
-              jointHeight: 10,
-              male: false,
-              numberOfJoints: 3,
+              jointType: "halfLap",
+              male: true,
+              size: 10,
+              holes: {
+                numberOfHoles: 3,
+                radius: 1,
+              },
             },
           },
 

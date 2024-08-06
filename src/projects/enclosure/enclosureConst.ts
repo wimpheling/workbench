@@ -12,10 +12,10 @@ export const SLIDING_PANEL_WIDTH =
 export const STRUCTURE_JOINT_SIZE = 3;
 export const STRUCTURE_BOX_SIZE = 5;
 
-export const LATERAL_WIDTH_PIECE_1_WIDTH =
+export const LATERAL_WIDTH_PIECE_1_HEIGHT =
   Math.round((ENCLOSURE_WIDTH * 2) / 3) + STRUCTURE_JOINT_SIZE;
 
-export const LATERAL_WIDTH_PIECE_2_WIDTH = Math.round(
+export const LATERAL_WIDTH_PIECE_2_HEIGHT = Math.round(
   (ENCLOSURE_WIDTH * 1) / 3,
 );
 
