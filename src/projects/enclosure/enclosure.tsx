@@ -23,6 +23,7 @@ class Enclosure implements MyObject3D {
     structureBoxJointSize,
     structureHalflapJointSize,
     structureScrewSize,
+    slidingDoorGuardSize,
   }: {
     enclosureWidth: number;
     enclosureHeight: number;
@@ -33,6 +34,7 @@ class Enclosure implements MyObject3D {
     structureBoxJointSize: number;
     structureHalflapJointSize: number;
     structureScrewSize: number;
+    slidingDoorGuardSize: number;
   }) {
     this.sm = new EnclosureShapeMaker({
       enclosureVigaThickness,
@@ -235,6 +237,104 @@ class Enclosure implements MyObject3D {
         },
       });
     });
+
+    this.sm.makeShape({
+      name: "Left Pillar Outside",
+      material: "Wood",
+      color: "fuchsia",
+      group: Groups.Structure + 2,
+      assemble: (obj) => {
+        obj.position.set(
+          0,
+          enclosureHeight / 2,
+          0 + structureWidth / 2 - enclosureVigaThickness,
+        );
+      },
+      getGeometry() {
+        const mainPart = getGeometry({
+          depth: enclosureVigaThickness,
+          height: enclosureHeight,
+          width: structureWidth,
+          type: "box",
+          sides: {
+            front: {
+              joint: {
+                jointHeight: structureBoxJointSize,
+                jointType: "box",
+                male: true,
+                numberOfJoints: 2,
+              },
+            },
+            left: {
+              joint: {
+                jointHeight: structureBoxJointSize,
+                jointType: "box",
+                male: true,
+                numberOfJoints: 20,
+              },
+            },
+            right: {
+              joint: {
+                jointHeight: structureBoxJointSize,
+                jointType: "box",
+                male: true,
+                numberOfJoints: 20,
+              },
+            },
+          },
+        });
+
+        const leftPart = getGeometry({
+          depth: enclosureVigaThickness,
+          height: enclosureHeight - enclosureVigaThickness,
+          width: slidingDoorGuardSize,
+          type: "box",
+          sides: {
+            front: {
+              joint: {
+                jointType: "halfLap",
+                male: true,
+                size: slidingDoorGuardSize,
+                holes: {
+                  numberOfHoles: 1,
+                  radius: structureScrewSize,
+                },
+              },
+            },
+          },
+        }).translate(
+          0 - structureWidth / 2 - enclosureVigaThickness,
+          0 + enclosureVigaThickness / 2,
+          0,
+        );
+
+        const rightPart = getGeometry({
+          depth: enclosureVigaThickness,
+          height: enclosureHeight - enclosureVigaThickness,
+          width: slidingDoorGuardSize,
+          type: "box",
+          sides: {
+            front: {
+              joint: {
+                jointType: "halfLap",
+                male: true,
+                size: slidingDoorGuardSize,
+                holes: {
+                  numberOfHoles: 1,
+                  radius: structureScrewSize,
+                },
+              },
+            },
+          },
+        }).translate(
+          0 + structureWidth / 2 + enclosureVigaThickness,
+          0 + enclosureVigaThickness / 2,
+          0,
+        );
+
+        return mainPart.fuse(leftPart).fuse(rightPart);
+      },
+    });
   }
 }
 
@@ -248,6 +348,7 @@ renderObject3D(Enclosure, {
   enclosureVigaThickness: 1,
   structureHalflapJointSize: 3,
   structureScrewSize: 0.3,
+  slidingDoorGuardSize: 2,
 });
 
 // renderObject3D(Enclosure, {
@@ -260,4 +361,5 @@ renderObject3D(Enclosure, {
 //   enclosureVigaThickness: 1,
 //   structureHalflapJointSize: 2,
 //   structureScrewSize: 0.3,
+// slidingDoorGuardSize: 2,
 // });
