@@ -2,6 +2,7 @@ import { AbstractShapeMaker, Sides } from "../../lib/AbstractShapeMaker";
 import { getGeometry } from "../../lib/pieceHelpers";
 import { Materials } from "./enclosureConst";
 
+export type AssembleCallback = (obj: THREE.Object3D) => void;
 export class EnclosureShapeMaker extends AbstractShapeMaker {
   enclosureVigaThickness: number;
   constructor({ enclosureVigaThickness }: { enclosureVigaThickness: number }) {
@@ -21,7 +22,7 @@ export class EnclosureShapeMaker extends AbstractShapeMaker {
     width: number;
     color?: string;
     name: string;
-    assemble: (obj: THREE.Object3D) => void;
+    assemble: AssembleCallback;
     group: string;
     sides?: Sides;
   }) {

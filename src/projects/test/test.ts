@@ -7,7 +7,6 @@ class Enclosure implements MyObject3D {
   sm = new AbstractShapeMaker();
 
   hiddenGroups = [];
-  hiddenGroupsInSpecs = [];
 
   constructor() {
     this.sm.makeShape({
