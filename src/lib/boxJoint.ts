@@ -32,7 +32,7 @@ export function boxJoint({
     const translateModifier = male ? 0.5 : 1.5;
     if (orientation.axis === "horizontal") {
       const boxHeight = jointHeight;
-      const boxWidth = (width / (numberOfJoints + 0.5)) * 2;
+      const boxWidth = width / (numberOfJoints + 0.5) / 2;
       const box = makeBaseBox(boxWidth, boxHeight, depth);
       const jointHeightOrder = orientation.cutDirection === "up" ? 1 : -1;
       const section = box.translate(
@@ -45,7 +45,7 @@ export function boxJoint({
       geo2 = geo2.cut(section);
     } else {
       // vertical
-      const boxHeight = (height / (numberOfJoints + 0.5)) * 2;
+      const boxHeight = height / (numberOfJoints + 0.5) / 2;
       const boxWidth = jointHeight;
       const box = makeBaseBox(boxWidth, boxHeight, depth);
       const jointWidthOrder = orientation.cutDirection === "left" ? -1 : 1;

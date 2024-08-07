@@ -1,6 +1,7 @@
 import { MyObject3D } from "../../lib/MyObject3D";
 import { renderObject3D } from "../../lib/render";
 import { AbstractShapeMaker } from "../../lib/AbstractShapeMaker";
+import { getGeometry } from "../../lib/pieceHelpers";
 
 class Enclosure implements MyObject3D {
   sm = new AbstractShapeMaker();
@@ -15,34 +16,34 @@ class Enclosure implements MyObject3D {
         console.log(obj);
       },
       material: "Wood",
-      geometry: {
-        depth: 10,
-        height: 100,
-        width: 100,
-        type: "box",
-        sides: {
-          right: {
-            joint: {
-              jointType: "halfLap",
-              male: true,
-              size: 10,
-              holes: {
-                numberOfHoles: 3,
-                radius: 1,
+      getGeometry: () =>
+        getGeometry({
+          depth: 10,
+          height: 100,
+          width: 100,
+          type: "box",
+          sides: {
+            right: {
+              joint: {
+                jointType: "halfLap",
+                male: true,
+                size: 10,
+                holes: {
+                  numberOfHoles: 3,
+                  radius: 1,
+                },
+              },
+            },
+            left: {
+              joint: {
+                jointType: "box",
+                jointHeight: 10,
+                male: true,
+                numberOfJoints: 3,
               },
             },
           },
-
-          left: {
-            joint: {
-              jointType: "box",
-              jointHeight: 10,
-              male: false,
-              numberOfJoints: 13,
-            },
-          },
-        },
-      },
+        }),
       name: "Test",
     });
   }

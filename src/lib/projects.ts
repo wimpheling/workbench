@@ -1,1 +1,1 @@
-export default ["workbench", "enclosure", "montessoriLibrary", "test"];
+export default ["enclosure", "montessoriLibrary", "test"];

@@ -46,7 +46,7 @@ export function init(
   itemsToDispose.push(controls);
   const loadControls: () => void = () => {
     const stateJSON = localStorage.getItem(`orbitControls`);
-
+    console.log(stateJSON);
     if (stateJSON) {
       const { target0, position0, zoom0 } = JSON.parse(stateJSON);
       controls.target0.copy(target0);
@@ -57,6 +57,14 @@ export function init(
   };
 
   const reinitControls = () => {
+    const { target0, position0, zoom0 } = {
+      target0: { x: 0, y: 0, z: 0 },
+      position0: { x: 499.9999999999999, y: 500.00000000000006, z: 500 },
+      zoom0: 1,
+    };
+    controls.target0.set(target0.x, target0.y, target0.z);
+    controls.position0.set(position0.x, position0.y, position0.z);
+    controls.zoom0 = zoom0;
     controls.reset();
   };
 
