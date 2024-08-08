@@ -6,6 +6,7 @@ import { MyObject3D } from "../lib/MyObject3D";
 import { DisposableItem } from "./interfaces";
 
 export const Assembly = ({ item }: { item: MyObject3D }) => {
+  let reinit: () => void;
   let loadControls: () => void;
   let saveControls: () => void;
   const [renderer, setRenderer] = createSignal<THREE.WebGLRenderer>();
@@ -48,13 +49,14 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
       scene,
       loadControls: lc,
       saveControls: sc,
-      // exportStl: es,
+      reinit: r,
       renderer,
       itemsToDispose: itemsToInit,
     } = init(onSelect);
     setItemsToDisposeInit(itemsToInit);
     loadControls = lc;
     saveControls = sc;
+    reinit = r;
     // exportStl = es;
     const itemsTo = item.sm.assemble(scene, {
       hiddenGroups: item.hiddenGroups,
@@ -81,7 +83,14 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
     <div
       style={{ position: "absolute", top: "30px", left: 0, "z-index": 1000 }}
     >
-      <div style={{ display: "flex", "flex-direction": "row" }}>
+      <div
+        style={{
+          display: "flex",
+          "flex-direction": "row",
+          "background-color": "whitesmoke",
+          opacity: 0.8,
+        }}
+      >
         <div>
           <h1>Controls</h1>
           <For each={Object.keys(threeGroups())}>
@@ -105,7 +114,9 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
             }}
           </For>
         </div>
-        <div style={{ "margin-left": "20px" }}>
+        <div
+          style={{ "margin-left": "20px", "background-color": "whitesmoke" }}
+        >
           <Show when={select()}>
             <h1>Piece Info</h1>
             <p>
@@ -130,6 +141,7 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
         </div>
       </div>
 
+      <button onClick={() => reinit()}>reinit</button>
       <button onClick={() => saveControls()}>Save</button>
       <button onClick={() => loadControls()}>Load</button>
     </div>

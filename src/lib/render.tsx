@@ -23,9 +23,12 @@ const init = async () => {
   return true;
 };
 
-export function renderObject3D<A extends MyObject3D>(c: new () => A) {
+export function renderObject3D<A extends MyObject3D, B>(
+  c: new (params: B) => A,
+  params: B = {} as B,
+) {
   function App() {
-    const object3D = new c();
+    const object3D = new c(params);
     return <Renderer3D object3D={object3D} />;
   }
   const el = document.getElementById("app");

@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { DisposableItem } from "../ui/interfaces";
-import { getGeometry, specsKey } from "./pieceHelpers";
 import { syncGeometries } from "replicad-threejs-helper";
 import { Shape3D } from "replicad";
 
@@ -16,6 +15,7 @@ export interface HalfLapJoint {
   jointType: "halfLap";
   size: number;
   borderSize?: number;
+  holes?: { numberOfHoles: number; radius: number };
 }
 
 export type Joint = BoxJoint | HalfLapJoint;
@@ -30,57 +30,34 @@ export interface Sides {
   front?: Side;
   back?: Side;
 }
-export type PostProcessHandler = (obj: Shape3D) => Shape3D;
 interface BoxGeometryProps {
   height: number;
   width: number;
   depth: number;
   type: "box";
   sides?: Sides;
-  postProcess?: PostProcessHandler;
 }
 
-type GeometryProps = BoxGeometryProps;
-interface MakeShapeProps {
-  geometry: GeometryProps;
-  x: number;
-  y: number;
-  z: number;
-  scene: THREE.Scene;
+export type GeometryProps = BoxGeometryProps;
+export interface Piece {
+  getGeometry: () => Shape3D;
   color?: string;
-  dimensions?: boolean;
   opacity?: number;
   name: string;
-}
-export type Piece = Omit<MakeShapeProps, "x" | "y" | "z" | "scene"> & {
   material: string;
   group: string;
   assemble: (obj: THREE.Object3D) => void;
-};
+}
 
 export class AbstractShapeMaker {
   objectsByGroup: Record<string, Piece[]> = {};
   threeGroups: Record<string, THREE.Group> = {};
-  piecesBySpecs: Record<string, Piece[]> = {};
-  hiddenGroupsInSpecs: string[] = [];
-
-  constructor(hiddenGroupsInSpecs: string[] = []) {
-    this.hiddenGroupsInSpecs = hiddenGroupsInSpecs;
-  }
 
   makeShape(props: Piece) {
     if (!this.objectsByGroup[props.group]) {
       this.objectsByGroup[props.group] = [];
     }
     this.objectsByGroup[props.group]?.push(props);
-
-    if (!this.hiddenGroupsInSpecs.includes(props.group)) {
-      const specs = specsKey(props);
-      if (!this.piecesBySpecs[specs]) {
-        this.piecesBySpecs[specs] = [];
-      }
-      this.piecesBySpecs[specs]?.push(props);
-    }
   }
 
   assemble(
@@ -101,7 +78,7 @@ export class AbstractShapeMaker {
       this.threeGroups[group] = groupObj;
       pieces.forEach((piece) => {
         // Mesh
-        let shape = getGeometry(piece);
+        const shape = piece.getGeometry();
         const mat = new THREE.MeshLambertMaterial({
           color: piece.color || 0xa1662f,
           opacity: piece.opacity || 1,
@@ -109,9 +86,6 @@ export class AbstractShapeMaker {
           name: piece.name,
         });
 
-        if (piece.geometry.postProcess) {
-          shape = piece.geometry.postProcess(shape);
-        }
         const shapeItem = {
           name: piece.name,
           faces: shape.mesh({ tolerance: 0.05, angularTolerance: 30 }),
