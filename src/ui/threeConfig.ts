@@ -75,12 +75,12 @@ export function init(
     localStorage.setItem(`orbitControls`, JSON.stringify(state));
   };
 
-  // const light = new THREE.AmbientLight("white", 1);
-  const light = new THREE.DirectionalLight(0xffffff);
+  const light = new THREE.AmbientLight("white", 1);
+  // const light = new THREE.DirectionalLight(0xffffff);
   scene.add(light);
 
-  const helper = new THREE.DirectionalLightHelper(light, 5);
-  scene.add(helper);
+  // const helper = new THREE.DirectionalLightHelper(light, 5);
+  // scene.add(helper);
   light.castShadow = true;
   light.position.set(500, 1000, 500);
   itemsToDispose.push(light);

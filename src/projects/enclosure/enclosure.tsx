@@ -3,14 +3,13 @@ import { renderObject3D } from "../../lib/render";
 import { AssembleCallback, EnclosureShapeMaker } from "./enclosureShapeMaker";
 import * as THREE from "three";
 import { getGeometry } from "../../lib/pieceHelpers";
-import { halfLapJoint } from "../../lib/halfLapJoint";
 
 enum Groups {
   Structure = "Structure",
 }
 
 class Enclosure implements MyObject3D {
-  hiddenGroups = [Groups.Structure];
+  hiddenGroups = [Groups.Structure + "1", Groups.Structure + "2"];
   sm: EnclosureShapeMaker;
 
   constructor({
@@ -24,6 +23,7 @@ class Enclosure implements MyObject3D {
     structureHalflapJointSize,
     structureScrewSize,
     slidingDoorGuardSize,
+    baseCornerPieceMargin,
   }: {
     enclosureWidth: number;
     enclosureHeight: number;
@@ -35,6 +35,7 @@ class Enclosure implements MyObject3D {
     structureHalflapJointSize: number;
     structureScrewSize: number;
     slidingDoorGuardSize: number;
+    baseCornerPieceMargin: number;
   }) {
     this.sm = new EnclosureShapeMaker({
       enclosureVigaThickness,
@@ -43,7 +44,10 @@ class Enclosure implements MyObject3D {
     const lateralWidthPiece1Height =
       (enclosureWidth * 3) / 5 + structureHalflapJointSize;
 
-    const lateralWidthPiece2Height = (enclosureWidth * 2) / 5;
+    const lateralWidthPiece2Height =
+      (enclosureWidth * 2) / 5 -
+      baseCornerPieceMargin +
+      structureHalflapJointSize;
     const structureWidth = enclosureFoamThickness + enclosureVigaThickness * 2;
 
     const columnHolderShapeHeight = structureWidth;
@@ -54,12 +58,57 @@ class Enclosure implements MyObject3D {
     const part1X = 0 + endShapeHeight / 2 + columnHolderShapeHeight / 2;
     const part2X =
       0 -
-      lateralWidthPiece2Height / 2 -
+      (lateralWidthPiece2Height - structureWidth) / 2 -
       columnHolderShapeHeight / 2 -
       lapShapeHeight +
       structureHalflapJointSize;
     const slidingPanelWidth =
       enclosureVigaThickness * 2 + enclosureFoamThickness;
+
+    const baseCornerPieceLength = structureWidth + baseCornerPieceMargin;
+
+    const getColumnHolder = () => {
+      return getGeometry({
+        depth: enclosureVigaThickness,
+        width: structureWidth,
+        height: columnHolderShapeHeight,
+        type: "box",
+        sides: {
+          front: {
+            joint: {
+              jointHeight: structureBoxJointSize,
+              jointType: "box",
+              male: false,
+              numberOfJoints: 2,
+            },
+          },
+          back: {
+            joint: {
+              jointHeight: structureBoxJointSize,
+              jointType: "box",
+              male: false,
+              numberOfJoints: 2,
+            },
+          },
+          left: {
+            joint: {
+              jointHeight: structureBoxJointSize,
+              jointType: "box",
+              male: false,
+              numberOfJoints: 2,
+            },
+          },
+          right: {
+            joint: {
+              jointHeight: structureBoxJointSize,
+              jointType: "box",
+              male: false,
+              numberOfJoints: 2,
+            },
+          },
+        },
+      });
+    };
 
     this.sm.makeShape({
       name: "Left Bottom Part 1",
@@ -79,46 +128,9 @@ class Enclosure implements MyObject3D {
           type: "box",
         });
 
-        const columnHolderShape = getGeometry({
-          depth: enclosureVigaThickness,
-          width: structureWidth,
-          height: columnHolderShapeHeight,
-          type: "box",
-          sides: {
-            front: {
-              joint: {
-                jointHeight: structureBoxJointSize,
-                jointType: "box",
-                male: false,
-                numberOfJoints: 2,
-              },
-            },
-            back: {
-              joint: {
-                jointHeight: structureBoxJointSize,
-                jointType: "box",
-                male: false,
-                numberOfJoints: 2,
-              },
-            },
-            left: {
-              joint: {
-                jointHeight: structureBoxJointSize,
-                jointType: "box",
-                male: false,
-                numberOfJoints: 2,
-              },
-            },
-            right: {
-              joint: {
-                jointHeight: structureBoxJointSize,
-                jointType: "box",
-                male: false,
-                numberOfJoints: 2,
-              },
-            },
-          },
-        }).translateY(0 - endShapeHeight / 2 - columnHolderShapeHeight / 2);
+        const columnHolderShape = getColumnHolder().translateY(
+          0 - endShapeHeight / 2 - columnHolderShapeHeight / 2,
+        );
 
         const lapShape = getGeometry({
           depth: enclosureVigaThickness,
@@ -143,7 +155,8 @@ class Enclosure implements MyObject3D {
       },
     });
 
-    this.sm.viga({
+    this.sm.makeShape({
+      name: "Left Bottom Part 2",
       group: Groups.Structure,
       assemble: (obj) => {
         obj.rotateZ(Math.PI / 2);
@@ -151,33 +164,50 @@ class Enclosure implements MyObject3D {
         obj.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI);
         obj.position.set(part2X, enclosureVigaThickness, 0);
       },
-      height: lateralWidthPiece2Height,
-      width: structureWidth,
-      name: "Left Bottom Part 2",
-      sides: {
-        back: {
-          joint: {
-            size: structureHalflapJointSize,
-            jointType: "halfLap",
-            male: true,
-            holes: { numberOfHoles: 2, radius: structureScrewSize },
+      material: "Wood",
+      getGeometry: () => {
+        const mainShapeHeight = lateralWidthPiece2Height - structureWidth;
+        const mainShape = getGeometry({
+          depth: enclosureVigaThickness,
+          height: mainShapeHeight,
+          width: structureWidth,
+          sides: {
+            back: {
+              joint: {
+                size: structureHalflapJointSize,
+                jointType: "halfLap",
+                male: true,
+                holes: { numberOfHoles: 2, radius: structureScrewSize },
+              },
+            },
           },
-        },
+          type: "box",
+        });
+        const jointShape = getGeometry({
+          depth: enclosureVigaThickness,
+          height: structureWidth,
+          width: structureWidth,
+          type: "box",
+          sides: {
+            front: {
+              joint: {
+                size: structureHalflapJointSize,
+                jointType: "halfLap",
+                male: true,
+                holes: { numberOfHoles: 2, radius: structureScrewSize },
+              },
+            },
+          },
+        }).translateY(0 - mainShapeHeight / 2 - structureWidth / 2);
+        return mainShape.fuse(jointShape);
       },
     });
-    const panels: {
+    const panelsSide: {
       side: string;
       assemble: AssembleCallback;
       color?: string;
       male: boolean;
     }[] = [
-      {
-        side: "Inside",
-        assemble: (obj) => {
-          obj.position.set(0, enclosureHeight / 2, 0 - structureWidth / 2);
-        },
-        male: true,
-      },
       {
         side: "Back",
         assemble: (obj) => {
@@ -201,7 +231,7 @@ class Enclosure implements MyObject3D {
         male: false,
       },
     ];
-    panels.forEach(({ side, assemble, color, male }) => {
+    panelsSide.forEach(({ side, assemble, color, male }) => {
       this.sm.viga({
         group: Groups.Structure + 1,
         assemble,
@@ -238,101 +268,168 @@ class Enclosure implements MyObject3D {
       });
     });
 
-    this.sm.makeShape({
-      name: "Left Pillar Outside",
-      material: "Wood",
-      color: "fuchsia",
-      group: Groups.Structure + 2,
-      assemble: (obj) => {
-        obj.position.set(
-          0,
-          enclosureHeight / 2,
-          0 + structureWidth / 2 - enclosureVigaThickness,
-        );
+    const panelsFace: {
+      side: string;
+      assemble: AssembleCallback;
+      color?: string;
+    }[] = [
+      {
+        side: "Inside",
+        color: "purple",
+        assemble: (obj) => {
+          obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
+          obj.position.set(
+            0,
+            enclosureHeight / 2,
+            0 - structureWidth / 2 + enclosureVigaThickness,
+          );
+        },
       },
-      getGeometry() {
-        const mainPart = getGeometry({
+      {
+        side: "Outside",
+        color: "fuchsia",
+        assemble: (obj) => {
+          obj.position.set(
+            0,
+            enclosureHeight / 2,
+            0 + structureWidth / 2 - enclosureVigaThickness,
+          );
+        },
+      },
+    ];
+
+    panelsFace.forEach(({ side, assemble, color }) => {
+      this.sm.makeShape({
+        name: `Left Pillar ${side}`,
+        material: "Wood",
+        color,
+        group: Groups.Structure + 2,
+        assemble,
+        getGeometry() {
+          const mainPart = getGeometry({
+            depth: enclosureVigaThickness,
+            height: enclosureHeight,
+            width: structureWidth,
+            type: "box",
+            sides: {
+              front: {
+                joint: {
+                  jointHeight: structureBoxJointSize,
+                  jointType: "box",
+                  male: true,
+                  numberOfJoints: 2,
+                },
+              },
+              left: {
+                joint: {
+                  jointHeight: structureBoxJointSize,
+                  jointType: "box",
+                  male: true,
+                  numberOfJoints: 20,
+                },
+              },
+              right: {
+                joint: {
+                  jointHeight: structureBoxJointSize,
+                  jointType: "box",
+                  male: true,
+                  numberOfJoints: 20,
+                },
+              },
+            },
+          });
+
+          const leftPart = getGeometry({
+            depth: enclosureVigaThickness,
+            height: enclosureHeight - enclosureVigaThickness,
+            width: slidingDoorGuardSize,
+            type: "box",
+            sides: {
+              front: {
+                joint: {
+                  jointType: "halfLap",
+                  male: true,
+                  size: slidingDoorGuardSize,
+                  holes: {
+                    numberOfHoles: 1,
+                    radius: structureScrewSize,
+                  },
+                },
+              },
+            },
+          }).translate(
+            0 - structureWidth / 2 - enclosureVigaThickness,
+            0 + enclosureVigaThickness / 2,
+            0,
+          );
+
+          const rightPart = getGeometry({
+            depth: enclosureVigaThickness,
+            height: enclosureHeight - enclosureVigaThickness,
+            width: slidingDoorGuardSize,
+            type: "box",
+            sides: {
+              front: {
+                joint: {
+                  jointType: "halfLap",
+                  male: true,
+                  size: slidingDoorGuardSize,
+                  holes: {
+                    numberOfHoles: 1,
+                    radius: structureScrewSize,
+                  },
+                },
+              },
+            },
+          }).translate(
+            0 + structureWidth / 2 + enclosureVigaThickness,
+            0 + enclosureVigaThickness / 2,
+            0,
+          );
+
+          return mainPart.fuse(leftPart).fuse(rightPart);
+        },
+      });
+    });
+
+    this.sm.makeShape({
+      name: "Base Corner Piece Left Back",
+      material: "Wood",
+      color: "blue",
+      group: Groups.Structure + 3,
+      assemble: (obj) => {
+        obj.rotateZ(Math.PI * 1.5);
+        obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI * 1.5);
+        // obj.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI);
+        // obj.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+        // obj.position.set(
+        //   0,
+        //   enclosureHeight / 2,
+        //   0 - structureWidth / 2 + enclosureVigaThickness,
+        // );
+      },
+      getGeometry: () => {
+        const columnHolder = getColumnHolder();
+        const bottomLink = getGeometry({
           depth: enclosureVigaThickness,
-          height: enclosureHeight,
+          height: baseCornerPieceMargin,
           width: structureWidth,
           type: "box",
           sides: {
             front: {
               joint: {
-                jointHeight: structureBoxJointSize,
-                jointType: "box",
-                male: true,
-                numberOfJoints: 2,
-              },
-            },
-            left: {
-              joint: {
-                jointHeight: structureBoxJointSize,
-                jointType: "box",
-                male: true,
-                numberOfJoints: 20,
-              },
-            },
-            right: {
-              joint: {
-                jointHeight: structureBoxJointSize,
-                jointType: "box",
-                male: true,
-                numberOfJoints: 20,
-              },
-            },
-          },
-        });
-
-        const leftPart = getGeometry({
-          depth: enclosureVigaThickness,
-          height: enclosureHeight - enclosureVigaThickness,
-          width: slidingDoorGuardSize,
-          type: "box",
-          sides: {
-            front: {
-              joint: {
                 jointType: "halfLap",
                 male: true,
-                size: slidingDoorGuardSize,
+                size: structureHalflapJointSize,
                 holes: {
-                  numberOfHoles: 1,
+                  numberOfHoles: 2,
                   radius: structureScrewSize,
                 },
               },
             },
           },
-        }).translate(
-          0 - structureWidth / 2 - enclosureVigaThickness,
-          0 + enclosureVigaThickness / 2,
-          0,
-        );
-
-        const rightPart = getGeometry({
-          depth: enclosureVigaThickness,
-          height: enclosureHeight - enclosureVigaThickness,
-          width: slidingDoorGuardSize,
-          type: "box",
-          sides: {
-            front: {
-              joint: {
-                jointType: "halfLap",
-                male: true,
-                size: slidingDoorGuardSize,
-                holes: {
-                  numberOfHoles: 1,
-                  radius: structureScrewSize,
-                },
-              },
-            },
-          },
-        }).translate(
-          0 + structureWidth / 2 + enclosureVigaThickness,
-          0 + enclosureVigaThickness / 2,
-          0,
-        );
-
-        return mainPart.fuse(leftPart).fuse(rightPart);
+        }).translateY(-structureWidth / 2 - baseCornerPieceMargin / 2);
+        return columnHolder.fuse(bottomLink);
       },
     });
   }
@@ -349,6 +446,7 @@ renderObject3D(Enclosure, {
   structureHalflapJointSize: 3,
   structureScrewSize: 0.3,
   slidingDoorGuardSize: 2,
+  baseCornerPieceMargin: 6,
 });
 
 // renderObject3D(Enclosure, {
