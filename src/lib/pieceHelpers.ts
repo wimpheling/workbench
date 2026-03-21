@@ -1,135 +1,113 @@
-import { Piece } from "./AbstractShapeMaker";
+import { GeometryProps } from "./AbstractShapeMaker";
 import { makeBaseBox, Shape3D } from "replicad";
 import { boxJoint } from "./boxJoint";
 import { halfLapJoint } from "./halfLapJoint";
 
-export function getGeometry(props: Piece): Shape3D {
-  if (props.geometry.type === "box") {
+export function getGeometry(geometry: GeometryProps): Shape3D {
+  if (geometry.type === "box") {
     let geoShape: Shape3D = makeBox({
-      depth: props.geometry.depth,
-      height: props.geometry.height,
-      width: props.geometry.width,
+      depth: geometry.depth,
+      height: geometry.height,
+      width: geometry.width,
     });
 
     // back
-    if (props.geometry.sides?.back?.joint)
-      if (props.geometry.sides.back.joint.jointType === "halfLap") {
+    if (geometry.sides?.back?.joint)
+      if (geometry.sides.back.joint.jointType === "halfLap") {
         geoShape = halfLapJoint({
           geo: geoShape,
-          sectionWidth: props.geometry.width,
-          sectionHeight: props.geometry.sides.back.joint.size,
-          depth: props.geometry.depth,
+          sectionWidth: geometry.width,
+          sectionHeight: geometry.sides.back.joint.size,
+          depth: geometry.depth,
           translateY:
-            0 +
-            props.geometry.height / 2 -
-            props.geometry.sides.back.joint.size / 2,
+            0 + geometry.height / 2 - geometry.sides.back.joint.size / 2,
           translateX: 0,
+          holes: geometry.sides.back.joint.holes,
+          orientation: "horizontal",
         });
-      } else if (props.geometry.sides.back.joint.jointType === "box") {
+      } else if (geometry.sides.back.joint.jointType === "box") {
         geoShape = boxJoint({
           geo: geoShape,
-          depth: props.geometry.depth,
-          jointHeight: props.geometry.sides.back.joint.jointHeight,
-          jointWidth:
-            props.geometry.width /
-            ((props.geometry.sides.back.joint.numberOfJoints + 0.5) * 2),
-          male: props.geometry.sides.back.joint.male,
-          numberOfJoints: props.geometry.sides.back.joint.numberOfJoints,
+          width: geometry.width,
+          height: geometry.height,
+          depth: geometry.depth,
+          ...geometry.sides.back.joint,
           orientation: { axis: "horizontal", cutDirection: "down" },
-          width: props.geometry.width,
-          height: props.geometry.height,
         });
       }
 
     // front
-    if (props.geometry.sides?.front?.joint) {
-      if (props.geometry.sides.front.joint.jointType === "halfLap") {
+    if (geometry.sides?.front?.joint) {
+      if (geometry.sides.front.joint.jointType === "halfLap") {
         geoShape = halfLapJoint({
           geo: geoShape,
-          sectionWidth: props.geometry.width,
-          sectionHeight: props.geometry.sides.front.joint.size,
-          depth: props.geometry.depth,
+          sectionWidth: geometry.width,
+          sectionHeight: geometry.sides.front.joint.size,
+          depth: geometry.depth,
           translateY:
-            0 -
-            props.geometry.height / 2 +
-            props.geometry.sides.front.joint.size / 2,
+            0 - geometry.height / 2 + geometry.sides.front.joint.size / 2,
           translateX: 0,
+          holes: geometry.sides.front.joint.holes,
+          orientation: "horizontal",
         });
-      } else if (props.geometry.sides.front.joint.jointType === "box") {
+      } else if (geometry.sides.front.joint.jointType === "box") {
         geoShape = boxJoint({
           geo: geoShape,
-          depth: props.geometry.depth,
-          jointHeight: props.geometry.sides.front.joint.jointHeight,
-          jointWidth:
-            props.geometry.width /
-            ((props.geometry.sides.front.joint.numberOfJoints + 0.5) * 2),
-          male: props.geometry.sides.front.joint.male,
-          numberOfJoints: props.geometry.sides.front.joint.numberOfJoints,
+          width: geometry.width,
+          height: geometry.height,
+          depth: geometry.depth,
+          ...geometry.sides.front.joint,
           orientation: { axis: "horizontal", cutDirection: "up" },
-          width: props.geometry.width,
-          height: props.geometry.height,
         });
       }
     }
     // right
-    if (props.geometry.sides?.right?.joint)
-      if (props.geometry.sides.right.joint.jointType === "halfLap") {
+    if (geometry.sides?.right?.joint)
+      if (geometry.sides.right.joint.jointType === "halfLap") {
         geoShape = halfLapJoint({
           geo: geoShape,
-          sectionWidth: props.geometry.sides.right.joint.size,
-          sectionHeight: props.geometry.height,
-          depth: props.geometry.depth,
+          sectionWidth: geometry.sides.right.joint.size,
+          sectionHeight: geometry.height,
+          depth: geometry.depth,
           translateY: 0,
           translateX:
-            0 +
-            props.geometry.width / 2 -
-            props.geometry.sides.right.joint.size / 2,
+            0 + geometry.width / 2 - geometry.sides.right.joint.size / 2,
+          holes: geometry.sides.right.joint.holes,
+          orientation: "vertical",
         });
-      } else if (props.geometry.sides.right.joint.jointType === "box") {
+      } else if (geometry.sides.right.joint.jointType === "box") {
         geoShape = boxJoint({
           geo: geoShape,
-          depth: props.geometry.depth,
-          jointHeight:
-            props.geometry.height /
-            ((props.geometry.sides.right.joint.numberOfJoints + 0.5) * 2),
-          jointWidth: props.geometry.sides.right.joint.jointHeight,
-
-          male: props.geometry.sides.right.joint.male,
-          numberOfJoints: props.geometry.sides.right.joint.numberOfJoints,
+          depth: geometry.depth,
+          width: geometry.width,
+          height: geometry.height,
           orientation: { axis: "vertical", cutDirection: "left" },
-          width: props.geometry.width,
-          height: props.geometry.height,
+          ...geometry.sides.right.joint,
         });
       }
 
     // left
-    if (props.geometry.sides?.left?.joint)
-      if (props.geometry.sides.left.joint.jointType === "halfLap") {
+    if (geometry.sides?.left?.joint)
+      if (geometry.sides.left.joint.jointType === "halfLap") {
         geoShape = halfLapJoint({
           geo: geoShape,
-          sectionWidth: props.geometry.sides.left.joint.size,
-          sectionHeight: props.geometry.height,
-          depth: props.geometry.depth,
+          sectionWidth: geometry.sides.left.joint.size,
+          sectionHeight: geometry.height,
+          depth: geometry.depth,
           translateY: 0,
           translateX:
-            0 -
-            props.geometry.width / 2 +
-            props.geometry.sides.left.joint.size / 2,
+            0 - geometry.width / 2 + geometry.sides.left.joint.size / 2,
+          holes: geometry.sides.left.joint.holes,
+          orientation: "vertical",
         });
-      } else if (props.geometry.sides.left.joint.jointType === "box") {
+      } else if (geometry.sides.left.joint.jointType === "box") {
         geoShape = boxJoint({
           geo: geoShape,
-          depth: props.geometry.depth,
-          jointHeight:
-            props.geometry.height /
-            ((props.geometry.sides.left.joint.numberOfJoints + 0.5) * 2),
-          jointWidth: props.geometry.sides.left.joint.jointHeight,
-
-          male: props.geometry.sides.left.joint.male,
-          numberOfJoints: props.geometry.sides.left.joint.numberOfJoints,
+          depth: geometry.depth,
+          width: geometry.width,
+          height: geometry.height,
           orientation: { axis: "vertical", cutDirection: "right" },
-          width: props.geometry.width,
-          height: props.geometry.height,
+          ...geometry.sides.left.joint,
         });
       }
 
@@ -148,8 +126,4 @@ function makeBox({
   depth: number;
 }): Shape3D {
   return makeBaseBox(width, height, depth);
-}
-
-export function specsKey(props: Piece) {
-  return `${props.material} ${props.geometry.height}x${props.geometry.width}x${props.geometry.depth}`;
 }

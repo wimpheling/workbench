@@ -1,43 +1,41 @@
-import {
-  AbstractShapeMaker,
-  PostProcessHandler,
-  Sides,
-} from "../../lib/AbstractShapeMaker";
-import { ENCLOSURE_VIGA_THICKNESS, Materials } from "./enclosureConst";
+import { AbstractShapeMaker, Sides } from "../../lib/AbstractShapeMaker";
+import { getGeometry } from "../../lib/pieceHelpers";
+import { Materials } from "./enclosureConst";
 
+export type AssembleCallback = (obj: THREE.Object3D) => void;
 export class EnclosureShapeMaker extends AbstractShapeMaker {
+  enclosureVigaThickness: number;
+  constructor({ enclosureVigaThickness }: { enclosureVigaThickness: number }) {
+    super();
+    this.enclosureVigaThickness = enclosureVigaThickness;
+  }
   viga({
     height,
     width,
     color,
-    dimensions,
     name,
     assemble,
     group,
     sides,
-    postProcess,
   }: {
     height: number;
     width: number;
     color?: string;
-    dimensions?: boolean;
     name: string;
-    assemble: (obj: THREE.Object3D) => void;
+    assemble: AssembleCallback;
     group: string;
     sides?: Sides;
-    postProcess?: PostProcessHandler;
   }) {
     return this.makeShape({
-      geometry: {
-        height,
-        width,
-        depth: ENCLOSURE_VIGA_THICKNESS,
-        type: "box",
-        sides,
-        postProcess,
-      },
+      getGeometry: () =>
+        getGeometry({
+          height,
+          width,
+          depth: this.enclosureVigaThickness,
+          type: "box",
+          sides,
+        }),
       color,
-      dimensions,
       name,
       group,
       assemble,

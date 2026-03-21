@@ -6,7 +6,6 @@ class MontessoriLibrary implements MyObject3D {
   sm: AbstractShapeMaker = new AbstractShapeMaker();
 
   hiddenGroups = [];
-  hiddenGroupsInSpecs = [];
 
   constructor() {
     this.sm.makeShape({

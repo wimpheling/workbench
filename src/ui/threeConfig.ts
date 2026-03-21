@@ -46,7 +46,7 @@ export function init(
   itemsToDispose.push(controls);
   const loadControls: () => void = () => {
     const stateJSON = localStorage.getItem(`orbitControls`);
-
+    console.log(stateJSON);
     if (stateJSON) {
       const { target0, position0, zoom0 } = JSON.parse(stateJSON);
       controls.target0.copy(target0);
@@ -56,6 +56,18 @@ export function init(
     }
   };
 
+  const reinitControls = () => {
+    const { target0, position0, zoom0 } = {
+      target0: { x: 0, y: 0, z: 0 },
+      position0: { x: 499.9999999999999, y: 500.00000000000006, z: 500 },
+      zoom0: 1,
+    };
+    controls.target0.set(target0.x, target0.y, target0.z);
+    controls.position0.set(position0.x, position0.y, position0.z);
+    controls.zoom0 = zoom0;
+    controls.reset();
+  };
+
   const saveControls = () => {
     controls.saveState();
     const { target0, position0, zoom0 } = controls;
@@ -63,12 +75,12 @@ export function init(
     localStorage.setItem(`orbitControls`, JSON.stringify(state));
   };
 
-  // const light = new THREE.AmbientLight("white", 1);
-  const light = new THREE.DirectionalLight(0xffffff);
+  const light = new THREE.AmbientLight("white", 1);
+  // const light = new THREE.DirectionalLight(0xffffff);
   scene.add(light);
 
-  const helper = new THREE.DirectionalLightHelper(light, 5);
-  scene.add(helper);
+  // const helper = new THREE.DirectionalLightHelper(light, 5);
+  // scene.add(helper);
   light.castShadow = true;
   light.position.set(500, 1000, 500);
   itemsToDispose.push(light);
@@ -182,6 +194,7 @@ export function init(
     setAnimateCallback,
     loadControls,
     saveControls,
+    reinit: reinitControls,
     renderer,
     itemsToDispose,
   };
