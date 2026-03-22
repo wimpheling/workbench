@@ -133,6 +133,66 @@ export function getGeometry(props: Piece): Shape3D {
         });
       }
 
+    // top
+    if (props.geometry.sides?.top?.joint)
+      if (props.geometry.sides.top.joint.jointType === "halfLap") {
+        geoShape = halfLapJoint({
+          geo: geoShape,
+          sectionWidth: props.geometry.width,
+          sectionHeight: props.geometry.sides.top.joint.size,
+          depth: props.geometry.depth,
+          translateY:
+            0 +
+            props.geometry.height / 2 -
+            props.geometry.sides.top.joint.size / 2,
+          translateX: 0,
+        });
+      } else if (props.geometry.sides.top.joint.jointType === "box") {
+        geoShape = boxJoint({
+          geo: geoShape,
+          depth: props.geometry.depth,
+          jointHeight: props.geometry.sides.top.joint.jointHeight,
+          jointWidth:
+            props.geometry.width /
+            ((props.geometry.sides.top.joint.numberOfJoints + 0.5) * 2),
+          male: props.geometry.sides.top.joint.male,
+          numberOfJoints: props.geometry.sides.top.joint.numberOfJoints,
+          orientation: { axis: "horizontal", cutDirection: "down" },
+          width: props.geometry.width,
+          height: props.geometry.height,
+        });
+      }
+
+    // bottom
+    if (props.geometry.sides?.bottom?.joint)
+      if (props.geometry.sides.bottom.joint.jointType === "halfLap") {
+        geoShape = halfLapJoint({
+          geo: geoShape,
+          sectionWidth: props.geometry.width,
+          sectionHeight: props.geometry.sides.bottom.joint.size,
+          depth: props.geometry.depth,
+          translateY:
+            0 -
+            props.geometry.height / 2 +
+            props.geometry.sides.bottom.joint.size / 2,
+          translateX: 0,
+        });
+      } else if (props.geometry.sides.bottom.joint.jointType === "box") {
+        geoShape = boxJoint({
+          geo: geoShape,
+          depth: props.geometry.depth,
+          jointHeight: props.geometry.sides.bottom.joint.jointHeight,
+          jointWidth:
+            props.geometry.width /
+            ((props.geometry.sides.bottom.joint.numberOfJoints + 0.5) * 2),
+          male: props.geometry.sides.bottom.joint.male,
+          numberOfJoints: props.geometry.sides.bottom.joint.numberOfJoints,
+          orientation: { axis: "horizontal", cutDirection: "up" },
+          width: props.geometry.width,
+          height: props.geometry.height,
+        });
+      }
+
     return geoShape;
   }
   throw new Error("TODO: shapes not implemented yet");

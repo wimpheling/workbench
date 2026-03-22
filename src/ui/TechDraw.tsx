@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Piece } from "../lib/AbstractShapeMaker";
 import { onMount } from "solid-js";
 import { getGeometry } from "../lib/pieceHelpers";
+import { syncGeometries } from "replicad-threejs-helper";
 
 export const TechDraw = ({
   piece,
@@ -11,58 +12,45 @@ export const TechDraw = ({
   renderer: THREE.WebGLRenderer;
 }) => {
   let drx: HTMLDivElement | undefined;
-  const geometryItem = getGeometry(piece).geometry;
-  geometryItem.computeBoundingBox();
-  const width = geometryItem.boundingBox?.max
-    .clone()
-    .sub(geometryItem.boundingBox?.min)
-    .multiplyScalar(1.2);
-  if (!width) {
-    return null;
-  }
+  
   onMount(() => {
+    let shape = getGeometry(piece);
+    if (piece.geometry.postProcess) {
+      shape = piece.geometry.postProcess(shape);
+    }
+    const shapeItem = {
+      name: piece.name,
+      faces: shape.mesh({ tolerance: 0.05, angularTolerance: 30 }),
+      edges: shape.meshEdges(),
+    };
+
+    const geometries = syncGeometries([shapeItem], []);
+    const geo = geometries[0];
+    
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("white");
-    const canvasWidth = width.x * 2;
-    const canvasHeight = width.y * 2;
-    const camera = new THREE.OrthographicCamera(
-      -canvasWidth / 2,
-      canvasWidth / 2,
-      canvasHeight / 2,
-      -canvasHeight / 2,
-      1,
-      1000,
-    );
-
-    renderer.setSize(canvasWidth, canvasHeight);
-
-    const ambientLight = new THREE.AmbientLight("white", 1);
-    scene.add(ambientLight);
-
-    // const light = new THREE.DirectionalLight("white", 0.8);
-    // light.position.set(1, 1, 1);
-    // scene.add(light);
-
+    
     const group = new THREE.Group();
     scene.add(group);
-    const edges = new THREE.EdgesGeometry(geometryItem);
-    const line = new THREE.LineSegments(
-      edges,
-      new THREE.LineBasicMaterial({
-        color: "black",
-        opacity: 1,
-      }),
-    );
+    
     const material = new THREE.MeshBasicMaterial({
       color: "white",
       transparent: true,
       opacity: 1,
     });
-    const geometry = getGeometry(piece);
-    const mesh = new THREE.Mesh(geometry.geometry, material);
+    const mesh = new THREE.Mesh(geo.faces, material);
     group.add(mesh);
+    
+    const line = new THREE.LineSegments(
+      geo.lines,
+      new THREE.LineBasicMaterial({
+        color: "black",
+        opacity: 1,
+      }),
+    );
     group.add(line);
-    // group.rotation.z = THREE.MathUtils.degToRad(0);
+    
+    // Rotate for a better view
     group.rotateOnAxis(
       new THREE.Vector3(1, 0, 0),
       THREE.MathUtils.degToRad(-5),
@@ -79,17 +67,31 @@ export const TechDraw = ({
 
     box.getCenter(center);
     box.getSize(size);
+    
+    const width = size.multiplyScalar(1.2);
+    const canvasWidth = width.x * 2;
+    const canvasHeight = width.y * 2;
+    const camera = new THREE.OrthographicCamera(
+      -canvasWidth / 2,
+      canvasWidth / 2,
+      canvasHeight / 2,
+      -canvasHeight / 2,
+      1,
+      1000,
+    );
+
+    renderer.setSize(canvasWidth, canvasHeight);
+
+    const ambientLight = new THREE.AmbientLight("white", 1);
+    scene.add(ambientLight);
 
     // function to set the camera
-    //		dx, dy, dz - direction from the group center
-    //		width and height of the group from that direction
-
     function adjustCamera(
       dx: number,
       dy: number,
       dz: number,
-      width: number,
-      height: number,
+      w: number,
+      h: number,
     ) {
       // set the camera in respect to the group center
       camera.position.set(
@@ -102,7 +104,7 @@ export const TechDraw = ({
       camera.lookAt(center.x, center.y, center.z);
 
       // zoom the camera as to fit the group in the window
-      camera.zoom = Math.min(canvasHeight / height, canvasWidth / width);
+      camera.zoom = Math.min(canvasHeight / h, canvasWidth / w);
 
       // update the camera projection matrix
       camera.updateProjectionMatrix();
@@ -113,17 +115,7 @@ export const TechDraw = ({
     const oImg = document.createElement("img");
     oImg.setAttribute("src", image);
     drx?.appendChild(oImg);
-
-    // drx?.appendChild(renderer.domElement);
   });
 
-  return (
-    <span
-      style={{
-        width: `${width.x * 2}px`,
-        height: `${width.y * 2}px`,
-      }}
-      ref={drx}
-    />
-  );
+  return <span ref={drx} />;
 };

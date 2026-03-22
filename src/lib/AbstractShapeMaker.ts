@@ -29,6 +29,8 @@ export interface Sides {
   right?: Side;
   front?: Side;
   back?: Side;
+  top?: Side;
+  bottom?: Side;
 }
 export type PostProcessHandler = (obj: Shape3D) => Shape3D;
 interface BoxGeometryProps {
@@ -68,18 +70,18 @@ export class AbstractShapeMaker {
     this.hiddenGroupsInSpecs = hiddenGroupsInSpecs;
   }
 
-  makeShape(props: Piece) {
-    if (!this.objectsByGroup[props.group]) {
-      this.objectsByGroup[props.group] = [];
+  makeShape(piece: Piece) {
+    if (!this.objectsByGroup[piece.group]) {
+      this.objectsByGroup[piece.group] = [];
     }
-    this.objectsByGroup[props.group]?.push(props);
+    this.objectsByGroup[piece.group]?.push(piece);
 
-    if (!this.hiddenGroupsInSpecs.includes(props.group)) {
-      const specs = specsKey(props);
+    if (!this.hiddenGroupsInSpecs.includes(piece.group)) {
+      const specs = specsKey(piece);
       if (!this.piecesBySpecs[specs]) {
         this.piecesBySpecs[specs] = [];
       }
-      this.piecesBySpecs[specs]?.push(props);
+      this.piecesBySpecs[specs]?.push(piece);
     }
   }
 
