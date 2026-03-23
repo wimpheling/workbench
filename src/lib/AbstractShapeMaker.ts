@@ -42,7 +42,14 @@ interface BoxGeometryProps {
   postProcess?: PostProcessHandler;
 }
 
-type GeometryProps = BoxGeometryProps;
+interface ExtrusionGeometryProps {
+  type: "extrusion";
+  length: number;
+  profileType: "3030";
+  postProcess?: PostProcessHandler;
+}
+
+type GeometryProps = BoxGeometryProps | ExtrusionGeometryProps;
 interface MakeShapeProps {
   geometry: GeometryProps;
   x: number;
@@ -258,10 +265,14 @@ export class AbstractShapeMaker {
           const pivotGroup = new THREE.Group();
           pivotGroup.name = `${compound.name}_pivot`;
 
-          const doorWidth = compound.pieces.reduce(
-            (max, p) => Math.max(max, p.geometry.width),
-            0,
-          );
+          const doorWidth = compound.pieces.reduce((max, p) => {
+            if (p.geometry.type === "box") {
+              return Math.max(max, p.geometry.width);
+            } else if (p.geometry.type === "extrusion") {
+              return Math.max(max, 30);
+            }
+            return max;
+          }, 0);
           const offsetX =
             compound.hingePosition === "left" ? doorWidth / 2 : -doorWidth / 2;
 

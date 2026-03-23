@@ -1,5 +1,5 @@
 import { Piece, CompoundPiece } from "./AbstractShapeMaker";
-import { makeBaseBox, Shape3D } from "replicad";
+import { makeBaseBox, Shape3D, draw } from "replicad";
 import { boxJoint } from "./boxJoint";
 import { halfLapJoint } from "./halfLapJoint";
 
@@ -195,6 +195,48 @@ export function getGeometry(props: Piece): Shape3D {
 
     return geoShape;
   }
+
+  if (props.geometry.type === "extrusion") {
+    const slotWidth = 1.1;
+    const outerSize = 3;
+    const innerSize = outerSize - slotWidth * 2;
+
+    const profile = draw()
+      // top
+      .hLine(slotWidth)
+      .vLine(-slotWidth)
+      .hLine(innerSize)
+      .vLine(slotWidth)
+      .hLine(slotWidth)
+      // right
+      .vLine(-slotWidth)
+      .hLine(-slotWidth)
+      .vLine(-innerSize)
+      .hLine(slotWidth)
+      .vLine(-slotWidth)
+      // bottom
+      .hLine(-slotWidth)
+      .vLine(slotWidth)
+      .hLine(-innerSize)
+      .vLine(-slotWidth)
+      .hLine(-slotWidth)
+      // left
+      .vLine(slotWidth)
+      .hLine(slotWidth)
+      .vLine(innerSize)
+      .hLine(-slotWidth)
+      .vLine(slotWidth)
+      .close()
+      .sketchOnPlane("XZ", [
+        0 - outerSize / 2,
+        props.geometry.length / 2,
+        outerSize,
+      ])
+      .extrude(props.geometry.length) as unknown as Shape3D;
+
+    return profile;
+  }
+
   throw new Error("TODO: shapes not implemented yet");
 }
 
@@ -211,6 +253,9 @@ function makeBox({
 }
 
 export function specsKey(props: Piece) {
+  if (props.geometry.type === "extrusion") {
+    return `${props.material} 3030 profile x ${props.geometry.length}`;
+  }
   return `${props.material} ${props.geometry.height}x${props.geometry.width}x${props.geometry.depth}`;
 }
 

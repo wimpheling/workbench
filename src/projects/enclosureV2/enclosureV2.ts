@@ -5,7 +5,6 @@ import type { MyObject3D } from "../../lib/MyObject3D";
 import {
   BACK_Z,
   BIG_EXTRUSION_DEPTH,
-  ENCLOSURE_INNER_DEPTH,
   ENCLOSURE_INNER_HEIGHT,
   ENCLOSURE_INNER_WIDTH,
   EnclosureV2Groups,
@@ -28,7 +27,7 @@ function makeVertical(obj: THREE.Object3D) {
 
 export class EnclosureV2 implements MyObject3D {
   sm: EnclosureV2ShapeMaker;
-  hiddenGroups: string[] = [EnclosureV2Groups.Internal];
+  hiddenGroups: string[] = [];
   hiddenGroupsInSpecs: string[] = ["internal"];
 
   constructor() {

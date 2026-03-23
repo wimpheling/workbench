@@ -4,8 +4,6 @@ import {
   Piece,
 } from "../../lib/AbstractShapeMaker";
 import {
-  BIG_EXTRUSION_DEPTH,
-  BIG_EXTRUSION_WIDTH,
   EnclosureV2Groups,
   EnclosureV2Materials,
   EXTRUSION_PROFILE_DEPTH,
@@ -30,13 +28,38 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     assemble: (obj: THREE.Object3D) => void;
     color?: string;
   }) {
-    // Create a 20x20 aluminium extrusion piece
     return this.makeShape({
       geometry: {
+        type: "extrusion",
+        profileType: "3030",
+        length: height,
+      },
+      color,
+      name,
+      group,
+      material: EnclosureV2Materials.AluminiumSingle,
+      assemble,
+    });
+  }
+  makeSingleExtrusionBox({
+    height,
+    name,
+    group,
+    assemble,
+    color = "silver",
+  }: {
+    height: number;
+    name: string;
+    group: string;
+    assemble: (obj: THREE.Object3D) => void;
+    color?: string;
+  }) {
+    return this.makeShape({
+      geometry: {
+        type: "box",
         height,
         width: EXTRUSION_PROFILE_WIDTH,
         depth: EXTRUSION_PROFILE_DEPTH,
-        type: "box",
       },
       color,
       name,
@@ -59,13 +82,11 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     assemble: (obj: THREE.Object3D) => void;
     color?: string;
   }) {
-    // Create a 20x40 aluminium extrusion piece
     return this.makeShape({
       geometry: {
-        height,
-        width: BIG_EXTRUSION_WIDTH,
-        depth: BIG_EXTRUSION_DEPTH,
-        type: "box",
+        type: "extrusion",
+        profileType: "3030",
+        length: height,
       },
       color,
       name,
@@ -97,10 +118,9 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     const leftVertical: Piece = {
       name: `${name} Left Vertical`,
       geometry: {
-        height,
-        width: EXTRUSION_PROFILE_WIDTH,
-        depth: EXTRUSION_PROFILE_DEPTH,
-        type: "box",
+        length: height,
+        profileType: "3030",
+        type: "extrusion",
       },
       color: "silver",
       group: EnclosureV2Groups.Doors,
@@ -118,10 +138,9 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     const rightVertical: Piece = {
       name: `${name} Right Vertical`,
       geometry: {
-        height,
-        width: EXTRUSION_PROFILE_WIDTH,
-        depth: EXTRUSION_PROFILE_DEPTH,
-        type: "box",
+        length: height,
+        profileType: "3030",
+        type: "extrusion",
       },
       color: "silver",
       group: EnclosureV2Groups.Doors,
@@ -139,10 +158,9 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     const topHorizontal: Piece = {
       name: `${name} Top Horizontal`,
       geometry: {
-        height: width - EXTRUSION_PROFILE_WIDTH * 2,
-        width: EXTRUSION_PROFILE_WIDTH,
-        depth: EXTRUSION_PROFILE_DEPTH,
-        type: "box",
+        length: width - EXTRUSION_PROFILE_WIDTH * 2,
+        profileType: "3030",
+        type: "extrusion",
       },
       color: "silver",
       group: EnclosureV2Groups.Doors,
@@ -157,10 +175,9 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     const bottomHorizontal: Piece = {
       name: `${name} Bottom Horizontal`,
       geometry: {
-        height: width - EXTRUSION_PROFILE_WIDTH * 2,
-        width: EXTRUSION_PROFILE_WIDTH,
-        depth: EXTRUSION_PROFILE_DEPTH,
-        type: "box",
+        length: width - EXTRUSION_PROFILE_WIDTH * 2,
+        profileType: "3030",
+        type: "extrusion",
       },
       color: "silver",
       group: EnclosureV2Groups.Doors,
