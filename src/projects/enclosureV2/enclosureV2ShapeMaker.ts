@@ -90,7 +90,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     hingePosition?: "left" | "right";
     panelDepth?: number;
     panelColor?: string;
-    assemble?: (obj: THREE.Object3D) => void;
+    assemble: (obj: THREE.Object3D) => void;
   }) {
     const framePieces: Piece[] = [];
 
@@ -139,8 +139,8 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     const topHorizontal: Piece = {
       name: `${name} Top Horizontal`,
       geometry: {
-        height: EXTRUSION_PROFILE_WIDTH,
-        width: width - EXTRUSION_PROFILE_WIDTH * 2,
+        height: width - EXTRUSION_PROFILE_WIDTH * 2,
+        width: EXTRUSION_PROFILE_WIDTH,
         depth: EXTRUSION_PROFILE_DEPTH,
         type: "box",
       },
@@ -148,6 +148,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
       group: EnclosureV2Groups.Doors,
       material: EnclosureV2Materials.AluminiumSingle,
       assemble: (obj) => {
+        obj.rotateZ(Math.PI / 2);
         obj.position.set(0, height - EXTRUSION_PROFILE_WIDTH / 2, 0);
       },
     };
@@ -156,8 +157,8 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     const bottomHorizontal: Piece = {
       name: `${name} Bottom Horizontal`,
       geometry: {
-        height: EXTRUSION_PROFILE_WIDTH,
-        width: width - EXTRUSION_PROFILE_WIDTH * 2,
+        height: width - EXTRUSION_PROFILE_WIDTH * 2,
+        width: EXTRUSION_PROFILE_WIDTH,
         depth: EXTRUSION_PROFILE_DEPTH,
         type: "box",
       },
@@ -165,6 +166,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
       group: EnclosureV2Groups.Doors,
       material: EnclosureV2Materials.AluminiumSingle,
       assemble: (obj) => {
+        obj.rotateZ(Math.PI / 2);
         obj.position.set(0, EXTRUSION_PROFILE_WIDTH / 2, 0);
       },
     };
@@ -193,7 +195,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
       group: EnclosureV2Groups.Doors,
       pieces: framePieces,
       hingePosition,
-      assemble: assemble || (() => {}),
+      assemble,
     };
 
     this.makeCompoundPiece(door);

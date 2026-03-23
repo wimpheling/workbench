@@ -5,14 +5,11 @@ import type { MyObject3D } from "../../lib/MyObject3D";
 import {
   BACK_Z,
   BIG_EXTRUSION_DEPTH,
-  BIG_EXTRUSION_WIDTH,
   ENCLOSURE_INNER_DEPTH,
   ENCLOSURE_INNER_HEIGHT,
   ENCLOSURE_INNER_WIDTH,
   EnclosureV2Groups,
-  EnclosureV2Materials,
   EXTRUSION_PROFILE_DEPTH,
-  FRONT_BACK_MIDDLE_JOINT_HEIGHT,
   FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
   RIGHT_SIDE_X,
   SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
@@ -294,30 +291,36 @@ export class EnclosureV2 implements MyObject3D {
     });
 
     // Doors
-
-    this.sm.makeSingleExtrusion({
-      height: ENCLOSURE_INNER_DEPTH,
-      name: "Door",
-      group: EnclosureV2Groups.Doors,
-      color: "orange",
+    // left door
+    this.sm.makeDoor({
+      width: ENCLOSURE_INNER_WIDTH / 2 - EXTRUSION_PROFILE_DEPTH,
+      height: VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
+      name: "Front Door Left",
+      hingePosition: "left",
+      panelColor: "red",
       assemble: (obj) => {
-        makeHorizontal(obj);
+        obj.rotation.y = Math.PI; // Rotate 180° so panel faces outward
         obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
-          ENCLOSURE_INNER_HEIGHT - EXTRUSION_PROFILE_DEPTH / 2,
-          0 - SIDE_HORIZONTAL_EXTRUSION_HEIGHT / 2 - EXTRUSION_PROFILE_DEPTH,
+          0 + EXTRUSION_PROFILE_DEPTH * 3, // Left of Front Left Vertical (3 - 25)
+          EXTRUSION_PROFILE_DEPTH,
+          0, // At front of frame
         );
       },
     });
 
+    // right door
     this.sm.makeDoor({
-      width: 50,
-      height: 80,
+      width: ENCLOSURE_INNER_WIDTH / 2,
+      height: VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
       name: "Front Door",
-      hingePosition: "left",
-      panelColor: "wood",
+      hingePosition: "right",
+      panelColor: "blue",
       assemble: (obj) => {
-        obj.position.set(0, 40, 100);
+        obj.position.set(
+          ENCLOSURE_INNER_WIDTH / 2 + EXTRUSION_PROFILE_DEPTH * 2, // Right of Front Right Vertical (25 - 47.5)
+          EXTRUSION_PROFILE_DEPTH,
+          0, // At front of frame
+        );
       },
     });
 

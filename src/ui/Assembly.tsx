@@ -25,12 +25,60 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
     position: THREE.Vector3;
   }>();
 
+  const doorStates: Record<
+    string,
+    { isOpen: boolean; targetRotation: number; baseRotation: number }
+  > = {};
+
   const onSelect = (params?: {
     groupName: string;
     vector: THREE.Vector3;
     position: THREE.Vector3;
   }) => {
     setSelect(params);
+  };
+
+  const onDoorClick = (doorName: string) => {
+    const doorPivot = item.sm.doorPivots[doorName];
+    if (!doorPivot) return;
+
+    if (!doorStates[doorName]) {
+      doorStates[doorName] = {
+        isOpen: false,
+        targetRotation: doorPivot.group.rotation.y,
+        baseRotation: doorPivot.group.rotation.y,
+      };
+    }
+
+    const state = doorStates[doorName];
+    state.isOpen = !state.isOpen;
+    // Open outward: -90° from base
+    state.targetRotation = state.isOpen
+      ? state.baseRotation - Math.PI / 2
+      : state.baseRotation;
+  };
+
+  const toggleDoorAnimation = () => {
+    const doors = Object.keys(item.sm.doorPivots);
+    if (doors.length === 0) {
+      requestAnimationFrame(toggleDoorAnimation);
+      return;
+    }
+    for (const doorName of doors) {
+      const doorPivot = item.sm.doorPivots[doorName];
+      const state = doorStates[doorName];
+      if (!doorPivot || !state) continue;
+
+      const currentRotation = doorPivot.group.rotation.y;
+      const diff = state.targetRotation - currentRotation;
+      if (Math.abs(diff) > 0.01) {
+        const newRotation = currentRotation + diff * 0.1;
+        doorPivot.group.rotation.y = newRotation;
+      } else {
+        doorPivot.group.rotation.y = state.targetRotation;
+      }
+    }
+    requestAnimationFrame(toggleDoorAnimation);
   };
 
   function removeRenderer() {
@@ -48,21 +96,16 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
       scene,
       loadControls: lc,
       saveControls: sc,
-      // exportStl: es,
       renderer,
       itemsToDispose: itemsToInit,
-    } = init(onSelect);
+    } = init(onSelect, onDoorClick);
     setItemsToDisposeInit(itemsToInit);
     loadControls = lc;
     saveControls = sc;
-    // exportStl = es;
     const itemsTo = item.sm.assemble(scene, {
       hiddenGroups: item.hiddenGroups,
     });
     setItemsToDispose(itemsTo);
-    // enclosure.sm.assemble(scene, {
-    //   // hiddenGroups: enclosure.hiddenGroups,
-    // });
     setThreeGroups(item.sm.threeGroups);
     setRenderer(renderer);
   }
@@ -71,6 +114,7 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
   });
   onMount(() => {
     render();
+    requestAnimationFrame(toggleDoorAnimation);
   });
   const switchGroupVisibility = (key: string, visible: boolean) => {
     const group = threeGroups()[key] as THREE.Group;

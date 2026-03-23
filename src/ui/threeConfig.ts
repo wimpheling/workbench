@@ -9,6 +9,7 @@ export function init(
     vector: THREE.Vector3;
     position: THREE.Vector3;
   }) => void,
+  onDoorClickCallback?: (doorName: string) => void,
 ) {
   const itemsToDispose: DisposableItem[] = [];
   const scene = new THREE.Scene();
@@ -102,6 +103,7 @@ export function init(
   animate();
   loadControls();
   renderer.domElement.addEventListener("mousemove", onPointerMove, false);
+  renderer.domElement.addEventListener("click", onPointerClick, false);
   let intersectState:
     | {
         object: THREE.LineSegments;
@@ -172,6 +174,31 @@ export function init(
         // @ts-expect-error color does not exist ?
         intersectState.object.material.color.set(intersectState.color);
         intersectState = undefined;
+      }
+    }
+  }
+
+  function onPointerClick(event: MouseEvent) {
+    if (!onDoorClickCallback) return;
+    event.preventDefault();
+    pointer.x = (event.offsetX / renderer.domElement.clientWidth) * 2 - 1;
+    pointer.y = -(event.offsetY / renderer.domElement.clientHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    if (intersects.length > 0) {
+      const intersect = intersects[0];
+      let obj: THREE.Object3D | null = intersect.object;
+      let doorName: string | null = null;
+      while (obj) {
+        const parent: THREE.Object3D | null = obj.parent;
+        if (parent && parent.name === "Doors") {
+          doorName = obj.name?.replace("_pivot", "") || null;
+          if (doorName) {
+            onDoorClickCallback(doorName);
+          }
+          break;
+        }
+        obj = parent;
       }
     }
   }

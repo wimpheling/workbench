@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { DisposableItem } from "../ui/interfaces";
-import { getGeometry, specsKey, fuseGeometries } from "./pieceHelpers";
+import { getGeometry, specsKey } from "./pieceHelpers";
 import { syncGeometries } from "replicad-threejs-helper";
 import { Shape3D } from "replicad";
 
@@ -196,56 +196,89 @@ export class AbstractShapeMaker {
       }
 
       compounds.forEach((compound) => {
-        const fusedShape = fuseGeometries(compound);
-
-        const mat = new THREE.MeshLambertMaterial({
-          color: compound.color || 0xa1662f,
-          name: compound.name,
-        });
-
-        const shapeItem = {
-          name: compound.name,
-          faces: fusedShape.mesh({ tolerance: 0.05, angularTolerance: 30 }),
-          edges: fusedShape.meshEdges(),
-        };
-
-        const geometries = syncGeometries([shapeItem], []);
-        const geo = geometries[0];
-        const obj = new THREE.Mesh(geo.faces, mat);
-        obj.castShadow = true;
-        obj.receiveShadow = true;
-
-        itemsToDispose.push(mat);
-        itemsToDispose.push(geo.faces);
-        itemsToDispose.push(geo.lines);
-
-        const line = new THREE.LineSegments(
-          geo.lines,
-          new THREE.LineBasicMaterial({
-            color: "black",
-            opacity: 0.4,
-          }),
-        );
-        line.castShadow = true;
-        line.receiveShadow = true;
-
         const compoundGroup = new THREE.Group();
         if (compound.name) {
           compoundGroup.name = compound.name;
         }
-        compoundGroup.add(obj);
-        compoundGroup.add(line);
+
+        for (const piece of compound.pieces) {
+          let shape = getGeometry(piece);
+
+          if (piece.geometry.postProcess) {
+            shape = piece.geometry.postProcess(shape);
+          }
+
+          const mat = new THREE.MeshLambertMaterial({
+            color: piece.color || 0xa1662f,
+            opacity: piece.opacity || 1,
+            transparent: Boolean(piece.opacity && piece.opacity < 1),
+            name: piece.name,
+          });
+
+          const shapeItem = {
+            name: piece.name,
+            faces: shape.mesh({ tolerance: 0.05, angularTolerance: 30 }),
+            edges: shape.meshEdges(),
+          };
+
+          const geometries = syncGeometries([shapeItem], []);
+          const geo = geometries[0];
+          const obj = new THREE.Mesh(geo.faces, mat);
+          obj.castShadow = true;
+          obj.receiveShadow = true;
+
+          itemsToDispose.push(mat);
+          itemsToDispose.push(geo.faces);
+          itemsToDispose.push(geo.lines);
+
+          const line = new THREE.LineSegments(
+            geo.lines,
+            new THREE.LineBasicMaterial({
+              color: "black",
+              opacity: piece.opacity || 0.4,
+            }),
+          );
+          line.castShadow = true;
+          line.receiveShadow = true;
+
+          const pieceGroup = new THREE.Group();
+          if (piece.name) {
+            pieceGroup.name = piece.name;
+          }
+          pieceGroup.add(obj);
+          pieceGroup.add(line);
+
+          piece.assemble(pieceGroup);
+          compoundGroup.add(pieceGroup);
+        }
 
         groupObj.add(compoundGroup);
 
         if (compound.hingePosition) {
+          const pivotGroup = new THREE.Group();
+          pivotGroup.name = `${compound.name}_pivot`;
+
+          const doorWidth = compound.pieces.reduce(
+            (max, p) => Math.max(max, p.geometry.width),
+            0,
+          );
+          const offsetX =
+            compound.hingePosition === "left" ? doorWidth / 2 : -doorWidth / 2;
+
+          compoundGroup.position.x -= offsetX;
+
+          pivotGroup.add(compoundGroup);
+          groupObj.add(pivotGroup);
+
           this.doorPivots[compound.name] = {
-            group: compoundGroup,
+            group: pivotGroup,
             hingePosition: compound.hingePosition,
           };
-        }
 
-        compound.assemble(compoundGroup);
+          compound.assemble(pivotGroup);
+        } else {
+          compound.assemble(compoundGroup);
+        }
       });
     });
     return itemsToDispose;
