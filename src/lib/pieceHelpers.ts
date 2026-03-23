@@ -1,4 +1,4 @@
-import { Piece } from "./AbstractShapeMaker";
+import { Piece, CompoundPiece } from "./AbstractShapeMaker";
 import { makeBaseBox, Shape3D } from "replicad";
 import { boxJoint } from "./boxJoint";
 import { halfLapJoint } from "./halfLapJoint";
@@ -212,4 +212,32 @@ function makeBox({
 
 export function specsKey(props: Piece) {
   return `${props.material} ${props.geometry.height}x${props.geometry.width}x${props.geometry.depth}`;
+}
+
+export function fuseGeometries(compound: CompoundPiece): Shape3D {
+  if (compound.pieces.length === 0) {
+    throw new Error("CompoundPiece must have at least one piece");
+  }
+
+  let fusedShape: Shape3D | null = null;
+
+  for (const piece of compound.pieces) {
+    const pieceGeometry = getGeometry(piece);
+
+    if (fusedShape === null) {
+      fusedShape = pieceGeometry;
+    } else {
+      fusedShape = fusedShape.fuse(pieceGeometry);
+    }
+  }
+
+  if (fusedShape === null) {
+    throw new Error("Failed to create fused geometry");
+  }
+
+  if (compound.fuseOptions?.postFuse) {
+    fusedShape = compound.fuseOptions.postFuse(fusedShape);
+  }
+
+  return fusedShape;
 }

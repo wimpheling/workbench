@@ -16,7 +16,8 @@ import {
   FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
   RIGHT_SIDE_X,
   SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
-  VERTICAL_BIG_EXTRUSION_HEIGHT,
+  VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
+  VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
 } from "./consts";
 import { calculatePrices } from "./calculatePrices";
 
@@ -30,7 +31,7 @@ function makeVertical(obj: THREE.Object3D) {
 
 export class EnclosureV2 implements MyObject3D {
   sm: EnclosureV2ShapeMaker;
-  hiddenGroups: string[] = ["internal"];
+  hiddenGroups: string[] = [EnclosureV2Groups.Internal];
   hiddenGroupsInSpecs: string[] = ["internal"];
 
   constructor() {
@@ -39,36 +40,7 @@ export class EnclosureV2 implements MyObject3D {
     // Create aluminium extrusion pieces
     this.sm.makeSingleExtrusion({
       height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Left Side Bottom front extrusion",
-      group: EnclosureV2Groups.Structure,
-      assemble: (obj) => {
-        makeHorizontal(obj);
-        obj.position.set(
-          EXTRUSION_PROFILE_DEPTH / 2,
-          EXTRUSION_PROFILE_DEPTH,
-          0 - SIDE_HORIZONTAL_EXTRUSION_HEIGHT / 2 - EXTRUSION_PROFILE_DEPTH,
-        );
-      },
-    });
-    this.sm.makeDoubleExtrusion({
-      height: VERTICAL_BIG_EXTRUSION_HEIGHT,
-      name: "Left Side Vertical extrusion",
-      group: EnclosureV2Groups.Structure,
-      assemble: (obj) => {
-        makeVertical(obj);
-        obj.position.set(
-          0,
-          VERTICAL_BIG_EXTRUSION_HEIGHT / 2,
-          0 -
-            SIDE_HORIZONTAL_EXTRUSION_HEIGHT -
-            BIG_EXTRUSION_DEPTH -
-            EXTRUSION_PROFILE_DEPTH,
-        );
-      },
-    });
-    this.sm.makeSingleExtrusion({
-      height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Left Side Bottom back extrusion",
+      name: "Left Side Bottom extrusion",
       group: EnclosureV2Groups.Structure,
       color: "red",
       assemble: (obj) => {
@@ -76,9 +48,23 @@ export class EnclosureV2 implements MyObject3D {
         obj.position.set(
           EXTRUSION_PROFILE_DEPTH / 2,
           EXTRUSION_PROFILE_DEPTH,
+          0 - SIDE_HORIZONTAL_EXTRUSION_HEIGHT / 2 - EXTRUSION_PROFILE_DEPTH,
+        );
+      },
+    });
+
+    this.sm.makeDoubleExtrusion({
+      height: VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
+      name: "Left Side Vertical extrusion",
+      group: EnclosureV2Groups.Structure,
+      assemble: (obj) => {
+        makeVertical(obj);
+        obj.position.set(
+          0,
+          VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT / 2 + EXTRUSION_PROFILE_DEPTH,
           0 -
-            SIDE_HORIZONTAL_EXTRUSION_HEIGHT * 1.5 -
-            BIG_EXTRUSION_WIDTH -
+            SIDE_HORIZONTAL_EXTRUSION_HEIGHT / 2 -
+            BIG_EXTRUSION_DEPTH / 2 -
             EXTRUSION_PROFILE_DEPTH,
         );
       },
@@ -86,33 +72,15 @@ export class EnclosureV2 implements MyObject3D {
 
     this.sm.makeSingleExtrusion({
       height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Left Side Top front extrusion",
+      name: "Left Side Top extrusion",
       group: EnclosureV2Groups.Structure,
       color: "green",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.position.set(
           EXTRUSION_PROFILE_DEPTH / 2,
-          ENCLOSURE_INNER_HEIGHT + EXTRUSION_PROFILE_DEPTH,
+          EXTRUSION_PROFILE_DEPTH * 2 + VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
           0 - SIDE_HORIZONTAL_EXTRUSION_HEIGHT / 2 - EXTRUSION_PROFILE_DEPTH,
-        );
-      },
-    });
-
-    this.sm.makeSingleExtrusion({
-      height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Left Side Top back extrusion",
-      group: EnclosureV2Groups.Structure,
-      color: "yellow",
-      assemble: (obj) => {
-        makeHorizontal(obj);
-        obj.position.set(
-          EXTRUSION_PROFILE_DEPTH / 2,
-          ENCLOSURE_INNER_HEIGHT + EXTRUSION_PROFILE_DEPTH,
-          0 -
-            SIDE_HORIZONTAL_EXTRUSION_HEIGHT * 1.5 -
-            BIG_EXTRUSION_WIDTH -
-            EXTRUSION_PROFILE_DEPTH,
         );
       },
     });
@@ -132,34 +100,19 @@ export class EnclosureV2 implements MyObject3D {
         );
       },
     });
+
     this.sm.makeDoubleExtrusion({
-      height: VERTICAL_BIG_EXTRUSION_HEIGHT,
+      height: VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
       name: "Right Side Vertical extrusion",
       group: EnclosureV2Groups.Structure,
       assemble: (obj) => {
         makeVertical(obj);
         obj.position.set(
-          RIGHT_SIDE_X - EXTRUSION_PROFILE_DEPTH / 2,
-          VERTICAL_BIG_EXTRUSION_HEIGHT / 2,
-          0 -
-            SIDE_HORIZONTAL_EXTRUSION_HEIGHT -
-            BIG_EXTRUSION_DEPTH -
-            EXTRUSION_PROFILE_DEPTH,
-        );
-      },
-    });
-    this.sm.makeSingleExtrusion({
-      height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Right Side Bottom back extrusion",
-      group: EnclosureV2Groups.Structure,
-      assemble: (obj) => {
-        makeHorizontal(obj);
-        obj.position.set(
           RIGHT_SIDE_X,
-          EXTRUSION_PROFILE_DEPTH,
+          VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT / 2 + EXTRUSION_PROFILE_DEPTH,
           0 -
-            SIDE_HORIZONTAL_EXTRUSION_HEIGHT * 1.5 -
-            BIG_EXTRUSION_WIDTH -
+            SIDE_HORIZONTAL_EXTRUSION_HEIGHT / 2 -
+            BIG_EXTRUSION_DEPTH / 2 -
             EXTRUSION_PROFILE_DEPTH,
         );
       },
@@ -167,74 +120,30 @@ export class EnclosureV2 implements MyObject3D {
 
     this.sm.makeSingleExtrusion({
       height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Right Side Top front extrusion",
+      name: "Right Side Top extrusion",
       group: EnclosureV2Groups.Structure,
+      color: "green",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.position.set(
           RIGHT_SIDE_X,
-          ENCLOSURE_INNER_HEIGHT + EXTRUSION_PROFILE_DEPTH,
+          EXTRUSION_PROFILE_DEPTH * 2 + VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
           0 - SIDE_HORIZONTAL_EXTRUSION_HEIGHT / 2 - EXTRUSION_PROFILE_DEPTH,
-        );
-      },
-    });
-
-    this.sm.makeSingleExtrusion({
-      height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Right Side Top back extrusion",
-      group: EnclosureV2Groups.Structure,
-      assemble: (obj) => {
-        makeHorizontal(obj);
-        obj.position.set(
-          RIGHT_SIDE_X,
-          ENCLOSURE_INNER_HEIGHT + EXTRUSION_PROFILE_DEPTH,
-          0 -
-            SIDE_HORIZONTAL_EXTRUSION_HEIGHT * 1.5 -
-            BIG_EXTRUSION_WIDTH -
-            EXTRUSION_PROFILE_DEPTH,
         );
       },
     });
 
     // Front
     this.sm.makeSingleExtrusion({
-      height: VERTICAL_BIG_EXTRUSION_HEIGHT,
-      name: "Front Left Vertical extrusion",
-      group: EnclosureV2Groups.Structure,
-      assemble: (obj) => {
-        makeVertical(obj);
-        obj.position.set(
-          0,
-          VERTICAL_BIG_EXTRUSION_HEIGHT / 2,
-          0 - EXTRUSION_PROFILE_DEPTH / 2,
-        );
-      },
-    });
-
-    this.sm.makeSingleExtrusion({
-      height: VERTICAL_BIG_EXTRUSION_HEIGHT,
-      name: "Front Right Vertical extrusion",
-      group: EnclosureV2Groups.Structure,
-      assemble: (obj) => {
-        makeVertical(obj);
-        obj.position.set(
-          RIGHT_SIDE_X - EXTRUSION_PROFILE_DEPTH / 2,
-          VERTICAL_BIG_EXTRUSION_HEIGHT / 2,
-          0 - EXTRUSION_PROFILE_DEPTH / 2,
-        );
-      },
-    });
-
-    this.sm.makeSingleExtrusion({
       height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Front Left Bottom Horizontal extrusion",
+      name: "Front Bottom Horizontal extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "blue",
+      color: "navy",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.rotation.set(0, 0, Math.PI / 2);
         obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2 + EXTRUSION_PROFILE_DEPTH,
+          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
           EXTRUSION_PROFILE_DEPTH / 2,
           0 - EXTRUSION_PROFILE_DEPTH,
         );
@@ -242,108 +151,95 @@ export class EnclosureV2 implements MyObject3D {
     });
 
     this.sm.makeDoubleExtrusion({
-      height: FRONT_BACK_MIDDLE_JOINT_HEIGHT,
-      name: "Front Middle Bottom Joint",
+      height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
+      name: "Front Top Horizontal extrusion",
       group: EnclosureV2Groups.Structure,
+      color: "fuchsia",
       assemble: (obj) => {
-        obj.rotation.x = Math.PI / 2;
+        makeHorizontal(obj);
+        obj.rotation.set(0, 0, Math.PI / 2);
         obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT + BIG_EXTRUSION_WIDTH,
-          EXTRUSION_PROFILE_DEPTH,
-          0 - FRONT_BACK_MIDDLE_JOINT_HEIGHT / 2,
+          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
+          EXTRUSION_PROFILE_DEPTH * 2 + VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
+          0 - EXTRUSION_PROFILE_DEPTH,
         );
       },
-      color: "purple",
     });
-    this.sm.makeSingleExtrusion({
-      height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Front Right Bottom Horizontal extrusion",
+
+    this.sm.makeDoubleExtrusion({
+      height: VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
+      name: "Front Left Vertical extrusion",
       group: EnclosureV2Groups.Structure,
       color: "orange",
       assemble: (obj) => {
-        makeHorizontal(obj);
-        obj.rotation.set(0, 0, Math.PI / 2);
+        makeVertical(obj);
+        obj.rotateY(THREE.MathUtils.degToRad(90));
         obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT +
-            BIG_EXTRUSION_WIDTH +
-            EXTRUSION_PROFILE_DEPTH +
-            FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
-          EXTRUSION_PROFILE_DEPTH / 2,
-          0 - EXTRUSION_PROFILE_DEPTH,
-        );
-      },
-    });
-
-    this.sm.makeSingleExtrusion({
-      height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Front Left Top Horizontal extrusion",
-      group: EnclosureV2Groups.Structure,
-      color: "cyan",
-      assemble: (obj) => {
-        makeHorizontal(obj);
-        obj.rotation.set(0, 0, Math.PI / 2);
-        obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2 + EXTRUSION_PROFILE_DEPTH,
-          ENCLOSURE_INNER_HEIGHT + EXTRUSION_PROFILE_DEPTH / 2,
-          0 - EXTRUSION_PROFILE_DEPTH,
+          EXTRUSION_PROFILE_DEPTH,
+          VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT / 2 + EXTRUSION_PROFILE_DEPTH,
+          0,
         );
       },
     });
 
     this.sm.makeDoubleExtrusion({
-      height: FRONT_BACK_MIDDLE_JOINT_HEIGHT,
-      name: "Front Middle Top Joint",
+      height: VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
+      name: "Front Right Vertical extrusion",
       group: EnclosureV2Groups.Structure,
+      color: "peachpuff",
       assemble: (obj) => {
-        obj.rotation.x = Math.PI / 2;
+        makeVertical(obj);
+        obj.rotateY(THREE.MathUtils.degToRad(90));
         obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT + BIG_EXTRUSION_WIDTH,
-          ENCLOSURE_INNER_HEIGHT + EXTRUSION_PROFILE_DEPTH,
-          0 - FRONT_BACK_MIDDLE_JOINT_HEIGHT / 2,
-        );
-      },
-      color: "green",
-    });
-
-    this.sm.makeSingleExtrusion({
-      height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Front Right Top Horizontal extrusion",
-      group: EnclosureV2Groups.Structure,
-      color: "magenta",
-      assemble: (obj) => {
-        makeHorizontal(obj);
-        obj.rotation.set(0, 0, Math.PI / 2);
-        obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT +
-            BIG_EXTRUSION_WIDTH +
-            EXTRUSION_PROFILE_DEPTH +
-            FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
-          ENCLOSURE_INNER_HEIGHT + EXTRUSION_PROFILE_DEPTH / 2,
-          0 - EXTRUSION_PROFILE_DEPTH,
+          RIGHT_SIDE_X - EXTRUSION_PROFILE_DEPTH / 2,
+          VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT / 2 + EXTRUSION_PROFILE_DEPTH,
+          0,
         );
       },
     });
 
     // Back
     this.sm.makeSingleExtrusion({
-      height: VERTICAL_BIG_EXTRUSION_HEIGHT,
+      height: VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
       name: "Back Left Vertical extrusion",
       group: EnclosureV2Groups.Structure,
+      color: "yellow",
       assemble: (obj) => {
         makeVertical(obj);
-        obj.position.set(0, VERTICAL_BIG_EXTRUSION_HEIGHT / 2, BACK_Z);
+        obj.position.set(
+          0,
+          VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT / 2 + EXTRUSION_PROFILE_DEPTH,
+          BACK_Z,
+        );
       },
     });
 
     this.sm.makeSingleExtrusion({
-      height: VERTICAL_BIG_EXTRUSION_HEIGHT,
+      height: VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
       name: "Back Right Vertical extrusion",
       group: EnclosureV2Groups.Structure,
+      color: "yellow",
       assemble: (obj) => {
         makeVertical(obj);
         obj.position.set(
-          RIGHT_SIDE_X - EXTRUSION_PROFILE_DEPTH / 2,
-          VERTICAL_BIG_EXTRUSION_HEIGHT / 2,
+          RIGHT_SIDE_X,
+          VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT / 2 + EXTRUSION_PROFILE_DEPTH,
+          BACK_Z,
+        );
+      },
+    });
+
+    this.sm.makeDoubleExtrusion({
+      height: VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
+      name: "Back Middle Joint",
+      group: EnclosureV2Groups.Structure,
+      color: "teal",
+      assemble: (obj) => {
+        makeVertical(obj);
+        obj.rotateY(THREE.MathUtils.degToRad(90));
+        obj.position.set(
+          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
+          VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT / 2 + EXTRUSION_PROFILE_DEPTH,
           BACK_Z,
         );
       },
@@ -351,64 +247,14 @@ export class EnclosureV2 implements MyObject3D {
 
     this.sm.makeSingleExtrusion({
       height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Back Left Top Horizontal extrusion",
+      name: "Back Bottom Horizontal extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "yellow",
+      color: "navy",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.rotation.set(0, 0, Math.PI / 2);
         obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2 + EXTRUSION_PROFILE_DEPTH,
-          ENCLOSURE_INNER_HEIGHT + EXTRUSION_PROFILE_DEPTH / 2,
-          BACK_Z - EXTRUSION_PROFILE_DEPTH / 2,
-        );
-      },
-    });
-
-    this.sm.makeSingleExtrusion({
-      height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Back Right Top Horizontal extrusion",
-      group: EnclosureV2Groups.Structure,
-      color: "brown",
-      assemble: (obj) => {
-        makeHorizontal(obj);
-        obj.rotation.set(0, 0, Math.PI / 2);
-        obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT +
-            BIG_EXTRUSION_WIDTH +
-            EXTRUSION_PROFILE_DEPTH +
-            FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
-          ENCLOSURE_INNER_HEIGHT + EXTRUSION_PROFILE_DEPTH / 2,
-          BACK_Z - EXTRUSION_PROFILE_DEPTH / 2,
-        );
-      },
-    });
-
-    this.sm.makeDoubleExtrusion({
-      height: VERTICAL_BIG_EXTRUSION_HEIGHT,
-      name: "Back Middle Top Joint",
-      group: EnclosureV2Groups.Structure,
-      assemble: (obj) => {
-        obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT + BIG_EXTRUSION_WIDTH,
-          VERTICAL_BIG_EXTRUSION_HEIGHT / 2,
-          BACK_Z - EXTRUSION_PROFILE_DEPTH / 2,
-        );
-      },
-      color: "brown",
-    });
-
-    // Back horizontal bottom extrusions
-    this.sm.makeSingleExtrusion({
-      height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Back Left Bottom Horizontal extrusion",
-      group: EnclosureV2Groups.Structure,
-      color: "gray",
-      assemble: (obj) => {
-        makeHorizontal(obj);
-        obj.rotation.set(0, 0, Math.PI / 2);
-        obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2 + EXTRUSION_PROFILE_DEPTH,
+          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
           EXTRUSION_PROFILE_DEPTH / 2,
           BACK_Z - EXTRUSION_PROFILE_DEPTH / 2,
         );
@@ -417,20 +263,61 @@ export class EnclosureV2 implements MyObject3D {
 
     this.sm.makeSingleExtrusion({
       height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: "Back Right Bottom Horizontal extrusion",
+      name: "Back Top Horizontal extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "gray",
+      color: "navy",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.rotation.set(0, 0, Math.PI / 2);
         obj.position.set(
-          FRONT_HORIZONTAL_EXTRUSION_HEIGHT +
-            BIG_EXTRUSION_WIDTH +
-            EXTRUSION_PROFILE_DEPTH +
-            FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
-          EXTRUSION_PROFILE_DEPTH / 2,
+          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
+          ENCLOSURE_INNER_HEIGHT - EXTRUSION_PROFILE_DEPTH / 2,
           BACK_Z - EXTRUSION_PROFILE_DEPTH / 2,
         );
+      },
+    });
+
+    // top-back tie for extra stability
+    this.sm.makeSingleExtrusion({
+      height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
+      name: "Back Top Horizontal extrusion",
+      group: EnclosureV2Groups.Structure,
+      color: "orange",
+      assemble: (obj) => {
+        makeHorizontal(obj);
+        obj.position.set(
+          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
+          ENCLOSURE_INNER_HEIGHT - EXTRUSION_PROFILE_DEPTH / 2,
+          0 - SIDE_HORIZONTAL_EXTRUSION_HEIGHT / 2 - EXTRUSION_PROFILE_DEPTH,
+        );
+      },
+    });
+
+    // Doors
+
+    this.sm.makeSingleExtrusion({
+      height: ENCLOSURE_INNER_DEPTH,
+      name: "Door",
+      group: EnclosureV2Groups.Doors,
+      color: "orange",
+      assemble: (obj) => {
+        makeHorizontal(obj);
+        obj.position.set(
+          FRONT_HORIZONTAL_EXTRUSION_HEIGHT / 2,
+          ENCLOSURE_INNER_HEIGHT - EXTRUSION_PROFILE_DEPTH / 2,
+          0 - SIDE_HORIZONTAL_EXTRUSION_HEIGHT / 2 - EXTRUSION_PROFILE_DEPTH,
+        );
+      },
+    });
+
+    this.sm.makeDoor({
+      width: 50,
+      height: 80,
+      name: "Front Door",
+      hingePosition: "left",
+      panelColor: "wood",
+      assemble: (obj) => {
+        obj.position.set(0, 40, 100);
       },
     });
 
