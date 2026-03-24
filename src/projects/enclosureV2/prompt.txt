@@ -1,0 +1,18 @@
+this is an enclosure for my CNC. i will make the frame now, with 3030 and 3060 enclosures. i want it to be parametric.
+
+here are the measures in cm
+
+export const ENCLOSURE_INNER_HEIGHT = 74;
+export const ENCLOSURE_INNER_WIDTH = 167.4;
+export const ENCLOSURE_INNER_DEPTH = 164.9;
+export const EXTRUSION_PROFILE_WIDTH = 3; // 30x30 aluminium extrusion
+export const EXTRUSION_PROFILE_DEPTH = 3; // 30x30 aluminium extrusion
+export const BIG_EXTRUSION_WIDTH = 6; // 60x30 aluminium extrusion
+export const BIG_EXTRUSION_DEPTH = 3; // 60x30 aluminium extrusion
+
+the whole frame has a bottom contour made of four full length 3030
+the left back and right sides have vertical corners made of 3030. 
+the front side vertical corners are 3060s, wide side facing fron
+the left back and right side have middle vertical extrusions for support. they are 3060
+
+the top contour is made of 3030 except the front, which is a 3060 with wide side facing front (for more rigidity as front has no middle vertical support)

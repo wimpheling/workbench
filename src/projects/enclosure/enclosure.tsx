@@ -1,11 +1,11 @@
-import { MyObject3D } from "../../lib/MyObject3D";
-import { renderObject3D } from "../../lib/render";
-import { EnclosureShapeMaker } from "./enclosureShapeMaker";
-import * as THREE from "three";
-import { makeBaseBox } from "replicad";
+import { makeBaseBox } from 'replicad';
+import * as THREE from 'three';
+import type { MyObject3D } from '../../lib/MyObject3D';
+import { renderObject3D } from '../../lib/render';
+import { EnclosureShapeMaker } from './enclosureShapeMaker';
 
 enum Groups {
-  Structure = "Structure",
+  Structure = 'Structure',
 }
 
 class Enclosure implements MyObject3D {
@@ -24,12 +24,12 @@ class Enclosure implements MyObject3D {
       },
       height: 100,
       width: 10,
-      name: "Left Bottom Part 1",
+      name: 'Left Bottom Part 1',
       sides: {
         back: {
           joint: {
             jointHeight: 10,
-            jointType: "box",
+            jointType: 'box',
             male: true,
             numberOfJoints: 2,
           },
@@ -52,7 +52,7 @@ class Enclosure implements MyObject3D {
         front: {
           joint: {
             jointHeight: 10,
-            jointType: "box",
+            jointType: 'box',
             male: false,
             numberOfJoints: 2,
           },
@@ -60,7 +60,7 @@ class Enclosure implements MyObject3D {
       },
       height: 89,
       width: 10,
-      name: "Left Bottom Part 2",
+      name: 'Left Bottom Part 2',
     });
   }
 }

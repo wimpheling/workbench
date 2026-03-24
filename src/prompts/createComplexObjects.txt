@@ -1,0 +1,19 @@
+Context
+
+- @/src/lib folder is my custom framework for 3d modeling
+- @/src/replicad-docs are the docs of the js library call replicad i use to help me
+  @/src/projects/enclosureV2 is the project i am working on
+
+Issue description
+
+The project is an enclosure for my CNC machine
+
+I already modelized the frame, that will be made out of 3030 extrusions.
+Now I want to add doors. There will be several doors. The thing is : a door is a complex object made out of several pieces. For now I can only model single pieces. Replicad allows me to fuse solids see @/src/replicad-docs/tutorial-making-a-watering-can/combining-the-shapes.md @/src/replicad-docs/tutorial-overview/combinations.md
+
+BUT i don't really work with replicad solids : I use a custom Pieces type that is then assembled in the end. How can I represent this in my abstract layer ? My idea is that there is a makeDoor function in @/src/projects/enclosureV2/enclosureV2ShapeMaker.ts , that calls makeShape to create the different pieces and fuse them. Then : when they are fused, makeDoors has an assemble callback too, that allows me to position the different doors. in the assembly.
+
+Bonus : i would like to be able to animate the doors later
+
+Your task :
+Analyze the project and provide an implementation plan

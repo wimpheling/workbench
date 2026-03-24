@@ -1,6 +1,6 @@
-import { AbstractShapeMaker } from "../../lib/AbstractShapeMaker";
-import { MyObject3D } from "../../lib/MyObject3D";
-import { renderObject3D } from "../../lib/render";
+import { AbstractShapeMaker } from '../../lib/AbstractShapeMaker';
+import type { MyObject3D } from '../../lib/MyObject3D';
+import { renderObject3D } from '../../lib/render';
 
 class MontessoriLibrary implements MyObject3D {
   sm: AbstractShapeMaker = new AbstractShapeMaker();
@@ -10,8 +10,8 @@ class MontessoriLibrary implements MyObject3D {
 
   constructor() {
     this.sm.makeShape({
-      material: "Wood",
-      group: "Side",
+      material: 'Wood',
+      group: 'Side',
       assemble: (obj) => {
         obj.position.set(0, 0, 0);
       },
@@ -19,9 +19,9 @@ class MontessoriLibrary implements MyObject3D {
         height: 10,
         width: 100,
         depth: 100,
-        type: "box",
+        type: 'box',
       },
-      name: "Sideleft",
+      name: 'Sideleft',
     });
   }
 }

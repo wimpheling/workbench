@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import * as THREE from 'three';
 
 export type Obj = THREE.Group<THREE.Object3DEventMap>;
 
@@ -13,18 +13,12 @@ function isEnclosureInnerWallCorrect({
   enclosureWallInnerRight: Obj;
 }) {
   const tableTopBbox = new THREE.Box3().setFromObject(tableTop);
-  const enclosureWallInnerBackBbox = new THREE.Box3().setFromObject(
-    enclosureWallInnerBack,
-  );
+  const enclosureWallInnerBackBbox = new THREE.Box3().setFromObject(enclosureWallInnerBack);
   /* distance between back of tableTop and enclosureWallInnerBack */
-  const distanceBetweenBackAndEdge =
-    enclosureWallInnerBackBbox.min.z - tableTopBbox.min.z;
+  const distanceBetweenBackAndEdge = enclosureWallInnerBackBbox.min.z - tableTopBbox.min.z;
 
-  const enclosureWallInnerLeftBbox = new THREE.Box3().setFromObject(
-    enclosureWallInnerLeft,
-  );
-  const distanceBetweenLeftAndEdge =
-    enclosureWallInnerLeftBbox.min.x - tableTopBbox.min.x;
+  const enclosureWallInnerLeftBbox = new THREE.Box3().setFromObject(enclosureWallInnerLeft);
+  const distanceBetweenLeftAndEdge = enclosureWallInnerLeftBbox.min.x - tableTopBbox.min.x;
   return { distanceBetweenBackAndEdge, distanceBetweenLeftAndEdge };
 }
 

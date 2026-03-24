@@ -1,4 +1,4 @@
-import { AbstractShapeMaker } from "../../lib/AbstractShapeMaker";
+import { AbstractShapeMaker } from '../../lib/AbstractShapeMaker';
 import {
   ENCLOSURE_VIGA_THICKNESS,
   ENCLOSURE_VIGA_WIDTH,
@@ -8,7 +8,7 @@ import {
   FOOT_WIDTH,
   VIGA_HEIGHT,
   VIGA_WIDTH,
-} from "./consts";
+} from './consts';
 
 export class WorkBenchShapeMaker extends AbstractShapeMaker {
   foot({
@@ -27,13 +27,13 @@ export class WorkBenchShapeMaker extends AbstractShapeMaker {
         height: FOOT_HEIGHT,
         width: FOOT_WIDTH,
         depth: FOOT_DEPTH,
-        type: "box",
+        type: 'box',
       },
       color,
       dimensions,
       name,
-      group: "Legs",
-      material: "wood",
+      group: 'Legs',
+      material: 'wood',
       assemble,
     });
   }
@@ -54,11 +54,11 @@ export class WorkBenchShapeMaker extends AbstractShapeMaker {
     assemble: (obj: THREE.Object3D) => void;
   }) {
     return this.makeShape({
-      geometry: { height, width: VIGA_WIDTH, depth: VIGA_HEIGHT, type: "box" },
+      geometry: { height, width: VIGA_WIDTH, depth: VIGA_HEIGHT, type: 'box' },
       color,
       dimensions,
       name,
-      material: "wood",
+      material: 'wood',
       assemble,
       group,
     });
@@ -82,13 +82,13 @@ export class WorkBenchShapeMaker extends AbstractShapeMaker {
         height,
         width: ENCLOSURE_VIGA_WIDTH,
         depth: ENCLOSURE_VIGA_THICKNESS,
-        type: "box",
+        type: 'box',
       },
       color,
       dimensions,
       name,
-      group: "enclosure",
-      material: "wood",
+      group: 'enclosure',
+      material: 'wood',
       assemble,
     });
   }
@@ -96,7 +96,7 @@ export class WorkBenchShapeMaker extends AbstractShapeMaker {
   enclosureWall({
     height,
     width,
-    color = "black",
+    color = 'black',
     dimensions,
     opacity = 0.4,
     name,
@@ -117,14 +117,14 @@ export class WorkBenchShapeMaker extends AbstractShapeMaker {
         height,
         width,
         depth: ENCLOSURE_WALL_THICKNESS,
-        type: "box",
+        type: 'box',
       },
       color,
       dimensions,
       opacity,
       name,
       group,
-      material: "wood",
+      material: 'wood',
       assemble,
     });
   }

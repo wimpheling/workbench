@@ -1,4 +1,4 @@
-import { AbstractShapeMaker } from "./AbstractShapeMaker";
+import type { AbstractShapeMaker } from './AbstractShapeMaker';
 
 export interface MyObject3D {
   sm: AbstractShapeMaker;

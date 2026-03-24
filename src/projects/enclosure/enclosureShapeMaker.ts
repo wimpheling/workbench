@@ -1,9 +1,9 @@
 import {
   AbstractShapeMaker,
-  PostProcessHandler,
-  Sides,
-} from "../../lib/AbstractShapeMaker";
-import { ENCLOSURE_VIGA_THICKNESS, Materials } from "./enclosureConst";
+  type PostProcessHandler,
+  type Sides,
+} from '../../lib/AbstractShapeMaker';
+import { ENCLOSURE_VIGA_THICKNESS, Materials } from './enclosureConst';
 
 export class EnclosureShapeMaker extends AbstractShapeMaker {
   viga({
@@ -32,7 +32,7 @@ export class EnclosureShapeMaker extends AbstractShapeMaker {
         height,
         width,
         depth: ENCLOSURE_VIGA_THICKNESS,
-        type: "box",
+        type: 'box',
         sides,
         postProcess,
       },

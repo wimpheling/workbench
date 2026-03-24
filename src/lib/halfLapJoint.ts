@@ -1,4 +1,4 @@
-import { makeBaseBox, Shape3D } from "replicad";
+import { type Shape3D, makeBaseBox } from 'replicad';
 
 export function halfLapJoint({
   geo,
@@ -18,7 +18,7 @@ export function halfLapJoint({
   const remove = makeBaseBox(sectionWidth, sectionHeight, depth / 2).translate(
     translateX,
     translateY,
-    depth * 0.25,
+    depth * 0.25
   );
   return geo.cut(remove);
 }
