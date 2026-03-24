@@ -1,11 +1,11 @@
-import { render } from "solid-js/web";
-import { Renderer3D } from "./Renderer3D";
-import { MyObject3D } from "./MyObject3D";
+import { render } from 'solid-js/web';
+import type { MyObject3D } from './MyObject3D';
+import { Renderer3D } from './Renderer3D';
 
-import "replicad-opencascadejs/src/replicad_single.wasm?url";
-import opencascade from "replicad-opencascadejs/src/replicad_single.js";
-import opencascadeWasm from "replicad-opencascadejs/src/replicad_single.wasm?url";
-import { setOC } from "replicad";
+import 'replicad-opencascadejs/src/replicad_single.wasm?url';
+import { setOC } from 'replicad';
+import opencascade from 'replicad-opencascadejs/src/replicad_single.js';
+import opencascadeWasm from 'replicad-opencascadejs/src/replicad_single.wasm?url';
 // import { expose } from "comlink";
 
 let loaded = false;
@@ -28,11 +28,11 @@ export function renderObject3D<A extends MyObject3D>(c: new () => A) {
     const object3D = new c();
     return <Renderer3D object3D={object3D} />;
   }
-  const el = document.getElementById("app");
+  const el = document.getElementById('app');
   if (!el) return;
-  el.innerHTML = "Loading...";
+  el.innerHTML = 'Loading...';
   init().then(() => {
-    el.innerHTML = "";
+    el.innerHTML = '';
     render(App, el as HTMLDivElement);
   });
 }

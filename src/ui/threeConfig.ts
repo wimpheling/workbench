@@ -1,7 +1,7 @@
-import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { DisposableItem } from "./interfaces";
-import { ViewportGizmo } from "three-viewport-gizmo";
+import * as THREE from 'three';
+import { ViewportGizmo } from 'three-viewport-gizmo';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import type { DisposableItem } from './interfaces';
 
 export function init(
   onSelectCallback: (params?: {
@@ -10,18 +10,13 @@ export function init(
     position: THREE.Vector3;
   }) => void,
   onDoorClickCallback?: (doorName: string) => void,
-  lightingMode: "directional" | "ambient" = "directional",
+  lightingMode: 'directional' | 'ambient' = 'directional'
 ) {
   const itemsToDispose: DisposableItem[] = [];
   const scene = new THREE.Scene();
   // scene.background = new THREE.Color(0xf5faf6);
   scene.background = new THREE.Color(0x202020);
-  const camera = new THREE.PerspectiveCamera(
-    55,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000,
-  );
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
 
   camera.position.z = 500;
   camera.position.y = 500;
@@ -64,16 +59,20 @@ export function init(
   const controls = new OrbitControls(camera, renderer.domElement);
 
   // listeners
-  viewportGizmo.addEventListener("start", () => (controls.enabled = false));
-  viewportGizmo.addEventListener("end", () => (controls.enabled = true));
+  viewportGizmo.addEventListener('start', () => {
+    controls.enabled = false;
+  });
+  viewportGizmo.addEventListener('end', () => {
+    controls.enabled = true;
+  });
 
-  controls.addEventListener("change", () => {
+  controls.addEventListener('change', () => {
     viewportGizmo.update();
   });
 
   itemsToDispose.push(controls);
   const loadControls: () => void = () => {
-    const stateJSON = localStorage.getItem(`orbitControls`);
+    const stateJSON = localStorage.getItem('orbitControls');
 
     if (stateJSON) {
       const { target0, position0, zoom0 } = JSON.parse(stateJSON);
@@ -88,11 +87,11 @@ export function init(
     controls.saveState();
     const { target0, position0, zoom0 } = controls;
     const state = { target0, position0, zoom0 };
-    localStorage.setItem(`orbitControls`, JSON.stringify(state));
+    localStorage.setItem('orbitControls', JSON.stringify(state));
   };
 
   // Lighting setup based on mode
-  if (lightingMode === "ambient") {
+  if (lightingMode === 'ambient') {
     const ambientLight = new THREE.AmbientLight(0xffffff, 1);
     scene.add(ambientLight);
     itemsToDispose.push(ambientLight);
@@ -142,7 +141,7 @@ export function init(
   function animate() {
     requestAnimationFrame(animate);
     clock.getDelta();
-    time = parseFloat(clock.elapsedTime.toFixed(2));
+    time = Number.parseFloat(clock.elapsedTime.toFixed(2));
 
     if (animateCallback) {
       animateCallback({ time });
@@ -153,8 +152,8 @@ export function init(
   }
   animate();
   loadControls();
-  renderer.domElement.addEventListener("mousemove", onPointerMove, false);
-  renderer.domElement.addEventListener("click", onPointerClick, false);
+  renderer.domElement.addEventListener('mousemove', onPointerMove, false);
+  renderer.domElement.addEventListener('click', onPointerClick, false);
   let intersectState:
     | {
         object: THREE.LineSegments;
@@ -207,7 +206,7 @@ export function init(
           color: lineChild.material.color.getHex(),
         };
         // @ts-expect-error color does not exist ?
-        lineChild.material.color.set("red");
+        lineChild.material.color.set('red');
         const bbox = new THREE.Box3().setFromObject(lineChild);
         const vector = new THREE.Vector3();
         bbox.getSize(vector);
@@ -242,8 +241,8 @@ export function init(
       let doorName: string | null = null;
       while (obj) {
         const parent: THREE.Object3D | null = obj.parent;
-        if (parent && parent.name === "Doors") {
-          doorName = obj.name?.replace("_pivot", "") || null;
+        if (parent && parent.name === 'Doors') {
+          doorName = obj.name?.replace('_pivot', '') || null;
           if (doorName) {
             onDoorClickCallback(doorName);
           }

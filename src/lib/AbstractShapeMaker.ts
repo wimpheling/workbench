@@ -1,19 +1,19 @@
-import * as THREE from "three";
-import { DisposableItem } from "../ui/interfaces";
-import { getGeometry, specsKey } from "./pieceHelpers";
-import { syncGeometries } from "replicad-threejs-helper";
-import { Shape3D } from "replicad";
+import type { Shape3D } from 'replicad';
+import { syncGeometries } from 'replicad-threejs-helper';
+import * as THREE from 'three';
+import type { DisposableItem } from '../ui/interfaces';
+import { getGeometry, specsKey } from './pieceHelpers';
 
 export interface BoxJoint {
   numberOfJoints: number;
   jointHeight: number;
   male: boolean;
-  jointType: "box";
+  jointType: 'box';
 }
 
 export interface HalfLapJoint {
   male: boolean;
-  jointType: "halfLap";
+  jointType: 'halfLap';
   size: number;
   borderSize?: number;
 }
@@ -37,15 +37,15 @@ interface BoxGeometryProps {
   height: number;
   width: number;
   depth: number;
-  type: "box";
+  type: 'box';
   sides?: Sides;
   postProcess?: PostProcessHandler;
 }
 
 interface ExtrusionGeometryProps {
-  type: "extrusion";
+  type: 'extrusion';
   length: number;
-  profileType: "3030" | "3060";
+  profileType: '3030' | '3060';
   postProcess?: PostProcessHandler;
 }
 
@@ -61,7 +61,7 @@ interface MakeShapeProps {
   opacity?: number;
   name: string;
 }
-export type Piece = Omit<MakeShapeProps, "x" | "y" | "z" | "scene"> & {
+export type Piece = Omit<MakeShapeProps, 'x' | 'y' | 'z' | 'scene'> & {
   material: string;
   group: string;
   assemble: (obj: THREE.Object3D) => void;
@@ -78,7 +78,7 @@ export type CompoundPiece = {
   pieces: Piece[];
   fuseOptions?: FuseOptions;
   assemble: (obj: THREE.Object3D) => void;
-  hingePosition?: "left" | "right";
+  hingePosition?: 'left' | 'right';
   color?: string;
 };
 
@@ -88,10 +88,7 @@ export class AbstractShapeMaker {
   threeGroups: Record<string, THREE.Group> = {};
   piecesBySpecs: Record<string, Piece[]> = {};
   hiddenGroupsInSpecs: string[] = [];
-  doorPivots: Record<
-    string,
-    { group: THREE.Group; hingePosition: "left" | "right" }
-  > = {};
+  doorPivots: Record<string, { group: THREE.Group; hingePosition: 'left' | 'right' }> = {};
 
   constructor(hiddenGroupsInSpecs: string[] = []) {
     this.hiddenGroupsInSpecs = hiddenGroupsInSpecs;
@@ -123,13 +120,13 @@ export class AbstractShapeMaker {
     scene: THREE.Scene,
     conf: {
       hiddenGroups?: string[];
-    },
+    }
   ) {
     const itemsToDispose: DisposableItem[] = [];
     this.threeGroups = {};
     this.doorPivots = {};
 
-    Object.keys(this.objectsByGroup).forEach((group) => {
+    for (const group in this.objectsByGroup) {
       const pieces = this.objectsByGroup[group];
       const groupObj = new THREE.Group();
       const visible = !conf?.hiddenGroups?.includes(group);
@@ -137,13 +134,13 @@ export class AbstractShapeMaker {
       groupObj.name = group;
       scene.add(groupObj);
       this.threeGroups[group] = groupObj;
-      pieces.forEach((piece) => {
+      for (const piece of pieces) {
         // Mesh
         let shape = getGeometry(piece);
         const isTransparent = piece.opacity && piece.opacity < 1;
         const isAluminium =
-          piece.material.toLowerCase().includes("aluminium") ||
-          piece.material.toLowerCase().includes("aluminum");
+          piece.material.toLowerCase().includes('aluminium') ||
+          piece.material.toLowerCase().includes('aluminum');
 
         const mat = isTransparent
           ? new THREE.MeshPhysicalMaterial({
@@ -188,9 +185,9 @@ export class AbstractShapeMaker {
         const line = new THREE.LineSegments(
           geo.lines,
           new THREE.LineBasicMaterial({
-            color: "black",
+            color: 'black',
             opacity: piece.opacity || 0.4,
-          }),
+          })
         );
         line.castShadow = true;
         line.receiveShadow = true;
@@ -208,10 +205,10 @@ export class AbstractShapeMaker {
         groupObj.add(group);
 
         piece.assemble(group);
-      });
-    });
+      }
+    }
 
-    Object.keys(this.compoundsByGroup).forEach((group) => {
+    for (const group in this.compoundsByGroup) {
       const compounds = this.compoundsByGroup[group];
       const groupObj = this.threeGroups[group] || new THREE.Group();
       const visible = !conf?.hiddenGroups?.includes(group);
@@ -222,7 +219,7 @@ export class AbstractShapeMaker {
         this.threeGroups[group] = groupObj;
       }
 
-      compounds.forEach((compound) => {
+      for (const compound of compounds) {
         const compoundGroup = new THREE.Group();
         if (compound.name) {
           compoundGroup.name = compound.name;
@@ -237,8 +234,8 @@ export class AbstractShapeMaker {
 
           const isTransparent = piece.opacity && piece.opacity < 1;
           const isAluminium =
-            piece.material.toLowerCase().includes("aluminium") ||
-            piece.material.toLowerCase().includes("aluminum");
+            piece.material.toLowerCase().includes('aluminium') ||
+            piece.material.toLowerCase().includes('aluminum');
 
           const mat = isTransparent
             ? new THREE.MeshPhysicalMaterial({
@@ -281,9 +278,9 @@ export class AbstractShapeMaker {
           const line = new THREE.LineSegments(
             geo.lines,
             new THREE.LineBasicMaterial({
-              color: "black",
+              color: 'black',
               opacity: piece.opacity || 0.4,
-            }),
+            })
           );
           line.castShadow = true;
           line.receiveShadow = true;
@@ -306,15 +303,12 @@ export class AbstractShapeMaker {
           pivotGroup.name = `${compound.name}_pivot`;
 
           const doorWidth = compound.pieces.reduce((max, p) => {
-            if (p.geometry.type === "box") {
+            if (p.geometry.type === 'box') {
               return Math.max(max, p.geometry.width);
-            } else if (p.geometry.type === "extrusion") {
-              return Math.max(max, 30);
             }
-            return max;
+            return Math.max(max, 30);
           }, 0);
-          const offsetX =
-            compound.hingePosition === "left" ? doorWidth / 2 : -doorWidth / 2;
+          const offsetX = compound.hingePosition === 'left' ? doorWidth / 2 : -doorWidth / 2;
 
           compoundGroup.position.x -= offsetX;
 
@@ -330,8 +324,8 @@ export class AbstractShapeMaker {
         } else {
           compound.assemble(compoundGroup);
         }
-      });
-    });
+      }
+    }
     return itemsToDispose;
   }
 }

@@ -1,26 +1,18 @@
+import { Show, createSignal, onCleanup, onMount } from 'solid-js';
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { For } from "solid-js/web";
-import { init } from "./threeConfig";
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
-import { MyObject3D } from "../lib/MyObject3D";
-import { DisposableItem } from "./interfaces";
+import { For } from 'solid-js/web';
+import type { MyObject3D } from '../lib/MyObject3D';
+import type { DisposableItem } from './interfaces';
+import { init } from './threeConfig';
 
 export const Assembly = ({ item }: { item: MyObject3D }) => {
   let loadControls: () => void;
   let saveControls: () => void;
   const [renderer, setRenderer] = createSignal<THREE.WebGLRenderer>();
-  const [itemsToDispose, setItemsToDispose] = createSignal<DisposableItem[]>(
-    [],
-  );
-  const [itemsToDisposeInit, setItemsToDisposeInit] = createSignal<
-    DisposableItem[]
-  >([]);
-  const [threeGroups, setThreeGroups] = createSignal<
-    Record<string, THREE.Group>
-  >({});
-  const [lightingMode, setLightingMode] = createSignal<
-    "directional" | "ambient"
-  >("directional");
+  const [itemsToDispose, setItemsToDispose] = createSignal<DisposableItem[]>([]);
+  const [itemsToDisposeInit, setItemsToDisposeInit] = createSignal<DisposableItem[]>([]);
+  const [threeGroups, setThreeGroups] = createSignal<Record<string, THREE.Group>>({});
+  const [lightingMode, setLightingMode] = createSignal<'directional' | 'ambient'>('directional');
 
   const [select, setSelect] = createSignal<{
     groupName: string;
@@ -56,9 +48,7 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
     const state = doorStates[doorName];
     state.isOpen = !state.isOpen;
     // Open outward: -90° from base
-    state.targetRotation = state.isOpen
-      ? state.baseRotation - Math.PI / 2
-      : state.baseRotation;
+    state.targetRotation = state.isOpen ? state.baseRotation - Math.PI / 2 : state.baseRotation;
   };
 
   const toggleDoorAnimation = () => {
@@ -88,8 +78,12 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
     const r = renderer();
     r?.domElement.remove();
     r?.dispose();
-    itemsToDispose().forEach((i) => i.dispose());
-    itemsToDisposeInit().forEach((i) => i.dispose());
+    for (const i of itemsToDispose()) {
+      i.dispose();
+    }
+    for (const i of itemsToDisposeInit()) {
+      i.dispose();
+    }
     setRenderer(undefined);
   }
 
@@ -125,10 +119,8 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
   };
 
   return (
-    <div
-      style={{ position: "absolute", top: "30px", left: 0, "z-index": 1000 }}
-    >
-      <div style={{ display: "flex", "flex-direction": "row" }}>
+    <div style={{ position: 'absolute', top: '30px', left: 0, 'z-index': 1000 }}>
+      <div style={{ display: 'flex', 'flex-direction': 'row' }}>
         <div>
           <h1>Controls</h1>
           <For each={Object.keys(threeGroups())}>
@@ -140,9 +132,7 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
                     <input
                       type="checkbox"
                       checked={group.visible}
-                      onChange={(e) =>
-                        switchGroupVisibility(key, e.target.checked)
-                      }
+                      onChange={(e) => switchGroupVisibility(key, e.target.checked)}
                     />
                     {key}
                   </label>
@@ -152,27 +142,31 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
             }}
           </For>
         </div>
-        <div style={{ "margin-left": "20px" }}>
+        <div style={{ 'margin-left': '20px' }}>
           <Show when={select()}>
-            <h1>Piece Info</h1>
-            <p>
-              <b>{select()!.groupName}</b>
-              <br />
-              Width: {Math.round(select()!.vector.x * 10)}mm /{" "}
-              {Math.round(((select()!.vector.x * 10) / 25.4) * 10) / 10} inches
-              <br />
-              Height: {Math.round(select()!.vector.y * 10)}mm /{" "}
-              {Math.round(((select()!.vector.y * 10) / 25.4) * 10) / 10} inches
-              <br />
-              Depth: {Math.round(select()!.vector.z * 10)}mm /{" "}
-              {Math.round(((select()!.vector.z * 10) / 25.4) * 10) / 10} inches
-              <br />
-              X: {Math.round(select()!.position.x * 10)}mm
-              <br />
-              Y: {Math.round(select()!.position.y * 10)}mm
-              <br />
-              Z: {Math.round(select()!.position.z * 10)}mm
-            </p>
+            {(selected) => (
+              <>
+                <h1>Piece Info</h1>
+                <p>
+                  <b>{selected().groupName}</b>
+                  <br />
+                  Width: {Math.round(selected().vector.x * 10)}mm /{' '}
+                  {Math.round(((selected().vector.x * 10) / 25.4) * 10) / 10} inches
+                  <br />
+                  Height: {Math.round(selected().vector.y * 10)}mm /{' '}
+                  {Math.round(((selected().vector.y * 10) / 25.4) * 10) / 10} inches
+                  <br />
+                  Depth: {Math.round(selected().vector.z * 10)}mm /{' '}
+                  {Math.round(((selected().vector.z * 10) / 25.4) * 10) / 10} inches
+                  <br />
+                  X: {Math.round(selected().position.x * 10)}mm
+                  <br />
+                  Y: {Math.round(selected().position.y * 10)}mm
+                  <br />
+                  Z: {Math.round(selected().position.z * 10)}mm
+                </p>
+              </>
+            )}
           </Show>
         </div>
       </div>
@@ -186,13 +180,12 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
       <button
         type="button"
         onClick={() => {
-          const newMode =
-            lightingMode() === "directional" ? "ambient" : "directional";
+          const newMode = lightingMode() === 'directional' ? 'ambient' : 'directional';
           setLightingMode(newMode);
           render();
         }}
       >
-        Lighting: {lightingMode() === "directional" ? "Directional" : "Ambient"}
+        Lighting: {lightingMode() === 'directional' ? 'Directional' : 'Ambient'}
       </button>
     </div>
   );

@@ -1,6 +1,6 @@
-import { MyObject3D } from "../../lib/MyObject3D";
-import { renderObject3D } from "../../lib/render";
-import { AbstractShapeMaker } from "../../lib/AbstractShapeMaker";
+import { AbstractShapeMaker } from '../../lib/AbstractShapeMaker';
+import type { MyObject3D } from '../../lib/MyObject3D';
+import { renderObject3D } from '../../lib/render';
 
 class Enclosure implements MyObject3D {
   sm = new AbstractShapeMaker();
@@ -10,20 +10,20 @@ class Enclosure implements MyObject3D {
 
   constructor() {
     this.sm.makeShape({
-      group: "Structure ",
+      group: 'Structure ',
       assemble: (obj) => {
         console.log(obj);
       },
-      material: "Wood",
+      material: 'Wood',
       geometry: {
         depth: 10,
         height: 100,
         width: 100,
-        type: "box",
+        type: 'box',
         sides: {
           right: {
             joint: {
-              jointType: "box",
+              jointType: 'box',
               jointHeight: 10,
               male: false,
               numberOfJoints: 3,
@@ -32,7 +32,7 @@ class Enclosure implements MyObject3D {
 
           left: {
             joint: {
-              jointType: "box",
+              jointType: 'box',
               jointHeight: 10,
               male: false,
               numberOfJoints: 13,
@@ -40,7 +40,7 @@ class Enclosure implements MyObject3D {
           },
         },
       },
-      name: "Test",
+      name: 'Test',
     });
   }
 }

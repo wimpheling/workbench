@@ -1,19 +1,15 @@
+import { AbstractShapeMaker, type CompoundPiece, type Piece } from '../../lib/AbstractShapeMaker';
 import {
-  AbstractShapeMaker,
-  CompoundPiece,
-  Piece,
-} from "../../lib/AbstractShapeMaker";
-import {
-  EnclosureV2Groups,
-  EnclosureV2Materials,
+  DOOR_PANEL_SLOT_DEPTH,
   EXTRUSION_PROFILE_DEPTH,
   EXTRUSION_PROFILE_WIDTH,
-  DOOR_PANEL_SLOT_DEPTH,
-} from "./consts";
+  EnclosureV2Groups,
+  EnclosureV2Materials,
+} from './consts';
 
 export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
   constructor() {
-    super(["internal"]);
+    super(['internal']);
   }
 
   makeSingleExtrusion({
@@ -21,7 +17,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     name,
     group,
     assemble,
-    color = "silver",
+    color = 'silver',
   }: {
     height: number;
     name: string;
@@ -31,8 +27,8 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
   }) {
     return this.makeShape({
       geometry: {
-        type: "extrusion",
-        profileType: "3030",
+        type: 'extrusion',
+        profileType: '3030',
         length: height,
       },
       color,
@@ -47,7 +43,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     name,
     group,
     assemble,
-    color = "silver",
+    color = 'silver',
   }: {
     height: number;
     name: string;
@@ -57,7 +53,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
   }) {
     return this.makeShape({
       geometry: {
-        type: "box",
+        type: 'box',
         height,
         width: EXTRUSION_PROFILE_WIDTH,
         depth: EXTRUSION_PROFILE_DEPTH,
@@ -75,7 +71,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     name,
     group,
     assemble,
-    color = "silver",
+    color = 'silver',
   }: {
     height: number;
     name: string;
@@ -85,8 +81,8 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
   }) {
     return this.makeShape({
       geometry: {
-        type: "extrusion",
-        profileType: "3060",
+        type: 'extrusion',
+        profileType: '3060',
         length: height,
       },
       color,
@@ -101,15 +97,15 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     width,
     height,
     name,
-    hingePosition = "left",
+    hingePosition = 'left',
     panelDepth = 0.4,
-    panelColor = "clear",
+    panelColor = 'clear',
     assemble,
   }: {
     width: number;
     height: number;
     name: string;
-    hingePosition?: "left" | "right";
+    hingePosition?: 'left' | 'right';
     panelDepth?: number;
     panelColor?: string;
     assemble: (obj: THREE.Object3D) => void;
@@ -120,18 +116,14 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
       name: `${name} Left Vertical`,
       geometry: {
         length: height,
-        profileType: "3030",
-        type: "extrusion",
+        profileType: '3030',
+        type: 'extrusion',
       },
-      color: "silver",
+      color: 'silver',
       group: EnclosureV2Groups.Doors,
       material: EnclosureV2Materials.AluminiumSingle,
       assemble: (obj) => {
-        obj.position.set(
-          -width / 2 + EXTRUSION_PROFILE_WIDTH / 2,
-          height / 2,
-          0,
-        );
+        obj.position.set(-width / 2 + EXTRUSION_PROFILE_WIDTH / 2, height / 2, 0);
       },
     };
     framePieces.push(leftVertical);
@@ -140,18 +132,14 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
       name: `${name} Right Vertical`,
       geometry: {
         length: height,
-        profileType: "3030",
-        type: "extrusion",
+        profileType: '3030',
+        type: 'extrusion',
       },
-      color: "silver",
+      color: 'silver',
       group: EnclosureV2Groups.Doors,
       material: EnclosureV2Materials.AluminiumSingle,
       assemble: (obj) => {
-        obj.position.set(
-          width / 2 - EXTRUSION_PROFILE_WIDTH / 2,
-          height / 2,
-          0,
-        );
+        obj.position.set(width / 2 - EXTRUSION_PROFILE_WIDTH / 2, height / 2, 0);
       },
     };
     framePieces.push(rightVertical);
@@ -160,10 +148,10 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
       name: `${name} Top Horizontal`,
       geometry: {
         length: width - EXTRUSION_PROFILE_WIDTH * 2,
-        profileType: "3030",
-        type: "extrusion",
+        profileType: '3030',
+        type: 'extrusion',
       },
-      color: "silver",
+      color: 'silver',
       group: EnclosureV2Groups.Doors,
       material: EnclosureV2Materials.AluminiumSingle,
       assemble: (obj) => {
@@ -177,10 +165,10 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
       name: `${name} Bottom Horizontal`,
       geometry: {
         length: width - EXTRUSION_PROFILE_WIDTH * 2,
-        profileType: "3030",
-        type: "extrusion",
+        profileType: '3030',
+        type: 'extrusion',
       },
-      color: "silver",
+      color: 'silver',
       group: EnclosureV2Groups.Doors,
       material: EnclosureV2Materials.AluminiumSingle,
       assemble: (obj) => {
@@ -193,21 +181,20 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     const panel: Piece = {
       name: `${name} Panel`,
       geometry: {
-        height:
-          height - EXTRUSION_PROFILE_WIDTH * 2 + DOOR_PANEL_SLOT_DEPTH * 2,
+        height: height - EXTRUSION_PROFILE_WIDTH * 2 + DOOR_PANEL_SLOT_DEPTH * 2,
         width: width - EXTRUSION_PROFILE_WIDTH * 2 + DOOR_PANEL_SLOT_DEPTH * 2,
         depth: panelDepth,
-        type: "box",
+        type: 'box',
       },
       color: panelColor,
       opacity: 0.2,
       group: EnclosureV2Groups.Doors,
-      material: "compact polycarbonate",
+      material: 'compact polycarbonate',
       assemble: (obj) => {
         obj.position.set(
           0 + DOOR_PANEL_SLOT_DEPTH / 2,
           height / 2 - DOOR_PANEL_SLOT_DEPTH,
-          EXTRUSION_PROFILE_DEPTH / 2 - panelDepth / 2,
+          EXTRUSION_PROFILE_DEPTH / 2 - panelDepth / 2
         );
       },
     };
@@ -215,7 +202,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
 
     const door: CompoundPiece = {
       name,
-      material: "door",
+      material: 'door',
       group: EnclosureV2Groups.Doors,
       pieces: framePieces,
       hingePosition,
