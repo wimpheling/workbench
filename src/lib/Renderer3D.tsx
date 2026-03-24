@@ -1,12 +1,12 @@
 import { Assembly } from '../ui/Assembly';
 import type { MyObject3D } from './MyObject3D';
-import projects from './projects';
+// import projects from './projects';
 
 export function Renderer3D({ object3D }: { object3D: MyObject3D }) {
   return (
     <>
       <div style={{ top: 0, left: 0, 'z-index': 1004, display: 'flex' }}>
-        <ul style={{ 'list-style': 'none', display: 'flex' }}>
+        {/* <ul style={{ 'list-style': 'none', display: 'flex' }}>
           {projects.map((project) => (
             // biome-ignore lint/correctness/useJsxKeyInIterable: <explanation>
             <li style={{ 'margin-right': '10px' }}>
@@ -15,7 +15,7 @@ export function Renderer3D({ object3D }: { object3D: MyObject3D }) {
               </a>
             </li>
           ))}
-        </ul>
+        </ul> */}
       </div>
       <Assembly item={object3D} />
     </>

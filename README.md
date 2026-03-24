@@ -41,6 +41,12 @@ The tool is designed to be extensible, allowing users to create custom projects,
 
 ## Usage Guide
 
+### Publish to gh-pages
+
+```bash
+npm run deploy
+```
+
 ### Opening Existing Projects
 
 1. When you first start the application, you'll see a list of available projects
