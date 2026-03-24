@@ -3,6 +3,39 @@ import { makeBaseBox, Shape3D, draw } from "replicad";
 import { boxJoint } from "./boxJoint";
 import { halfLapJoint } from "./halfLapJoint";
 
+function create3030Profile(length: number): Shape3D {
+  const slotWidth = 1.1;
+  const outerSize = 3;
+  const innerSize = outerSize - slotWidth * 2;
+
+  const profile = draw()
+    .hLine(slotWidth)
+    .vLine(-slotWidth)
+    .hLine(innerSize)
+    .vLine(slotWidth)
+    .hLine(slotWidth)
+    .vLine(-slotWidth)
+    .hLine(-slotWidth)
+    .vLine(-innerSize)
+    .hLine(slotWidth)
+    .vLine(-slotWidth)
+    .hLine(-slotWidth)
+    .vLine(slotWidth)
+    .hLine(-innerSize)
+    .vLine(-slotWidth)
+    .hLine(-slotWidth)
+    .vLine(slotWidth)
+    .hLine(slotWidth)
+    .vLine(innerSize)
+    .hLine(-slotWidth)
+    .vLine(slotWidth)
+    .close()
+    .sketchOnPlane("XZ", [0 - outerSize / 2, length / 2, outerSize])
+    .extrude(length) as unknown as Shape3D;
+
+  return profile;
+}
+
 export function getGeometry(props: Piece): Shape3D {
   if (props.geometry.type === "box") {
     let geoShape: Shape3D = makeBox({
@@ -197,44 +230,45 @@ export function getGeometry(props: Piece): Shape3D {
   }
 
   if (props.geometry.type === "extrusion") {
-    const slotWidth = 1.1;
-    const outerSize = 3;
-    const innerSize = outerSize - slotWidth * 2;
+    if (props.geometry.profileType === "3060") {
+      const slotWidth = 1.1;
+      const outerWidth = 6;
+      const outerHeight = 3;
+      const innerWidth = outerWidth - slotWidth * 2;
 
-    const profile = draw()
-      // top
-      .hLine(slotWidth)
-      .vLine(-slotWidth)
-      .hLine(innerSize)
-      .vLine(slotWidth)
-      .hLine(slotWidth)
-      // right
-      .vLine(-slotWidth)
-      .hLine(-slotWidth)
-      .vLine(-innerSize)
-      .hLine(slotWidth)
-      .vLine(-slotWidth)
-      // bottom
-      .hLine(-slotWidth)
-      .vLine(slotWidth)
-      .hLine(-innerSize)
-      .vLine(-slotWidth)
-      .hLine(-slotWidth)
-      // left
-      .vLine(slotWidth)
-      .hLine(slotWidth)
-      .vLine(innerSize)
-      .hLine(-slotWidth)
-      .vLine(slotWidth)
-      .close()
-      .sketchOnPlane("XZ", [
-        0 - outerSize / 2,
-        props.geometry.length / 2,
-        outerSize,
-      ])
-      .extrude(props.geometry.length) as unknown as Shape3D;
+      const profile = draw()
+        .hLine(slotWidth)
+        .vLine(-slotWidth)
+        .hLine(innerWidth)
+        .vLine(slotWidth)
+        .hLine(slotWidth)
+        .vLine(-slotWidth)
+        .hLine(-slotWidth)
+        .vLine(-outerHeight + slotWidth * 2)
+        .hLine(slotWidth)
+        .vLine(-slotWidth)
+        .hLine(-slotWidth)
+        .vLine(outerHeight - slotWidth * 2)
+        .hLine(-innerWidth)
+        .vLine(-slotWidth)
+        .hLine(-slotWidth)
+        .vLine(slotWidth)
+        .hLine(slotWidth)
+        .vLine(outerHeight - slotWidth * 2)
+        .hLine(-slotWidth)
+        .vLine(slotWidth)
+        .close()
+        .sketchOnPlane("XZ", [
+          0 - outerWidth / 2,
+          props.geometry.length / 2,
+          outerHeight,
+        ])
+        .extrude(props.geometry.length) as unknown as Shape3D;
 
-    return profile;
+      return profile;
+    }
+
+    return create3030Profile(props.geometry.length) as Shape3D;
   }
 
   throw new Error("TODO: shapes not implemented yet");
@@ -254,7 +288,8 @@ function makeBox({
 
 export function specsKey(props: Piece) {
   if (props.geometry.type === "extrusion") {
-    return `${props.material} 3030 profile x ${props.geometry.length}`;
+    const profile = props.geometry.profileType === "3060" ? "3060" : "3030";
+    return `${props.material} ${profile} profile x ${props.geometry.length}`;
   }
   return `${props.material} ${props.geometry.height}x${props.geometry.width}x${props.geometry.depth}`;
 }

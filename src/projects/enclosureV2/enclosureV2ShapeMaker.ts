@@ -85,7 +85,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     return this.makeShape({
       geometry: {
         type: "extrusion",
-        profileType: "3030",
+        profileType: "3060",
         length: height,
       },
       color,

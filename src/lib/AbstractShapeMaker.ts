@@ -45,7 +45,7 @@ interface BoxGeometryProps {
 interface ExtrusionGeometryProps {
   type: "extrusion";
   length: number;
-  profileType: "3030";
+  profileType: "3030" | "3060";
   postProcess?: PostProcessHandler;
 }
 
