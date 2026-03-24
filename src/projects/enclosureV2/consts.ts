@@ -17,6 +17,7 @@ export const EXTRUSION_PROFILE_WIDTH = 3; // 30x30 aluminium extrusion
 export const EXTRUSION_PROFILE_DEPTH = 3; // 30x30 aluminium extrusion
 export const BIG_EXTRUSION_WIDTH = 6; // 60x30 aluminium extrusion
 export const BIG_EXTRUSION_DEPTH = 3; // 60x30 aluminium extrusion
+export const DOOR_PANEL_SLOT_DEPTH = 0.5; // depth of the panel into the extrusion for the door panels to slot in
 
 export const SIDE_HORIZONTAL_EXTRUSION_HEIGHT = ENCLOSURE_INNER_DEPTH;
 

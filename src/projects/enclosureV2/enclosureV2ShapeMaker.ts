@@ -8,6 +8,7 @@ import {
   EnclosureV2Materials,
   EXTRUSION_PROFILE_DEPTH,
   EXTRUSION_PROFILE_WIDTH,
+  DOOR_PANEL_SLOT_DEPTH,
 } from "./consts";
 
 export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
@@ -101,7 +102,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     height,
     name,
     hingePosition = "left",
-    panelDepth = 0.5,
+    panelDepth = 0.4,
     panelColor = "clear",
     assemble,
   }: {
@@ -192,8 +193,9 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
     const panel: Piece = {
       name: `${name} Panel`,
       geometry: {
-        height: height - EXTRUSION_PROFILE_WIDTH * 2,
-        width: width - EXTRUSION_PROFILE_WIDTH * 2,
+        height:
+          height - EXTRUSION_PROFILE_WIDTH * 2 + DOOR_PANEL_SLOT_DEPTH * 2,
+        width: width - EXTRUSION_PROFILE_WIDTH * 2 + DOOR_PANEL_SLOT_DEPTH * 2,
         depth: panelDepth,
         type: "box",
       },
@@ -201,7 +203,11 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
       group: EnclosureV2Groups.Doors,
       material: "panel",
       assemble: (obj) => {
-        obj.position.set(0, height / 2, 0);
+        obj.position.set(
+          0 + DOOR_PANEL_SLOT_DEPTH / 2,
+          height / 2 - DOOR_PANEL_SLOT_DEPTH,
+          EXTRUSION_PROFILE_DEPTH / 2 - panelDepth / 2,
+        );
       },
     };
     framePieces.push(panel);
