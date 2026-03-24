@@ -18,6 +18,9 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
   const [threeGroups, setThreeGroups] = createSignal<
     Record<string, THREE.Group>
   >({});
+  const [lightingMode, setLightingMode] = createSignal<
+    "directional" | "ambient"
+  >("directional");
 
   const [select, setSelect] = createSignal<{
     groupName: string;
@@ -98,7 +101,7 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
       saveControls: sc,
       renderer,
       itemsToDispose: itemsToInit,
-    } = init(onSelect, onDoorClick);
+    } = init(onSelect, onDoorClick, lightingMode());
     setItemsToDisposeInit(itemsToInit);
     loadControls = lc;
     saveControls = sc;
@@ -174,8 +177,23 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
         </div>
       </div>
 
-      <button onClick={() => saveControls()}>Save</button>
-      <button onClick={() => loadControls()}>Load</button>
+      <button type="button" onClick={() => saveControls()}>
+        Save
+      </button>
+      <button type="button" onClick={() => loadControls()}>
+        Load
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          const newMode =
+            lightingMode() === "directional" ? "ambient" : "directional";
+          setLightingMode(newMode);
+          render();
+        }}
+      >
+        Lighting: {lightingMode() === "directional" ? "Directional" : "Ambient"}
+      </button>
     </div>
   );
 };

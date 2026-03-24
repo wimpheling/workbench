@@ -10,6 +10,7 @@ export function init(
     position: THREE.Vector3;
   }) => void,
   onDoorClickCallback?: (doorName: string) => void,
+  lightingMode: "directional" | "ambient" = "directional",
 ) {
   const itemsToDispose: DisposableItem[] = [];
   const scene = new THREE.Scene();
@@ -64,16 +65,23 @@ export function init(
     localStorage.setItem(`orbitControls`, JSON.stringify(state));
   };
 
-  // const light = new THREE.AmbientLight("white", 1);
-  const light = new THREE.DirectionalLight(0xffffff);
-  scene.add(light);
+  // Lighting setup based on mode
+  if (lightingMode === "ambient") {
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(ambientLight);
+    itemsToDispose.push(ambientLight);
+  } else {
+    // Directional lighting (default)
+    const light = new THREE.DirectionalLight(0xffffff);
+    scene.add(light);
 
-  const helper = new THREE.DirectionalLightHelper(light, 5);
-  scene.add(helper);
-  light.castShadow = true;
-  light.position.set(500, 1000, 500);
-  itemsToDispose.push(light);
-  scene.add(light);
+    const helper = new THREE.DirectionalLightHelper(light, 5);
+    scene.add(helper);
+    light.castShadow = true;
+    light.position.set(500, 1000, 500);
+    itemsToDispose.push(light);
+    scene.add(light);
+  }
   const axesHelper = new THREE.AxesHelper(500);
   scene.add(axesHelper);
   document.body.appendChild(renderer.domElement);
