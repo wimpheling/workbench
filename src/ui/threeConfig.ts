@@ -33,6 +33,32 @@ export function init(
   const renderer = new THREE.WebGLRenderer();
   renderer.shadowMap.enabled = true;
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  // Create environment map for reflections
+  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+  const envScene = new THREE.Scene();
+  envScene.background = new THREE.Color(0x888888);
+
+  // Add gradient lights for environment reflections
+  const envLight1 = new THREE.PointLight(0xffffff, 500);
+  envLight1.position.set(100, 100, 100);
+  envScene.add(envLight1);
+
+  const envLight2 = new THREE.PointLight(0xffffff, 500);
+  envLight2.position.set(-100, 100, -100);
+  envScene.add(envLight2);
+
+  const envLight3 = new THREE.PointLight(0xffffff, 300);
+  envLight3.position.set(0, -100, 0);
+  envScene.add(envLight3);
+
+  const envMap = pmremGenerator.fromScene(envScene).texture;
+  scene.environment = envMap;
+  itemsToDispose.push(envMap);
+  pmremGenerator.dispose();
 
   const viewportGizmo = new ViewportGizmo(camera, renderer, {});
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -71,16 +97,33 @@ export function init(
     scene.add(ambientLight);
     itemsToDispose.push(ambientLight);
   } else {
-    // Directional lighting (default)
-    const light = new THREE.DirectionalLight(0xffffff);
+    // Directional lighting with enhanced shadows
+    const light = new THREE.DirectionalLight(0xffffff, 2);
     scene.add(light);
 
     const helper = new THREE.DirectionalLightHelper(light, 5);
     scene.add(helper);
     light.castShadow = true;
+    light.shadow.mapSize.width = 2048;
+    light.shadow.mapSize.height = 2048;
+    light.shadow.camera.near = 0.5;
+    light.shadow.camera.far = 2000;
+    light.shadow.bias = -0.0001;
     light.position.set(500, 1000, 500);
     itemsToDispose.push(light);
     scene.add(light);
+
+    // Add fill light from opposite direction
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    fillLight.position.set(-300, 500, -300);
+    scene.add(fillLight);
+    itemsToDispose.push(fillLight);
+
+    // Add rim light for edge highlights
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
+    rimLight.position.set(0, -200, 500);
+    scene.add(rimLight);
+    itemsToDispose.push(rimLight);
   }
   const axesHelper = new THREE.AxesHelper(500);
   scene.add(axesHelper);

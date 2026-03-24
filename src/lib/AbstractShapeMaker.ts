@@ -140,12 +140,32 @@ export class AbstractShapeMaker {
       pieces.forEach((piece) => {
         // Mesh
         let shape = getGeometry(piece);
-        const mat = new THREE.MeshLambertMaterial({
-          color: piece.color || 0xa1662f,
-          opacity: piece.opacity || 1,
-          transparent: Boolean(piece.opacity && piece.opacity < 1),
-          name: piece.name,
-        });
+        const isTransparent = piece.opacity && piece.opacity < 1;
+        const isAluminium =
+          piece.material.toLowerCase().includes("aluminium") ||
+          piece.material.toLowerCase().includes("aluminum");
+
+        const mat = isTransparent
+          ? new THREE.MeshPhysicalMaterial({
+              color: piece.color || 0xa1662f,
+              opacity: piece.opacity || 1,
+              transparent: true,
+              name: piece.name,
+              metalness: 0,
+              roughness: 0.1,
+              transmission: 0.9,
+              thickness: 0.5,
+            })
+          : new THREE.MeshPhysicalMaterial({
+              color: piece.color || 0xa1662f,
+              opacity: piece.opacity || 1,
+              transparent: false,
+              name: piece.name,
+              metalness: isAluminium ? 1 : 0,
+              roughness: isAluminium ? 0.15 : 0.5,
+              clearcoat: isAluminium ? 1.0 : 0,
+              clearcoatRoughness: 0.1,
+            });
 
         if (piece.geometry.postProcess) {
           shape = piece.geometry.postProcess(shape);
@@ -215,12 +235,32 @@ export class AbstractShapeMaker {
             shape = piece.geometry.postProcess(shape);
           }
 
-          const mat = new THREE.MeshLambertMaterial({
-            color: piece.color || 0xa1662f,
-            opacity: piece.opacity || 1,
-            transparent: Boolean(piece.opacity && piece.opacity < 1),
-            name: piece.name,
-          });
+          const isTransparent = piece.opacity && piece.opacity < 1;
+          const isAluminium =
+            piece.material.toLowerCase().includes("aluminium") ||
+            piece.material.toLowerCase().includes("aluminum");
+
+          const mat = isTransparent
+            ? new THREE.MeshPhysicalMaterial({
+                color: piece.color || 0xa1662f,
+                opacity: piece.opacity || 1,
+                transparent: true,
+                name: piece.name,
+                metalness: 0,
+                roughness: 0.1,
+                transmission: 0.9,
+                thickness: 0.5,
+              })
+            : new THREE.MeshPhysicalMaterial({
+                color: piece.color || 0xa1662f,
+                opacity: piece.opacity || 1,
+                transparent: false,
+                name: piece.name,
+                metalness: isAluminium ? 1 : 0,
+                roughness: isAluminium ? 0.15 : 0.5,
+                clearcoat: isAluminium ? 1.0 : 0,
+                clearcoatRoughness: 0.1,
+              });
 
           const shapeItem = {
             name: piece.name,
