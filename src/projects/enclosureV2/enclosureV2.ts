@@ -38,7 +38,6 @@ export class EnclosureV2 implements MyObject3D {
       height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
       name: "Left Side Bottom extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "red",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.position.set(
@@ -70,7 +69,6 @@ export class EnclosureV2 implements MyObject3D {
       height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
       name: "Left Side Top extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "green",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.position.set(
@@ -86,7 +84,6 @@ export class EnclosureV2 implements MyObject3D {
       height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
       name: "Right Side Bottom front extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "red",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.position.set(
@@ -118,7 +115,6 @@ export class EnclosureV2 implements MyObject3D {
       height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
       name: "Right Side Top extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "green",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.position.set(
@@ -134,7 +130,6 @@ export class EnclosureV2 implements MyObject3D {
       height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
       name: "Front Bottom Horizontal extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "navy",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.rotation.set(0, 0, Math.PI / 2);
@@ -150,7 +145,6 @@ export class EnclosureV2 implements MyObject3D {
       height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
       name: "Front Top Horizontal extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "fuchsia",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.rotation.set(0, 0, Math.PI / 2);
@@ -166,7 +160,6 @@ export class EnclosureV2 implements MyObject3D {
       height: VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
       name: "Front Left Vertical extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "orange",
       assemble: (obj) => {
         makeVertical(obj);
         obj.rotateY(THREE.MathUtils.degToRad(90));
@@ -182,7 +175,6 @@ export class EnclosureV2 implements MyObject3D {
       height: VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
       name: "Front Right Vertical extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "peachpuff",
       assemble: (obj) => {
         makeVertical(obj);
         obj.rotateY(THREE.MathUtils.degToRad(90));
@@ -199,7 +191,6 @@ export class EnclosureV2 implements MyObject3D {
       height: VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
       name: "Back Left Vertical extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "yellow",
       assemble: (obj) => {
         makeVertical(obj);
         obj.position.set(
@@ -214,7 +205,6 @@ export class EnclosureV2 implements MyObject3D {
       height: VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
       name: "Back Right Vertical extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "yellow",
       assemble: (obj) => {
         makeVertical(obj);
         obj.position.set(
@@ -229,7 +219,6 @@ export class EnclosureV2 implements MyObject3D {
       height: VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
       name: "Back Middle Joint",
       group: EnclosureV2Groups.Structure,
-      color: "teal",
       assemble: (obj) => {
         makeVertical(obj);
         obj.rotateY(THREE.MathUtils.degToRad(90));
@@ -245,7 +234,6 @@ export class EnclosureV2 implements MyObject3D {
       height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
       name: "Back Bottom Horizontal extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "navy",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.rotation.set(0, 0, Math.PI / 2);
@@ -261,7 +249,6 @@ export class EnclosureV2 implements MyObject3D {
       height: FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
       name: "Back Top Horizontal extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "navy",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.rotation.set(0, 0, Math.PI / 2);
@@ -278,7 +265,6 @@ export class EnclosureV2 implements MyObject3D {
       height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
       name: "Back Top Horizontal extrusion",
       group: EnclosureV2Groups.Structure,
-      color: "orange",
       assemble: (obj) => {
         makeHorizontal(obj);
         obj.position.set(
@@ -296,7 +282,7 @@ export class EnclosureV2 implements MyObject3D {
       height: VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
       name: "Front Door Left",
       hingePosition: "left",
-      panelColor: "red",
+      panelColor: "yellow",
       assemble: (obj) => {
         obj.rotation.y = Math.PI; // Rotate 180° so panel faces outward
         obj.position.set(
@@ -313,7 +299,7 @@ export class EnclosureV2 implements MyObject3D {
       height: VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
       name: "Front Door",
       hingePosition: "right",
-      panelColor: "blue",
+      panelColor: "yellow",
       assemble: (obj) => {
         obj.position.set(
           ENCLOSURE_INNER_WIDTH / 2 + EXTRUSION_PROFILE_DEPTH * 2, // Right of Front Right Vertical (25 - 47.5)

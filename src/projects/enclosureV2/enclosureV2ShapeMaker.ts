@@ -200,8 +200,9 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
         type: "box",
       },
       color: panelColor,
+      opacity: 0.2,
       group: EnclosureV2Groups.Doors,
-      material: "panel",
+      material: "compact polycarbonate",
       assemble: (obj) => {
         obj.position.set(
           0 + DOOR_PANEL_SLOT_DEPTH / 2,
