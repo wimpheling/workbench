@@ -14,6 +14,7 @@ const projectFiles = readdirSync('projects')
 
 export default defineConfig({
   plugins: [solidPlugin()],
+  base: '/workbench/',
   build: {
     rollupOptions: {
       input: {
