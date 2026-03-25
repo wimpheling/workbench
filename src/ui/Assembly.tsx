@@ -121,7 +121,13 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
   return (
     <div style={{ position: 'absolute', top: '30px', left: 0, 'z-index': 1000 }}>
       <div style={{ display: 'flex', 'flex-direction': 'row' }}>
-        <div>
+        <div
+          style={{
+            'background-color': 'rgba(255, 255, 255, 0.5)',
+            padding: '10px',
+            'border-radius': '5px',
+          }}
+        >
           <h1>Controls</h1>
           <For each={Object.keys(threeGroups())}>
             {(key) => {
@@ -142,33 +148,39 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
             }}
           </For>
         </div>
-        <div style={{ 'margin-left': '20px' }}>
-          <Show when={select()}>
-            {(selected) => (
-              <>
-                <h1>Piece Info</h1>
-                <p>
-                  <b>{selected().groupName}</b>
-                  <br />
-                  Width: {Math.round(selected().vector.x * 10)}mm /{' '}
-                  {Math.round(((selected().vector.x * 10) / 25.4) * 10) / 10} inches
-                  <br />
-                  Height: {Math.round(selected().vector.y * 10)}mm /{' '}
-                  {Math.round(((selected().vector.y * 10) / 25.4) * 10) / 10} inches
-                  <br />
-                  Depth: {Math.round(selected().vector.z * 10)}mm /{' '}
-                  {Math.round(((selected().vector.z * 10) / 25.4) * 10) / 10} inches
-                  <br />
-                  X: {Math.round(selected().position.x * 10)}mm
-                  <br />
-                  Y: {Math.round(selected().position.y * 10)}mm
-                  <br />
-                  Z: {Math.round(selected().position.z * 10)}mm
-                </p>
-              </>
-            )}
-          </Show>
-        </div>
+
+        <Show when={select()}>
+          {(selected) => (
+            <div
+              style={{
+                'margin-left': '20px',
+                'background-color': 'rgba(255, 255, 255, 0.5)',
+                padding: '10px',
+                'border-radius': '5px',
+              }}
+            >
+              <h1>Piece Info</h1>
+              <p>
+                <b>{selected().groupName}</b>
+                <br />
+                Width: {Math.round(selected().vector.x * 10)}mm /{' '}
+                {Math.round(((selected().vector.x * 10) / 25.4) * 10) / 10} inches
+                <br />
+                Height: {Math.round(selected().vector.y * 10)}mm /{' '}
+                {Math.round(((selected().vector.y * 10) / 25.4) * 10) / 10} inches
+                <br />
+                Depth: {Math.round(selected().vector.z * 10)}mm /{' '}
+                {Math.round(((selected().vector.z * 10) / 25.4) * 10) / 10} inches
+                <br />
+                X: {Math.round(selected().position.x * 10)}mm
+                <br />
+                Y: {Math.round(selected().position.y * 10)}mm
+                <br />
+                Z: {Math.round(selected().position.z * 10)}mm
+              </p>
+            </div>
+          )}
+        </Show>
       </div>
 
       <button type="button" onClick={() => saveControls()}>
