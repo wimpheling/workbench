@@ -48,9 +48,10 @@ export class EnclosureV2 implements MyObject3D {
       },
     });
 
+    // Left-side middle support
     this.sm.makeDoubleExtrusion({
       height: VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
-      name: 'Left Side Vertical extrusion',
+      name: 'Left Side Middle Support',
       group: EnclosureV2Groups.Structure,
       assemble: (obj) => {
         makeVertical(obj);
@@ -94,9 +95,10 @@ export class EnclosureV2 implements MyObject3D {
       },
     });
 
+    // Right-side middle support
     this.sm.makeDoubleExtrusion({
       height: VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
-      name: 'Right Side Vertical extrusion',
+      name: 'Right Side Middle Support',
       group: EnclosureV2Groups.Structure,
       assemble: (obj) => {
         makeVertical(obj);

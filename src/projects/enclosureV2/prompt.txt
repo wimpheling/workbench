@@ -1,6 +1,6 @@
-this is an enclosure for my CNC. i will make the frame now, with 3030 and 3060 enclosures. i want it to be parametric.
+This is an enclosure for my CNC. The frame uses 3030 and 3060 aluminium extrusions and is parametric: the dimensions below are inputs, not fixed validation targets.
 
-here are the measures in cm
+These measurements are in cm in the model.
 
 export const ENCLOSURE_INNER_HEIGHT = 74;
 export const ENCLOSURE_INNER_WIDTH = 167.4;
@@ -10,9 +10,14 @@ export const EXTRUSION_PROFILE_DEPTH = 3; // 30x30 aluminium extrusion
 export const BIG_EXTRUSION_WIDTH = 6; // 60x30 aluminium extrusion
 export const BIG_EXTRUSION_DEPTH = 3; // 60x30 aluminium extrusion
 
-the whole frame has a bottom contour made of four full length 3030
-the left back and right sides have vertical corners made of 3030. 
-the front side vertical corners are 3060s, wide side facing fron
-the left back and right side have middle vertical extrusions for support. they are 3060
+The whole frame has a bottom contour made of four full-length 3030 extrusions.
 
-the top contour is made of 3030 except the front, which is a 3060 with wide side facing front (for more rigidity as front has no middle vertical support)
+The non-front corner posts are 3030: the back-left and back-right posts are 3030. The front-left and front-right corner posts are 3060, with the wide side facing the front.
+
+The left and right sides each have a middle vertical support. These supports are 3060.
+
+The top contour uses 3030 on the left, right, and back, while the front top member is 3060 with its wide side facing the front. The front uses 3060 for additional rigidity because it has no middle vertical support and must leave the opening uninterrupted for the wood/panel to enter fully.
+
+The model also includes an additional 3060 back-middle support and an extra 3030 top-back tie for stability.
+
+Doors, enclosure panels, walls, roof, and other infill will be modelled later; they are intentionally separate from the current frame model.
