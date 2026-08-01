@@ -1,7 +1,7 @@
 export default [
-  "workbench",
+  'workbench',
   // 'enclosure',
-  "enclosureV2",
+  'enclosureV2',
   // 'montessoriLibrary',
   // 'test',
   // 'enclosureExtrusion',
