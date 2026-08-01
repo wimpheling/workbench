@@ -47,8 +47,11 @@ export const Assembly = ({ item }: { item: MyObject3D }) => {
 
     const state = doorStates[doorName];
     state.isOpen = !state.isOpen;
-    // Open outward: -90° from base
-    state.targetRotation = state.isOpen ? state.baseRotation - Math.PI / 2 : state.baseRotation;
+    // Open outward in opposite directions because the hinges are on opposite sides.
+    const openDirection = doorPivot.hingePosition === 'left' ? -1 : 1;
+    state.targetRotation = state.isOpen
+      ? state.baseRotation + openDirection * (Math.PI / 2)
+      : state.baseRotation;
   };
 
   const toggleDoorAnimation = () => {

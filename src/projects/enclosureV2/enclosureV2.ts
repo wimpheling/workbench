@@ -15,6 +15,7 @@ import {
   VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
   VERTICAL_SIDE_BIG_EXTRUSION_HEIGHT,
 } from './consts';
+import { assertEnclosureV2 } from './enclosureV2Assertions';
 import { EnclosureV2ShapeMaker } from './enclosureV2ShapeMaker';
 
 function makeHorizontal(obj: THREE.Object3D) {
@@ -265,7 +266,7 @@ export class EnclosureV2 implements MyObject3D {
     // top-back tie for extra stability
     this.sm.makeSingleExtrusion({
       height: SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
-      name: 'Back Top Horizontal extrusion',
+      name: 'Back Top Depth Tie',
       group: EnclosureV2Groups.Structure,
       assemble: (obj) => {
         makeHorizontal(obj);
@@ -286,12 +287,7 @@ export class EnclosureV2 implements MyObject3D {
       hingePosition: 'left',
       panelColor: 'yellow',
       assemble: (obj) => {
-        obj.rotation.y = Math.PI; // Rotate 180° so panel faces outward
-        obj.position.set(
-          0 + EXTRUSION_PROFILE_DEPTH * 3, // Left of Front Left Vertical (3 - 25)
-          EXTRUSION_PROFILE_DEPTH,
-          0 // At front of frame
-        );
+        obj.position.set(EXTRUSION_PROFILE_DEPTH, EXTRUSION_PROFILE_DEPTH, 0);
       },
     });
 
@@ -303,13 +299,11 @@ export class EnclosureV2 implements MyObject3D {
       hingePosition: 'right',
       panelColor: 'yellow',
       assemble: (obj) => {
-        obj.position.set(
-          ENCLOSURE_INNER_WIDTH / 2 + EXTRUSION_PROFILE_DEPTH * 2, // Right of Front Right Vertical (25 - 47.5)
-          EXTRUSION_PROFILE_DEPTH,
-          0 // At front of frame
-        );
+        obj.position.set(RIGHT_SIDE_X - EXTRUSION_PROFILE_DEPTH / 2, EXTRUSION_PROFILE_DEPTH, 0);
       },
     });
+
+    assertEnclosureV2(this.sm);
 
     // Calculate and log total heights of pieces for each material
     calculatePrices(this.sm.objectsByGroup[EnclosureV2Groups.Structure]);
