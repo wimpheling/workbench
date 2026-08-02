@@ -13,6 +13,7 @@ export enum EnclosureV2Materials {
 export const ENCLOSURE_INNER_HEIGHT = 74;
 export const ENCLOSURE_INNER_WIDTH = 167.4;
 export const ENCLOSURE_INNER_DEPTH = 164.9;
+export const FRONT_DOOR_WIDTH = ENCLOSURE_INNER_WIDTH / 2;
 export const EXTRUSION_PROFILE_WIDTH = 3; // 30x30 aluminium extrusion
 export const EXTRUSION_PROFILE_DEPTH = 3; // 30x30 aluminium extrusion
 export const BIG_EXTRUSION_WIDTH = 6; // 60x30 aluminium extrusion

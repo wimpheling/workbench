@@ -6,9 +6,9 @@ import {
   BACK_Z,
   BIG_EXTRUSION_DEPTH,
   ENCLOSURE_INNER_HEIGHT,
-  ENCLOSURE_INNER_WIDTH,
   EXTRUSION_PROFILE_DEPTH,
   EnclosureV2Groups,
+  FRONT_DOOR_WIDTH,
   FRONT_HORIZONTAL_EXTRUSION_HEIGHT,
   RIGHT_SIDE_X,
   SIDE_HORIZONTAL_EXTRUSION_HEIGHT,
@@ -281,7 +281,7 @@ export class EnclosureV2 implements MyObject3D {
     // Doors
     // left door
     this.sm.makeDoor({
-      width: ENCLOSURE_INNER_WIDTH / 2 - EXTRUSION_PROFILE_DEPTH,
+      width: FRONT_DOOR_WIDTH,
       height: VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
       name: 'Front Door Left',
       hingePosition: 'left',
@@ -293,7 +293,7 @@ export class EnclosureV2 implements MyObject3D {
 
     // right door
     this.sm.makeDoor({
-      width: ENCLOSURE_INNER_WIDTH / 2,
+      width: FRONT_DOOR_WIDTH,
       height: VERTICAL_FRONT_BIG_EXTRUSION_HEIGHT,
       name: 'Front Door',
       hingePosition: 'right',

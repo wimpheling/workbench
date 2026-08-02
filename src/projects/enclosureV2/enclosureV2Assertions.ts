@@ -51,7 +51,11 @@ export function assertEnclosureV2(shapeMaker: EnclosureV2ShapeMaker) {
   }
 
   const doors = shapeMaker.compoundsByGroup[EnclosureV2Groups.Doors] ?? [];
-  if (doors.length !== 2 || doors.some((door) => !door.width || door.width <= 0)) {
+  if (
+    doors.length !== 2 ||
+    doors.some((door) => !door.width || door.width <= 0) ||
+    doors[0].width !== doors[1].width
+  ) {
     throw new Error('Enclosure V2 must define two positive-width doors');
   }
 }
