@@ -205,6 +205,7 @@ export class EnclosureV2ShapeMaker extends AbstractShapeMaker {
       material: 'door',
       group: EnclosureV2Groups.Doors,
       pieces: framePieces,
+      width,
       hingePosition,
       assemble,
     };

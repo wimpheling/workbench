@@ -76,6 +76,7 @@ export type CompoundPiece = {
   material: string;
   group: string;
   pieces: Piece[];
+  width?: number;
   fuseOptions?: FuseOptions;
   assemble: (obj: THREE.Object3D) => void;
   hingePosition?: 'left' | 'right';
@@ -302,15 +303,18 @@ export class AbstractShapeMaker {
           const pivotGroup = new THREE.Group();
           pivotGroup.name = `${compound.name}_pivot`;
 
-          const doorWidth = compound.pieces.reduce((max, p) => {
-            if (p.geometry.type === 'box') {
-              return Math.max(max, p.geometry.width);
-            }
-            return Math.max(max, 30);
-          }, 0);
-          const offsetX = compound.hingePosition === 'left' ? doorWidth / 2 : -doorWidth / 2;
+          const doorWidth =
+            compound.width ??
+            compound.pieces.reduce((max, p) => {
+              if (p.geometry.type === 'box') {
+                return Math.max(max, p.geometry.width);
+              }
+              return Math.max(max, 30);
+            }, 0);
+          const hingeOffsetX = compound.hingePosition === 'left' ? doorWidth / 2 : -doorWidth / 2;
 
-          compoundGroup.position.x -= offsetX;
+          // Piece geometry is centered on the door. Move its hinge edge to the pivot origin.
+          compoundGroup.position.x += hingeOffsetX;
 
           pivotGroup.add(compoundGroup);
           groupObj.add(pivotGroup);
