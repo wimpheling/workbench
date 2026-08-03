@@ -316,7 +316,7 @@ Tasks:
 - [x] Introduce a `makeRail({ from, to, profile })` helper for a profile whose length is derived from two anchors.
 - [x] Introduce a `makePost({ from, to, profile })` helper for vertical or arbitrary-axis members.
 - [x] Encode wide-face orientation of 3060 profiles as an explicit profile orientation, not a sequence of unexplained rotations.
-- [ ] Add a Three.js adapter that translates the declarative placement into the current mesh transform.
+- [x] Add a Three.js adapter that translates the declarative placement into the current mesh transform.
 - [x] Migrate EnclosureV2 structure members first; migrate doors after the frame is stable.
 
 Example target API:
