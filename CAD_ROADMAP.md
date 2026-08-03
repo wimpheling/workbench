@@ -318,6 +318,7 @@ Tasks:
 - [x] Encode wide-face orientation of 3060 profiles as an explicit profile orientation, not a sequence of unexplained rotations.
 - [x] Add a Three.js adapter that translates the declarative placement into the current mesh transform.
 - [x] Migrate EnclosureV2 structure members first; migrate doors after the frame is stable.
+- [x] Integrate production scene construction so every declarative EnclosureV2 member is adapted into a stable, inspectable Three.js object.
 
 Example target API:
 
