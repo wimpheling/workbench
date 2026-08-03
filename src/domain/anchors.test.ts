@@ -50,7 +50,21 @@ describe("EnclosureV2 declarative frame", () => {
     expect(member?.profile).toBe("profile:aluminium-3060");
     expect(member?.orientation).toEqual({ wideFace: "front" });
     expect(member?.transform.basis).toBeDefined();
-    expect(member?.transform.basis).not.toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+    expect(member?.transform.basis).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+  });
+
+  it("keeps the legacy front plane at zero and the back plane on negative Z", async () => {
+    const { makeEnclosureV2 } = await import("./enclosureV2");
+    const model = makeEnclosureV2({ width: 600, height: 500, depth: 400 });
+    expect(model.anchors["front-opening-mid"].position.z).toBe(0);
+    expect(model.anchors["back-middle"].position.z).toBe(-400);
+  });
+
+  it("uses a right-handed basis with front wide faces normal to positive Z", async () => {
+    const { makeEnclosureV2 } = await import("./enclosureV2");
+    const model = makeEnclosureV2({ width: 600, height: 500, depth: 400 });
+    const member = model.members.find((item) => item.id === "part:front-top");
+    expect(member?.transform.basis).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1]);
   });
 
   it("describes the complete legacy frame with semantic endpoints", async () => {

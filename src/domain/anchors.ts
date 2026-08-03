@@ -20,6 +20,9 @@ export type AnchorSpan = {
 };
 
 const rootFrame = frameId("enclosure-root");
+// Canonical project frame: right-handed X points right, Y points up, and
+// positive Z points from the legacy back plane toward the front plane.
+// Therefore front-facing normals are +Z and back-facing normals are -Z.
 const vector = (from: Point3, to: Point3): Vector3 => ({
   x: to.x - from.x,
   y: to.y - from.y,
@@ -82,8 +85,8 @@ export const orientedAlong = (
   const yaw = Math.atan2(span.axis.y, span.axis.x);
   const pitch = Math.atan2(-span.axis.z, Math.sqrt(span.axis.x ** 2 + span.axis.y ** 2));
   const normals: Record<NonNullable<OrientationSpec["wideFace"]>, Vector3> = {
-    front: { x: 0, y: 0, z: -1 },
-    back: { x: 0, y: 0, z: 1 },
+    front: { x: 0, y: 0, z: 1 },
+    back: { x: 0, y: 0, z: -1 },
     left: { x: -1, y: 0, z: 0 },
     right: { x: 1, y: 0, z: 0 },
     top: { x: 0, y: 1, z: 0 },
