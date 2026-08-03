@@ -6,9 +6,9 @@ import { buildEnclosureScene } from "./enclosureScene";
 const dimensions = { width: 120, height: 100, depth: 80 };
 
 describe("production EnclosureV2 scene boundary", () => {
-  it("adapts every declarative member into one named Three object", () => {
+  it("adapts every declarative member into one named Three object", async () => {
     const model = makeEnclosureV2(dimensions);
-    const scene = buildEnclosureScene(dimensions);
+    const scene = await buildEnclosureScene(dimensions);
 
     expect(model.members).toHaveLength(16);
     expect(scene.members).toHaveLength(model.members.length);
@@ -21,9 +21,19 @@ describe("production EnclosureV2 scene boundary", () => {
     );
   });
 
-  it("applies representative positions and explicit wide-face orientations", () => {
+  it("creates a real mesh for every member from the profile catalog", async () => {
+    const scene = await buildEnclosureScene(dimensions);
+    expect(scene.members.every((object) => object.type === "Mesh")).toBe(true);
+    expect(scene.members.every((object) => object.userData.geometryAdapter === "replicad")).toBe(
+      true,
+    );
+    expect(scene.members.every((object) => object.userData.solid)).toBe(true);
+    expect(scene.members.every((object) => object.userData.meshVertexCount > 0)).toBe(true);
+  });
+
+  it("applies representative positions and explicit wide-face orientations", async () => {
     const model = makeEnclosureV2(dimensions);
-    const scene = buildEnclosureScene(dimensions);
+    const scene = await buildEnclosureScene(dimensions);
     const frontTop = model.members.find((member) => member.id === "part:front-top")!;
     const frontTopObject = scene.members.find((object) => object.name === frontTop.id)!;
 

@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "replicad": "^0.23.1",
+    "replicad-opencascadejs": "^0.23.0",
     "solid-js": "^1.9.14",
     "three": "^0.185.1"
   },
