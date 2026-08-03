@@ -38,4 +38,14 @@ describe("EnclosureV2 historical assembly parity", () => {
     expect(model.anchors["anchor:left-hinge"]?.position).toEqual({ x: 30, y: 30, z: 0 });
     expect(model.anchors["anchor:right-hinge"]?.position).toEqual({ x: 1704, y: 30, z: 0 });
   });
+
+  it("décrit les deux portes avec les dimensions legacy en millimètres", () => {
+    const model = makeEnclosureV2({ width: 1200, height: 800, depth: 600 });
+    expect(model.doors).toHaveLength(2);
+    expect(model.doors).toEqual([
+      { id: "left-door", nominalWidth: 600 },
+      { id: "right-door", nominalWidth: 600 },
+    ]);
+    expect(model.dimensions).toEqual({ x: 1200, y: 800, z: 600 });
+  });
 });

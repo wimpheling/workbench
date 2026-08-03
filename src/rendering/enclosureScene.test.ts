@@ -72,4 +72,31 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(localSpan.y).toBeCloseTo(member.transform.axis!.y);
     expect(localSpan.z).toBeCloseTo(member.transform.axis!.z);
   });
+
+  it("rend deux portes pivotées, chacune avec cinq meshes de parité legacy", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    expect(scene.members).toHaveLength(16);
+    expect(scene.doors).toHaveLength(2);
+    expect(scene.doors.map((door) => door.name)).toEqual(["door:left-door", "door:right-door"]);
+    expect(scene.doors[0].position.toArray()).toEqual([30, 30, 0]);
+    expect(scene.doors[1].position.toArray()).toEqual([1230, 30, 0]);
+    for (const door of scene.doors) {
+      const meshes: any[] = [];
+      door.traverse((child) => {
+        if (child.type === "Mesh") meshes.push(child);
+      });
+      expect(meshes).toHaveLength(5);
+      expect(
+        meshes.filter((mesh) => mesh.userData.profileId === "profile:aluminium-3030"),
+      ).toHaveLength(4);
+      expect(meshes.filter((mesh) => mesh.userData.partType === "door-panel")).toHaveLength(1);
+    }
+    const descendant = scene.doors[0].getObjectByName("left-door-panel")!;
+    scene.root.updateMatrixWorld(true);
+    const before = descendant.getWorldPosition(new Vector3()).clone();
+    scene.doors[0].rotation.y = Math.PI / 2;
+    scene.root.updateMatrixWorld(true);
+    expect(descendant.getWorldPosition(new Vector3()).distanceTo(before)).toBeGreaterThan(1);
+    expect(descendant.getWorldPosition(new Vector3()).z).not.toBeCloseTo(before.z);
+  });
 });
