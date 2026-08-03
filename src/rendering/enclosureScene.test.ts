@@ -57,4 +57,19 @@ describe("production EnclosureV2 scene boundary", () => {
       ]);
     }
   });
+
+  it("builds each member with its span on local X, so transformed endpoints align", async () => {
+    const model = makeEnclosureV2(dimensions);
+    const scene = await buildEnclosureScene(dimensions);
+    const member = model.members.find((item) => item.id === "part:front-top")!;
+    const object = scene.members.find((item) => item.name === member.id)!;
+    object.geometry.computeBoundingBox();
+    const bounds = object.geometry.boundingBox!;
+    expect(bounds.max.x - bounds.min.x).toBeCloseTo(member.length);
+    expect(bounds.max.z - bounds.min.z).toBeCloseTo(60);
+    const localSpan = new Vector3(1, 0, 0).applyQuaternion(object.quaternion);
+    expect(localSpan.x).toBeCloseTo(member.transform.axis!.x);
+    expect(localSpan.y).toBeCloseTo(member.transform.axis!.y);
+    expect(localSpan.z).toBeCloseTo(member.transform.axis!.z);
+  });
 });

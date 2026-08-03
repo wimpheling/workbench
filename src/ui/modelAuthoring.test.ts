@@ -22,4 +22,12 @@ describe("model authoring", () => {
     );
     expect(regenerateModel({ ...defaultDimensions, width: 140 }).model.dimensions?.x).toBe(140);
   });
+  it("keeps the documented legacy enclosure envelope in millimetres", () => {
+    expect(defaultDimensions).toEqual({ width: 1674, height: 740, depth: 1649 });
+    expect(regenerateModel(defaultDimensions).model.dimensions).toEqual({
+      x: 1674,
+      y: 740,
+      z: 1649,
+    });
+  });
 });

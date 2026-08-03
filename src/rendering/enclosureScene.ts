@@ -51,8 +51,9 @@ function createExtrusionSolid(
   profileId: Parameters<typeof getProfile>[0],
 ): Shape3D {
   const profile = getProfile(profileId);
-  // Current geometry adapter: a faithful, manufacturable box approximation of a T-slot profile.
-  return makeBaseBox(profile.section.x, profile.section.y, length) as Shape3D;
+  // The domain basis maps local X to the member span, local Y to the profile side,
+  // and local Z to its wide face. Keep the profile section dimensions in mm.
+  return makeBaseBox(length, profile.section.x, profile.section.y) as Shape3D;
 }
 
 function shapeMesh(shape: Shape3D): BufferGeometry {
@@ -103,4 +104,4 @@ export async function buildEnclosureScene(
 }
 
 export const defaultEnclosureScene = () =>
-  buildEnclosureScene({ width: 120, height: 100, depth: 80 });
+  buildEnclosureScene({ width: 1674, height: 740, depth: 1649 });
