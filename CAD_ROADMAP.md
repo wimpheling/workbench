@@ -23,16 +23,18 @@ sketch is not evidence of completion.
 
 ### Implemented
 
-- The active Vite Plus/SolidJS application is under `src/`, with domain,
-  validation, manufacturing, export, rendering, and UI modules.
+- The active Vite Plus/SolidJS application is under `src/`, with active sources
+  in `src/domain`, `src/validation`, `src/rendering`, and `src/ui`; the older
+  renderer remains under `legacy/`.
 - EnclosureV2 has typed IDs, unit conversion, shared profile/material catalogs,
   frames/anchors, declarative members, Three.js adaptation, constraints,
   deterministic kinematics, sampled motion envelopes, fit policies, a Replicad
   solid-check adapter, structured reports, an extrusion BOM/cut plan, and
   JSON/CSV/SVG exports.
-- Local quality gates pass: 19 test files and 58 tests, formatting/lint/type
-  checks, production build, workflow policy validation, and diff whitespace
-  validation.
+- Local quality gates pass: 21 test files and 65 tests, formatting/lint/type
+  checks, production builds, workflow policy validation, and diff whitespace
+  validation. `Vitest` is available through `npm test`; this is non-browser
+  coverage, not an automated browser smoke test.
 
 ### Explicit blockers and limits
 
@@ -50,6 +52,10 @@ sketch is not evidence of completion.
 - Browser smoke tests, PDF/vector drawing production, full stock optimization,
   hardware/panel manufacturing records, generic door assembly migration, and
   later configuration variants remain planned and must stay unchecked.
+- A browser smoke test was attempted against
+  `https://wimpheling.github.io/workbench/`, but the execution environment has
+  no browser/Playwright. HTTP/MIME checks are available, but do not replace the
+  browser smoke test.
 
 ## Current-state assessment
 
@@ -57,15 +63,15 @@ sketch is not evidence of completion.
 
 The repository has a working Replicad/Three.js/SolidJS pipeline:
 
-- [ ] `src/lib/render.tsx` initializes Replicad/OpenCascade and mounts the SolidJS renderer.
-- [ ] `src/lib/AbstractShapeMaker.ts` stores pieces by group, builds Replicad geometry, converts it to Three.js meshes, and exposes group visibility and door pivots.
-- [ ] `src/lib/pieceHelpers.ts` generates box geometry, 3030/3060 aluminium extrusion geometry, box joints, half-laps, specification keys, and an optional fused compound geometry path.
+- [ ] `legacy/src/lib/render.tsx` initializes Replicad/OpenCascade and mounts the SolidJS renderer.
+- [ ] `legacy/src/lib/AbstractShapeMaker.ts` stores pieces by group, builds Replicad geometry, converts it to Three.js meshes, and exposes group visibility and door pivots.
+- [ ] `legacy/src/lib/pieceHelpers.ts` generates box geometry, 3030/3060 aluminium extrusion geometry, box joints, half-laps, specification keys, and an optional fused compound geometry path.
 - [ ] `Piece` describes a single item with geometry, material, display properties, and an `assemble(obj)` callback.
 - [ ] `CompoundPiece` groups several `Piece` records and optionally creates a hinge pivot. `enclosureV2` uses this for its two doors.
 - [ ] `src/ui/Assembly.tsx` provides the current viewer, selection information, group visibility controls, saved camera controls, and door animation.
-- [ ] `src/projects/enclosureV2/consts.ts` centralizes the enclosure's current input values and several derived dimensions.
-- [ ] `src/projects/enclosureV2/enclosureV2Assertions.ts` checks required structure member names, profile/material classification, and the presence of two equal-width doors.
-- [ ] `src/projects/enclosureV2/calculatePrices.ts` estimates extrusion cost from total member length and fixed per-100-unit prices.
+- [ ] `legacy/src/projects/enclosureV2/consts.ts` centralizes the enclosure's current input values and several derived dimensions.
+- [ ] `legacy/src/projects/enclosureV2/enclosureV2Assertions.ts` checks required structure member names, profile/material classification, and the presence of two equal-width doors.
+- [ ] `legacy/src/projects/enclosureV2/calculatePrices.ts` estimates extrusion cost from total member length and fixed per-100-unit prices.
 - [ ] The repository history shows a useful progression: Replicad adoption, the enclosureV2 project, compound/animated doors, and a merged fix for frame/door parametric behavior. Future work should preserve this incremental style.
 
 ### Current limitations
@@ -336,10 +342,10 @@ Tasks:
 
 Acceptance criteria:
 
-- [ ] EnclosureV2 still renders unchanged at its default parameters.
-- [ ] Changing width, height, or depth changes the model without changing tests that only assert relationships.
+- [x] EnclosureV2 still renders its default model through the tested scene construction.
+- [x] Changing width, height, or depth regenerates dependent model geometry/placements.
 - [ ] 3030/3060 geometry, displayed profile metadata, and price lookup use the same catalog records.
-- [ ] The project can be evaluated in a non-browser test without mounting Three.js.
+- [x] The project can be evaluated in a non-browser test without mounting Three.js.
 
 ### Phase 1 — Declarative placements and semantic anchors
 
@@ -354,7 +360,7 @@ Tasks:
 - [x] Introduce a `makePost({ from, to, profile })` helper for vertical or arbitrary-axis members.
 - [x] Encode wide-face orientation of 3060 profiles as an explicit profile orientation, not a sequence of unexplained rotations.
 - [x] Add a Three.js adapter that translates the declarative placement into the current mesh transform.
-- [x] Migrate EnclosureV2 structure members first; migrate doors after the frame is stable.
+- [ ] Migrate EnclosureV2 doors from the legacy renderer after the frame is stable; the declarative door migration is incomplete.
 - [x] Integrate production scene construction so every declarative EnclosureV2 member is adapted into a stable, inspectable Three.js object.
 
 Example target API:
@@ -422,7 +428,7 @@ EnclosureV2 constraints should cover:
 - [x] the front opening has no middle support;
 - [x] front top and front post members use 3060 and required members are reported when missing;
 - [x] the two doors have equal nominal widths and cover the canonical x opening;
-- [x] the closed door seam has the configured clearance;
+- [ ] the closed door seam is checked against a named clearance value; the current check does not establish a configured policy;
 - [x] panel bounds stay inside their frame relative to their anchor and orientation;
 - [x] no required anchor is orphaned;
 - [x] no part has an impossible profile orientation.
@@ -464,7 +470,7 @@ Implement a small, testable transform graph for rigid assemblies and the motion 
 - [ ] sliding/prismatic joints for future panels or drawers;
 - [ ] nested parent/child assembly frames;
 - [x] limits, default positions, and named states;
-- [x] deterministic composition of transforms and motion values;
+- [x] deterministic transform-composition primitives and motion-value evaluation;
 - [ ] no physics simulation, contact solver, or frame-rate-dependent behavior.
 
 Suggested API:
@@ -533,19 +539,19 @@ For every moving assembly, validate the path rather than only its endpoints:
 - [x] sample named motion intervals with deterministic resolution;
 - [x] use adaptive subdivision where clearance changes rapidly or a coarse sample brackets a collision;
 - [ ] check moving-vs-static and moving-vs-moving pairs;
-- [x] record the motion value at the first collision or minimum clearance;
+- [x] record sampled motion values at a detected minimum/threshold event;
 - [x] support a configurable minimum clearance and maximum sample/refinement budget;
 - [ ] distinguish a proven clear sampled interval from an unverified interval when the budget is exhausted.
 
 The first implementation can use uniform sampling plus refinement around the minimum. It should not claim a mathematical continuous-motion proof. A swept-volume implementation may be added later if a project needs it.
 
-> **Audit note:** Uniform sampling and sign-change refinement are tested. Moving-pair integration and explicit `incomplete` results when a refinement budget is exhausted are not implemented; the current result always reports `verified: true`.
+> **Audit note:** Uniform sampling and sign-change refinement are tested. The implementation does not establish the first collision, return offending part IDs, integrate moving pairs, or report explicit `incomplete` results when a refinement budget is exhausted; the current result always reports `verified: true`.
 
 #### Tolerance and fit policies
 
 Nominal dimensions and manufacturing allowances must be separate inputs. Add typed policies for the actual materials and interfaces in scope:
 
-- [x] glass/polycarbonate panel edge clearance and thickness tolerance;
+- [x] compact-polycarbonate panel-slot thickness tolerance primitive;
 - [ ] panel expansion or installation gap;
 - [ ] door-to-frame and door-to-door clearance;
 - [ ] hinge-side and latch-side allowances;
@@ -567,7 +573,7 @@ export type FitPolicy = {
 
 Policies should be named and overridable per project/configuration. Avoid scattering offsets such as `0.5` through project transforms without recording what they mean.
 
-> **Audit note:** The tested scope is compact-polycarbonate panel-slot thickness tolerance and named door-seam clearance only. Expansion/installation gaps, hinge/latch allowances, connector-hole rules, and machining allowances remain missing.
+> **Audit note:** The tested scope is a compact-polycarbonate panel-slot thickness-tolerance primitive. It is not a complete clearance integration; expansion/installation gaps, door allowances, connector-hole rules, and machining allowances remain missing.
 
 #### Structured validation reports
 
@@ -632,7 +638,8 @@ Limitations:
 - [ ] The model is an idealized beam/frame representation, not the detailed solids, T-slots, brackets, bolts, joints, panels, or contact surfaces.
 - [ ] Results depend on explicitly authored supports, loads, material data, section properties, and connection assumptions; these cannot be inferred safely from geometry alone.
 - [ ] Initial scope is linear static screening. It does not cover structural certification, code compliance, nonlinear behavior, fatigue, vibration, seismic, fire, or safety approval.
-- [ ] a missing solver must produce an `unavailable` diagnostic and must not break rendering, ordinary validation, BOM generation, or drawings.
+- [x] a missing solver produces an `unavailable` diagnostic;
+- [ ] a missing solver must not break rendering, ordinary validation, BOM generation, or drawings.
 
 #### Inputs and outputs for the whole validation phase
 
@@ -701,6 +708,7 @@ Avoid trying to infer every connection from geometric intersection. Connections 
 
 Acceptance criteria:
 
+- [x] Typed joint records are generated and validated as domain data.
 - [ ] A connection is visible in the model/specs and appears in manufacturing output.
 - [ ] A mismatched mating joint produces a clear validation error.
 - [ ] Hardware can be hidden from the structural view without being removed from the BOM.
@@ -759,8 +767,8 @@ model.addPanel({
 
 Features to support:
 
-- [ ] planar panels bounded by four anchors or edges;
-- [ ] thickness and material selection;
+- [x] domain panels retain boundary, material, thickness, and installation data;
+- [ ] planar panels are fully integrated into the rendered enclosure;
 - [ ] slot-in, clip-in, screw-on, and removable installation modes;
 - [ ] panel edge clearances and expansion allowance;
 - [ ] cutouts for doors, extraction ducts, cable passes, and emergency access;
@@ -783,6 +791,7 @@ Replace `calculatePrices()` with a reusable manufacturing report.
 
 Core outputs:
 
+- [x] extrusion BOM/cut-plan records are generated from the domain model;
 - [ ] hierarchical bill of materials;
 - [ ] grouped part list with quantities and nominal dimensions;
 - [ ] aluminium extrusion cut list grouped by profile;
@@ -852,14 +861,15 @@ Prioritize simple, reliable outputs over a full drawing workbench.
 
 First outputs:
 
+- [x] SVG and JSON exports of the evaluated model/domain records;
 - [ ] front, side, top, and isometric views;
 - [ ] exploded assembly view with part labels;
 - [ ] individual cut sheets for extrusions and panels;
 - [ ] dimension annotations generated from model references;
 - [ ] hole, slot, and connector locations;
 - [ ] BOM and assembly notes;
-- [ ] SVG/PDF-ready vector drawing output;
-- [ ] JSON export of the evaluated model and manufacturing report.
+- [ ] SVG/PDF-ready full drawing output;
+- [ ] JSON export combining the evaluated model and manufacturing report.
 
 Later outputs may include STEP/STL/OBJ where the underlying Replicad and export tooling support them, but exported solids should never replace the structured BOM and feature data.
 
@@ -903,7 +913,7 @@ Useful EnclosureV2 configurations:
 
 Add:
 
-- [ ] a serializable project definition format;
+- [x] serializable configuration records for parameters and enabled features;
 - [ ] validation of parameter ranges and feature dependencies;
 - [ ] named presets;
 - [ ] deterministic regeneration from the same input;
@@ -1035,19 +1045,20 @@ Testing should grow with the domain model and remain independent of the renderer
 
 Test these as pure functions:
 
-- [ ] unit conversion and rounding;
-- [ ] profile catalog dimensions and identity;
-- [ ] anchor coordinates and frame transforms;
-- [ ] rail/post lengths and orientation;
-- [ ] panel boundary calculations;
-- [ ] joint parameter validation;
-- [ ] door seam and hinge offset calculations;
+- [x] unit conversion and rounding;
+- [x] profile catalog dimensions and identity;
+- [x] anchor coordinates and frame transforms;
+- [x] rail/post lengths and orientation;
+- [x] panel boundary calculations;
+- [x] joint parameter validation;
+- [x] door seam and hinge offset calculations;
+- [x] constraint evaluation;
+- [x] revolute transform composition and motion limits;
+- [x] fit-policy evaluation and tolerance diagnostics;
+- [x] validation report aggregation and severity/status calculation.
+- [ ] prismatic transform composition and motion limits;
 - [ ] BOM grouping and quantity calculation;
-- [ ] stock-bar planning, kerf, and waste;
-- [ ] constraint evaluation.
-- [ ] revolute/prismatic transform composition and motion limits;
-- [ ] fit-policy evaluation and tolerance propagation;
-- [ ] validation report aggregation and severity/status calculation.
+- [ ] stock-bar planning, kerf, and waste.
 
 These tests should use small synthetic inputs and should not initialize OpenCascade or WebGL. OpenCascade-backed checks belong in a separate geometry test layer.
 
@@ -1055,15 +1066,15 @@ These tests should use small synthetic inputs and should not initialize OpenCasc
 
 For EnclosureV2, test invariants rather than defaults:
 
-- [ ] required structural IDs exist exactly once;
-- [ ] all required profiles are correct;
-- [ ] side middle supports are symmetric and located at the depth midpoint;
-- [ ] front top/corner profiles remain 3060;
-- [ ] the back middle support and top-back tie remain present;
-- [ ] door count and symmetry remain valid;
-- [ ] changing each principal parameter changes the expected dependent lengths;
-- [ ] invalid dimensions return useful errors;
-- [ ] panel and door clearances remain non-negative for valid configurations.
+- [x] required structural IDs exist exactly once;
+- [x] all required profiles are correct;
+- [x] side middle supports are symmetric and located at the depth midpoint;
+- [x] front top/corner profiles remain 3060;
+- [x] the back middle support and top-back tie remain present;
+- [x] door count and symmetry remain valid;
+- [x] changing principal parameters changes expected dependent lengths;
+- [x] invalid dimensions return useful errors;
+- [x] panel and door clearance diagnostics are evaluated for valid configurations.
 
 Use a matrix of small and large parameter values. Include near-boundary values so that negative or zero lengths are caught.
 
@@ -1082,12 +1093,13 @@ Avoid snapshotting large serialized meshes. Mesh snapshots are brittle and obscu
 
 Test deterministic motion independently of rendering:
 
-- [ ] exact revolute and prismatic states at limits and representative intermediate values;
+- [x] revolute states at limits and representative intermediate values;
+- [ ] prismatic states at limits and representative intermediate values;
 - [ ] nested assembly transform composition;
-- [ ] invalid motion values and limit diagnostics;
+- [x] invalid motion values and limit diagnostics;
 - [ ] moving-vs-static and moving-vs-moving collision fixtures;
 - [ ] minimum-distance results at sampled states;
-- [ ] adaptive refinement around a deliberately narrow collision or clearance minimum;
+- [x] adaptive refinement around a deliberately narrow clearance minimum;
 - [ ] explicit `incomplete` results when a sample/refinement budget is exhausted.
 
 Use Replicad/OpenCascade-backed solids for authoritative intersection and distance fixtures. Three.js bounding boxes may be tested only as an optional broad-phase optimization.
@@ -1112,7 +1124,7 @@ Keep structural analysis tests outside the browser runtime:
 - [ ] fixture tests for material, section, support, and load-case serialization;
 - [ ] parser tests using a small checked-in solver-result fixture;
 - [ ] round-trip mapping tests from Frame3DD result IDs back to anchors and parts;
-- [ ] graceful `unavailable` and `failed` results when the executable is missing or returns malformed output;
+- [x] graceful `unavailable` and malformed-input results when the executable is missing or returns malformed output;
 - [ ] synthetic-frame tests that verify predictable structural warnings;
 - [ ] validation-report tests showing that structural warnings reach the demo and BOM without blocking ordinary rendering.
 
