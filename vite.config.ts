@@ -6,4 +6,10 @@ export default defineConfig({
   resolve: {
     conditions: ["module", "browser", "development"],
   },
+  lint: {
+    ignorePatterns: ["legacy/**"],
+  },
+  fmt: {
+    ignorePatterns: ["CAD_ROADMAP.md", "legacy/**"],
+  },
 });
