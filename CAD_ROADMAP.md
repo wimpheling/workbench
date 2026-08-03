@@ -287,9 +287,10 @@ Tasks:
 
 - [ ] Document the canonical coordinate frame and current unit convention.
 - [ ] Decide where conversion from the current centimetre project values to manufacturing units will happen.
-- [ ] Replace stringly-typed display names as internal references with stable IDs, while retaining human-readable names.
-- [ ] Add a small `ProjectDefinition`/`EvaluationContext` boundary around project parameters.
-- [ ] Move the 3030/3060 profile dimensions and slot width into a single profile catalog consumed by geometry and pricing.
+- [x] Replace stringly-typed display names as internal references with stable IDs, while retaining human-readable names.
+- [x] Add a small `ProjectDefinition`/`EvaluationContext` boundary around project parameters.
+- [x] Move the 3030/3060 profile dimensions and slot width into a single profile catalog consumed by geometry and pricing.
+- [x] Add the initial immutable wood, compact polycarbonate, and aluminium material classifications to the evaluation catalog.
 - [ ] Delete the draft project directories `src/projects/enclosure/`, `src/projects/montessoriLibrary/`, `src/projects/test/`, and `src/projects/workbench/`, plus their unused bathroom-plan assets; Git history is the archive for removed projects.
 - [ ] Delete the stale `src/projects/enclosureV2/enclosureV2Const.ts` and make `projects.ts` expose only EnclosureV2.
 - [ ] Extract repeated material and mesh conversion in `AbstractShapeMaker.assemble()` into renderer helpers.

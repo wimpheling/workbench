@@ -17,7 +17,6 @@ describe("coordinate frames and transforms", () => {
     expect(result.y).toBeCloseTo(12);
     expect(result.z).toBeCloseTo(33);
   });
-
   it("composes transforms and exposes vector helpers", () => {
     const translated = composeTransforms(
       { position: { x: 10, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 } },
@@ -34,5 +33,26 @@ describe("coordinate frames and transforms", () => {
       position: { x: 0, y: 0, z: 0 },
       rotation: { x: 0, y: 0, z: 0 },
     });
+  });
+  it("composes non-commuting rotations as rotations, not Euler component sums", () => {
+    const x = { position: { x: 0, y: 0, z: 0 }, rotation: { x: Math.PI / 2, y: 0, z: 0 } };
+    const y = { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: Math.PI / 2, z: 0 } };
+    expect(applyTransform({ x: 0, y: 1, z: 0 }, composeTransforms(x, y))).toEqual({
+      x: 0,
+      y: expect.closeTo(0),
+      z: expect.closeTo(1),
+    });
+    expect(applyTransform({ x: 0, y: 1, z: 0 }, composeTransforms(y, x))).toEqual({
+      x: expect.closeTo(1),
+      y: expect.closeTo(0),
+      z: expect.closeTo(0),
+    });
+  });
+  it("supports radians and parent-local translation", () => {
+    const parent = { position: { x: 10, y: 20, z: 30 }, rotation: { x: 0, y: 0, z: Math.PI / 2 } };
+    expect(
+      composeTransforms(parent, { position: { x: 2, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 } })
+        .position,
+    ).toEqual({ x: 10, y: 22, z: 30 });
   });
 });
