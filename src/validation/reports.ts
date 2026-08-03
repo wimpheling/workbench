@@ -10,9 +10,14 @@ export type ValidationIssue = {
   measured?: number;
   expected?: number;
 };
+export type ValidationAssertion = ValidationIssue & {
+  status: "passed" | "failed";
+  method: "deterministic constraint";
+};
 export type ValidationReport = {
   status: "valid" | "warnings" | "invalid" | "incomplete";
   issues: ValidationIssue[];
+  assertions: ValidationAssertion[];
   modelRevision: string;
 };
 const fromConstraint = (item: ConstraintResult): ValidationIssue => ({
@@ -23,6 +28,11 @@ const fromConstraint = (item: ConstraintResult): ValidationIssue => ({
   references: item.references,
   measured: item.measured,
   expected: item.expected,
+});
+const assertionFromConstraint = (item: ConstraintResult): ValidationAssertion => ({
+  ...fromConstraint(item),
+  status: item.passed ? "passed" : "failed",
+  method: "deterministic constraint",
 });
 export const buildValidationReport = (
   revision: string,
@@ -60,6 +70,7 @@ export const buildValidationReport = (
         ? "warnings"
         : "valid",
     issues,
+    assertions: constraints.map(assertionFromConstraint),
     modelRevision: revision,
   };
 };
