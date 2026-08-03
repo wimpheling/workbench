@@ -14,6 +14,42 @@ The system should answer three questions for every project:
 
 EnclosureV2 is the only active product target. It already contains a parametric frame, aluminium profiles, two compound doors, a moving hinge pivot, project-level assertions, and a price calculation. Its current dimensions remain project inputs—not validation targets.
 
+## Quality audit — 2026-08-03
+
+This audit reflects the implementation on `refactor/viteplus-solidjs` at the
+quality phase commits and the local quality gates. A checked item below means
+that implementation and relevant automated coverage are present; a planned API
+sketch is not evidence of completion.
+
+### Implemented
+
+- The active Vite Plus/SolidJS application is under `src/`, with domain,
+  validation, manufacturing, export, rendering, and UI modules.
+- EnclosureV2 has typed IDs, unit conversion, shared profile/material catalogs,
+  frames/anchors, declarative members, Three.js adaptation, constraints,
+  deterministic kinematics, sampled motion envelopes, fit policies, a Replicad
+  solid-check adapter, structured reports, an extrusion BOM/cut plan, and
+  JSON/CSV/SVG exports.
+- Local quality gates pass: 19 test files and 58 tests, formatting/lint/type
+  checks, production build, workflow policy validation, and diff whitespace
+  validation.
+
+### Explicit blockers and limits
+
+- Frame3DD remains an optional external sidecar. Serialization, parsing, and an
+  explicit `unavailable` result exist, but no solver is installed/configured in
+  this checkout; no structural result is claimed.
+- Pages workflow semantics are validated locally, but repository Pages settings,
+  environment approval, and the remote deployment URL require authenticated
+  GitHub access and cannot be verified here.
+- The Replicad solid-check adapter and sampled motion envelope are covered, but
+  the demo does not yet run a complete project-wide collision pass and sampling
+  is not a continuous-motion proof. BOM coverage is currently frame extrusions;
+  hardware, panels, and vendor data are not inferred.
+- Browser smoke tests, PDF/vector drawing production, full stock optimization,
+  hardware/panel manufacturing records, generic door assembly migration, and
+  later configuration variants remain planned and must stay unchecked.
+
 ## Current-state assessment
 
 ### What exists today
@@ -46,7 +82,7 @@ The current architecture is a renderer-facing scene description rather than a CA
 - [ ] Assertions are mostly name/profile checks. They do not yet inspect placements, clearances, intersections, or the generated geometry.
 - [ ] There is no general project parameter object or configuration system. EnclosureV2 uses module-level constants and manually repeated derived transforms.
 - [ ] There is no formal unit type. EnclosureV2 documents model values as centimetres, while the viewer converts selected object dimensions by multiplying by 10 to display millimetres.
-- [ ] There is no automated test suite visible in `package.json`; validation currently happens through TypeScript, linting, visual inspection, and project constructor assertions.
+- [x] `package.json` exposes `npm test`; the Vitest suite covers pure domain, validation, rendering-adapter, UI-authoring, export, and Frame3DD-boundary behavior without a browser.
 - [ ] The repository contains draft projects and stale enclosure parameter files outside the active scope; they should be deleted during the foundation phase, with Git history serving as the archive.
 - [ ] The README describes technical drawings, real-time adjustment, and cutting layouts more fully than the current source implements. The roadmap treats these as targets, not existing capabilities.
 
@@ -285,8 +321,8 @@ The current door pivot can be represented as a revolute motion around a hinge an
 
 Tasks:
 
-- [ ] Document the canonical coordinate frame and current unit convention.
-- [ ] Decide where conversion from the current centimetre project values to manufacturing units will happen.
+- [x] Document the canonical coordinate frame and current unit convention (the active model/UI use millimetres; `toMillimetres()` handles cm/m inputs).
+- [x] Decide where conversion from current centimetre project values to manufacturing units happens: at the domain/model boundary.
 - [x] Replace stringly-typed display names as internal references with stable IDs, while retaining human-readable names.
 - [x] Add a small `ProjectDefinition`/`EvaluationContext` boundary around project parameters.
 - [x] Move the 3030/3060 profile dimensions and slot width into a single profile catalog consumed by geometry and pricing.
@@ -385,18 +421,18 @@ EnclosureV2 constraints should cover:
 - [x] the front opening has no middle support;
 - [x] front top and front post members use 3060 and required members are reported when missing;
 - [x] the two doors have equal nominal widths and cover the canonical x opening;
-- [ ] the closed door seam has the configured clearance;
+- [x] the closed door seam has the configured clearance;
 - [x] panel bounds stay inside their frame relative to their anchor and orientation;
-- [ ] no required anchor is orphaned;
-- [ ] no part has an impossible profile orientation.
+- [x] no required anchor is orphaned;
+- [x] no part has an impossible profile orientation.
 
 Move the current project assertions into this result-based system, preserving a throwing helper for startup failures if desired. Keep project-specific rules in the project, and reusable geometric rules in `src/lib`.
 
 Acceptance criteria:
 
-- [ ] The UI can show errors and warnings without parsing exception strings.
-- [ ] A changed parameter produces a useful failure such as “right door exceeds front opening by 1.2 mm,” not a generic missing-piece error.
-- [ ] Constraint tests use small synthetic models and do not require WebGL.
+- [x] The UI shows structured errors and warnings without parsing exception strings.
+- [x] Changed parameters produce measured, referenced constraint failures rather than generic missing-piece errors.
+- [x] Constraint tests use small synthetic models and do not require WebGL.
 
 ### Phase 3 — Practical validation, kinematics, and optional structural analysis
 
