@@ -21,6 +21,10 @@ import { applyMemberTransform } from "./threeAdapter";
 import { checkSolidPairs, type SolidCheckResult, type SolidPair } from "../validation/solidChecks";
 import { buildValidationReport, type ValidationReport } from "../validation/reports";
 import { validateModel } from "../validation/constraints";
+import {
+  checkDoorMotionSolids,
+  type MotionSolidCheckResult,
+} from "../validation/motionSolidChecks";
 
 let openCascadePromise: Promise<unknown> | undefined;
 type OpenCascadeModule = Parameters<typeof setOC>[0];
@@ -83,6 +87,7 @@ export type EnclosureScene = {
   doors: readonly Group[];
   solidChecks: readonly SolidCheckResult[];
   validationReport: ValidationReport;
+  motionSolidCheck: MotionSolidCheckResult;
 };
 
 export const transformShapeToWorld = (shape: Shape3D, object: Object3D): Shape3D => {
@@ -231,6 +236,26 @@ export async function buildEnclosureScene(
 
   root.updateMatrixWorld(true);
   const minimum = model.doorSeamClearance ?? 2;
+  const motionSolidCheck: MotionSolidCheckResult = initializationError
+    ? {
+        status: "incomplete",
+        verified: false,
+        states: [],
+        checkedStates: 0,
+        checkedPairs: [],
+        diagnostics: [
+          initializationError instanceof Error
+            ? initializationError.message
+            : String(initializationError),
+        ],
+      }
+    : checkDoorMotionSolids({
+        doors,
+        staticMeshes: members,
+        samples: 9,
+        maxStates: 81,
+        minimumClearance: minimum,
+      });
   const solidIds = [
     "clearance.door-left-door.door-right-door",
     "clearance.door-left-door.part:front-left-post",
@@ -283,17 +308,19 @@ export async function buildEnclosureScene(
       ),
     ];
   }
+
   const revision = JSON.stringify({ dimensions: model.dimensions, members: model.members });
   const validationReport = buildValidationReport(
     revision,
     validateModel(model),
     [],
     [],
-    solidChecks,
+    [...solidChecks, ...(motionSolidCheck.firstFailure ? [motionSolidCheck.firstFailure] : [])],
+    motionSolidCheck,
   );
   root.userData.geometryReady = true;
 
-  return { model, root, members, doors, solidChecks, validationReport };
+  return { model, root, members, doors, solidChecks, motionSolidCheck, validationReport };
 }
 
 export const defaultEnclosureScene = () =>

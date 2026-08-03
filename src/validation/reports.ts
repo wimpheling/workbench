@@ -2,6 +2,7 @@ import type { KinematicIssue } from "./kinematics";
 import type { ConstraintResult } from "./constraints";
 import type { FitResult } from "./fitPolicies";
 import type { SolidCheckResult } from "./solidChecks";
+import type { MotionSolidCheckResult } from "./motionSolidChecks";
 export type ValidationIssue = {
   id: string;
   severity: "error" | "warning" | "info";
@@ -50,6 +51,7 @@ export const buildValidationReport = (
   kinematics: readonly KinematicIssue[] = [],
   fits: readonly FitResult[] = [],
   solidChecks: readonly SolidCheckResult[] = [],
+  motion?: MotionSolidCheckResult,
 ): ValidationReport => {
   const issues: ValidationIssue[] = [
     ...constraints.filter((item) => !item.passed).map(fromConstraint),
@@ -74,8 +76,22 @@ export const buildValidationReport = (
         expected: item.required,
       })),
     ...solidChecks.filter((item) => item.status !== "clear").map(fromSolidCheck),
+    ...(motion && motion.status !== "clear"
+      ? [
+          {
+            id: "motion.solid",
+            severity: motion.status === "collision" ? ("error" as const) : ("warning" as const),
+            category: "clearance" as const,
+            message: motion.diagnostics.join("; ") || `motion solid check ${motion.status}`,
+            references: motion.firstFailure
+              ? [motion.firstFailure.subject, motion.firstFailure.target]
+              : ["left-door.angle", "right-door.angle"],
+          },
+        ]
+      : []),
   ];
-  const hasIndeterminate = solidChecks.some((item) => item.status === "indeterminate");
+  const hasIndeterminate =
+    solidChecks.some((item) => item.status === "indeterminate") || motion?.status === "incomplete";
   return {
     status: issues.some((item) => item.severity === "error")
       ? "invalid"

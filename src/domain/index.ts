@@ -16,4 +16,5 @@ export * from "../validation/kinematics";
 export * from "../validation/motionEnvelope";
 export * from "../validation/reports";
 export * from "../validation/solidChecks";
+export * from "../validation/motionSolidChecks";
 export * from "../analysis/frame3dd";
