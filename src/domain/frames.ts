@@ -10,8 +10,16 @@ export const identityTransform = (): Transform => ({
   rotation: { x: 0, y: 0, z: 0 },
 });
 
-export const addVectors = (a: Vector3, b: Vector3): Vector3 => ({ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z });
-export const subtractVectors = (a: Vector3, b: Vector3): Vector3 => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
+export const addVectors = (a: Vector3, b: Vector3): Vector3 => ({
+  x: a.x + b.x,
+  y: a.y + b.y,
+  z: a.z + b.z,
+});
+export const subtractVectors = (a: Vector3, b: Vector3): Vector3 => ({
+  x: a.x - b.x,
+  y: a.y - b.y,
+  z: a.z - b.z,
+});
 
 export function applyTransform(point: Point3, transform: Transform): Point3 {
   const { x: rx, y: ry, z: rz } = transform.rotation;
@@ -19,11 +27,14 @@ export function applyTransform(point: Point3, transform: Transform): Point3 {
   let y = point.y;
   let z = point.z;
 
-  const cosX = Math.cos(rx), sinX = Math.sin(rx);
+  const cosX = Math.cos(rx),
+    sinX = Math.sin(rx);
   [y, z] = [y * cosX - z * sinX, y * sinX + z * cosX];
-  const cosY = Math.cos(ry), sinY = Math.sin(ry);
+  const cosY = Math.cos(ry),
+    sinY = Math.sin(ry);
   [x, z] = [x * cosY + z * sinY, -x * sinY + z * cosY];
-  const cosZ = Math.cos(rz), sinZ = Math.sin(rz);
+  const cosZ = Math.cos(rz),
+    sinZ = Math.sin(rz);
   [x, y] = [x * cosZ - y * sinZ, x * sinZ + y * cosZ];
 
   return addVectors({ x, y, z }, transform.position);

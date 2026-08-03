@@ -5,7 +5,6 @@ import {
   composeTransforms,
   identityTransform,
   subtractVectors,
-  type Point3,
 } from "./frames";
 
 describe("coordinate frames and transforms", () => {
@@ -26,7 +25,14 @@ describe("coordinate frames and transforms", () => {
     );
     expect(translated.position).toEqual({ x: 10, y: 5, z: 0 });
     expect(addVectors({ x: 1, y: 2, z: 3 }, { x: 4, y: 5, z: 6 })).toEqual({ x: 5, y: 7, z: 9 });
-    expect(subtractVectors({ x: 4, y: 5, z: 6 }, { x: 1, y: 2, z: 3 })).toEqual({ x: 3, y: 3, z: 3 });
-    expect(identityTransform()).toEqual({ position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 } });
+    expect(subtractVectors({ x: 4, y: 5, z: 6 }, { x: 1, y: 2, z: 3 })).toEqual({
+      x: 3,
+      y: 3,
+      z: 3,
+    });
+    expect(identityTransform()).toEqual({
+      position: { x: 0, y: 0, z: 0 },
+      rotation: { x: 0, y: 0, z: 0 },
+    });
   });
 });

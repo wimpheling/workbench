@@ -3,8 +3,12 @@ export type PartId = StableId<"part">;
 export type FeatureId = StableId<"feature">;
 export type ParameterId = StableId<"parameter">;
 
-export function stableId<Namespace extends string>(namespace: Namespace, value: string): StableId<Namespace> {
-  if (!value.trim() || value.includes(":")) throw new Error("Stable ID values must be non-empty and contain no colon");
+export function stableId<Namespace extends string>(
+  namespace: Namespace,
+  value: string,
+): StableId<Namespace> {
+  if (!value.trim() || value.includes(":"))
+    throw new Error("Stable ID values must be non-empty and contain no colon");
   return `${namespace}:${value}` as StableId<Namespace>;
 }
 
