@@ -383,10 +383,10 @@ EnclosureV2 constraints should cover:
 - [x] all structural member lengths are positive;
 - [x] the left and right side supports are at the depth midpoint;
 - [x] the front opening has no middle support;
-- [x] front top and front corner members use 3060;
-- [x] the two doors have equal nominal widths and cover the opening;
+- [x] front top and front post members use 3060 and required members are reported when missing;
+- [x] the two doors have equal nominal widths and cover the canonical x opening;
 - [ ] the closed door seam has the configured clearance;
-- [ ] panel bounds stay inside their frame;
+- [x] panel bounds stay inside their frame relative to their anchor and orientation;
 - [ ] no required anchor is orphaned;
 - [ ] no part has an impossible profile orientation.
 

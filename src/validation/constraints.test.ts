@@ -63,4 +63,109 @@ describe("deterministic constraints", () => {
       validateModel(changed).find((r) => r.id === "enclosure.front.front-top.profile")?.passed,
     ).toBe(false);
   });
+
+  it("uses canonical x dimensions when checking undersized doors", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const undersized = {
+      ...model,
+      doors: [
+        { id: "left-door", nominalWidth: 50 },
+        { id: "right-door", nominalWidth: 50 },
+      ],
+    };
+    const failure = validateModel(undersized).find((r) => r.id === "enclosure.doors.cover-opening");
+    expect(failure).toMatchObject({ passed: false, measured: 100, expected: 120 });
+  });
+
+  it("validates side-middle supports against the model depth midpoint", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const anchors = {
+      ...model.anchors,
+      "anchor:side-middle-left-bottom": {
+        ...model.anchors["anchor:side-middle-left-bottom"],
+        position: { x: 0, y: 0, z: -30 },
+      },
+    };
+    const failure = validateModel({ ...model, anchors }).find(
+      (r) => r.id === "enclosure.part:side-middle-left.depth-midpoint",
+    );
+    expect(failure).toMatchObject({ passed: false, measured: -35, expected: -40 });
+  });
+
+  it("reports missing required front members and profile violations", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const missing = validateModel({
+      ...model,
+      members: model.members.filter((m) => !String(m.id).endsWith(":front-left-post")),
+    });
+    expect(missing.find((r) => r.id === "enclosure.front.front-left-post.required")).toMatchObject({
+      passed: false,
+    });
+    const wrongProfile = validateModel({
+      ...model,
+      members: model.members.map((m) =>
+        String(m.id).endsWith(":front-right-post")
+          ? { ...m, profile: "profile:aluminium-3030" as typeof m.profile }
+          : m,
+      ),
+    });
+    expect(
+      wrongProfile.find((r) => r.id === "enclosure.front.front-right-post.profile"),
+    ).toMatchObject({ passed: false });
+  });
+
+  it("checks panel extents from the panel anchor in the frame", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const outside = {
+      ...model,
+      anchors: {
+        ...model.anchors,
+        "anchor:outside": {
+          ...model.anchors["anchor:front-left-bottom"],
+          id: "anchor:outside",
+          position: { x: 110, y: 0, z: 0 },
+        },
+      },
+      panels: [
+        {
+          id: "side-panel",
+          size: { x: 20, y: 20, z: 2 },
+          anchor: "anchor:outside",
+          orientation: { wideFace: "front" as const },
+        },
+      ],
+    };
+    const failure = validateModel(outside).find((r) => r.id === "panel.side-panel.bounds");
+    expect(failure).toMatchObject({ passed: false });
+    expect(failure?.measured).toBeGreaterThan(0);
+  });
+
+  it("aggregates independent validation failures", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const broken = {
+      ...model,
+      doors: [
+        { id: "left-door", nominalWidth: 40 },
+        { id: "right-door", nominalWidth: 40 },
+      ],
+      members: model.members.filter((m) => !String(m.id).endsWith(":front-left-post")),
+      anchors: {
+        ...model.anchors,
+        "anchor:side-middle-left-bottom": {
+          ...model.anchors["anchor:side-middle-left-bottom"],
+          position: { x: 0, y: 0, z: -20 },
+        },
+      },
+    };
+    const failures = validateModel(broken)
+      .filter((r) => !r.passed)
+      .map((r) => r.id);
+    expect(failures).toEqual(
+      expect.arrayContaining([
+        "enclosure.doors.cover-opening",
+        "enclosure.front.front-left-post.required",
+        "enclosure.part:side-middle-left.depth-midpoint",
+      ]),
+    );
+  });
 });
