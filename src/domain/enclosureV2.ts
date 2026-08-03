@@ -26,6 +26,16 @@ export type EnclosureModel = {
   frame: { id: ReturnType<typeof frameId>; transform: Transform };
   anchors: Readonly<Record<string, Anchor>>;
   members: readonly FrameMember[];
+  dimensions?: { x: number; y: number; z: number };
+  doors?: readonly DoorRecord[];
+  panels?: readonly PanelRecord[];
+};
+export type DoorRecord = { id: string; nominalWidth: number };
+export type PanelRecord = {
+  id: string;
+  size: Point3;
+  anchor: string;
+  orientation?: OrientationSpec;
 };
 
 const point = (x: number, y: number, z: number): Point3 => ({ x, y, z });
@@ -176,5 +186,10 @@ export function makeEnclosureV2(
     },
     anchors,
     members,
+    dimensions: { x: width, y: height, z: depth },
+    doors: [
+      { id: "left-door", nominalWidth: width / 2 },
+      { id: "right-door", nominalWidth: width / 2 },
+    ],
   };
 }

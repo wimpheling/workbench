@@ -347,18 +347,18 @@ Start with deterministic constraints, not a general solver.
 
 Initial constraint types:
 
-- [ ] `PositiveLength`
-- [ ] `Equal`
-- [ ] `CenteredOn`
-- [ ] `Between`
-- [ ] `Coincident`
-- [ ] `Parallel`
-- [ ] `Perpendicular`
-- [ ] `Distance`
-- [ ] `FitsWithin`
-- [ ] `ClearanceAtLeast`
-- [ ] `SymmetricAbout`
-- [ ] `SupportedBy`
+- [x] `PositiveLength`
+- [x] `Equal`
+- [x] `CenteredOn`
+- [x] `Between`
+- [x] `Coincident`
+- [x] `Parallel`
+- [x] `Perpendicular`
+- [x] `Distance`
+- [x] `FitsWithin`
+- [x] `ClearanceAtLeast`
+- [x] `SymmetricAbout`
+- [x] `SupportedBy`
 
 Suggested API:
 
@@ -380,11 +380,11 @@ export function validateModel(model: EvaluatedModel): ConstraintResult[];
 
 EnclosureV2 constraints should cover:
 
-- [ ] all structural member lengths are positive;
-- [ ] the left and right side supports are at the depth midpoint;
-- [ ] the front opening has no middle support;
-- [ ] front top and front corner members use 3060;
-- [ ] the two doors have equal nominal widths and cover the opening;
+- [x] all structural member lengths are positive;
+- [x] the left and right side supports are at the depth midpoint;
+- [x] the front opening has no middle support;
+- [x] front top and front corner members use 3060;
+- [x] the two doors have equal nominal widths and cover the opening;
 - [ ] the closed door seam has the configured clearance;
 - [ ] panel bounds stay inside their frame;
 - [ ] no required anchor is orphaned;
