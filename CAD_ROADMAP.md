@@ -495,7 +495,7 @@ export function evaluateKinematics(
 
 The current door pivot behavior should migrate to this API. The viewer should consume evaluated transforms and animate between states, while tests can evaluate a door at exact angles without initializing Three.js.
 
-> **Audit note:** Revolute door motion, limits, named states, and pure transform helpers are implemented and tested. Prismatic motion, nested assembly propagation, and an explicit browser integration of evaluated states remain incomplete.
+> **Audit note:** Revolute door motion, limits, named states, and pure transform helpers are implemented and tested. Both EnclosureV2 doors expose named `closed` and `open` states at exact angles; the viewer consumes their evaluated poses without rebuilding geometry, and viewer pose-controller tests cover that path. Continuous animation, browser smoke/integration, prismatic motion, and nested assembly propagation remain incomplete.
 
 #### Authoritative solid checks
 
@@ -686,7 +686,8 @@ Outputs:
 
 #### Acceptance criteria
 
-- [ ] EnclosureV2 doors can be evaluated at exact open/closed angles and sliding assemblies can use the same deterministic transform API.
+- [x] Both EnclosureV2 doors can be evaluated at exact named `closed`/`open` angles and the viewer consumes their evaluated poses without rebuilding geometry; controller tests cover the path.
+- [ ] Sliding assemblies can use the same deterministic transform API.
 - [x] Static collisions and minimum clearances are determined from Replicad/OpenCascade solids, with Three.js used only for display or optional previews.
 - [x] A door motion check reports the state and pair IDs at the first detected blocking collision or insufficient-clearance result; it does not claim a minimum non-blocking clearance or continuous/swept proof.
 - [ ] Door, panel, glass/polycarbonate, slot, and connector fit rules are named policies rather than unexplained numeric offsets.
