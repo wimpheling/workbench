@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev",
-    "build": "vp build",
+    "build": "vp build && node scripts/verify-pages-assets.mjs",
     "test": "vp test --run",
     "test:watch": "vp test",
     "lint": "vp lint",
