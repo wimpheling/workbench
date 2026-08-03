@@ -1,35 +1,52 @@
-import { createEffect, createResource, createSignal, onCleanup } from "solid-js";
-import { defaultEnclosureScene } from "../rendering/enclosureScene";
+import { createEffect, createResource, createSignal, For, onCleanup } from "solid-js";
+import { buildEnclosureScene } from "../rendering/enclosureScene";
 import { mountThreeViewer } from "../rendering/viewer";
 import { buildManufacturingReport, manufacturingReportJson } from "../domain/manufacturing";
-import { buildValidationReport } from "../validation/reports";
-import { validateModel } from "../validation/constraints";
-import { defaultFitPolicies, evaluateFit } from "../validation/fitPolicies";
+import {
+  defaultDrawingViews,
+  drawingToSvg,
+  exportBOMCsv,
+  exportCutListCsv,
+  exportModelJson,
+  renderDrawing,
+} from "../exports";
+import {
+  defaultConfigurations,
+  defaultDimensions,
+  motionStateIds,
+  regenerateModel,
+  updateDimension,
+  type EditableDimensions,
+} from "./modelAuthoring";
 
 export function App() {
   let canvas: HTMLCanvasElement | undefined;
-  const [scene] = createResource(defaultEnclosureScene);
-  const [showReport, setShowReport] = createSignal(false);
+  const [dimensions, setDimensions] = createSignal<EditableDimensions>(defaultDimensions);
+  const [scene] = createResource(dimensions, (value) => buildEnclosureScene(value));
+  const [showReport, setShowReport] = createSignal(true);
+  const [configuration, setConfiguration] = createSignal("default");
+  const [motionState, setMotionState] = createSignal("closed");
+  const regenerated = () => regenerateModel(dimensions());
+  const configurations = () => defaultConfigurations(dimensions());
+  const motions = () => motionStateIds(regenerated().model);
+
   createEffect(() => {
     const value = scene();
     if (!value || !canvas) return;
     const dispose = mountThreeViewer(canvas, value.root);
     onCleanup(dispose);
   });
-  const report = () => {
-    const model = scene()?.model;
-    if (!model) return undefined;
-    return buildValidationReport(
-      model.frame.id,
-      validateModel(model),
-      [],
-      [evaluateFit(defaultFitPolicies[0], 0.5)],
-    );
+  const download = (name: string, content: string, type: string) => {
+    const url = URL.createObjectURL(new Blob([content], { type }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    link.click();
+    URL.revokeObjectURL(url);
   };
-  const manufacturing = () => {
-    const model = scene()?.model;
-    return model ? buildManufacturingReport(model) : undefined;
-  };
+  const report = () => regenerated().report;
+  const manufacturing = () => buildManufacturingReport(regenerated().model);
+
   return (
     <main>
       <h1>Workbench</h1>
@@ -42,30 +59,114 @@ export function App() {
             : `${scene()?.members.length ?? 0} members rendered.`}
       </p>
       <div class="toolbar">
+        <fieldset aria-label="Enclosure dimensions">
+          <legend>Dimensions (mm)</legend>
+          <For each={["width", "height", "depth"] as const}>
+            {(key) => (
+              <label>
+                {key}{" "}
+                <input
+                  type="number"
+                  min="1"
+                  value={dimensions()[key]}
+                  onChange={(event) => {
+                    const next = updateDimension(dimensions(), key, event.currentTarget.value);
+                    if (next) setDimensions(next);
+                  }}
+                />
+              </label>
+            )}
+          </For>
+        </fieldset>
+        <label>
+          Configuration{" "}
+          <select
+            value={configuration()}
+            onChange={(event) => setConfiguration(event.currentTarget.value)}
+          >
+            <For each={configurations()}>
+              {(item) => <option value={item.id}>{item.name}</option>}
+            </For>
+          </select>
+        </label>
+        <label>
+          Motion state{" "}
+          <select
+            value={motionState()}
+            onChange={(event) => setMotionState(event.currentTarget.value)}
+          >
+            <For each={motions()}>{(state) => <option value={state}>{state}</option>}</For>
+          </select>
+        </label>
         <button type="button" onClick={() => setShowReport(!showReport())}>
           {showReport() ? "Hide report" : "Show validation report"}
         </button>
         <button
           type="button"
-          onClick={() => {
-            const value = manufacturing();
-            if (value) navigator.clipboard?.writeText(manufacturingReportJson(value));
-          }}
+          onClick={() => navigator.clipboard?.writeText(manufacturingReportJson(manufacturing()))}
         >
           Copy BOM JSON
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            download(
+              "workbench-model.json",
+              exportModelJson(regenerated().model),
+              "application/json",
+            )
+          }
+        >
+          Export JSON
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            download("workbench-bom.csv", exportBOMCsv(regenerated().model), "text/csv")
+          }
+        >
+          Export BOM CSV
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            download("workbench-cut-list.csv", exportCutListCsv(regenerated().model), "text/csv")
+          }
+        >
+          Export cut list
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            download(
+              "workbench-front.svg",
+              drawingToSvg(renderDrawing(regenerated().model, defaultDrawingViews[0])),
+              "image/svg+xml",
+            )
+          }
+        >
+          Export front SVG
         </button>
       </div>
       {showReport() && (
         <section aria-label="Validation report">
           <h2>Validation</h2>
-          <p>Status: {report()?.status ?? "incomplete"}</p>
+          <p>Status: {report().status}</p>
           <ul>
-            {report()?.issues.map((issue) => (
-              <li>
-                {issue.severity}: {issue.message}
-              </li>
-            ))}
+            <For each={report().issues}>
+              {(issue) => (
+                <li data-severity={issue.severity}>
+                  <strong>{issue.severity}</strong> <span>{issue.category}</span>: {issue.message}{" "}
+                  {issue.references.length ? `[${issue.references.join(", ")}]` : ""}
+                </li>
+              )}
+            </For>
           </ul>
+          <p>
+            {report().issues.length
+              ? "Review errors and warnings before fabrication."
+              : "No validation errors or warnings."}
+          </p>
         </section>
       )}
       <canvas

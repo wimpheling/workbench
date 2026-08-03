@@ -55,8 +55,14 @@ export const renderDrawing = (model: EnclosureModel, view: DrawingView): Drawing
       ]
     : [],
 });
+const svgEscape = (value: string) =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 export const drawingToSvg = (drawing: DrawingDocument) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><title>${drawing.title}</title><text x="20" y="30">${drawing.title}</text>${drawing.labels.map((label, index) => `<text x="20" y="${60 + index * 18}">${label}</text>`).join("")}</svg>`;
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><title>${svgEscape(drawing.title)}</title><text x="20" y="30">${svgEscape(drawing.title)}</text>${drawing.labels.map((label, index) => `<text x="20" y="${60 + index * 18}">${svgEscape(label)}</text>`).join("")}</svg>`;
 export const exportModelJson = (
   model: EnclosureModel,
   report: ManufacturingReport = buildManufacturingReport(model),
@@ -78,5 +84,18 @@ export const exportBOMCsv = (model: EnclosureModel) => {
         .map(csvEscape)
         .join(","),
     ),
+  ].join("\n");
+};
+export const exportCutListCsv = (model: EnclosureModel) => {
+  const report = buildManufacturingReport(model);
+  return [
+    "partId,quantity,material,profile,cutLength",
+    ...report.parts
+      .filter((part) => part.cutLength !== undefined)
+      .map((part) =>
+        [part.partId, part.quantity, part.material, part.profile ?? "", part.cutLength ?? ""]
+          .map(csvEscape)
+          .join(","),
+      ),
   ].join("\n");
 };
