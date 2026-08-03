@@ -16,7 +16,12 @@ for (const [name, text] of Object.entries(workflows)) {
   requireText(name, text, /run:\s*npm ci\b/, "npm ci");
   requireText(name, text, /run:\s*npm run check\b/, "check step");
   requireText(name, text, /run:\s*npm test\b/, "test step");
-  requireText(name, text, /run:\s*npm run build\b/, "build step");
+  requireText(
+    name,
+    text,
+    /run:\s*(?:VITE_BASE_PATH=\/workbench\/\s+)?npm run build\b/,
+    "build step",
+  );
 }
 
 requireText("ci", workflows.ci, /contents:\s*read\b/, "read-only contents permission");
@@ -37,6 +42,12 @@ requireText(
 );
 requireText("pages", workflows.pages, /path:\s*dist\b/, "dist artifact path");
 requireText("pages", workflows.pages, /uses:\s*actions\/deploy-pages@v4/, "Pages deployment");
+requireText(
+  "pages",
+  workflows.pages,
+  /run:\s*VITE_BASE_PATH=\/workbench\/ npm run build\b/,
+  "Pages base path build setting",
+);
 
 console.log(
   "Workflow semantic checks passed (CI, Pages, Node 24, dist artifact, Frame3DD policy).",

@@ -2,8 +2,8 @@ import { defineConfig } from "vite-plus";
 import solid from "vite-plugin-solid";
 
 export default defineConfig({
-  // GitHub Pages serves this repository below /workbench/.
-  base: "/workbench/",
+  // Keep local development at the origin root; Pages supplies its subpath in CI.
+  base: process.env.VITE_BASE_PATH || "/",
   plugins: [solid()],
   resolve: {
     conditions: ["module", "browser", "development"],
