@@ -44,11 +44,14 @@ sketch is not evidence of completion.
 - Pages workflow semantics are validated locally, but repository Pages settings,
   environment approval, and the remote deployment URL require authenticated
   GitHub access and cannot be verified here.
-- The Replicad solid-check adapter exists but has no automated test coverage yet;
-  the sampled motion envelope is covered, but the demo does not yet run a
-  complete project-wide collision pass and sampling is not a continuous-motion
-  proof. BOM coverage is currently frame extrusions;
-  hardware, panels, and vendor data are not inferred.
+- Replicad/OpenCascade solid validation is covered by static solid-check tests
+  and scene integration. Door motion solid validation has focused tests: it
+  checks a two-door Cartesian grid against moving-vs-static and moving-vs-moving
+  pairs, reports pair IDs and the first blocking sampled-state failure, and
+  returns `incomplete` for exhausted budgets or kernel errors. A `clear` result
+  only covers the sampled states and is explicitly not a continuous-motion
+  proof. BOM coverage is currently frame extrusions; hardware, panels, and
+  vendor data are not inferred.
 - Browser smoke tests, PDF/vector drawing production, full stock optimization,
   hardware/panel manufacturing records, generic door assembly migration, and
   later configuration variants remain planned and must stay unchecked.
@@ -496,15 +499,20 @@ The current door pivot behavior should migrate to this API. The viewer should co
 
 #### Authoritative solid checks
 
-> **Audit note:** `solidChecks.ts` contains Replicad/OpenCascade-backed intersection and distance logic, but this checkout has no automated solid-check test, so these criteria remain unchecked.
+> **Audit note:** Static `solidChecks.ts` intersection/distance logic is covered
+> by Replicad/OpenCascade tests and integrated into scene construction. The
+> motion-specific suite covers the two-door grid, kernel truth, pair coverage,
+> first blocking sampled-state failure, and `incomplete` diagnostics. Broad
+> phase optimization and touching classification are not implemented. Pair IDs
+> are available; feature/constraint provenance is not consistently attached.
 
 Use Replicad/OpenCascade solids—not Three.js meshes or only axis-aligned bounding boxes—as the authority for geometric validity:
 
-- [ ] exact or kernel-backed intersection checks for static parts;
-- [ ] minimum-distance checks between selected solids or surfaces;
+- [x] exact or kernel-backed intersection checks for static parts;
+- [x] minimum-distance checks between selected solids or surfaces;
 - [ ] configurable broad-phase bounds only as a performance optimization before authoritative checks;
 - [ ] classification of touching, overlapping, separated, and invalid/unknown results;
-- [ ] stable IDs for both offending parts and the feature/constraint that requested the check.
+- [ ] stable IDs for both offending parts and the feature/constraint that requested the check; the current checks expose pair IDs, but do not yet attach the requesting feature/constraint consistently.
 
 Suggested API:
 
@@ -537,15 +545,23 @@ Three.js may display the result and provide fast previews, but it must not silen
 For every moving assembly, validate the path rather than only its endpoints:
 
 - [x] sample named motion intervals with deterministic resolution;
-- [x] use adaptive subdivision where clearance changes rapidly or a coarse sample brackets a collision;
-- [ ] check moving-vs-static and moving-vs-moving pairs;
-- [x] record sampled motion values at a detected minimum/threshold event;
-- [x] support a configurable minimum clearance and maximum sample/refinement budget;
-- [ ] distinguish a proven clear sampled interval from an unverified interval when the budget is exhausted.
+- [ ] use adaptive subdivision where clearance changes rapidly or a coarse sample brackets a collision; the generic `motionEnvelope.ts` helper refines sign changes, but the Replicad door sweep does not use it;
+- [x] check moving-vs-static and moving-vs-moving pairs in the Replicad door sweep;
+- [x] record sampled motion values at a detected blocking event;
+- [x] support a configurable minimum clearance and maximum state budget for the Replicad door sweep;
+- [x] distinguish sampled states covered by the sweep from an unverified interval when the state budget is exhausted.
 
 The first implementation can use uniform sampling plus refinement around the minimum. It should not claim a mathematical continuous-motion proof. A swept-volume implementation may be added later if a project needs it.
 
-> **Audit note:** Uniform sampling and sign-change refinement are tested. The implementation does not establish the first collision, return offending part IDs, integrate moving pairs, or report explicit `incomplete` results when a refinement budget is exhausted; the current result always reports `verified: true`.
+> **Audit note:** The door motion solid sweep evaluates a deterministic two-door
+> Cartesian grid using Replicad/OpenCascade as the authority, covers
+> moving-vs-static and moving-vs-moving pairs, restores the initial pose, and
+> reports the first blocking sampled-state result with pair IDs and state.
+> Exhausted state budgets and kernel errors are `incomplete`/unverified. A
+> `clear` result is limited to sampled states and carries a diagnostic that it
+> is not continuous/swept proof. The generic `motionEnvelope.ts` helper is
+> separate and does not upgrade this door sweep to adaptive or continuous
+> validation.
 
 #### Tolerance and fit policies
 
@@ -643,7 +659,12 @@ Limitations:
 
 #### Inputs and outputs for the whole validation phase
 
-> **Audit note:** Pure kinematic states, sampled envelope results, and fit diagnostics are implemented with focused tests. The full phase input wiring, solid-check/report integration, and shared report consumption by BOM remain incomplete.
+> **Audit note:** Pure kinematic states, sampled envelope results, fit
+> diagnostics, and Replicad solid checks are implemented with focused tests.
+> Scene construction integrates the static and door-motion checks into
+> `validationReport`, and the UI consumes that scene report. Shared report
+> consumption by the BOM remains incomplete; the global report/BOM criterion
+> therefore stays unchecked.
 
 Inputs:
 
@@ -657,22 +678,22 @@ Inputs:
 Outputs:
 
 - [x] deterministic evaluated states;
-- [ ] solid collision and minimum-distance results;
-- [x] sampled/adaptive motion-envelope results;
+- [x] static solid collision and minimum-distance results; the door sweep also checks blocking collision/clearance at sampled states;
+- [ ] sampled/adaptive motion-envelope results; the generic helper is tested separately, while the Replicad door sweep is sampled and does not provide adaptive subdivision;
 - [x] fit/tolerance diagnostics;
-- [ ] one structured `ValidationReport` consumed by the demo and manufacturing/BOM layers;
+- [ ] one structured `ValidationReport` consumed by the demo and manufacturing/BOM layers; the demo/UI consumes the scene report, but BOM consumption is not implemented.
 - [ ] optional Frame3DD input/result documents and structural issues.
 
 #### Acceptance criteria
 
 - [ ] EnclosureV2 doors can be evaluated at exact open/closed angles and sliding assemblies can use the same deterministic transform API.
-- [ ] Static collisions and minimum clearances are determined from Replicad/OpenCascade solids, with Three.js used only for display or optional previews.
-- [ ] A motion-envelope check reports the state and part IDs at the first detected collision or minimum clearance and can refine around a suspicious interval.
+- [x] Static collisions and minimum clearances are determined from Replicad/OpenCascade solids, with Three.js used only for display or optional previews.
+- [x] A door motion check reports the state and pair IDs at the first detected blocking collision or insufficient-clearance result; it does not claim a minimum non-blocking clearance or continuous/swept proof.
 - [ ] Door, panel, glass/polycarbonate, slot, and connector fit rules are named policies rather than unexplained numeric offsets.
 - [ ] The demo and BOM consume the same structured validation report; no consumer parses console output.
 - [ ] EnclosureV2 can export a deterministic Frame3DD input document, and an external run can be imported without requiring Frame3DD in the browser.
-- [ ] Missing solver, malformed geometry, or exhausted motion-validation budgets result in explicit `incomplete`/diagnostic states rather than false passes.
-- [ ] Tests cover a valid reference frame, an intentional collision, an insufficient panel/door clearance, a kinematic limit violation, and an unavailable Frame3DD executable.
+- [x] Missing solver, malformed geometry, or exhausted motion-validation budgets result in explicit `incomplete`/diagnostic states rather than false passes for the implemented solid/motion paths.
+- [ ] Tests cover a valid reference frame, an intentional collision, an insufficient panel/door clearance, a kinematic limit violation, and an unavailable Frame3DD executable; coverage is granular rather than complete across this mixed criterion.
 
 ### Phase 4 — First-class joints, connectors, and interfaces
 
@@ -1097,10 +1118,10 @@ Test deterministic motion independently of rendering:
 - [ ] prismatic states at limits and representative intermediate values;
 - [ ] nested assembly transform composition;
 - [x] invalid motion values and limit diagnostics;
-- [ ] moving-vs-static and moving-vs-moving collision fixtures;
-- [ ] minimum-distance results at sampled states;
-- [x] adaptive refinement around a deliberately narrow clearance minimum;
-- [ ] explicit `incomplete` results when a sample/refinement budget is exhausted.
+- [x] moving-vs-static and moving-vs-moving collision fixtures;
+- [x] minimum-distance results at sampled states;
+- [x] adaptive refinement in the generic `motionEnvelope.ts` helper around a deliberately narrow clearance minimum;
+- [x] explicit `incomplete` results when the door-sweep state budget is exhausted.
 
 Use Replicad/OpenCascade-backed solids for authoritative intersection and distance fixtures. Three.js bounding boxes may be tested only as an optional broad-phase optimization.
 
