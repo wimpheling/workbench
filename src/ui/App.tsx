@@ -18,6 +18,7 @@ import {
   updateDimension,
   type EditableDimensions,
 } from "./modelAuthoring";
+import { resolveRuntimeValidationState } from "./runtimeValidation";
 
 export function App() {
   let canvas: HTMLCanvasElement | undefined;
@@ -44,7 +45,6 @@ export function App() {
     link.click();
     URL.revokeObjectURL(url);
   };
-  const report = () => regenerated().report;
   const manufacturing = () => buildManufacturingReport(regenerated().model);
 
   return (
@@ -151,59 +151,75 @@ export function App() {
       {showReport() && (
         <section aria-label="Validation report">
           <h2>Validation</h2>
-          <p>Status: {report().status}</p>
-          <ul>
-            <For each={report().issues}>
-              {(issue) => (
-                <li data-severity={issue.severity}>
-                  <strong>{issue.severity}</strong> <span>{issue.category}</span>: {issue.message}{" "}
-                  {issue.references.length ? `[${issue.references.join(", ")}]` : ""}
-                </li>
-              )}
-            </For>
-          </ul>
-          <p>
-            {report().issues.length
-              ? "Review errors and warnings before fabrication."
-              : "No validation errors or warnings."}
-          </p>
-          <details class="validation-assertions">
-            <summary>Detailed assertions ({report().assertions.length})</summary>
-            <div class="validation-table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th scope="col">Status</th>
-                    <th scope="col">Assertion</th>
-                    <th scope="col">Method</th>
-                    <th scope="col">Measured</th>
-                    <th scope="col">Expected</th>
-                    <th scope="col">References</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <For each={report().assertions}>
-                    {(assertion) => (
-                      <tr data-status={assertion.status}>
-                        <td>{assertion.status}</td>
-                        <td>
-                          <code>{assertion.id}</code>
-                          <br />
-                          {assertion.message}
-                        </td>
-                        <td>{assertion.method}</td>
-                        <td>{assertion.measured ?? "—"}</td>
-                        <td>{assertion.expected ?? "—"}</td>
-                        <td>
-                          {assertion.references.length ? assertion.references.join(", ") : "—"}
-                        </td>
-                      </tr>
+          {(() => {
+            const state = resolveRuntimeValidationState({
+              loading: scene.loading,
+              error: scene.error,
+              scene: scene(),
+            });
+            if (state.status !== "ready") return <p>{state.message}</p>;
+            const report = state.report;
+            return (
+              <>
+                <p>Status: {report.status}</p>
+                <ul>
+                  <For each={report.issues}>
+                    {(issue) => (
+                      <li data-severity={issue.severity}>
+                        <strong>{issue.severity}</strong> <span>{issue.category}</span>:{" "}
+                        {issue.message}{" "}
+                        {issue.references.length ? `[${issue.references.join(", ")}]` : ""}
+                      </li>
                     )}
                   </For>
-                </tbody>
-              </table>
-            </div>
-          </details>
+                </ul>
+                <p>
+                  {report.issues.length
+                    ? "Review errors and warnings before fabrication."
+                    : "No validation errors or warnings."}
+                </p>
+                <details class="validation-assertions">
+                  <summary>Detailed assertions ({report.assertions.length})</summary>
+                  <div class="validation-table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col">Status</th>
+                          <th scope="col">Assertion</th>
+                          <th scope="col">Method</th>
+                          <th scope="col">Measured</th>
+                          <th scope="col">Expected</th>
+                          <th scope="col">References</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <For each={report.assertions}>
+                          {(assertion) => (
+                            <tr data-status={assertion.status}>
+                              <td>{assertion.status}</td>
+                              <td>
+                                <code>{assertion.id}</code>
+                                <br />
+                                {assertion.message}
+                              </td>
+                              <td>{assertion.method}</td>
+                              <td>{assertion.measured ?? "—"}</td>
+                              <td>{assertion.expected ?? "—"}</td>
+                              <td>
+                                {assertion.references.length
+                                  ? assertion.references.join(", ")
+                                  : "—"}
+                              </td>
+                            </tr>
+                          )}
+                        </For>
+                      </tbody>
+                    </table>
+                  </div>
+                </details>
+              </>
+            );
+          })()}
         </section>
       )}
       <canvas
