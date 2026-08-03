@@ -81,11 +81,36 @@ export const orientedAlong = (
   const span = betweenAnchors(from, to);
   const yaw = Math.atan2(span.axis.y, span.axis.x);
   const pitch = Math.atan2(-span.axis.z, Math.sqrt(span.axis.x ** 2 + span.axis.y ** 2));
+  const normals: Record<NonNullable<OrientationSpec["wideFace"]>, Vector3> = {
+    front: { x: 0, y: 0, z: -1 },
+    back: { x: 0, y: 0, z: 1 },
+    left: { x: -1, y: 0, z: 0 },
+    right: { x: 1, y: 0, z: 0 },
+    top: { x: 0, y: 1, z: 0 },
+    bottom: { x: 0, y: -1, z: 0 },
+  };
+  let normal = orientation?.wideFace ? normals[orientation.wideFace] : { x: 0, y: 0, z: 1 };
+  let dot = span.axis.x * normal.x + span.axis.y * normal.y + span.axis.z * normal.z;
+  if (Math.abs(Math.abs(dot) - 1) < 1e-9) {
+    normal = { x: 0, y: 1, z: 0 };
+    dot = span.axis.y;
+  }
+  const wide = normalize({
+    x: normal.x - dot * span.axis.x,
+    y: normal.y - dot * span.axis.y,
+    z: normal.z - dot * span.axis.z,
+  });
+  const side = {
+    x: wide.y * span.axis.z - wide.z * span.axis.y,
+    y: wide.z * span.axis.x - wide.x * span.axis.z,
+    z: wide.x * span.axis.y - wide.y * span.axis.x,
+  };
   return {
     position: midpoint(from, to).position,
     rotation: { x: 0, y: pitch, z: yaw } satisfies Rotation,
     axis: span.axis,
     orientation,
+    basis: [span.axis.x, side.x, wide.x, span.axis.y, side.y, wide.y, span.axis.z, side.z, wide.z],
   };
 };
 

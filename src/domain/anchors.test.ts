@@ -33,7 +33,7 @@ describe("EnclosureV2 declarative frame", () => {
     expect(model.anchors["front-left-bottom"].position).toEqual({ x: 0, y: 0, z: 0 });
     expect(model.anchors["front-right-top"].position).toEqual({ x: 600, y: 500, z: 0 });
     expect(model.members.find((member) => member.id === "part:front-top")?.length).toBe(600);
-    expect(model.members.find((member) => member.id === "part:side-middle-left")?.length).toBe(400);
+    expect(model.members.find((member) => member.id === "part:side-middle-left")?.length).toBe(500);
   });
 
   it("propagates dimension changes to rail lengths", async () => {
@@ -49,6 +49,42 @@ describe("EnclosureV2 declarative frame", () => {
     const member = model.members.find((item) => item.id === "part:front-top");
     expect(member?.profile).toBe("profile:aluminium-3060");
     expect(member?.orientation).toEqual({ wideFace: "front" });
+    expect(member?.transform.basis).toBeDefined();
+    expect(member?.transform.basis).not.toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+  });
+
+  it("describes the complete legacy frame with semantic endpoints", async () => {
+    const { makeEnclosureV2 } = await import("./enclosureV2");
+    const model = makeEnclosureV2({ width: 600, height: 500, depth: 400 });
+    expect(model.members).toHaveLength(16);
+    expect(new Set(model.members.map((item) => item.id)).size).toBe(16);
+    const member = (id: string) => model.members.find((item) => item.id === `part:${id}`)!;
+    expect(member("side-middle-left").from).toBe("anchor:side-middle-left-bottom");
+    expect(member("side-middle-left").to).toBe("anchor:side-middle-left-top");
+    expect(member("side-middle-right").from).toBe("anchor:side-middle-right-bottom");
+    expect(member("back-middle-support").from).toBe("anchor:back-middle-bottom");
+    expect(member("back-middle-support").to).toBe("anchor:back-middle-top");
+    expect(member("top-back-tie").from).toBe("anchor:front-middle-top");
+    expect(member("top-back-tie").to).toBe("anchor:back-middle-top");
+  });
+
+  it("rejects invalid dimensions and mixed-frame anchors", async () => {
+    const { makeEnclosureV2, makeRail } = await import("./enclosureV2");
+    expect(() => makeEnclosureV2({ width: 0, height: 500, depth: 400 })).toThrow(/positive/i);
+    expect(() => makeEnclosureV2({ width: 600, height: -1, depth: 400 })).toThrow(/positive/i);
+    const { anchor } = await import("./anchors");
+    const { frameId, profileId } = await import("./ids");
+    expect(() =>
+      makeRail({
+        from: "anchor:a",
+        to: "anchor:b",
+        profile: profileId("aluminium-3030"),
+        anchors: {
+          "anchor:a": anchor("a", { x: 0, y: 0, z: 0 }, frameId("one")),
+          "anchor:b": anchor("b", { x: 1, y: 0, z: 0 }, frameId("two")),
+        },
+      }),
+    ).toThrow(/frame/i);
   });
 
   it("reports missing anchor references", async () => {

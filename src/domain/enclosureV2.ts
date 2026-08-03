@@ -47,6 +47,8 @@ export function makeRail({
 }): FrameMember {
   const start = atAnchor(from, anchors);
   const end = atAnchor(to, anchors);
+  if (start.frame !== end.frame)
+    throw new Error(`Anchor frame mismatch: ${start.frame} !== ${end.frame}`);
   const span = betweenAnchors(start, end);
   return {
     id: partId(id),
@@ -66,6 +68,8 @@ export function makeEnclosureV2(
   const width = "width" in dimensions ? dimensions.width : dimensions.x;
   const height = "height" in dimensions ? dimensions.height : dimensions.y;
   const depth = "depth" in dimensions ? dimensions.depth : dimensions.z;
+  if (![width, height, depth].every((value) => Number.isFinite(value) && value > 0))
+    throw new Error("Enclosure dimensions must be finite and positive");
   const anchors: Record<string, Anchor> = {};
   const add = (name: string, position: Point3) => {
     const value = anchor(name, position);
@@ -84,16 +88,26 @@ export function makeEnclosureV2(
   add("back-middle", point(width / 2, height / 2, depth));
   add("side-middle-left", point(0, height / 2, depth / 2));
   add("side-middle-right", point(width, height / 2, depth / 2));
+  add("side-middle-left-bottom", point(0, 0, depth / 2));
+  add("side-middle-left-top", point(0, height, depth / 2));
+  add("side-middle-right-bottom", point(width, 0, depth / 2));
+  add("side-middle-right-top", point(width, height, depth / 2));
+  add("front-middle-top", point(width / 2, height, 0));
+  add("back-middle-bottom", point(width / 2, 0, depth));
+  add("back-middle-top", point(width / 2, height, depth));
   add("left-hinge", point(0, height / 2, 0));
   add("right-hinge", point(width, height / 2, 0));
+  const ids = new Set<string>();
   const member = (
     id: string,
     from: string,
     to: string,
     profile: string,
     orientation?: OrientationSpec,
-  ) =>
-    makeRail({
+  ) => {
+    if (ids.has(id)) throw new Error(`Duplicate member ID: ${id}`);
+    ids.add(id);
+    return makeRail({
       id,
       from: `anchor:${from}`,
       to: `anchor:${to}`,
@@ -101,7 +115,46 @@ export function makeEnclosureV2(
       anchors,
       orientation,
     });
+  };
   const members = [
+    member("left-bottom-rail", "front-left-bottom", "back-left-bottom", "aluminium-3030"),
+    member(
+      "side-middle-left",
+      "side-middle-left-bottom",
+      "side-middle-left-top",
+      "aluminium-3060",
+      { wideFace: "front" },
+    ),
+    member("left-top-rail", "front-left-top", "back-left-top", "aluminium-3030"),
+    member("right-bottom-rail", "front-right-bottom", "back-right-bottom", "aluminium-3030"),
+    member(
+      "side-middle-right",
+      "side-middle-right-bottom",
+      "side-middle-right-top",
+      "aluminium-3060",
+      { wideFace: "front" },
+    ),
+    member("right-top-rail", "front-right-top", "back-right-top", "aluminium-3030"),
+    member("front-bottom-rail", "front-left-bottom", "front-right-bottom", "aluminium-3030"),
+    member("front-top", "front-left-top", "front-right-top", "aluminium-3060", {
+      wideFace: "front",
+    }),
+    member("front-left-post", "front-left-bottom", "front-left-top", "aluminium-3060", {
+      wideFace: "front",
+    }),
+    member("front-right-post", "front-right-bottom", "front-right-top", "aluminium-3060", {
+      wideFace: "front",
+    }),
+    member("back-left-post", "back-left-bottom", "back-left-top", "aluminium-3030"),
+    member("back-right-post", "back-right-bottom", "back-right-top", "aluminium-3030"),
+    member("back-middle-support", "back-middle-bottom", "back-middle-top", "aluminium-3060", {
+      wideFace: "front",
+    }),
+    member("back-bottom-rail", "back-left-bottom", "back-right-bottom", "aluminium-3030"),
+    member("back-top-rail", "back-left-top", "back-right-top", "aluminium-3030"),
+    member("top-back-tie", "front-middle-top", "back-middle-top", "aluminium-3030"),
+  ];
+  /* const members = [
     member("front-top", "front-left-top", "front-right-top", "aluminium-3060", {
       wideFace: "front",
     }),
@@ -115,7 +168,7 @@ export function makeEnclosureV2(
     member("side-middle-right", "front-right-bottom", "back-right-bottom", "aluminium-3030"),
     member("back-middle-support", "back-left-bottom", "back-right-bottom", "aluminium-3030"),
     member("top-back-tie", "front-right-top", "back-right-top", "aluminium-3030"),
-  ];
+  ]; */
   return {
     frame: {
       id: frameId("enclosure-root"),
