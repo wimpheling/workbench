@@ -1,39 +1,27 @@
 {
   "name": "workbench",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
-  "homepage": "https://github.com/wimpheling/workbench",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "deploy": "tsc && vite build && gh-pages -d dist",
-    "publish": "tsc && vite build && tsx src/build/package.ts",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write ."
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.0",
-    "@types/node": "^20.10.0",
-    "@types/three": "^0.158.2",
-    "gh-pages": "^6.1.0",
-    "tsx": "^4.6.0",
-    "typescript": "^5.5.4",
-    "vite": "^4.4.5",
-    "vite-plugin-singlefile": "^0.13.5",
-    "vite-plugin-solid": "^2.7.2"
+    "dev": "vp dev",
+    "build": "vp build",
+    "test": "vp test --run",
+    "test:watch": "vp test",
+    "lint": "vp lint",
+    "format": "vp fmt",
+    "format:check": "vp fmt --check",
+    "check": "vp check"
   },
   "dependencies": {
-    "comlink": "^4.4.1",
-    "file-saver": "^2.0.5",
-    "lil-gui": "^0.19.2",
-    "replicad": "^0.17.1",
-    "replicad-opencascadejs": "^0.17.1",
-    "replicad-threejs-helper": "^0.17.0",
-    "solid-js": "^1.9.11",
-    "three": "^0.158.0",
-    "three-bvh-csg": "^0.0.16",
-    "three-viewport-gizmo": "^0.1.5"
+    "replicad": "^0.23.1",
+    "solid-js": "^1.9.14",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite-plugin-solid": "^2.11.14",
+    "vite-plus": "^0.2.7",
+    "vitest": "^4.1.10"
   }
 }
