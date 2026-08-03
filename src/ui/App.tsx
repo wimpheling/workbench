@@ -1,6 +1,7 @@
 import { createEffect, createResource, createSignal, For, onCleanup } from "solid-js";
-import { buildEnclosureScene } from "../rendering/enclosureScene";
+import { applyDoorPose, buildEnclosureScene } from "../rendering/enclosureScene";
 import { mountThreeViewer } from "../rendering/viewer";
+import { evaluateEnclosureDoorPose } from "../domain/assemblies";
 import { buildManufacturingReport, manufacturingReportJson } from "../domain/manufacturing";
 import {
   defaultDrawingViews,
@@ -19,9 +20,11 @@ import {
   type EditableDimensions,
 } from "./modelAuthoring";
 import { resolveRuntimeValidationState } from "./runtimeValidation";
+import { createViewerPoseController } from "./viewerPoseController";
 
 export function App() {
-  let canvas: HTMLCanvasElement | undefined;
+  const [canvas, setCanvas] = createSignal<HTMLCanvasElement>();
+  let viewer: ReturnType<typeof mountThreeViewer> | undefined;
   const [dimensions, setDimensions] = createSignal<EditableDimensions>(defaultDimensions);
   const [scene] = createResource(dimensions, (value) => buildEnclosureScene(value));
   const [showReport, setShowReport] = createSignal(true);
@@ -30,12 +33,28 @@ export function App() {
   const regenerated = () => regenerateModel(dimensions());
   const configurations = () => defaultConfigurations(dimensions());
   const motions = () => motionStateIds(regenerated().model);
+  const poseController = createViewerPoseController({
+    resolvePose: (value: Awaited<ReturnType<typeof buildEnclosureScene>>, state: string) =>
+      evaluateEnclosureDoorPose(value.model, state),
+    applyPose: (value, pose) => applyDoorPose(value, pose),
+  });
 
   createEffect(() => {
     const value = scene();
-    if (!value || !canvas) return;
-    const dispose = mountThreeViewer(canvas, value.root);
-    onCleanup(dispose);
+    const element = canvas();
+    if (!value || !element) return;
+    viewer?.dispose();
+    viewer = mountThreeViewer(element, value.root);
+    poseController.setScene(value, viewer.render);
+    onCleanup(() => {
+      viewer?.dispose();
+      viewer = undefined;
+    });
+  });
+  createEffect(() => {
+    const value = scene();
+    const state = motionState();
+    if (value && viewer) poseController.select(state);
   });
   const download = (name: string, content: string, type: string) => {
     const url = URL.createObjectURL(new Blob([content], { type }));
@@ -222,11 +241,7 @@ export function App() {
           })()}
         </section>
       )}
-      <canvas
-        ref={(element) => (canvas = element)}
-        class="viewer-canvas"
-        aria-label="EnclosureV2 3D viewer"
-      />
+      <canvas ref={setCanvas} class="viewer-canvas" aria-label="EnclosureV2 3D viewer" />
     </main>
   );
 }

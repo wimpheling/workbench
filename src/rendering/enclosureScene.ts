@@ -90,6 +90,21 @@ export type EnclosureScene = {
   motionSolidCheck: MotionSolidCheckResult;
 };
 
+export type DoorPose = Readonly<Record<"left-door.angle" | "right-door.angle", number>>;
+
+export const applyDoorPose = (
+  scene: Pick<EnclosureScene, "root" | "doors">,
+  pose: DoorPose,
+): void => {
+  for (const door of scene.doors) {
+    const id = door.name.slice("door:".length);
+    const angle = pose[`${id}.angle` as keyof DoorPose];
+    if (angle === undefined) throw new Error(`Missing pose for ${id}.angle`);
+    door.rotation.y = angle;
+  }
+  scene.root.updateMatrixWorld(true);
+};
+
 export const transformShapeToWorld = (shape: Shape3D, object: Object3D): Shape3D => {
   const position = object.getWorldPosition(new Vector3());
   const quaternion = object.getWorldQuaternion(new Quaternion());

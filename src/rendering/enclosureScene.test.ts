@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 import { describe, expect, it } from "vitest";
 import { makeEnclosureV2 } from "../domain/enclosureV2";
-import { buildEnclosureScene, transformShapeToWorld } from "./enclosureScene";
+import { applyDoorPose, buildEnclosureScene, transformShapeToWorld } from "./enclosureScene";
 import { makeBaseBox, type Shape3D } from "replicad";
 
 const dimensions = { width: 120, height: 100, depth: 80 };
@@ -130,5 +130,55 @@ describe("production EnclosureV2 scene boundary", () => {
     const maxX = Math.max(...vertices.filter((_, index) => index % 3 === 0));
     expect(scene.doors[1].scale.x).toBe(-1);
     expect(maxX).toBeLessThan(scene.doors[1].position.x);
+  });
+
+  it("applique une pose absolue aux groupes existants sans perdre pivots ni miroir", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const left = scene.doors[0];
+    const right = scene.doors[1];
+    const leftPosition = left.position.toArray();
+    const rightPosition = right.position.toArray();
+    const leftPanel = left.getObjectByName("left-door-panel")!;
+    const rightPanel = right.getObjectByName("right-door-panel")!;
+    applyDoorPose(scene, { "left-door.angle": Math.PI / 2, "right-door.angle": Math.PI / 2 });
+    expect(left.rotation.y).toBeCloseTo(Math.PI / 2);
+    expect(right.rotation.y).toBeCloseTo(Math.PI / 2);
+    expect(left.position.toArray()).toEqual(leftPosition);
+    expect(right.position.toArray()).toEqual(rightPosition);
+    expect(right.scale.x).toBe(-1);
+    expect(leftPanel).toBe(left.getObjectByName("left-door-panel"));
+    expect(rightPanel).toBe(right.getObjectByName("right-door-panel"));
+  });
+
+  it("ouvre puis referme les portes en conservant les pivots et l'identité des meshes", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const doors = [...scene.doors];
+    const meshes = doors.flatMap((door) => {
+      const result: any[] = [];
+      door.traverse((child) => child.type === "Mesh" && result.push(child));
+      return result;
+    });
+    const pivots = doors.map((door) => door.position.toArray());
+    const panelPosition = (door: (typeof doors)[number]) =>
+      door
+        .getObjectByName(`${door.name.slice("door:".length)}-panel`)!
+        .getWorldPosition(new Vector3())
+        .toArray();
+    const closed = doors.map(panelPosition);
+
+    applyDoorPose(scene, { "left-door.angle": Math.PI / 2, "right-door.angle": Math.PI / 2 });
+    expect(doors.map(panelPosition)).not.toEqual(closed);
+    expect(doors.map((door) => door.position.toArray())).toEqual(pivots);
+
+    applyDoorPose(scene, { "left-door.angle": 0, "right-door.angle": 0 });
+    expect(doors.map((door) => door.position.toArray())).toEqual(pivots);
+    expect(doors.map(panelPosition)).toEqual(closed);
+    expect(
+      doors.flatMap((door) => {
+        const result: any[] = [];
+        door.traverse((child) => child.type === "Mesh" && result.push(child));
+        return result;
+      }),
+    ).toEqual(meshes);
   });
 });

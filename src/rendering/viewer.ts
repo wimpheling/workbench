@@ -9,7 +9,9 @@ import {
   type Object3D,
 } from "three";
 
-export function mountThreeViewer(canvas: HTMLCanvasElement, model: Object3D): () => void {
+export type ThreeViewer = { render: () => void; dispose: () => void };
+
+export function mountThreeViewer(canvas: HTMLCanvasElement, model: Object3D): ThreeViewer {
   const scene = new Scene();
   scene.add(model);
   scene.add(new AmbientLight(0xffffff, 1.5));
@@ -37,7 +39,7 @@ export function mountThreeViewer(canvas: HTMLCanvasElement, model: Object3D): ()
   };
   resize();
   window.addEventListener("resize", resize);
-  return () => {
+  const dispose = () => {
     window.removeEventListener("resize", resize);
     model.traverse((object) => {
       const mesh = object as Object3D & {
@@ -50,4 +52,5 @@ export function mountThreeViewer(canvas: HTMLCanvasElement, model: Object3D): ()
     });
     renderer.dispose();
   };
+  return { render: () => renderer.render(scene, camera), dispose };
 }
