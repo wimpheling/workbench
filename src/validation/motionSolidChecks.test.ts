@@ -6,12 +6,18 @@ import { checkDoorMotionSolids, cartesianDoorStates } from "./motionSolidChecks"
 describe("validation Replicad des mouvements de portes", () => {
   it("génère une grille cartésienne déterministe et respecte maxStates", () => {
     const states = cartesianDoorStates({ samples: 3, maxStates: 4 });
+    const completeGrid = cartesianDoorStates({ samples: 3 });
     expect(states).toHaveLength(4);
     expect(states.slice(0, 3)).toEqual([
       { "left-door.angle": 0, "right-door.angle": 0 },
       { "left-door.angle": 0, "right-door.angle": Math.PI / 4 },
       { "left-door.angle": 0, "right-door.angle": Math.PI / 2 },
     ]);
+    expect(completeGrid).toHaveLength(9);
+    expect(completeGrid.at(-1)).toEqual({
+      "left-door.angle": -Math.PI / 2,
+      "right-door.angle": Math.PI / 2,
+    });
   });
 
   it("normalise les paramètres invalides sans NaN ni RangeError", () => {
@@ -107,5 +113,20 @@ describe("validation Replicad des mouvements de portes", () => {
     expect(result.status).toBe("incomplete");
     expect(result.verified).toBe(false);
     expect(result.diagnostics.join(" ")).toMatch(/indéterminé|kernel/i);
+  });
+
+  it("tolère un clone truthy mais non appelable sur un solide de mouvement", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const mesh = scene.doors[0].getObjectByName("left-door-panel") as Mesh;
+    mesh.userData.solid = Object.assign(mesh.userData.solid, { clone: true });
+    const result = checkDoorMotionSolids({
+      doors: scene.doors,
+      staticMeshes: [],
+      samples: 2,
+      maxStates: 1,
+    });
+    expect(["collision", "incomplete"]).toContain(result.status);
+    expect(result.verified).toBe(false);
+    expect(result.diagnostics.join(" ")).not.toMatch(/clone is not a function/i);
   });
 });

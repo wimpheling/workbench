@@ -25,7 +25,7 @@ describe("assemblies", () => {
       "right-door.angle": 0,
     });
     expect(evaluateEnclosureDoorPose(model, "open")).toEqual({
-      "left-door.angle": Math.PI / 2,
+      "left-door.angle": -Math.PI / 2,
       "right-door.angle": Math.PI / 2,
     });
   });

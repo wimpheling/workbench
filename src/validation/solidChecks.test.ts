@@ -36,6 +36,36 @@ describe("kernel-backed solid checks", () => {
     expect(result.distance).toBe(0);
   });
 
+  it("falls back to translate when clone is truthy but not callable", () => {
+    const original = box(0, 0, 0);
+    const frame = Object.create(original) as typeof original & { clone: true };
+    frame.clone = true;
+    frame.translate = (...args: Parameters<typeof original.translate>) =>
+      box(...(args as [number, number, number]));
+    const result = checkSolidClearance(
+      new Map([
+        ["frame", frame],
+        ["door", box(20, 0, 0)],
+      ]),
+      check(5),
+    );
+    expect(result.status).toBe("clear");
+    expect(result.status).not.toBe("indeterminate");
+  });
+
+  it("classifies face-tangent solids as insufficient clearance, not collision", () => {
+    const result = checkSolidClearance(
+      new Map([
+        ["frame", box(0, 0, 0)],
+        ["door", box(10, 0, 0)],
+      ]),
+      check(1),
+    );
+    expect(result.status).toBe("insufficient-clearance");
+    expect(result.intersection).toBe(false);
+    expect(result.distance).toBe(0);
+  });
+
   it("classifies separated solids with sufficient clearance", () => {
     const result = checkSolidClearance(
       new Map([
@@ -66,6 +96,21 @@ describe("kernel-backed solid checks", () => {
       status: "indeterminate",
       diagnostics: ["subject or target solid is unavailable"],
     });
+  });
+
+  it("réutilise les mêmes solides dans plusieurs checks sans les supprimer", () => {
+    const frame = box(0, 0, 0);
+    const door = box(20, 0, 0);
+    const results = checkSolidPairs(
+      [
+        { id: "frame", shape: frame },
+        { id: "door", shape: door },
+      ],
+      [check(5), { ...check(5), id: "frame-door-clearance-again" }],
+    );
+    expect(results.every((result) => result.status === "clear")).toBe(true);
+    expect(frame.isNull).toBe(false);
+    expect(door.isNull).toBe(false);
   });
 
   it("propagates each configured check and preserves blocking classification", () => {

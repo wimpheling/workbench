@@ -166,7 +166,7 @@ describe("production EnclosureV2 scene boundary", () => {
         .toArray();
     const closed = doors.map(panelPosition);
 
-    applyDoorPose(scene, { "left-door.angle": Math.PI / 2, "right-door.angle": Math.PI / 2 });
+    applyDoorPose(scene, { "left-door.angle": -Math.PI / 2, "right-door.angle": Math.PI / 2 });
     expect(doors.map(panelPosition)).not.toEqual(closed);
     expect(doors.map((door) => door.position.toArray())).toEqual(pivots);
 
@@ -180,5 +180,23 @@ describe("production EnclosureV2 scene boundary", () => {
         return result;
       }),
     ).toEqual(meshes);
+  });
+
+  it("avance les deux panneaux vers Z positif à l'ouverture sans déplacer les pivots", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const doors = [...scene.doors];
+    const rightDoor = doors.find((door) => door.name === "door:right-door")!;
+    const pivots = doors.map((door) => door.position.toArray());
+    const panelPosition = (door: (typeof doors)[number]) =>
+      door
+        .getObjectByName(`${door.name.slice("door:".length)}-panel`)!
+        .getWorldPosition(new Vector3());
+    const closed = doors.map(panelPosition).map((position) => position.z);
+    applyDoorPose(scene, { "left-door.angle": -Math.PI / 2, "right-door.angle": Math.PI / 2 });
+    const open = doors.map(panelPosition).map((position) => position.z);
+    expect(open[0]).toBeGreaterThan(closed[0]);
+    expect(open[1]).toBeGreaterThan(closed[1]);
+    expect(rightDoor.scale.x).toBe(-1);
+    expect(doors.map((door) => door.position.toArray())).toEqual(pivots);
   });
 });

@@ -31,14 +31,14 @@ const normaliseSamples = (value: number | undefined): number =>
   Number.isFinite(value) ? Math.max(2, Math.floor(value as number)) : 9;
 const normaliseMaxStates = (value: number | undefined, fallback: number): number =>
   value === undefined || !Number.isFinite(value) ? fallback : Math.max(0, Math.floor(value));
-const angleGrid = (samples: number): number[] =>
-  Array.from({ length: samples }, (_, index) => ((Math.PI / 2) * index) / (samples - 1));
+const angleGrid = (samples: number, end: number): number[] =>
+  Array.from({ length: samples }, (_, index) => (index === 0 ? 0 : (end * index) / (samples - 1)));
 
 export const cartesianDoorStates = (options: { samples?: number; maxStates?: number } = {}) => {
   const samples = normaliseSamples(options.samples);
   const all: DoorMotionState[] = [];
-  for (const left of angleGrid(samples))
-    for (const right of angleGrid(samples))
+  for (const left of angleGrid(samples, -Math.PI / 2))
+    for (const right of angleGrid(samples, Math.PI / 2))
       all.push({ "left-door.angle": left, "right-door.angle": right });
   return all.slice(0, normaliseMaxStates(options.maxStates, all.length));
 };
@@ -58,7 +58,9 @@ const transformShapeToWorld = (shape: Shape3D, object: Object3D): Shape3D => {
 };
 const cloneSolid = (shape: Shape3D): Shape3D => {
   const candidate = shape as Shape3D & { clone?: () => Shape3D };
-  return candidate.clone ? candidate.clone() : (shape.translate(0, 0, 0) as Shape3D);
+  return typeof candidate.clone === "function"
+    ? candidate.clone()
+    : (shape.translate(0, 0, 0) as Shape3D);
 };
 const meshes = (door: Group): SolidItem[] => {
   door.updateMatrixWorld(true);

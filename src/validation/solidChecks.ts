@@ -20,6 +20,13 @@ export type ClearanceCheck = {
   volumeTolerance?: number;
 };
 
+const cloneSolid = (shape: Shape3D): Shape3D => {
+  const candidate = shape as Shape3D & { clone?: () => Shape3D };
+  return typeof candidate.clone === "function"
+    ? candidate.clone()
+    : (shape.translate(0, 0, 0) as Shape3D);
+};
+
 export const checkSolidClearance = (
   solids: ReadonlyMap<string, Shape3D>,
   check: ClearanceCheck,
@@ -36,9 +43,9 @@ export const checkSolidClearance = (
       target: check.target,
     };
   try {
-    const intersection = subject.intersect(target);
+    const intersection = cloneSolid(subject).intersect(cloneSolid(target));
     const volume = intersection.isNull ? 0 : measureVolume(intersection);
-    const distance = measureDistanceBetween(subject, target);
+    const distance = measureDistanceBetween(cloneSolid(subject), cloneSolid(target));
     const collided = volume > (check.volumeTolerance ?? 1e-6);
     return {
       id: check.id,

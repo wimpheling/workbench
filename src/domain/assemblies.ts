@@ -15,6 +15,10 @@ export const buildEnclosureAssemblies = (model: EnclosureModel): readonly Assemb
     const hinge: AnchorReference = index === 0 ? "anchor:left-hinge" : "anchor:right-hinge";
     const motion = defaultDoorMotion(hinge);
     motion.id = `${door.id}.angle`;
+    motion.motion =
+      index === 0
+        ? { ...motion.motion, min: -Math.PI / 2, max: 0 }
+        : { ...motion.motion, min: 0, max: Math.PI / 2 };
     return {
       id: `assembly:${door.id}`,
       name: door.id,
@@ -24,7 +28,10 @@ export const buildEnclosureAssemblies = (model: EnclosureModel): readonly Assemb
       motions: [motion],
       states: defaultDoorStates().map((state) => ({
         id: state.id,
-        motions: { [`${door.id}.angle`]: state.id === "open" ? Math.PI / 2 : 0 },
+        motions: {
+          [`${door.id}.angle`]:
+            state.id === "open" ? (index === 0 ? -Math.PI / 2 : Math.PI / 2) : 0,
+        },
       })),
     };
   });
