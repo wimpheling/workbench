@@ -27,6 +27,7 @@ export type EnclosureModel = {
   anchors: Readonly<Record<string, Anchor>>;
   members: readonly FrameMember[];
   dimensions?: { x: number; y: number; z: number };
+  doorSeamClearance?: number;
   doors?: readonly DoorRecord[];
   panels?: readonly PanelRecord[];
 };
@@ -187,6 +188,7 @@ export function makeEnclosureV2(
     anchors,
     members,
     dimensions: { x: width, y: height, z: depth },
+    doorSeamClearance: 2,
     doors: [
       { id: "left-door", nominalWidth: width / 2 },
       { id: "right-door", nominalWidth: width / 2 },

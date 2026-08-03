@@ -140,6 +140,75 @@ describe("deterministic constraints", () => {
     expect(failure?.measured).toBeGreaterThan(0);
   });
 
+  it("rejects panels whose anchor is negative even when their positive extent fits", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const invalid = {
+      ...model,
+      anchors: {
+        ...model.anchors,
+        "anchor:negative": {
+          ...model.anchors["anchor:front-left-bottom"],
+          id: "anchor:negative",
+          position: { x: -1, y: 0, z: 0 },
+        },
+      },
+      panels: [
+        {
+          id: "negative-panel",
+          size: { x: 20, y: 20, z: 2 },
+          anchor: "anchor:negative",
+          orientation: { wideFace: "front" as const },
+        },
+      ],
+    };
+    expect(
+      validateModel(invalid).find((r) => r.id === "panel.negative-panel.bounds"),
+    ).toMatchObject({ passed: false });
+  });
+
+  it("validates panel orientation values rather than only checking presence", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const invalid = {
+      ...model,
+      panels: [
+        {
+          id: "bad-orientation",
+          size: { x: 20, y: 20, z: 2 },
+          anchor: "anchor:front-left-bottom",
+          orientation: { wideFace: "diagonal" },
+        },
+      ],
+    };
+    const result = validateModel(invalid).find((r) => r.id === "panel.bad-orientation.orientation");
+    expect(result).toMatchObject({ passed: false, severity: "error" });
+  });
+
+  it("accounts for signed panel extents for oriented faces", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const invalid = {
+      ...model,
+      panels: [
+        {
+          id: "back-panel",
+          size: { x: 20, y: 20, z: 2 },
+          anchor: "anchor:front-left-bottom",
+          orientation: { wideFace: "back" as const },
+        },
+      ],
+    };
+    expect(validateModel(invalid).find((r) => r.id === "panel.back-panel.bounds")).toMatchObject({
+      passed: false,
+    });
+  });
+
+  it("reports missing dimensions without throwing", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const result = validateModel({ ...model, dimensions: undefined });
+    expect(result.find((r) => r.id === "enclosure.dimensions.required")).toMatchObject({
+      passed: false,
+    });
+  });
+
   it("aggregates independent validation failures", () => {
     const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
     const broken = {

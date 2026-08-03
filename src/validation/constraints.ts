@@ -164,6 +164,23 @@ export const FitsWithin = (
   const measured = Math.max(item.x - container.x, item.y - container.y, item.z - container.z);
   return scalar(id, measured <= tolerance, measured, 0, "item exceeds bounds by", references);
 };
+type Bounds = { min: Point3; max: Point3 };
+const fitsWithinBounds = (
+  id: string,
+  bounds: Bounds,
+  container: Bounds,
+  references: string[] = [],
+) => {
+  const overflow = Math.max(
+    container.min.x - bounds.min.x,
+    bounds.max.x - container.max.x,
+    container.min.y - bounds.min.y,
+    bounds.max.y - container.max.y,
+    container.min.z - bounds.min.z,
+    bounds.max.z - container.max.z,
+  );
+  return scalar(id, overflow <= EPS, overflow, 0, "item exceeds bounds by", references);
+};
 export const ClearanceAtLeast = (
   id: string,
   clearance: number,
@@ -219,8 +236,34 @@ const anchorPoint = (model: EnclosureModel, ref: string) =>
   model.anchors[ref] ?? Object.values(model.anchors).find((a) => a.id === ref);
 export function validateModel(model: EnclosureModel): ConstraintResult[] {
   const out: ConstraintResult[] = [];
-  for (const member of model.members)
+  if (!model.dimensions) {
+    out.push(result("enclosure.dimensions.required", false, "enclosure dimensions are required"));
+    return out;
+  }
+  const referencedAnchors = new Set(model.members.flatMap((member) => [member.from, member.to]));
+  for (const [id, anchor] of Object.entries(model.anchors)) {
+    if (id !== anchor.id && id.startsWith("anchor:") && !referencedAnchors.has(anchor.id))
+      out.push(
+        result(`anchor.${anchor.id}.orphaned`, false, `anchor ${anchor.id} is not referenced`, [
+          anchor.id,
+        ]),
+      );
+  }
+  for (const member of model.members) {
     out.push(PositiveLength(`member.${member.id}.positive-length`, member.length, [member.id]));
+    if (
+      member.orientation?.wideFace &&
+      !["front", "back", "left", "right", "top", "bottom"].includes(member.orientation.wideFace)
+    )
+      out.push(
+        result(
+          `member.${member.id}.orientation`,
+          false,
+          `invalid profile orientation: ${member.orientation.wideFace}`,
+          [member.id],
+        ),
+      );
+  }
   const sides = model.members.filter(
     (m) =>
       String(m.id).endsWith(":side-middle-left") || String(m.id).endsWith(":side-middle-right"),
@@ -229,7 +272,7 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
     const from = anchorPoint(model, member.from),
       to = anchorPoint(model, member.to);
     const midpoint = from && to ? (from.position.z + to.position.z) / 2 : NaN;
-    const expected = -model.dimensions!.z / 2;
+    const expected = -model.dimensions.z / 2;
     out.push(
       scalar(
         `enclosure.${member.id}.depth-midpoint`,
@@ -268,6 +311,17 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
     const [a, b] = model.doors;
     if (a && b) {
       out.push(Equal("enclosure.doors.equal-width", a.nominalWidth, b.nominalWidth, [a.id, b.id]));
+      const seamClearance = model.doorSeamClearance ?? 0;
+      out.push(
+        result(
+          "enclosure.doors.seam-clearance",
+          seamClearance >= 0,
+          `door seam clearance must be non-negative: measured ${seamClearance}`,
+          [a.id, b.id],
+          seamClearance,
+          0,
+        ),
+      );
       const opening = model.dimensions?.x ?? 0;
       out.push(
         result(
@@ -285,24 +339,43 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
     for (const panel of model.panels) {
       const anchor = anchorPoint(model, panel.anchor);
       const wideFace = panel.orientation?.wideFace;
-      const extents =
-        wideFace === "left" || wideFace === "right"
-          ? { x: panel.size.z, y: panel.size.y, z: panel.size.x }
-          : wideFace === "top" || wideFace === "bottom"
-            ? { x: panel.size.x, y: panel.size.z, z: panel.size.y }
-            : { x: panel.size.x, y: panel.size.y, z: panel.size.z };
-      const panelBounds = anchor
-        ? {
-            x: anchor.position.x + extents.x,
-            y: anchor.position.y + extents.y,
-            z: anchor.position.z + extents.z,
-          }
-        : extents;
+      const validFaces = ["front", "back", "left", "right", "top", "bottom"] as const;
+      const validOrientation = wideFace === undefined || validFaces.includes(wideFace);
+      const offset =
+        wideFace === "front"
+          ? { x: panel.size.x, y: panel.size.y, z: -panel.size.z }
+          : wideFace === "back"
+            ? { x: panel.size.x, y: panel.size.y, z: panel.size.z }
+            : wideFace === "left"
+              ? { x: -panel.size.z, y: panel.size.y, z: panel.size.x }
+              : wideFace === "right"
+                ? { x: panel.size.z, y: panel.size.y, z: panel.size.x }
+                : wideFace === "top"
+                  ? { x: panel.size.x, y: panel.size.z, z: panel.size.y }
+                  : wideFace === "bottom"
+                    ? { x: panel.size.x, y: -panel.size.z, z: panel.size.y }
+                    : { x: panel.size.x, y: panel.size.y, z: panel.size.z };
+      const origin = anchor?.position ?? { x: 0, y: 0, z: 0 };
+      const panelBounds = {
+        min: {
+          x: Math.min(origin.x, origin.x + offset.x),
+          y: Math.min(origin.y, origin.y + offset.y),
+          z: Math.min(origin.z, origin.z + offset.z),
+        },
+        max: {
+          x: Math.max(origin.x, origin.x + offset.x),
+          y: Math.max(origin.y, origin.y + offset.y),
+          z: Math.max(origin.z, origin.z + offset.z),
+        },
+      };
       out.push(
-        FitsWithin(
+        fitsWithinBounds(
           `panel.${panel.id}.bounds`,
           panelBounds,
-          model.dimensions ?? { x: Infinity, y: Infinity, z: Infinity },
+          {
+            min: { x: 0, y: 0, z: -model.dimensions.z },
+            max: { x: model.dimensions.x, y: model.dimensions.y, z: 0 },
+          },
           [panel.id],
         ),
       );
@@ -317,8 +390,10 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
       out.push(
         result(
           `panel.${panel.id}.orientation`,
-          Boolean(panel.orientation),
-          `panel requires orientation`,
+          validOrientation && Boolean(panel.orientation),
+          validOrientation
+            ? `panel requires orientation`
+            : `invalid panel orientation: ${String(wideFace)}`,
           [panel.id],
         ),
       );
