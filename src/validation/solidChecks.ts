@@ -4,6 +4,7 @@ export type SolidCheckStatus = "clear" | "collision" | "insufficient-clearance" 
 export type SolidCheckResult = {
   id: string;
   status: SolidCheckStatus;
+  minimum?: number;
   distance?: number;
   intersection?: boolean;
   diagnostics: string[];
@@ -29,6 +30,7 @@ export const checkSolidClearance = (
     return {
       id: check.id,
       status: "indeterminate",
+      minimum: check.minimum,
       diagnostics: ["subject or target solid is unavailable"],
       subject: check.subject,
       target: check.target,
@@ -45,6 +47,7 @@ export const checkSolidClearance = (
         : distance < check.minimum
           ? "insufficient-clearance"
           : "clear",
+      minimum: check.minimum,
       distance,
       intersection: collided,
       diagnostics: collided
@@ -59,6 +62,7 @@ export const checkSolidClearance = (
     return {
       id: check.id,
       status: "indeterminate",
+      minimum: check.minimum,
       diagnostics: [error instanceof Error ? error.message : String(error)],
       subject: check.subject,
       target: check.target,

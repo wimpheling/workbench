@@ -5,6 +5,8 @@ import {
   Mesh,
   MeshStandardMaterial,
   Object3D,
+  Quaternion,
+  Vector3,
 } from "three";
 import { makeBaseBox, setOC, type Shape3D } from "replicad";
 import opencascade from "replicad-opencascadejs/src/replicad_single.js";
@@ -16,6 +18,9 @@ import {
 } from "../domain/enclosureV2";
 import { getProfile } from "../domain/profiles";
 import { applyMemberTransform } from "./threeAdapter";
+import { checkSolidPairs, type SolidCheckResult, type SolidPair } from "../validation/solidChecks";
+import { buildValidationReport, type ValidationReport } from "../validation/reports";
+import { validateModel } from "../validation/constraints";
 
 let openCascadePromise: Promise<unknown> | undefined;
 type OpenCascadeModule = Parameters<typeof setOC>[0];
@@ -35,6 +40,12 @@ export function initializeOpenCascade(
   initializer: OpenCascadeInitializer = opencascade,
   browserAsset = opencascadeWasm,
 ): Promise<OpenCascadeModule> {
+  if (initializer !== opencascade) {
+    return initializer({ locateFile: () => wasmLocation(browserAsset) }).then((oc) => {
+      setOC(oc);
+      return oc;
+    });
+  }
   if (!openCascadePromise) {
     openCascadePromise = initializer({ locateFile: () => wasmLocation(browserAsset) }).then(
       (oc) => {
@@ -70,6 +81,45 @@ export type EnclosureScene = {
   root: Group;
   members: readonly Object3D[];
   doors: readonly Group[];
+  solidChecks: readonly SolidCheckResult[];
+  validationReport: ValidationReport;
+};
+
+export const transformShapeToWorld = (shape: Shape3D, object: Object3D): Shape3D => {
+  const position = object.getWorldPosition(new Vector3());
+  const quaternion = object.getWorldQuaternion(new Quaternion());
+  const angle = 2 * Math.acos(Math.max(-1, Math.min(1, quaternion.w)));
+  const axis = new Vector3(quaternion.x, quaternion.y, quaternion.z);
+  const reflected = object.matrixWorld.determinant() < 0 ? shape.mirror("YZ", [0, 0, 0]) : shape;
+  const oriented =
+    angle > 1e-10 && axis.lengthSq() > 1e-12
+      ? reflected.rotate(angle, [0, 0, 0], axis.normalize().toArray())
+      : reflected;
+  return oriented.translate(position.x, position.y, position.z) as Shape3D;
+};
+
+const indeterminateSolidCheck = (
+  id: string,
+  subject: string,
+  target: string,
+  minimum: number,
+  error: unknown,
+): SolidCheckResult => ({
+  id,
+  status: "indeterminate",
+  minimum,
+  subject,
+  target,
+  diagnostics: [error instanceof Error ? error.message : String(error)],
+});
+
+const collectDoorSolid = (door: Group): Shape3D => {
+  const solids: Shape3D[] = [];
+  door.traverse((child) => {
+    if (child instanceof Mesh && child.userData.solid)
+      solids.push(transformShapeToWorld(child.userData.solid as Shape3D, child));
+  });
+  return solids.slice(1).reduce((combined, solid) => combined.fuse(solid) as Shape3D, solids[0]);
 };
 
 function createDoorMesh(
@@ -140,8 +190,14 @@ function createDoor(model: EnclosureModel, id: string, width: number, height: nu
 
 export async function buildEnclosureScene(
   dimensions: EnclosureDimensions,
+  initializer: OpenCascadeInitializer = opencascade,
 ): Promise<EnclosureScene> {
-  await initializeOpenCascade();
+  let initializationError: unknown;
+  try {
+    await initializeOpenCascade(initializer);
+  } catch (error) {
+    initializationError = error;
+  }
   const model = makeEnclosureV2(dimensions);
   const root = new Group();
   root.name = model.frame.id;
@@ -173,9 +229,71 @@ export async function buildEnclosureScene(
     return object;
   });
 
+  root.updateMatrixWorld(true);
+  const minimum = model.doorSeamClearance ?? 2;
+  const solidIds = [
+    "clearance.door-left-door.door-right-door",
+    "clearance.door-left-door.part:front-left-post",
+    "clearance.door-right-door.part:front-right-post",
+  ];
+  let solidChecks: SolidCheckResult[];
+  try {
+    if (initializationError) throw initializationError;
+    const solids: SolidPair[] = members.map((object) => ({
+      id: object.name,
+      shape: transformShapeToWorld(object.userData.solid as Shape3D, object),
+    }));
+    solids.push(...doors.map((door) => ({ id: door.name, shape: collectDoorSolid(door) })));
+    solidChecks = checkSolidPairs(solids, [
+      {
+        id: solidIds[0],
+        subject: "door:left-door",
+        target: "door:right-door",
+        minimum,
+      },
+      {
+        id: solidIds[1],
+        subject: "door:left-door",
+        target: "part:front-left-post",
+        minimum,
+      },
+      {
+        id: solidIds[2],
+        subject: "door:right-door",
+        target: "part:front-right-post",
+        minimum,
+      },
+    ]);
+  } catch (error) {
+    solidChecks = [
+      indeterminateSolidCheck(solidIds[0], "door:left-door", "door:right-door", minimum, error),
+      indeterminateSolidCheck(
+        solidIds[1],
+        "door:left-door",
+        "part:front-left-post",
+        minimum,
+        error,
+      ),
+      indeterminateSolidCheck(
+        solidIds[2],
+        "door:right-door",
+        "part:front-right-post",
+        minimum,
+        error,
+      ),
+    ];
+  }
+  const revision = JSON.stringify({ dimensions: model.dimensions, members: model.members });
+  const validationReport = buildValidationReport(
+    revision,
+    validateModel(model),
+    [],
+    [],
+    solidChecks,
+  );
   root.userData.geometryReady = true;
 
-  return { model, root, members, doors };
+  return { model, root, members, doors, solidChecks, validationReport };
 }
 
 export const defaultEnclosureScene = () =>

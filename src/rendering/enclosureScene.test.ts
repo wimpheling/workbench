@@ -1,7 +1,8 @@
 import { Vector3 } from "three";
 import { describe, expect, it } from "vitest";
 import { makeEnclosureV2 } from "../domain/enclosureV2";
-import { buildEnclosureScene } from "./enclosureScene";
+import { buildEnclosureScene, transformShapeToWorld } from "./enclosureScene";
+import { makeBaseBox, type Shape3D } from "replicad";
 
 const dimensions = { width: 120, height: 100, depth: 80 };
 
@@ -98,5 +99,36 @@ describe("production EnclosureV2 scene boundary", () => {
     scene.root.updateMatrixWorld(true);
     expect(descendant.getWorldPosition(new Vector3()).distanceTo(before)).toBeGreaterThan(1);
     expect(descendant.getWorldPosition(new Vector3()).z).not.toBeCloseTo(before.z);
+  });
+
+  it("expose des contrôles solides world-space et un rapport prêt à afficher", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    expect(scene.solidChecks.map((check) => check.id)).toEqual(
+      expect.arrayContaining([
+        "clearance.door-left-door.door-right-door",
+        "clearance.door-left-door.part:front-left-post",
+        "clearance.door-right-door.part:front-right-post",
+      ]),
+    );
+    expect(scene.solidChecks.every((check) => check.minimum !== undefined)).toBe(true);
+    expect(scene.validationReport).toEqual(expect.objectContaining({ issues: expect.any(Array) }));
+  });
+
+  it("retourne un rapport incomplet si l'initialisation OpenCascade échoue", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 }, async () => {
+      throw new Error("WASM indisponible");
+    });
+    expect(scene.solidChecks.every((check) => check.status === "indeterminate")).toBe(true);
+    expect(scene.validationReport.status).toBe("incomplete");
+  });
+
+  it("applique la réflexion world-space du parent de la porte droite au solide", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const panel = scene.doors[1].getObjectByName("right-door-panel")!;
+    const worldSolid = transformShapeToWorld(makeBaseBox(10, 10, 10) as Shape3D, panel);
+    const vertices = worldSolid.mesh({ tolerance: 0.01, angularTolerance: 0.1 }).vertices;
+    const maxX = Math.max(...vertices.filter((_, index) => index % 3 === 0));
+    expect(scene.doors[1].scale.x).toBe(-1);
+    expect(maxX).toBeLessThan(scene.doors[1].position.x);
   });
 });

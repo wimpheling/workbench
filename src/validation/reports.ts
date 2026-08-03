@@ -1,6 +1,7 @@
 import type { KinematicIssue } from "./kinematics";
 import type { ConstraintResult } from "./constraints";
 import type { FitResult } from "./fitPolicies";
+import type { SolidCheckResult } from "./solidChecks";
 export type ValidationIssue = {
   id: string;
   severity: "error" | "warning" | "info";
@@ -34,11 +35,21 @@ const assertionFromConstraint = (item: ConstraintResult): ValidationAssertion =>
   status: item.passed ? "passed" : "failed",
   method: "deterministic constraint",
 });
+const fromSolidCheck = (item: SolidCheckResult): ValidationIssue => ({
+  id: item.id,
+  severity: item.status === "indeterminate" ? "warning" : "error",
+  category: "clearance",
+  message: item.diagnostics.join("; ") || `solid check ${item.status}`,
+  references: [item.subject, item.target],
+  measured: item.distance,
+  expected: item.minimum,
+});
 export const buildValidationReport = (
   revision: string,
   constraints: readonly ConstraintResult[],
   kinematics: readonly KinematicIssue[] = [],
   fits: readonly FitResult[] = [],
+  solidChecks: readonly SolidCheckResult[] = [],
 ): ValidationReport => {
   const issues: ValidationIssue[] = [
     ...constraints.filter((item) => !item.passed).map(fromConstraint),
@@ -62,13 +73,17 @@ export const buildValidationReport = (
         measured: item.clearance,
         expected: item.required,
       })),
+    ...solidChecks.filter((item) => item.status !== "clear").map(fromSolidCheck),
   ];
+  const hasIndeterminate = solidChecks.some((item) => item.status === "indeterminate");
   return {
     status: issues.some((item) => item.severity === "error")
       ? "invalid"
-      : issues.length
-        ? "warnings"
-        : "valid",
+      : hasIndeterminate
+        ? "incomplete"
+        : issues.length
+          ? "warnings"
+          : "valid",
     issues,
     assertions: constraints.map(assertionFromConstraint),
     modelRevision: revision,
