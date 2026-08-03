@@ -310,14 +310,14 @@ Acceptance criteria:
 
 Tasks:
 
-- [ ] Add `CoordinateFrame`, `Anchor`, `Transform`, and `PlacementSpec` types.
-- [ ] Add pure helpers such as `betweenAnchors()`, `atAnchor()`, `midpoint()`, `offsetAlong()`, and `orientedAlong()`.
-- [ ] Define an enclosure root frame and named corner, opening, midpoint, and hinge anchors.
-- [ ] Introduce a `makeRail({ from, to, profile })` helper for a profile whose length is derived from two anchors.
-- [ ] Introduce a `makePost({ from, to, profile })` helper for vertical or arbitrary-axis members.
-- [ ] Encode wide-face orientation of 3060 profiles as an explicit profile orientation, not a sequence of unexplained rotations.
+- [x] Add `CoordinateFrame`, `Anchor`, `Transform`, and `PlacementSpec` types.
+- [x] Add pure helpers such as `betweenAnchors()`, `atAnchor()`, `midpoint()`, `offsetAlong()`, and `orientedAlong()`.
+- [x] Define an enclosure root frame and named corner, opening, midpoint, and hinge anchors.
+- [x] Introduce a `makeRail({ from, to, profile })` helper for a profile whose length is derived from two anchors.
+- [x] Introduce a `makePost({ from, to, profile })` helper for vertical or arbitrary-axis members.
+- [x] Encode wide-face orientation of 3060 profiles as an explicit profile orientation, not a sequence of unexplained rotations.
 - [ ] Add a Three.js adapter that translates the declarative placement into the current mesh transform.
-- [ ] Migrate EnclosureV2 structure members first; migrate doors after the frame is stable.
+- [x] Migrate EnclosureV2 structure members first; migrate doors after the frame is stable.
 
 Example target API:
 
@@ -333,10 +333,10 @@ model.addExtrusion({
 
 Acceptance criteria:
 
-- [ ] The enclosure member list reads as a layout rather than a list of manual `position.set()` calls.
-- [ ] A dimension change updates all dependent rail lengths and anchors.
-- [ ] Existing side middle supports, front 3060 members, back middle support, and top-back tie remain represented explicitly.
-- [ ] A placement can be tested by inspecting numeric transforms without constructing a Three.js scene.
+- [x] The enclosure member list reads as a layout rather than a list of manual `position.set()` calls.
+- [x] A dimension change updates all dependent rail lengths and anchors.
+- [x] Existing side middle supports, front 3060 members, back middle support, and top-back tie remain represented explicitly.
+- [x] A placement can be tested by inspecting numeric transforms without constructing a Three.js scene.
 
 ### Phase 2 — Constraints and model validation
 
