@@ -42,9 +42,10 @@ sketch is not evidence of completion.
 - Pages workflow semantics are validated locally, but repository Pages settings,
   environment approval, and the remote deployment URL require authenticated
   GitHub access and cannot be verified here.
-- The Replicad solid-check adapter and sampled motion envelope are covered, but
-  the demo does not yet run a complete project-wide collision pass and sampling
-  is not a continuous-motion proof. BOM coverage is currently frame extrusions;
+- The Replicad solid-check adapter exists but has no automated test coverage yet;
+  the sampled motion envelope is covered, but the demo does not yet run a
+  complete project-wide collision pass and sampling is not a continuous-motion
+  proof. BOM coverage is currently frame extrusions;
   hardware, panels, and vendor data are not inferred.
 - Browser smoke tests, PDF/vector drawing production, full stock optimization,
   hardware/panel manufacturing records, generic door assembly migration, and
@@ -444,8 +445,8 @@ This phase is deliberately layered. Deterministic TypeScript handles model relat
 
 The production validation layer must use the existing TypeScript, Three.js, Replicad, and OpenCascade dependencies. New validation code should not require additional runtime packages for:
 
-- [ ] parameter and invariant checks;
-- [ ] frame and assembly transforms;
+- [x] parameter and invariant checks;
+- [x] frame and assembly transforms;
 - [ ] revolute and prismatic kinematics;
 - [ ] static and moving collision checks;
 - [ ] minimum-distance and clearance checks;
@@ -459,11 +460,11 @@ Vitest may be added as a development-only test runner. Frame3DD is the only opti
 
 Implement a small, testable transform graph for rigid assemblies and the motion types needed by the projects:
 
-- [ ] revolute joints for hinged doors and access panels;
+- [x] revolute joints for hinged doors and access panels;
 - [ ] sliding/prismatic joints for future panels or drawers;
 - [ ] nested parent/child assembly frames;
-- [ ] limits, default positions, and named states;
-- [ ] deterministic composition of transforms and motion values;
+- [x] limits, default positions, and named states;
+- [x] deterministic composition of transforms and motion values;
 - [ ] no physics simulation, contact solver, or frame-rate-dependent behavior.
 
 Suggested API:
@@ -485,7 +486,11 @@ export function evaluateKinematics(
 
 The current door pivot behavior should migrate to this API. The viewer should consume evaluated transforms and animate between states, while tests can evaluate a door at exact angles without initializing Three.js.
 
+> **Audit note:** Revolute door motion, limits, named states, and pure transform helpers are implemented and tested. Prismatic motion, nested assembly propagation, and an explicit browser integration of evaluated states remain incomplete.
+
 #### Authoritative solid checks
+
+> **Audit note:** `solidChecks.ts` contains Replicad/OpenCascade-backed intersection and distance logic, but this checkout has no automated solid-check test, so these criteria remain unchecked.
 
 Use Replicad/OpenCascade solids—not Three.js meshes or only axis-aligned bounding boxes—as the authority for geometric validity:
 
@@ -525,20 +530,22 @@ Three.js may display the result and provide fast previews, but it must not silen
 
 For every moving assembly, validate the path rather than only its endpoints:
 
-- [ ] sample named motion intervals with deterministic resolution;
-- [ ] use adaptive subdivision where clearance changes rapidly or a coarse sample brackets a collision;
+- [x] sample named motion intervals with deterministic resolution;
+- [x] use adaptive subdivision where clearance changes rapidly or a coarse sample brackets a collision;
 - [ ] check moving-vs-static and moving-vs-moving pairs;
-- [ ] record the motion value at the first collision or minimum clearance;
-- [ ] support a configurable minimum clearance and maximum sample/refinement budget;
+- [x] record the motion value at the first collision or minimum clearance;
+- [x] support a configurable minimum clearance and maximum sample/refinement budget;
 - [ ] distinguish a proven clear sampled interval from an unverified interval when the budget is exhausted.
 
 The first implementation can use uniform sampling plus refinement around the minimum. It should not claim a mathematical continuous-motion proof. A swept-volume implementation may be added later if a project needs it.
+
+> **Audit note:** Uniform sampling and sign-change refinement are tested. Moving-pair integration and explicit `incomplete` results when a refinement budget is exhausted are not implemented; the current result always reports `verified: true`.
 
 #### Tolerance and fit policies
 
 Nominal dimensions and manufacturing allowances must be separate inputs. Add typed policies for the actual materials and interfaces in scope:
 
-- [ ] glass/polycarbonate panel edge clearance and thickness tolerance;
+- [x] glass/polycarbonate panel edge clearance and thickness tolerance;
 - [ ] panel expansion or installation gap;
 - [ ] door-to-frame and door-to-door clearance;
 - [ ] hinge-side and latch-side allowances;
@@ -559,6 +566,8 @@ export type FitPolicy = {
 ```
 
 Policies should be named and overridable per project/configuration. Avoid scattering offsets such as `0.5` through project transforms without recording what they mean.
+
+> **Audit note:** The tested scope is compact-polycarbonate panel-slot thickness tolerance and named door-seam clearance only. Expansion/installation gaps, hinge/latch allowances, connector-hole rules, and machining allowances remain missing.
 
 #### Structured validation reports
 
@@ -623,9 +632,11 @@ Limitations:
 - [ ] The model is an idealized beam/frame representation, not the detailed solids, T-slots, brackets, bolts, joints, panels, or contact surfaces.
 - [ ] Results depend on explicitly authored supports, loads, material data, section properties, and connection assumptions; these cannot be inferred safely from geometry alone.
 - [ ] Initial scope is linear static screening. It does not cover structural certification, code compliance, nonlinear behavior, fatigue, vibration, seismic, fire, or safety approval.
-- [ ] A missing solver must produce an `unavailable` diagnostic and must not break rendering, ordinary validation, BOM generation, or drawings.
+- [ ] a missing solver must produce an `unavailable` diagnostic and must not break rendering, ordinary validation, BOM generation, or drawings.
 
 #### Inputs and outputs for the whole validation phase
+
+> **Audit note:** Pure kinematic states, sampled envelope results, and fit diagnostics are implemented with focused tests. The full phase input wiring, solid-check/report integration, and shared report consumption by BOM remain incomplete.
 
 Inputs:
 
@@ -638,10 +649,10 @@ Inputs:
 
 Outputs:
 
-- [ ] deterministic evaluated states;
+- [x] deterministic evaluated states;
 - [ ] solid collision and minimum-distance results;
-- [ ] sampled/adaptive motion-envelope results;
-- [ ] fit/tolerance diagnostics;
+- [x] sampled/adaptive motion-envelope results;
+- [x] fit/tolerance diagnostics;
 - [ ] one structured `ValidationReport` consumed by the demo and manufacturing/BOM layers;
 - [ ] optional Frame3DD input/result documents and structural issues.
 
