@@ -27,19 +27,19 @@ describe("semantic anchors", () => {
 });
 
 describe("EnclosureV2 declarative frame", () => {
-  it("exposes named coordinates and derived members", async () => {
+  it("exposes historical profile-axis coordinates and derived members", async () => {
     const { makeEnclosureV2 } = await import("./enclosureV2");
     const model = makeEnclosureV2({ width: mm(600), height: mm(500), depth: mm(400) });
-    expect(model.anchors["front-left-bottom"].position).toEqual({ x: 0, y: 0, z: 0 });
-    expect(model.anchors["front-right-top"].position).toEqual({ x: 600, y: 500, z: 0 });
-    expect(model.members.find((member) => member.id === "part:front-top")?.length).toBe(600);
-    expect(model.members.find((member) => member.id === "part:side-middle-left")?.length).toBe(500);
+    expect(model.anchors["front-rail-bottom-left"].position).toEqual({ x: 0, y: 15, z: -30 });
+    expect(model.anchors["front-right-post-top"].position).toEqual({ x: 630, y: 440, z: 0 });
+    expect(model.members.find((member) => member.id === "part:front-top")?.length).toBe(660);
+    expect(model.members.find((member) => member.id === "part:side-middle-left")?.length).toBe(440);
   });
 
   it("propagates dimension changes to rail lengths", async () => {
     const { makeEnclosureV2 } = await import("./enclosureV2");
     const model = makeEnclosureV2(dimensions(800, 700, 450));
-    expect(model.members.find((member) => member.id === "part:front-top")?.length).toBe(800);
+    expect(model.members.find((member) => member.id === "part:front-top")?.length).toBe(860);
     expect(model.members.find((member) => member.id === "part:top-back-tie")?.length).toBe(450);
   });
 
@@ -56,8 +56,8 @@ describe("EnclosureV2 declarative frame", () => {
   it("keeps the legacy front plane at zero and the back plane on negative Z", async () => {
     const { makeEnclosureV2 } = await import("./enclosureV2");
     const model = makeEnclosureV2({ width: 600, height: 500, depth: 400 });
-    expect(model.anchors["front-opening-mid"].position.z).toBe(0);
-    expect(model.anchors["back-middle"].position.z).toBe(-400);
+    expect(model.anchors["anchor:left-hinge"].position.z).toBe(0);
+    expect(model.anchors["back-middle-bottom"].position.z).toBe(-445);
   });
 
   it("uses a right-handed basis with front wide faces normal to positive Z", async () => {
@@ -73,13 +73,13 @@ describe("EnclosureV2 declarative frame", () => {
     expect(model.members).toHaveLength(16);
     expect(new Set(model.members.map((item) => item.id)).size).toBe(16);
     const member = (id: string) => model.members.find((item) => item.id === `part:${id}`)!;
-    expect(member("side-middle-left").from).toBe("anchor:side-middle-left-bottom");
-    expect(member("side-middle-left").to).toBe("anchor:side-middle-left-top");
-    expect(member("side-middle-right").from).toBe("anchor:side-middle-right-bottom");
+    expect(member("side-middle-left").from).toBe("anchor:left-side-vertical-bottom");
+    expect(member("side-middle-left").to).toBe("anchor:left-side-vertical-top");
+    expect(member("side-middle-right").from).toBe("anchor:right-side-vertical-bottom");
     expect(member("back-middle-support").from).toBe("anchor:back-middle-bottom");
     expect(member("back-middle-support").to).toBe("anchor:back-middle-top");
-    expect(member("top-back-tie").from).toBe("anchor:front-middle-top");
-    expect(member("top-back-tie").to).toBe("anchor:back-middle-top");
+    expect(member("top-back-tie").from).toBe("anchor:top-tie-front");
+    expect(member("top-back-tie").to).toBe("anchor:top-tie-back");
   });
 
   it("rejects invalid dimensions and mixed-frame anchors", async () => {
@@ -117,7 +117,7 @@ describe("EnclosureV2 declarative frame", () => {
     const { makeEnclosureV2 } = await import("./enclosureV2");
     const model = makeEnclosureV2({ width: 600, height: 500, depth: 400 });
     const member = model.members.find((item) => item.id === "part:front-top");
-    expect(member?.transform.position).toEqual({ x: 300, y: 500, z: 0 });
+    expect(member?.transform.position).toEqual({ x: 330, y: 470, z: -30 });
     expect(member?.transform.rotation.z).toBe(0);
   });
 });

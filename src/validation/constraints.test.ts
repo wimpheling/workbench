@@ -77,19 +77,19 @@ describe("deterministic constraints", () => {
     expect(failure).toMatchObject({ passed: false, measured: 100, expected: 120 });
   });
 
-  it("validates side-middle supports against the model depth midpoint", () => {
+  it("validates side-middle supports against the historical depth axis", () => {
     const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
     const anchors = {
       ...model.anchors,
-      "anchor:side-middle-left-bottom": {
-        ...model.anchors["anchor:side-middle-left-bottom"],
+      "anchor:left-side-vertical-bottom": {
+        ...model.anchors["anchor:left-side-vertical-bottom"],
         position: { x: 0, y: 0, z: -30 },
       },
     };
     const failure = validateModel({ ...model, anchors }).find(
       (r) => r.id === "enclosure.part:side-middle-left.depth-midpoint",
     );
-    expect(failure).toMatchObject({ passed: false, measured: -35, expected: -40 });
+    expect(failure).toMatchObject({ passed: false, measured: -50, expected: -70 });
   });
 
   it("reports missing required front members and profile violations", () => {
@@ -220,8 +220,8 @@ describe("deterministic constraints", () => {
       members: model.members.filter((m) => !String(m.id).endsWith(":front-left-post")),
       anchors: {
         ...model.anchors,
-        "anchor:side-middle-left-bottom": {
-          ...model.anchors["anchor:side-middle-left-bottom"],
+        "anchor:left-side-vertical-bottom": {
+          ...model.anchors["anchor:left-side-vertical-bottom"],
           position: { x: 0, y: 0, z: -20 },
         },
       },

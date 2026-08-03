@@ -272,14 +272,17 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
     const from = anchorPoint(model, member.from),
       to = anchorPoint(model, member.to);
     const midpoint = from && to ? (from.position.z + to.position.z) / 2 : NaN;
-    const expected = -model.dimensions.z / 2;
+    // Legacy enclosure supports sit 30 mm behind the clear-depth midpoint so
+    // their 3060 profile clears the side rails. The input depth is the clear
+    // dimension, not the outer profile envelope.
+    const expected = -model.dimensions.z / 2 - 30;
     out.push(
       scalar(
         `enclosure.${member.id}.depth-midpoint`,
         Number.isFinite(midpoint) && Math.abs(midpoint - expected) <= EPS,
         midpoint,
         expected,
-        "side support depth midpoint",
+        "side support historical depth axis",
         [member.id, member.from, member.to],
       ),
     );

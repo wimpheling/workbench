@@ -87,27 +87,45 @@ export function makeEnclosureV2(
     anchors[`anchor:${name}`] = value;
     anchors[name] = value;
   };
-  add("front-left-bottom", point(0, 0, 0));
-  add("front-right-bottom", point(width, 0, 0));
-  add("front-left-top", point(0, height, 0));
-  add("front-right-top", point(width, height, 0));
-  add("back-left-bottom", point(0, 0, -depth));
-  add("back-right-bottom", point(width, 0, -depth));
-  add("back-left-top", point(0, height, -depth));
-  add("back-right-top", point(width, height, -depth));
-  add("front-opening-mid", point(width / 2, height / 2, 0));
-  add("back-middle", point(width / 2, height / 2, -depth));
-  add("side-middle-left", point(0, height / 2, -depth / 2));
-  add("side-middle-right", point(width, height / 2, -depth / 2));
-  add("side-middle-left-bottom", point(0, 0, -depth / 2));
-  add("side-middle-left-top", point(0, height, -depth / 2));
-  add("side-middle-right-bottom", point(width, 0, -depth / 2));
-  add("side-middle-right-top", point(width, height, -depth / 2));
-  add("front-middle-top", point(width / 2, height, 0));
-  add("back-middle-bottom", point(width / 2, 0, -depth));
-  add("back-middle-top", point(width / 2, height, -depth));
-  add("left-hinge", point(0, height / 2, 0));
-  add("right-hinge", point(width, height / 2, 0));
+  // These named points describe the historical cut layout directly.  The input
+  // dimensions are the clear (inner) dimensions; the 30 mm section offsets
+  // therefore belong in the anchor coordinates rather than in the renderer.
+  add("left-rail-bottom-front", point(15, 30, -30));
+  add("left-rail-bottom-back", point(15, 30, -depth - 30));
+  add("left-rail-top-front", point(15, height - 30, -30));
+  add("left-rail-top-back", point(15, height - 30, -depth - 30));
+  add("right-rail-bottom-front", point(width + 45, 30, -30));
+  add("right-rail-bottom-back", point(width + 45, 30, -depth - 30));
+  add("right-rail-top-front", point(width + 45, height - 30, -30));
+  add("right-rail-top-back", point(width + 45, height - 30, -depth - 30));
+  add("left-side-vertical-bottom", point(15, 30, -depth / 2 - 30));
+  add("left-side-vertical-top", point(15, height - 30, -depth / 2 - 30));
+  add("right-side-vertical-bottom", point(width + 45, 30, -depth / 2 - 30));
+  add("right-side-vertical-top", point(width + 45, height - 30, -depth / 2 - 30));
+  add("front-rail-bottom-left", point(0, 15, -30));
+  add("front-rail-bottom-right", point(width + 60, 15, -30));
+  add("front-rail-top-left", point(0, height - 30, -30));
+  add("front-rail-top-right", point(width + 60, height - 30, -30));
+
+  add("front-left-post-bottom", point(30, 30, 0));
+  add("front-left-post-top", point(30, height - 60, 0));
+  add("front-right-post-bottom", point(width + 30, 30, 0));
+  add("front-right-post-top", point(width + 30, height - 60, 0));
+  add("back-left-post-bottom", point(15, 30, -depth - 45));
+  add("back-left-post-top", point(15, height - 30, -depth - 45));
+  add("back-right-post-bottom", point(width + 45, 30, -depth - 45));
+  add("back-right-post-top", point(width + 45, height - 30, -depth - 45));
+  add("back-middle-bottom", point(width / 2 + 30, 30, -depth - 45));
+  add("back-middle-top", point(width / 2 + 30, height - 30, -depth - 45));
+  add("back-rail-bottom-left", point(0, 15, -depth - 60));
+  add("back-rail-bottom-right", point(width + 60, 15, -depth - 60));
+  add("back-rail-top-left", point(0, height - 15, -depth - 60));
+  add("back-rail-top-right", point(width + 60, height - 15, -depth - 60));
+  add("top-tie-front", point(width / 2 + 30, height - 15, -30));
+  add("top-tie-back", point(width / 2 + 30, height - 15, -depth - 30));
+  add("left-hinge", point(30, 30, 0));
+  add("right-hinge", point(width + 30, 30, 0));
+
   const ids = new Set<string>();
   const member = (
     id: string,
@@ -128,58 +146,61 @@ export function makeEnclosureV2(
     });
   };
   const members = [
-    member("left-bottom-rail", "front-left-bottom", "back-left-bottom", "aluminium-3030"),
+    member("left-bottom-rail", "left-rail-bottom-front", "left-rail-bottom-back", "aluminium-3030"),
     member(
       "side-middle-left",
-      "side-middle-left-bottom",
-      "side-middle-left-top",
+      "left-side-vertical-bottom",
+      "left-side-vertical-top",
       "aluminium-3060",
-      { wideFace: "front" },
+      {
+        wideFace: "front",
+      },
     ),
-    member("left-top-rail", "front-left-top", "back-left-top", "aluminium-3030"),
-    member("right-bottom-rail", "front-right-bottom", "back-right-bottom", "aluminium-3030"),
+    member("left-top-rail", "left-rail-top-front", "left-rail-top-back", "aluminium-3030"),
+    member(
+      "right-bottom-rail",
+      "right-rail-bottom-front",
+      "right-rail-bottom-back",
+      "aluminium-3030",
+    ),
     member(
       "side-middle-right",
-      "side-middle-right-bottom",
-      "side-middle-right-top",
+      "right-side-vertical-bottom",
+      "right-side-vertical-top",
+      "aluminium-3060",
+      {
+        wideFace: "front",
+      },
+    ),
+    member("right-top-rail", "right-rail-top-front", "right-rail-top-back", "aluminium-3030"),
+    member(
+      "front-bottom-rail",
+      "front-rail-bottom-left",
+      "front-rail-bottom-right",
+      "aluminium-3030",
+    ),
+    member("front-top", "front-rail-top-left", "front-rail-top-right", "aluminium-3060", {
+      wideFace: "front",
+    }),
+    member("front-left-post", "front-left-post-bottom", "front-left-post-top", "aluminium-3060", {
+      wideFace: "front",
+    }),
+    member(
+      "front-right-post",
+      "front-right-post-bottom",
+      "front-right-post-top",
       "aluminium-3060",
       { wideFace: "front" },
     ),
-    member("right-top-rail", "front-right-top", "back-right-top", "aluminium-3030"),
-    member("front-bottom-rail", "front-left-bottom", "front-right-bottom", "aluminium-3030"),
-    member("front-top", "front-left-top", "front-right-top", "aluminium-3060", {
-      wideFace: "front",
-    }),
-    member("front-left-post", "front-left-bottom", "front-left-top", "aluminium-3060", {
-      wideFace: "front",
-    }),
-    member("front-right-post", "front-right-bottom", "front-right-top", "aluminium-3060", {
-      wideFace: "front",
-    }),
-    member("back-left-post", "back-left-bottom", "back-left-top", "aluminium-3030"),
-    member("back-right-post", "back-right-bottom", "back-right-top", "aluminium-3030"),
+    member("back-left-post", "back-left-post-bottom", "back-left-post-top", "aluminium-3030"),
+    member("back-right-post", "back-right-post-bottom", "back-right-post-top", "aluminium-3030"),
     member("back-middle-support", "back-middle-bottom", "back-middle-top", "aluminium-3060", {
       wideFace: "front",
     }),
-    member("back-bottom-rail", "back-left-bottom", "back-right-bottom", "aluminium-3030"),
-    member("back-top-rail", "back-left-top", "back-right-top", "aluminium-3030"),
-    member("top-back-tie", "front-middle-top", "back-middle-top", "aluminium-3030"),
+    member("back-bottom-rail", "back-rail-bottom-left", "back-rail-bottom-right", "aluminium-3030"),
+    member("back-top-rail", "back-rail-top-left", "back-rail-top-right", "aluminium-3030"),
+    member("top-back-tie", "top-tie-front", "top-tie-back", "aluminium-3030"),
   ];
-  /* const members = [
-    member("front-top", "front-left-top", "front-right-top", "aluminium-3060", {
-      wideFace: "front",
-    }),
-    member("front-left-corner", "front-left-bottom", "front-left-top", "aluminium-3060", {
-      wideFace: "front",
-    }),
-    member("front-right-corner", "front-right-bottom", "front-right-top", "aluminium-3060", {
-      wideFace: "front",
-    }),
-    member("side-middle-left", "front-left-bottom", "back-left-bottom", "aluminium-3030"),
-    member("side-middle-right", "front-right-bottom", "back-right-bottom", "aluminium-3030"),
-    member("back-middle-support", "back-left-bottom", "back-right-bottom", "aluminium-3030"),
-    member("top-back-tie", "front-right-top", "back-right-top", "aluminium-3030"),
-  ]; */
   return {
     frame: {
       id: frameId("enclosure-root"),
