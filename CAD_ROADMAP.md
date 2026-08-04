@@ -31,7 +31,7 @@ sketch is not evidence of completion.
   deterministic kinematics, sampled motion envelopes, fit policies, a Replicad
   solid-check adapter, structured reports, an extrusion BOM/cut plan, and
   JSON/CSV/SVG exports.
-- Local quality gates pass: 21 test files and 65 tests, formatting/lint/type
+- Local quality gates pass: 25 test files and 112 tests, formatting/lint/type
   checks, production builds, workflow policy validation, and diff whitespace
   validation. `Vitest` is available through `npm test`; this is non-browser
   coverage, not an automated browser smoke test.
@@ -337,8 +337,8 @@ Tasks:
 - [x] Add a small `ProjectDefinition`/`EvaluationContext` boundary around project parameters.
 - [x] Move the 3030/3060 profile dimensions and slot width into a single profile catalog consumed by geometry and pricing.
 - [x] Add the initial immutable wood, compact polycarbonate, and aluminium material classifications to the evaluation catalog.
-- [ ] Delete the draft project directories `src/projects/enclosure/`, `src/projects/montessoriLibrary/`, `src/projects/test/`, and `src/projects/workbench/`, plus their unused bathroom-plan assets; Git history is the archive for removed projects.
-- [ ] Delete the stale `src/projects/enclosureV2/enclosureV2Const.ts` and make `projects.ts` expose only EnclosureV2.
+- [x] Delete the draft project directories `legacy/src/projects/enclosure/`, `legacy/src/projects/montessoriLibrary/`, `legacy/src/projects/test/`, and `legacy/src/projects/workbench/`, plus their unused bathroom-plan assets; Git history is the archive for removed projects.
+- [x] Delete the stale `legacy/src/projects/enclosureV2/enclosureV2Const.ts` and make the retained legacy `projects.ts` expose only EnclosureV2.
 - [ ] Extract repeated material and mesh conversion in `AbstractShapeMaker.assemble()` into renderer helpers.
 - [ ] Replace `Piece` and `CompoundPiece` with the new typed part/assembly model; no compatibility adapter is required.
 - [ ] Update README and `AGENTS.md` so they describe implemented features separately from planned features.
@@ -347,7 +347,7 @@ Acceptance criteria:
 
 - [x] EnclosureV2 still renders its default model through the tested scene construction.
 - [x] Changing width, height, or depth regenerates dependent model geometry/placements.
-- [ ] 3030/3060 geometry, displayed profile metadata, and price lookup use the same catalog records.
+- [x] 3030/3060 geometry, displayed profile metadata, stock lengths, and default estimate rates use the same catalog records.
 - [x] The project can be evaluated in a non-browser test without mounting Three.js.
 
 ### Phase 1 — Declarative placements and semantic anchors
@@ -431,7 +431,7 @@ EnclosureV2 constraints should cover:
 - [x] the front opening has no middle support;
 - [x] front top and front post members use 3060 and required members are reported when missing;
 - [x] the two doors have equal nominal widths and cover the canonical x opening;
-- [ ] the closed door seam is checked against a named clearance value; the current check does not establish a configured policy;
+- [x] the closed door seam is checked against the named `door-seam-clearance` fit policy;
 - [x] panel bounds stay inside their frame relative to their anchor and orientation;
 - [x] no required anchor is orphaned;
 - [x] no part has an impossible profile orientation.
@@ -470,7 +470,7 @@ Vitest may be added as a development-only test runner. Frame3DD is the only opti
 Implement a small, testable transform graph for rigid assemblies and the motion types needed by the projects:
 
 - [x] revolute joints for hinged doors and access panels;
-- [ ] sliding/prismatic joints for future panels or drawers;
+- [x] sliding/prismatic motion primitives for future panels or drawers;
 - [ ] nested parent/child assembly frames;
 - [x] limits, default positions, and named states;
 - [x] deterministic transform-composition primitives and motion-value evaluation;
@@ -495,7 +495,7 @@ export function evaluateKinematics(
 
 The current door pivot behavior should migrate to this API. The viewer should consume evaluated transforms and animate between states, while tests can evaluate a door at exact angles without initializing Three.js.
 
-> **Audit note:** Revolute door motion, limits, named states, and pure transform helpers are implemented and tested. Both EnclosureV2 doors expose named `closed` and `open` states at exact angles; the viewer consumes their evaluated poses without rebuilding geometry, and viewer pose-controller tests cover that path. Continuous animation, browser smoke/integration, prismatic motion, and nested assembly propagation remain incomplete.
+> **Audit note:** Revolute door motion, limits, named states, and pure transform helpers are implemented and tested. Both EnclosureV2 doors expose named `closed` and `open` states at exact angles; the viewer consumes their evaluated poses through generic assembly/motion records without rebuilding geometry, and viewer pose-controller tests cover that path. Prismatic motion evaluation and renderer application are available with focused unit coverage. Continuous animation, browser smoke/integration, and nested assembly propagation remain incomplete.
 
 #### Authoritative solid checks
 
@@ -568,12 +568,7 @@ The first implementation can use uniform sampling plus refinement around the min
 Nominal dimensions and manufacturing allowances must be separate inputs. Add typed policies for the actual materials and interfaces in scope:
 
 - [x] compact-polycarbonate panel-slot thickness tolerance primitive;
-- [ ] panel expansion or installation gap;
-- [ ] door-to-frame and door-to-door clearance;
-- [ ] hinge-side and latch-side allowances;
-- [ ] slot-fit depth and profile tolerance;
-- [ ] fastener/connector clearance holes;
-- [ ] saw kerf and machining allowance where manufacturing output needs it.
+- [x] panel expansion/installation-gap, door-frame/seam, hinge-side/latch-side, slot-depth, fastener-hole, and saw-cut policy definitions; their geometry/manufacturing consumers remain incremental.
 
 ```ts
 export type FitPolicy = {
@@ -741,10 +736,10 @@ Acceptance criteria:
 
 Tasks:
 
-- [ ] Replace the `doorPivots` special case with an assembly frame and `MotionSpec`.
-- [ ] Represent each hinge/slider axis and origin through the shared kinematics API.
+- [x] Replace the active viewer's `doorPivots` special case with assembly records and a generic assembly-to-render-object map.
+- [x] Represent EnclosureV2 hinge axes and origins through the shared kinematics API; prismatic definitions use the same application path.
 - [ ] Add assembly tree selection, visibility, and source-feature inspection.
-- [ ] Define named states such as `open`, `closed`, and `service` for use by validation, drawings, and the demo.
+- [x] Define named `open` and `closed` states for the demo and validation; a future `service` state remains project work.
 - [ ] Allow a project to define an operating envelope for the CNC gantry, spindle, dust hose, and cable chain.
 
 Suggested states:
@@ -765,7 +760,7 @@ export type Configuration = {
 
 Acceptance criteria:
 
-- [ ] Doors can be opened to a requested angle and returned to a valid closed state.
+- [x] Doors can be opened to a requested angle and returned to a valid closed state.
 - [ ] The model reports door/frame and door/door interference.
 - [ ] The same motion API can later drive a sliding panel or removable roof without adding another renderer-specific special case.
 

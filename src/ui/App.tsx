@@ -1,5 +1,5 @@
 import { createEffect, createResource, createSignal, For, onCleanup } from "solid-js";
-import { applyDoorPose, buildEnclosureScene } from "../rendering/enclosureScene";
+import { applyAssemblyPose, buildEnclosureScene } from "../rendering/enclosureScene";
 import { mountThreeViewer } from "../rendering/viewer";
 import { evaluateEnclosureDoorPose } from "../domain/assemblies";
 import { buildManufacturingReport, manufacturingReportJson } from "../domain/manufacturing";
@@ -36,7 +36,7 @@ export function App() {
   const poseController = createViewerPoseController({
     resolvePose: (value: Awaited<ReturnType<typeof buildEnclosureScene>>, state: string) =>
       evaluateEnclosureDoorPose(value.model, state),
-    applyPose: (value, pose) => applyDoorPose(value, pose),
+    applyPose: (value, pose) => applyAssemblyPose(value, pose),
   });
 
   createEffect(() => {

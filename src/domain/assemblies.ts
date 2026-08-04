@@ -7,6 +7,7 @@ import {
   type Assembly,
   type AssemblyState,
   type KinematicResult,
+  type MotionPose,
 } from "../validation/kinematics";
 
 export const buildEnclosureAssemblies = (model: EnclosureModel): readonly Assembly[] => {
@@ -47,15 +48,13 @@ export const assemblyState = (assembly: Assembly, id: string): AssemblyState => 
   return state;
 };
 
-export type DoorPose = Readonly<Record<"left-door.angle" | "right-door.angle", number>>;
-
-export const evaluateEnclosureDoorPose = (model: EnclosureModel, stateId: string): DoorPose => {
-  const pose = {} as Record<"left-door.angle" | "right-door.angle", number>;
+export const evaluateEnclosureDoorPose = (model: EnclosureModel, stateId: string): MotionPose => {
+  const pose: Record<string, number> = {};
   for (const assembly of buildEnclosureAssemblies(model)) {
     const result = evaluateEnclosureAssemblyState(assembly, assemblyState(assembly, stateId));
     const motion = assembly.motions[0];
     if (!motion || result.issues.length) throw new Error(`Invalid door state: ${stateId}`);
-    pose[motion.id as "left-door.angle" | "right-door.angle"] = result.state.values[motion.id] ?? 0;
+    pose[motion.id] = result.state.values[motion.id] ?? 0;
   }
   return pose;
 };

@@ -1,6 +1,7 @@
 import type { Anchor } from "../domain/anchors";
 import type { Point3, Vector3 } from "../domain/frames";
 import type { EnclosureModel } from "../domain/enclosureV2";
+import { evaluateFit, requiredFitPolicy } from "./fitPolicies";
 
 export type ConstraintSeverity = "error" | "warning";
 export type ConstraintResult = {
@@ -314,15 +315,17 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
     const [a, b] = model.doors;
     if (a && b) {
       out.push(Equal("enclosure.doors.equal-width", a.nominalWidth, b.nominalWidth, [a.id, b.id]));
+      const seamPolicy = requiredFitPolicy("door-seam-clearance");
       const seamClearance = model.doorSeamClearance ?? 0;
+      const seamFit = evaluateFit(seamPolicy, seamClearance);
       out.push(
         result(
           "enclosure.doors.seam-clearance",
-          seamClearance >= 0,
-          `door seam clearance must be non-negative: measured ${seamClearance}`,
+          seamFit.passed,
+          seamFit.message,
           [a.id, b.id],
           seamClearance,
-          0,
+          seamFit.required,
         ),
       );
       const opening = model.dimensions?.x ?? 0;

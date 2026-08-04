@@ -5,6 +5,7 @@ import {
   Mesh,
   MeshStandardMaterial,
   Object3D,
+  Vector3,
 } from "three";
 import { makeBaseBox, setOC, type Shape3D } from "replicad";
 import opencascade from "replicad-opencascadejs/src/replicad_single.js";
@@ -24,6 +25,8 @@ import {
   type MotionSolidCheckResult,
 } from "../validation/motionSolidChecks";
 import { transformShapeToWorld } from "../geometry/replicadTransform";
+import { buildEnclosureAssemblies } from "../domain/assemblies";
+import type { Assembly, MotionPose } from "../validation/kinematics";
 
 export { transformShapeToWorld } from "../geometry/replicadTransform";
 
@@ -86,22 +89,35 @@ export type EnclosureScene = {
   root: Group;
   members: readonly Object3D[];
   doors: readonly Group[];
+  assemblies: readonly Assembly[];
+  assemblyObjects: ReadonlyMap<string, Object3D>;
   solidChecks: readonly SolidCheckResult[];
   validationReport: ValidationReport;
   motionSolidCheck: MotionSolidCheckResult;
 };
 
-export type DoorPose = Readonly<Record<"left-door.angle" | "right-door.angle", number>>;
-
-export const applyDoorPose = (
-  scene: Pick<EnclosureScene, "root" | "doors">,
-  pose: DoorPose,
+export const applyAssemblyPose = (
+  scene: Pick<EnclosureScene, "root" | "assemblies" | "assemblyObjects">,
+  pose: MotionPose,
 ): void => {
-  for (const door of scene.doors) {
-    const id = door.name.slice("door:".length);
-    const angle = pose[`${id}.angle` as keyof DoorPose];
-    if (angle === undefined) throw new Error(`Missing pose for ${id}.angle`);
-    door.rotation.y = angle;
+  for (const assembly of scene.assemblies) {
+    const object = scene.assemblyObjects.get(assembly.id);
+    if (!object) throw new Error(`Missing render object for ${assembly.id}`);
+    for (const definition of assembly.motions) {
+      const value = pose[definition.id];
+      if (value === undefined) throw new Error(`Missing pose for ${definition.id}`);
+      const axis = new Vector3(
+        definition.motion.axis.x,
+        definition.motion.axis.y,
+        definition.motion.axis.z,
+      ).normalize();
+      if (definition.motion.kind === "revolute") object.setRotationFromAxisAngle(axis, value);
+      else {
+        const base = object.userData.basePosition;
+        if (!(base instanceof Vector3)) throw new Error(`Missing base position for ${assembly.id}`);
+        object.position.copy(base).addScaledVector(axis, value);
+      }
+    }
   }
   scene.root.updateMatrixWorld(true);
 };
@@ -224,6 +240,7 @@ export async function buildEnclosureScene(
     initializationError = error;
   }
   const model = makeEnclosureV2(dimensions);
+  const assemblies = buildEnclosureAssemblies(model);
   const root = new Group();
   root.name = model.frame.id;
   root.userData.frameId = model.frame.id;
@@ -254,8 +271,14 @@ export async function buildEnclosureScene(
   // the two post clearances, making the closed leaves overlap.
   const doorWidth = (dimensions.width - 2 * sideClearance - seamClearance) / 2;
   const doorHeight = dimensions.height - 90 - seamClearance;
+  const assemblyObjects = new Map<string, Object3D>();
   const doors = (model.doors ?? []).map((door) => {
     const object = createDoor(model, door.id, doorWidth, doorHeight);
+    object.userData.basePosition = object.position.clone();
+    const assembly = assemblies.find((candidate) => candidate.parts.includes(door.id));
+    if (!assembly) throw new Error(`Missing assembly for ${door.id}`);
+    object.userData.assemblyId = assembly.id;
+    assemblyObjects.set(assembly.id, object);
     root.add(object);
     return object;
   });
@@ -377,7 +400,17 @@ export async function buildEnclosureScene(
   );
   root.userData.geometryReady = true;
 
-  return { model, root, members, doors, solidChecks, motionSolidCheck, validationReport };
+  return {
+    model,
+    root,
+    members,
+    doors,
+    assemblies,
+    assemblyObjects,
+    solidChecks,
+    motionSolidCheck,
+    validationReport,
+  };
 }
 
 export const defaultEnclosureScene = () =>

@@ -14,6 +14,7 @@ export type KinematicIssue = {
   expected: { min: number; max: number };
 };
 export type KinematicResult = { state: KinematicState; issues: KinematicIssue[] };
+export type MotionPose = Readonly<Record<string, number>>;
 
 const normalize = (v: Vector3): Vector3 => {
   const length = Math.hypot(v.x, v.y, v.z);
@@ -33,6 +34,8 @@ export const translate = (point: Point3, axis: Vector3, distance: number): Point
     z: point.z + unit.z * distance,
   };
 };
+export const motionPosition = (motion: Motion, value: number, origin: Point3): Point3 =>
+  motion.kind === "prismatic" ? translate(origin, motion.axis, value) : origin;
 export const rotateAround = (
   point: Point3,
   origin: Point3,
@@ -86,6 +89,8 @@ export type Assembly = {
 };
 export const evaluateAssemblyState = (assembly: Assembly, state: AssemblyState): KinematicResult =>
   evaluateMotions(assembly.motions, state.motions);
+export const assemblyPose = (assembly: Assembly, state: AssemblyState): MotionPose =>
+  evaluateAssemblyState(assembly, state).state.values;
 export const composeTransforms = (parent: Transform, child: Transform): Transform => ({
   position: {
     x: parent.position.x + child.position.x,

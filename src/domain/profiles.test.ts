@@ -10,6 +10,9 @@ describe("aluminium profile catalog", () => {
       geometry: "tSlot",
       material: "aluminium",
       slotWidth: 8,
+      stockLengths: [6000],
+      pricePerLength: 0.018,
+      currency: "EUR",
     });
     expect(getProfile(profileId("aluminium-3060"))).toMatchObject({
       id: "profile:aluminium-3060",
@@ -17,6 +20,9 @@ describe("aluminium profile catalog", () => {
       geometry: "tSlot",
       material: "aluminium",
       slotWidth: 8,
+      stockLengths: [6000],
+      pricePerLength: 0.027,
+      currency: "EUR",
     });
   });
   it("has immutable catalog entries and rejects unknown IDs", () => {

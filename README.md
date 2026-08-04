@@ -24,11 +24,11 @@ npm run build
 npm run validate:workflows
 ```
 
-The quality suite currently covers 19 test files / 58 tests. Build output is `dist/`.
+The quality suite currently covers 25 test files / 112 tests. Build output is `dist/`.
 
 ## Current limits
 
-The manufacturing report currently covers the aluminium frame and extrusion cut planning. Hardware, panel cut records, vendor catalogs, complete project-wide collision evaluation, continuous-motion proof, PDF production, browser smoke tests, and generic door assembly migration are not yet implemented.
+The manufacturing report currently covers the aluminium frame and extrusion cut planning, with profile-catalog stock lengths and estimate rates. Hardware, panel cut records, full vendor catalogs, complete project-wide collision evaluation, continuous-motion proof, PDF production, and browser smoke tests are not yet implemented. The viewer applies EnclosureV2 motion through generic assembly/motion records; panel, hardware, and larger assembly hierarchy work remains.
 
 Frame3DD is an optional external structural sidecar. The code can serialize inputs, parse saved results, and return an explicit `unavailable` diagnostic; Frame3DD is not installed or configured locally and is never required for rendering, ordinary validation, or exports. It is simplified screening, not engineering certification.
 

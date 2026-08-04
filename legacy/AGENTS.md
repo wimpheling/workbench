@@ -1,4 +1,9 @@
-# Agents Documentation for src/lib
+# Historical renderer documentation
+
+This file documents the archived `legacy/` renderer only. The active product
+is in the repository root under `src/`; see `../AGENTS.md` for its boundaries.
+The retained legacy EnclosureV2 files are historical reference, not an active
+feature-development path.
 
 This documentation describes the core library files for a 3D woodworking design and assembly system. The system uses Replicad for 3D modeling, Three.js for rendering, and SolidJS for UI.
 

@@ -103,12 +103,20 @@ export const buildManufacturingReport = (
       ),
     ],
   }));
-  const cutPlan = buildCutPlan(parts);
-  const estimatedCost = parts.reduce(
-    (total, part) =>
-      total + (part.cutLength ?? 0) * (vendors[part.profile ?? ""]?.pricePerLength ?? 0),
-    0,
-  );
+  const stockLengths = [
+    ...new Set(
+      model.members.flatMap((member) => getProfile(member.profile).stockLengths ?? [6000]),
+    ),
+  ].sort((a, b) => a - b);
+  const cutPlan = buildCutPlan(parts, stockLengths);
+  const estimatedCost = parts.reduce((total, part) => {
+    const profile = part.profile
+      ? getProfile(part.profile as Parameters<typeof getProfile>[0])
+      : undefined;
+    const pricePerLength =
+      vendors[part.profile ?? ""]?.pricePerLength ?? profile?.pricePerLength ?? 0;
+    return total + (part.cutLength ?? 0) * pricePerLength;
+  }, 0);
   return {
     parts: grouped,
     cutPlan,

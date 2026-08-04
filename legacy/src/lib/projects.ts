@@ -1,8 +1,1 @@
-export default [
-  'workbench',
-  // 'enclosure',
-  'enclosureV2',
-  // 'montessoriLibrary',
-  // 'test',
-  // 'enclosureExtrusion',
-];
+export default ['enclosureV2'];

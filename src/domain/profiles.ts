@@ -8,6 +8,8 @@ export type Profile = {
   material: "aluminium";
   slotWidth: number;
   stockLengths?: readonly number[];
+  pricePerLength?: number;
+  currency?: string;
 };
 export type ProfileCatalog = ReadonlyMap<ProfileId, Profile>;
 const freeze = <T extends object>(value: T): Readonly<T> => Object.freeze(value);
@@ -19,6 +21,9 @@ export const aluminiumProfiles: readonly Profile[] = Object.freeze([
     geometry: "tSlot",
     material: "aluminium",
     slotWidth: 8,
+    stockLengths: [6000],
+    pricePerLength: 0.018,
+    currency: "EUR",
   },
   {
     id: profileId("aluminium-3060"),
@@ -27,6 +32,9 @@ export const aluminiumProfiles: readonly Profile[] = Object.freeze([
     geometry: "tSlot",
     material: "aluminium",
     slotWidth: 8,
+    stockLengths: [6000],
+    pricePerLength: 0.027,
+    currency: "EUR",
   },
 ]);
 class ImmutableMap<K, V> implements ReadonlyMap<K, V> {

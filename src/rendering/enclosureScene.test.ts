@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { makeEnclosureV2 } from "../domain/enclosureV2";
 import type { MotionSolidCheckResult } from "../validation/motionSolidChecks";
 import {
-  applyDoorPose,
+  applyAssemblyPose,
   buildEnclosureScene,
   initializeOpenCascade,
   transformShapeToWorld,
@@ -101,6 +101,13 @@ describe("production EnclosureV2 scene boundary", () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     expect(scene.members).toHaveLength(16);
     expect(scene.doors).toHaveLength(2);
+    expect(scene.assemblies.map((assembly) => assembly.id)).toEqual([
+      "assembly:left-door",
+      "assembly:right-door",
+    ]);
+    expect([...scene.assemblyObjects.keys()]).toEqual(
+      scene.assemblies.map((assembly) => assembly.id),
+    );
     expect(scene.doors.map((door) => door.name)).toEqual(["door:left-door", "door:right-door"]);
     expect(scene.doors[0].position.toArray()).toEqual([30, 30, 34]);
     expect(scene.doors[1].position.toArray()).toEqual([1230, 30, 34]);
@@ -253,7 +260,7 @@ describe("production EnclosureV2 scene boundary", () => {
     ] as const;
 
     for (const pose of poses) {
-      applyDoorPose(scene, pose);
+      applyAssemblyPose(scene, pose);
       for (const door of scene.doors) {
         door.traverse((object) => {
           if (!(object instanceof Mesh) || !object.userData.solid) return;
@@ -331,7 +338,7 @@ describe("production EnclosureV2 scene boundary", () => {
     const rightPosition = right.position.toArray();
     const leftPanel = left.getObjectByName("left-door-panel")!;
     const rightPanel = right.getObjectByName("right-door-panel")!;
-    applyDoorPose(scene, { "left-door.angle": Math.PI / 2, "right-door.angle": Math.PI / 2 });
+    applyAssemblyPose(scene, { "left-door.angle": Math.PI / 2, "right-door.angle": Math.PI / 2 });
     expect(left.rotation.y).toBeCloseTo(Math.PI / 2);
     expect(right.rotation.y).toBeCloseTo(Math.PI / 2);
     expect(left.position.toArray()).toEqual(leftPosition);
@@ -357,11 +364,11 @@ describe("production EnclosureV2 scene boundary", () => {
         .toArray();
     const closed = doors.map(panelPosition);
 
-    applyDoorPose(scene, { "left-door.angle": -Math.PI / 2, "right-door.angle": Math.PI / 2 });
+    applyAssemblyPose(scene, { "left-door.angle": -Math.PI / 2, "right-door.angle": Math.PI / 2 });
     expect(doors.map(panelPosition)).not.toEqual(closed);
     expect(doors.map((door) => door.position.toArray())).toEqual(pivots);
 
-    applyDoorPose(scene, { "left-door.angle": 0, "right-door.angle": 0 });
+    applyAssemblyPose(scene, { "left-door.angle": 0, "right-door.angle": 0 });
     expect(doors.map((door) => door.position.toArray())).toEqual(pivots);
     expect(doors.map(panelPosition)).toEqual(closed);
     expect(
@@ -383,7 +390,7 @@ describe("production EnclosureV2 scene boundary", () => {
         .getObjectByName(`${door.name.slice("door:".length)}-panel`)!
         .getWorldPosition(new Vector3());
     const closed = doors.map(panelPosition).map((position) => position.z);
-    applyDoorPose(scene, { "left-door.angle": -Math.PI / 2, "right-door.angle": Math.PI / 2 });
+    applyAssemblyPose(scene, { "left-door.angle": -Math.PI / 2, "right-door.angle": Math.PI / 2 });
     const open = doors.map(panelPosition).map((position) => position.z);
     expect(open[0]).toBeGreaterThan(closed[0]);
     expect(open[1]).toBeGreaterThan(closed[1]);
