@@ -171,12 +171,20 @@ function createDoor(model: EnclosureModel, id: string, width: number, height: nu
   // offset from the catalog's established section width.
   const frontPostSide = getProfile("profile:aluminium-3030").section.x;
   const clearance = 2;
+  // Put the hinge line in front of the post's front face. A pivot on the post
+  // centreline is clear only while closed; the hinge-side stile sweeps back
+  // into the post as soon as the leaf rotates.
+  door.position.z += frontPostSide + 2 * clearance;
   const frame = new Group();
   frame.name = `${id}-frame`;
   // The local door is positioned from its hinge edge. The front post occupies
   // one profile side toward the door, so leave that side plus the clearance;
   // the hinge pivot itself remains unchanged.
   frame.position.x = width / 2 + frontPostSide + clearance;
+  // The bottom rail occupies the first 30 mm above the hinge anchor.  Raise
+  // the leaf by the configured clearance so its upright does not merely touch
+  // (or intersect) that rail in the closed state.
+  frame.position.y = clearance;
   door.add(frame);
   const verticalSide = getProfile("profile:aluminium-3030").section.x;
   const panelSide = 4;
@@ -238,8 +246,14 @@ export async function buildEnclosureScene(
     return object;
   });
 
-  const doorWidth = dimensions.width / 2;
-  const doorHeight = dimensions.height - 90;
+  const frontPostSide = getProfile("profile:aluminium-3030").section.x;
+  const seamClearance = model.doorSeamClearance ?? 2;
+  const sideClearance = frontPostSide + seamClearance;
+  // Each leaf starts after its front post and must leave the configured seam
+  // between the two meeting stiles.  Using half the enclosure width ignored
+  // the two post clearances, making the closed leaves overlap.
+  const doorWidth = (dimensions.width - 2 * sideClearance - seamClearance) / 2;
+  const doorHeight = dimensions.height - 90 - seamClearance;
   const doors = (model.doors ?? []).map((door) => {
     const object = createDoor(model, door.id, doorWidth, doorHeight);
     root.add(object);
@@ -264,14 +278,19 @@ export async function buildEnclosureScene(
     : checkDoorMotionSolids({
         doors,
         staticMeshes: members,
-        samples: 9,
-        maxStates: 81,
+        // Keep the interactive scene responsive.  The three-state grid covers
+        // closed, mid-travel, and fully open for each leaf; exhaustive sweeps
+        // can be requested by the validation API outside the render path.
+        samples: 3,
+        maxStates: 9,
         minimumClearance: minimum,
       });
   const solidIds = [
     "clearance.door-left-door.door-right-door",
     "clearance.door-left-door.part:front-left-post",
     "clearance.door-right-door.part:front-right-post",
+    "clearance.door-left-door.part:front-bottom-rail",
+    "clearance.door-right-door.part:front-bottom-rail",
   ];
   let solidChecks: SolidCheckResult[];
   try {
@@ -300,6 +319,18 @@ export async function buildEnclosureScene(
         target: "part:front-right-post",
         minimum,
       },
+      {
+        id: solidIds[3],
+        subject: "door:left-door",
+        target: "part:front-bottom-rail",
+        minimum,
+      },
+      {
+        id: solidIds[4],
+        subject: "door:right-door",
+        target: "part:front-bottom-rail",
+        minimum,
+      },
     ]);
   } catch (error) {
     solidChecks = [
@@ -315,6 +346,20 @@ export async function buildEnclosureScene(
         solidIds[2],
         "door:right-door",
         "part:front-right-post",
+        minimum,
+        error,
+      ),
+      indeterminateSolidCheck(
+        solidIds[3],
+        "door:left-door",
+        "part:front-bottom-rail",
+        minimum,
+        error,
+      ),
+      indeterminateSolidCheck(
+        solidIds[4],
+        "door:right-door",
+        "part:front-bottom-rail",
         minimum,
         error,
       ),

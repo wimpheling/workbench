@@ -102,8 +102,8 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(scene.members).toHaveLength(16);
     expect(scene.doors).toHaveLength(2);
     expect(scene.doors.map((door) => door.name)).toEqual(["door:left-door", "door:right-door"]);
-    expect(scene.doors[0].position.toArray()).toEqual([30, 30, 0]);
-    expect(scene.doors[1].position.toArray()).toEqual([1230, 30, 0]);
+    expect(scene.doors[0].position.toArray()).toEqual([30, 30, 34]);
+    expect(scene.doors[1].position.toArray()).toEqual([1230, 30, 34]);
     for (const door of scene.doors) {
       const meshes: any[] = [];
       door.traverse((child) => {
@@ -131,6 +131,8 @@ describe("production EnclosureV2 scene boundary", () => {
         "clearance.door-left-door.door-right-door",
         "clearance.door-left-door.part:front-left-post",
         "clearance.door-right-door.part:front-right-post",
+        "clearance.door-left-door.part:front-bottom-rail",
+        "clearance.door-right-door.part:front-bottom-rail",
       ]),
     );
     expect(scene.solidChecks.every((check) => check.minimum !== undefined)).toBe(true);
@@ -205,6 +207,24 @@ describe("production EnclosureV2 scene boundary", () => {
       expect(check.intersection).toBe(false);
       expect(check.distance).toBeGreaterThanOrEqual(2);
     }
+  });
+
+  it("keeps the closed door seam and bottom rail clear by the configured 2 mm", async () => {
+    const scene = await buildEnclosureScene({ width: 1674, height: 740, depth: 1649 });
+    for (const id of [
+      "clearance.door-left-door.door-right-door",
+      "clearance.door-left-door.part:front-bottom-rail",
+      "clearance.door-right-door.part:front-bottom-rail",
+    ]) {
+      const check = scene.solidChecks.find((candidate) => candidate.id === id)!;
+      expect(check.status, `${id}: ${check.diagnostics.join("; ")}`).toBe("clear");
+      expect(check.intersection).toBe(false);
+      expect(check.distance).toBeGreaterThanOrEqual(2);
+    }
+    expect(scene.motionSolidCheck.status, scene.motionSolidCheck.diagnostics.join("; ")).toBe(
+      "clear",
+    );
+    expect(scene.motionSolidCheck.verified).toBe(true);
   });
 
   it("retourne un rapport incomplet si l'initialisation OpenCascade échoue", async () => {

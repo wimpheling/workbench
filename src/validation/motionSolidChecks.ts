@@ -45,6 +45,19 @@ export const cartesianDoorStates = (options: { samples?: number; maxStates?: num
 };
 
 type SolidItem = { id: string; door?: string; shape: Shape3D };
+
+// Axis-aligned bounds give a conservative lower bound on the separation of
+// two solids. If that bound already meets the required clearance, an exact
+// kernel operation cannot change the result. This keeps a valid motion sweep
+// from spending most of its time comparing a door with distant frame members.
+const boundsDistance = (a: Shape3D, b: Shape3D): number => {
+  const [aMin, aMax] = a.boundingBox.bounds;
+  const [bMin, bMax] = b.boundingBox.bounds;
+  const gap = [0, 1, 2].map((axis) =>
+    Math.max(aMin[axis]! - bMax[axis]!, bMin[axis]! - aMax[axis]!, 0),
+  );
+  return Math.hypot(...gap);
+};
 const meshes = (door: Group): SolidItem[] => {
   door.updateMatrixWorld(true);
   const result: SolidItem[] = [];
@@ -98,6 +111,7 @@ export const checkDoorMotionSolids = (options: MotionSolidCheckOptions): MotionS
             b = items[j];
           if (a.door && b.door && a.door === b.door) continue;
           if (!a.door && !b.door) continue;
+          if (boundsDistance(a.shape, b.shape) >= minimum) continue;
           const pair = { subject: a.id, target: b.id };
           if (
             !checkedPairs.some(
