@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { defaultDoorMotion, evaluateMotions, motionPosition, rotateAround } from "./kinematics";
+import {
+  buildAssemblyTree,
+  defaultDoorMotion,
+  evaluateMotions,
+  motionPosition,
+  rotateAround,
+} from "./kinematics";
 
 describe("kinematics", () => {
   it("clamps and reports motion values outside limits", () => {
@@ -31,5 +37,30 @@ describe("kinematics", () => {
       y: 2,
       z: 3,
     });
+  });
+  it("rejects malformed assembly hierarchy links", () => {
+    expect(() =>
+      buildAssemblyTree([
+        {
+          id: "root",
+          name: "root",
+          frame: "frame:test",
+          parts: [],
+          children: ["child"],
+          motions: [],
+          states: [],
+        },
+        {
+          id: "child",
+          name: "child",
+          frame: "frame:test",
+          parts: [],
+          parent: "elsewhere",
+          children: [],
+          motions: [],
+          states: [],
+        },
+      ]),
+    ).toThrow("must declare root as parent");
   });
 });

@@ -31,7 +31,7 @@ sketch is not evidence of completion.
   deterministic kinematics, sampled motion envelopes, fit policies, a Replicad
   solid-check adapter, structured reports, an extrusion BOM/cut plan, and
   JSON/CSV/SVG exports.
-- Local quality gates pass: 25 test files and 112 tests, formatting/lint/type
+- Local quality gates pass: 25 test files and 115 tests, formatting/lint/type
   checks, production builds, workflow policy validation, and diff whitespace
   validation. `Vitest` is available through `npm test`; this is non-browser
   coverage, not an automated browser smoke test.
@@ -738,7 +738,7 @@ Tasks:
 
 - [x] Replace the active viewer's `doorPivots` special case with assembly records and a generic assembly-to-render-object map.
 - [x] Represent EnclosureV2 hinge axes and origins through the shared kinematics API; prismatic definitions use the same application path.
-- [ ] Add assembly tree selection, visibility, and source-feature inspection.
+- [x] Add assembly tree selection, visibility, and source-part/motion/state inspection in the active UI.
 - [x] Define named `open` and `closed` states for the demo and validation; a future `service` state remains project work.
 - [ ] Allow a project to define an operating envelope for the CNC gantry, spindle, dust hose, and cable chain.
 
@@ -762,7 +762,7 @@ Acceptance criteria:
 
 - [x] Doors can be opened to a requested angle and returned to a valid closed state.
 - [ ] The model reports door/frame and door/door interference.
-- [ ] The same motion API can later drive a sliding panel or removable roof without adding another renderer-specific special case.
+- [x] The same motion API drives the rendered rear service-slider demonstration without another renderer-specific special case; full panel and roof product features remain separate work.
 
 ### Phase 6 — Panels and bounded infill
 

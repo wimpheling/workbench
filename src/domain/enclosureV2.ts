@@ -29,9 +29,17 @@ export type EnclosureModel = {
   dimensions?: { x: number; y: number; z: number };
   doorSeamClearance?: number;
   doors?: readonly DoorRecord[];
+  serviceSlider?: ServiceSliderRecord;
   panels?: readonly PanelRecord[];
 };
 export type DoorRecord = { id: string; nominalWidth: number };
+export type ServiceSliderRecord = {
+  id: string;
+  anchor: string;
+  width: number;
+  height: number;
+  travel: number;
+};
 export type PanelRecord = {
   id: string;
   size: Point3;
@@ -125,6 +133,7 @@ export function makeEnclosureV2(
   add("top-tie-back", point(width / 2 + 30, height - 15, -depth - 30));
   add("left-hinge", point(30, 30, 0));
   add("right-hinge", point(width + 30, 30, 0));
+  add("service-slider-origin", point(60, height / 2 - 100, -depth - 75));
 
   const ids = new Set<string>();
   const member = (
@@ -214,5 +223,14 @@ export function makeEnclosureV2(
       { id: "left-door", nominalWidth: width / 2 },
       { id: "right-door", nominalWidth: width / 2 },
     ],
+    // A small rear access panel exercises the same assembly API as future
+    // sliding panels without claiming full panel/fit/manufacturing support.
+    serviceSlider: {
+      id: "service-slider",
+      anchor: "anchor:service-slider-origin",
+      width: Math.max(1, Math.min(300, width - 120)),
+      height: Math.max(1, Math.min(300, height - 120)),
+      travel: Math.max(0, Math.min(200, width - 180)),
+    },
   };
 }

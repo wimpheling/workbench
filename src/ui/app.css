@@ -1,0 +1,103 @@
+:root {
+  color: #edf2f7;
+  background: #12171e;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #12171e;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+main {
+  width: min(100%, 1800px);
+  margin: 0 auto;
+  padding: clamp(1rem, 2vw, 2rem);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.toolbar fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.viewer-panel {
+  margin: 1.5rem 0;
+  border: 1px solid #3a4655;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, #2d3b4d, #12171e 72%);
+  box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 30%);
+}
+
+.viewer-heading {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #3a4655;
+  background: rgb(10 14 20 / 72%);
+}
+
+.viewer-heading h2,
+.viewer-heading p {
+  margin: 0;
+}
+
+.viewer-heading p {
+  margin-top: 0.25rem;
+  color: #b8c7d9;
+  font-size: 0.9rem;
+}
+
+.viewer-canvas {
+  display: block;
+  width: 100%;
+  height: clamp(34rem, 72vh, 72rem);
+  cursor: grab;
+  touch-action: none;
+}
+
+.viewer-canvas:active {
+  cursor: grabbing;
+}
+
+section {
+  margin: 1.25rem 0;
+}
+
+@media (max-width: 700px) {
+  main {
+    padding: 0.75rem;
+  }
+
+  .viewer-canvas {
+    height: 65vh;
+    min-height: 28rem;
+  }
+}

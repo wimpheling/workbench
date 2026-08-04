@@ -8,11 +8,13 @@ import {
   Vector3,
   type Object3D,
 } from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 export type ThreeViewer = { render: () => void; dispose: () => void };
 
 export function mountThreeViewer(canvas: HTMLCanvasElement, model: Object3D): ThreeViewer {
   const scene = new Scene();
+  scene.background = null;
   scene.add(model);
   scene.add(new AmbientLight(0xffffff, 1.5));
   const light = new DirectionalLight(0xffffff, 2);
@@ -29,18 +31,33 @@ export function mountThreeViewer(canvas: HTMLCanvasElement, model: Object3D): Th
   camera.far = distance * 4;
   camera.lookAt(center);
   const renderer = new WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  const controls = new OrbitControls(camera, canvas);
+  controls.target.copy(center);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.screenSpacePanning = true;
+  controls.minDistance = Math.max(radius * 0.15, 10);
+  controls.maxDistance = Math.max(radius * 12, 1000);
+  controls.update();
+  const render = () => renderer.render(scene, camera);
+  controls.addEventListener("change", render);
   const resize = () => {
     const width = canvas.clientWidth || 640;
     const height = canvas.clientHeight || 480;
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height, false);
-    renderer.render(scene, camera);
+    render();
   };
+  const resizeObserver = new ResizeObserver(resize);
+  resizeObserver.observe(canvas);
   resize();
-  window.addEventListener("resize", resize);
   const dispose = () => {
-    window.removeEventListener("resize", resize);
+    resizeObserver.disconnect();
+    controls.removeEventListener("change", render);
+    controls.dispose();
     model.traverse((object) => {
       const mesh = object as Object3D & {
         geometry?: { dispose: () => void };
@@ -52,5 +69,5 @@ export function mountThreeViewer(canvas: HTMLCanvasElement, model: Object3D): Th
     });
     renderer.dispose();
   };
-  return { render: () => renderer.render(scene, camera), dispose };
+  return { render, dispose };
 }

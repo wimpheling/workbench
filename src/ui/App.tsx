@@ -1,7 +1,7 @@
 import { createEffect, createResource, createSignal, For, onCleanup } from "solid-js";
 import { applyAssemblyPose, buildEnclosureScene } from "../rendering/enclosureScene";
 import { mountThreeViewer } from "../rendering/viewer";
-import { evaluateEnclosureDoorPose } from "../domain/assemblies";
+import { evaluateEnclosureAssemblyPose } from "../domain/assemblies";
 import { buildManufacturingReport, manufacturingReportJson } from "../domain/manufacturing";
 import {
   defaultDrawingViews,
@@ -30,12 +30,14 @@ export function App() {
   const [showReport, setShowReport] = createSignal(true);
   const [configuration, setConfiguration] = createSignal("default");
   const [motionState, setMotionState] = createSignal("closed");
+  const [selectedAssembly, setSelectedAssembly] = createSignal("assembly:enclosure");
+  const [hiddenAssemblies, setHiddenAssemblies] = createSignal<ReadonlySet<string>>(new Set());
   const regenerated = () => regenerateModel(dimensions());
   const configurations = () => defaultConfigurations(dimensions());
   const motions = () => motionStateIds(regenerated().model);
   const poseController = createViewerPoseController({
     resolvePose: (value: Awaited<ReturnType<typeof buildEnclosureScene>>, state: string) =>
-      evaluateEnclosureDoorPose(value.model, state),
+      evaluateEnclosureAssemblyPose(value.model, state),
     applyPose: (value, pose) => applyAssemblyPose(value, pose),
   });
 
@@ -65,6 +67,22 @@ export function App() {
     URL.revokeObjectURL(url);
   };
   const manufacturing = () => buildManufacturingReport(regenerated().model);
+  const selectedAssemblyDetails = () =>
+    scene()?.assemblies.find((assembly) => assembly.id === selectedAssembly());
+  const setAssemblyVisible = (id: string, visible: boolean) => {
+    const value = scene();
+    const object = value?.assemblyObjects.get(id);
+    if (object) {
+      object.visible = visible;
+      viewer?.render();
+    }
+    setHiddenAssemblies((current) => {
+      const next = new Set(current);
+      if (visible) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <main>
@@ -167,6 +185,58 @@ export function App() {
           Export front SVG
         </button>
       </div>
+      <section class="viewer-panel" aria-label="3D enclosure viewer">
+        <div class="viewer-heading">
+          <div>
+            <h2>3D view</h2>
+            <p>Drag to orbit, scroll or pinch to zoom, and right-drag to pan.</p>
+          </div>
+        </div>
+        <canvas ref={setCanvas} class="viewer-canvas" aria-label="EnclosureV2 3D viewer" />
+      </section>
+      <section aria-label="Assembly hierarchy">
+        <h2>Assembly hierarchy</h2>
+        <ul>
+          <For each={scene()?.assemblies ?? []}>
+            {(assembly) => (
+              <li style={{ "margin-left": assembly.parent ? "1.5rem" : "0" }}>
+                <button
+                  type="button"
+                  aria-pressed={selectedAssembly() === assembly.id}
+                  onClick={() => setSelectedAssembly(assembly.id)}
+                >
+                  {assembly.name}
+                </button>{" "}
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={!hiddenAssemblies().has(assembly.id)}
+                    disabled={!scene()?.assemblyObjects.has(assembly.id)}
+                    onChange={(event) =>
+                      setAssemblyVisible(assembly.id, event.currentTarget.checked)
+                    }
+                  />{" "}
+                  visible
+                </label>
+              </li>
+            )}
+          </For>
+        </ul>
+        {selectedAssemblyDetails() && (
+          <p data-testid="assembly-inspection">
+            <strong>{selectedAssemblyDetails()!.name}</strong>: source parts{" "}
+            {selectedAssemblyDetails()!.parts.join(", ") || "—"}; motions{" "}
+            {selectedAssemblyDetails()!
+              .motions.map((motion) => motion.id)
+              .join(", ") || "—"}
+            ; states{" "}
+            {selectedAssemblyDetails()!
+              .states.map((state) => state.id)
+              .join(", ") || "—"}
+            .
+          </p>
+        )}
+      </section>
       {showReport() && (
         <section aria-label="Validation report">
           <h2>Validation</h2>
@@ -241,7 +311,6 @@ export function App() {
           })()}
         </section>
       )}
-      <canvas ref={setCanvas} class="viewer-canvas" aria-label="EnclosureV2 3D viewer" />
     </main>
   );
 }

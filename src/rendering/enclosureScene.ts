@@ -26,7 +26,12 @@ import {
 } from "../validation/motionSolidChecks";
 import { transformShapeToWorld } from "../geometry/replicadTransform";
 import { buildEnclosureAssemblies } from "../domain/assemblies";
-import type { Assembly, MotionPose } from "../validation/kinematics";
+import {
+  buildAssemblyTree,
+  type Assembly,
+  type AssemblyTreeNode,
+  type MotionPose,
+} from "../validation/kinematics";
 
 export { transformShapeToWorld } from "../geometry/replicadTransform";
 
@@ -90,6 +95,7 @@ export type EnclosureScene = {
   members: readonly Object3D[];
   doors: readonly Group[];
   assemblies: readonly Assembly[];
+  assemblyTree: readonly AssemblyTreeNode[];
   assemblyObjects: ReadonlyMap<string, Object3D>;
   solidChecks: readonly SolidCheckResult[];
   validationReport: ValidationReport;
@@ -101,11 +107,13 @@ export const applyAssemblyPose = (
   pose: MotionPose,
 ): void => {
   for (const assembly of scene.assemblies) {
+    if (!assembly.motions.length) continue;
     const object = scene.assemblyObjects.get(assembly.id);
     if (!object) throw new Error(`Missing render object for ${assembly.id}`);
     for (const definition of assembly.motions) {
-      const value = pose[definition.id];
-      if (value === undefined) throw new Error(`Missing pose for ${definition.id}`);
+      // A caller may intentionally control only one assembly. Motions omitted
+      // from a partial pose return to their declared rest/minimum position.
+      const value = pose[definition.id] ?? definition.motion.min;
       const axis = new Vector3(
         definition.motion.axis.x,
         definition.motion.axis.y,
@@ -229,6 +237,21 @@ function createDoor(model: EnclosureModel, id: string, width: number, height: nu
   return door;
 }
 
+function createServiceSlider(model: EnclosureModel): Group | undefined {
+  const slider = model.serviceSlider;
+  if (!slider) return undefined;
+  const anchor = model.anchors[slider.anchor]?.position;
+  if (!anchor) throw new Error(`Missing service slider anchor ${slider.anchor}`);
+  const group = new Group();
+  group.name = `assembly-object:${slider.id}`;
+  group.position.set(anchor.x, anchor.y, anchor.z);
+  const panel = createDoorMesh(slider.width, slider.height, 4, slider.id);
+  panel.position.set(slider.width / 2, slider.height / 2, 0);
+  panel.userData.partType = "service-slider";
+  group.add(panel);
+  return group;
+}
+
 export async function buildEnclosureScene(
   dimensions: EnclosureDimensions,
   initializer: OpenCascadeInitializer = opencascade,
@@ -282,6 +305,17 @@ export async function buildEnclosureScene(
     root.add(object);
     return object;
   });
+  const slider = createServiceSlider(model);
+  if (slider && model.serviceSlider) {
+    slider.userData.basePosition = slider.position.clone();
+    const assembly = assemblies.find((candidate) =>
+      candidate.parts.includes(model.serviceSlider!.id),
+    );
+    if (!assembly) throw new Error(`Missing assembly for ${model.serviceSlider.id}`);
+    slider.userData.assemblyId = assembly.id;
+    assemblyObjects.set(assembly.id, slider);
+    root.add(slider);
+  }
 
   root.updateMatrixWorld(true);
   const minimum = model.doorSeamClearance ?? 2;
@@ -406,6 +440,7 @@ export async function buildEnclosureScene(
     members,
     doors,
     assemblies,
+    assemblyTree: buildAssemblyTree(assemblies),
     assemblyObjects,
     solidChecks,
     motionSolidCheck,

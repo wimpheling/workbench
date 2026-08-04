@@ -83,9 +83,48 @@ export type Assembly = {
   name: string;
   frame: string;
   parts: readonly string[];
+  parent?: string;
   children: readonly string[];
   motions: readonly MotionDefinition[];
   states: readonly AssemblyState[];
+};
+export type AssemblyTreeNode = Readonly<{
+  assembly: Assembly;
+  children: readonly AssemblyTreeNode[];
+}>;
+
+export const buildAssemblyTree = (assemblies: readonly Assembly[]): readonly AssemblyTreeNode[] => {
+  const byId = new Map(assemblies.map((assembly) => [assembly.id, assembly]));
+  if (byId.size !== assemblies.length) throw new Error("Assembly IDs must be unique");
+  const childrenOf = new Map<string, readonly string[]>();
+  for (const assembly of assemblies) {
+    if (new Set(assembly.children).size !== assembly.children.length)
+      throw new Error(`Assembly ${assembly.id} repeats a child`);
+    for (const childId of assembly.children) {
+      const child = byId.get(childId);
+      if (!child) throw new Error(`Assembly ${assembly.id} references missing child ${childId}`);
+      if (child.parent !== assembly.id)
+        throw new Error(`Assembly ${childId} must declare ${assembly.id} as parent`);
+    }
+    if (assembly.parent && !byId.has(assembly.parent))
+      throw new Error(`Assembly ${assembly.id} references missing parent ${assembly.parent}`);
+    childrenOf.set(assembly.id, assembly.children);
+  }
+  const visit = (id: string, ancestry: ReadonlySet<string>): AssemblyTreeNode => {
+    if (ancestry.has(id)) throw new Error(`Assembly hierarchy cycle at ${id}`);
+    const assembly = byId.get(id)!;
+    const next = new Set(ancestry);
+    next.add(id);
+    return Object.freeze({
+      assembly,
+      children: Object.freeze((childrenOf.get(id) ?? []).map((child) => visit(child, next))),
+    });
+  };
+  return Object.freeze(
+    assemblies
+      .filter((assembly) => !assembly.parent)
+      .map((assembly) => visit(assembly.id, new Set())),
+  );
 };
 export const evaluateAssemblyState = (assembly: Assembly, state: AssemblyState): KinematicResult =>
   evaluateMotions(assembly.motions, state.motions);

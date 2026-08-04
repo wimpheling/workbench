@@ -102,12 +102,16 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(scene.members).toHaveLength(16);
     expect(scene.doors).toHaveLength(2);
     expect(scene.assemblies.map((assembly) => assembly.id)).toEqual([
+      "assembly:enclosure",
       "assembly:left-door",
       "assembly:right-door",
+      "assembly:service-slider",
     ]);
-    expect([...scene.assemblyObjects.keys()]).toEqual(
-      scene.assemblies.map((assembly) => assembly.id),
-    );
+    expect([...scene.assemblyObjects.keys()]).toEqual([
+      "assembly:left-door",
+      "assembly:right-door",
+      "assembly:service-slider",
+    ]);
     expect(scene.doors.map((door) => door.name)).toEqual(["door:left-door", "door:right-door"]);
     expect(scene.doors[0].position.toArray()).toEqual([30, 30, 34]);
     expect(scene.doors[1].position.toArray()).toEqual([1230, 30, 34]);
@@ -396,5 +400,20 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(open[1]).toBeGreaterThan(closed[1]);
     expect(rightDoor.scale.x).toBe(-1);
     expect(doors.map((door) => door.position.toArray())).toEqual(pivots);
+  });
+
+  it("moves the service slider through the generic prismatic assembly path", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const slider = scene.assemblyObjects.get("assembly:service-slider")!;
+    const initial = slider.position.clone();
+
+    applyAssemblyPose(scene, {
+      "left-door.angle": 0,
+      "right-door.angle": 0,
+      "service-slider.travel": scene.model.serviceSlider!.travel,
+    });
+    expect(slider.position.x).toBeCloseTo(initial.x + scene.model.serviceSlider!.travel);
+    expect(slider.position.y).toBeCloseTo(initial.y);
+    expect(slider.position.z).toBeCloseTo(initial.z);
   });
 });
