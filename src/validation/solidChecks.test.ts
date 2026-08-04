@@ -36,12 +36,15 @@ describe("kernel-backed solid checks", () => {
     expect(result.distance).toBe(0);
   });
 
-  it("falls back to translate when clone is truthy but not callable", () => {
-    const original = box(0, 0, 0);
-    const frame = Object.create(original) as typeof original & { clone: true };
-    frame.clone = true;
-    frame.translate = (...args: Parameters<typeof original.translate>) =>
-      box(...(args as [number, number, number]));
+  it("rend un solide non clonable indéterminé sans jamais le transformer", () => {
+    let translations = 0;
+    const frame = {
+      clone: true,
+      translate: () => {
+        translations++;
+        throw new Error("source mutated");
+      },
+    } as unknown as ReturnType<typeof box>;
     const result = checkSolidClearance(
       new Map([
         ["frame", frame],
@@ -49,8 +52,9 @@ describe("kernel-backed solid checks", () => {
       ]),
       check(5),
     );
-    expect(result.status).toBe("clear");
-    expect(result.status).not.toBe("indeterminate");
+    expect(result.status).toBe("indeterminate");
+    expect(result.diagnostics.join(" ")).toMatch(/non clonable|clone/i);
+    expect(translations).toBe(0);
   });
 
   it("classifies face-tangent solids as insufficient clearance, not collision", () => {
@@ -111,6 +115,41 @@ describe("kernel-backed solid checks", () => {
     expect(results.every((result) => result.status === "clear")).toBe(true);
     expect(frame.isNull).toBe(false);
     expect(door.isNull).toBe(false);
+    expect(frame.translate(1, 0, 0).isNull).toBe(false);
+    expect(door.rotate(17, [0, 0, 0], [0, 1, 0]).isNull).toBe(false);
+  });
+
+  it("convertit une vraie défaillance intersect en diagnostic kernel", () => {
+    const frame = box(0, 0, 0);
+    const originalClone = frame.clone.bind(frame);
+    const failingClone = (): typeof frame => {
+      const clone = originalClone();
+      let proxy: typeof frame;
+      proxy = new Proxy(clone, {
+        get(target, property, receiver) {
+          if (property === "clone" || property === "translate") return () => proxy;
+          if (property === "intersect")
+            return () => {
+              throw new Error("kernel intersect failure");
+            };
+          return Reflect.get(target, property, receiver);
+        },
+      });
+      return proxy;
+    };
+    frame.clone = failingClone;
+
+    const result = checkSolidClearance(
+      new Map([
+        ["frame", frame],
+        ["door", box(20, 0, 0)],
+      ]),
+      check(5),
+    );
+
+    expect(result.status).toBe("indeterminate");
+    expect(result.diagnostics.join(" ")).toMatch(/kernel intersect failure/i);
+    expect(Object.getPrototypeOf(frame)).toBe(Object.getPrototypeOf(box(0, 0, 0)));
   });
 
   it("propagates each configured check and preserves blocking classification", () => {

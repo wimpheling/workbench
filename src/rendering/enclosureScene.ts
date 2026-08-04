@@ -5,8 +5,6 @@ import {
   Mesh,
   MeshStandardMaterial,
   Object3D,
-  Quaternion,
-  Vector3,
 } from "three";
 import { makeBaseBox, setOC, type Shape3D } from "replicad";
 import opencascade from "replicad-opencascadejs/src/replicad_single.js";
@@ -25,6 +23,9 @@ import {
   checkDoorMotionSolids,
   type MotionSolidCheckResult,
 } from "../validation/motionSolidChecks";
+import { transformShapeToWorld } from "../geometry/replicadTransform";
+
+export { transformShapeToWorld } from "../geometry/replicadTransform";
 
 let openCascadePromise: Promise<unknown> | undefined;
 type OpenCascadeModule = Parameters<typeof setOC>[0];
@@ -105,19 +106,6 @@ export const applyDoorPose = (
   scene.root.updateMatrixWorld(true);
 };
 
-export const transformShapeToWorld = (shape: Shape3D, object: Object3D): Shape3D => {
-  const position = object.getWorldPosition(new Vector3());
-  const quaternion = object.getWorldQuaternion(new Quaternion());
-  const angle = 2 * Math.acos(Math.max(-1, Math.min(1, quaternion.w)));
-  const axis = new Vector3(quaternion.x, quaternion.y, quaternion.z);
-  const reflected = object.matrixWorld.determinant() < 0 ? shape.mirror("YZ", [0, 0, 0]) : shape;
-  const oriented =
-    angle > 1e-10 && axis.lengthSq() > 1e-12
-      ? reflected.rotate(angle, [0, 0, 0], axis.normalize().toArray())
-      : reflected;
-  return oriented.translate(position.x, position.y, position.z) as Shape3D;
-};
-
 const indeterminateSolidCheck = (
   id: string,
   subject: string,
@@ -136,8 +124,9 @@ const indeterminateSolidCheck = (
 const collectDoorSolid = (door: Group): Shape3D => {
   const solids: Shape3D[] = [];
   door.traverse((child) => {
-    if (child instanceof Mesh && child.userData.solid)
+    if (child instanceof Mesh && child.userData.solid) {
       solids.push(transformShapeToWorld(child.userData.solid as Shape3D, child));
+    }
   });
   return solids.slice(1).reduce((combined, solid) => combined.fuse(solid) as Shape3D, solids[0]);
 };
@@ -177,15 +166,23 @@ function createDoor(model: EnclosureModel, id: string, width: number, height: nu
   const hinge = model.anchors[`anchor:${id === "left-door" ? "left" : "right"}-hinge`]!.position;
   door.position.set(hinge.x, hinge.y, hinge.z);
   if (id === "right-door") door.scale.x = -1;
+  const profile = "aluminium-3030" as Parameters<typeof getProfile>[0];
+  // The 3060 front post presents a 30 mm side toward the door; derive the
+  // offset from the catalog's established section width.
+  const frontPostSide = getProfile("profile:aluminium-3030").section.x;
+  const clearance = 2;
   const frame = new Group();
   frame.name = `${id}-frame`;
+  // The local door is positioned from its hinge edge. The front post occupies
+  // one profile side toward the door, so leave that side plus the clearance;
+  // the hinge pivot itself remains unchanged.
+  frame.position.x = width / 2 + frontPostSide + clearance;
   door.add(frame);
-  const profile = "aluminium-3030" as Parameters<typeof getProfile>[0];
-  const verticalSide = 30;
+  const verticalSide = getProfile("profile:aluminium-3030").section.x;
   const panelSide = 4;
   const verticals = [
-    [verticalSide / 2, height / 2, "left-montant"],
-    [width - verticalSide / 2, height / 2, "right-montant"],
+    [-(width / 2 - verticalSide / 2), height / 2, "left-montant"],
+    [width / 2 - verticalSide / 2, height / 2, "right-montant"],
   ] as const;
   for (const [x, y, name] of verticals) {
     const mesh = createDoorMesh(height, verticalSide, verticalSide, `${id}-${name}`, profile);
@@ -195,15 +192,15 @@ function createDoor(model: EnclosureModel, id: string, width: number, height: nu
     frame.add(mesh);
   }
   for (const [x, y, name] of [
-    [width / 2, verticalSide / 2, "bottom-traverse"],
-    [width / 2, height - verticalSide / 2, "top-traverse"],
+    [0, verticalSide / 2, "bottom-traverse"],
+    [0, height - verticalSide / 2, "top-traverse"],
   ] as const) {
     const mesh = createDoorMesh(width - 60, verticalSide, verticalSide, `${id}-${name}`, profile);
     mesh.position.set(x, y, 0);
     frame.add(mesh);
   }
   const panel = createDoorMesh(width - 50, height - 50, panelSide, `${id}-panel`);
-  panel.position.set(width / 2, height / 2, verticalSide / 2 - panelSide / 2);
+  panel.position.set(0, height / 2, verticalSide / 2 - panelSide / 2);
   frame.add(panel);
   return door;
 }
@@ -330,7 +327,7 @@ export async function buildEnclosureScene(
     validateModel(model),
     [],
     [],
-    [...solidChecks, ...(motionSolidCheck.firstFailure ? [motionSolidCheck.firstFailure] : [])],
+    solidChecks,
     motionSolidCheck,
   );
   root.userData.geometryReady = true;

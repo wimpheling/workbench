@@ -1,5 +1,6 @@
-import { type Group, type Object3D, Quaternion, Vector3 } from "three";
+import { type Group, type Object3D } from "three";
 import type { Shape3D } from "replicad";
+import { cloneShape, transformShapeToWorld } from "../geometry/replicadTransform";
 import {
   checkSolidClearance,
   solidCheckStatusIsBlocking,
@@ -18,7 +19,7 @@ export type MotionSolidCheckOptions = Readonly<{
   minimumClearance?: number;
 }>;
 export type MotionSolidCheckResult = {
-  status: "clear" | "collision" | "incomplete";
+  status: "clear" | "collision" | "insufficient-clearance" | "incomplete";
   verified: boolean;
   states: readonly DoorMotionState[];
   checkedStates: number;
@@ -44,31 +45,16 @@ export const cartesianDoorStates = (options: { samples?: number; maxStates?: num
 };
 
 type SolidItem = { id: string; door?: string; shape: Shape3D };
-const transformShapeToWorld = (shape: Shape3D, object: Object3D): Shape3D => {
-  const position = object.getWorldPosition(new Vector3());
-  const quaternion = object.getWorldQuaternion(new Quaternion());
-  const angle = 2 * Math.acos(Math.max(-1, Math.min(1, quaternion.w)));
-  const axis = new Vector3(quaternion.x, quaternion.y, quaternion.z);
-  const reflected = object.matrixWorld.determinant() < 0 ? shape.mirror("YZ", [0, 0, 0]) : shape;
-  const oriented =
-    angle > 1e-10 && axis.lengthSq() > 1e-12
-      ? reflected.rotate(angle, [0, 0, 0], axis.normalize().toArray())
-      : reflected;
-  return oriented.translate(position.x, position.y, position.z) as Shape3D;
-};
-const cloneSolid = (shape: Shape3D): Shape3D => {
-  const candidate = shape as Shape3D & { clone?: () => Shape3D };
-  return typeof candidate.clone === "function"
-    ? candidate.clone()
-    : (shape.translate(0, 0, 0) as Shape3D);
-};
 const meshes = (door: Group): SolidItem[] => {
   door.updateMatrixWorld(true);
   const result: SolidItem[] = [];
   door.traverse((child) => {
     if (child.userData.solid) {
-      const local = cloneSolid(child.userData.solid as Shape3D);
-      result.push({ id: child.name, door: door.name, shape: transformShapeToWorld(local, child) });
+      result.push({
+        id: child.name,
+        door: door.name,
+        shape: transformShapeToWorld(child.userData.solid as Shape3D, child),
+      });
     }
   });
   return result;
@@ -81,6 +67,7 @@ export const checkDoorMotionSolids = (options: MotionSolidCheckOptions): MotionS
   const minimum = options.minimumClearance ?? 2;
   const checkedPairs: { subject: string; target: string }[] = [];
   let firstFailure: MotionSolidCheckResult["firstFailure"];
+  let firstClearanceFailure: MotionSolidCheckResult["firstFailure"];
   let kernelError: string | undefined;
   let checkedStates = 0;
   const initialRotations = options.doors.map((door) => door.rotation.clone());
@@ -120,8 +107,8 @@ export const checkDoorMotionSolids = (options: MotionSolidCheckOptions): MotionS
             checkedPairs.push(pair);
           const check = checkSolidClearance(
             new Map([
-              [a.id, cloneSolid(a.shape)],
-              [b.id, cloneSolid(b.shape)],
+              [a.id, cloneShape(a.shape)],
+              [b.id, cloneShape(b.shape)],
             ]),
             {
               id: `motion.${a.id}.${b.id}`,
@@ -131,9 +118,14 @@ export const checkDoorMotionSolids = (options: MotionSolidCheckOptions): MotionS
             },
           );
           if (solidCheckStatusIsBlocking(check.status)) {
-            firstFailure = { ...check, state };
+            const failure = { ...check, state };
+            if (check.status === "insufficient-clearance") {
+              firstClearanceFailure ??= failure;
+              continue;
+            }
+            firstFailure = failure;
             return {
-              // The sweep stopped at the first proven failure, so the complete
+              // The sweep stopped at the first proven collision, so the complete
               // state space is not verified even though this collision is real.
               status: "collision",
               verified: false,
@@ -142,6 +134,11 @@ export const checkDoorMotionSolids = (options: MotionSolidCheckOptions): MotionS
               checkedPairs,
               firstFailure,
               diagnostics: [
+                ...(firstClearanceFailure
+                  ? [
+                      `insufficient clearance was found earlier between ${firstClearanceFailure.subject} and ${firstClearanceFailure.target}; the sweep continued to check for collision`,
+                    ]
+                  : []),
                 ...check.diagnostics,
                 `collision found before all ${totalStates} states were checked; collision is a blocking sampled-state result`,
               ],
@@ -158,6 +155,39 @@ export const checkDoorMotionSolids = (options: MotionSolidCheckOptions): MotionS
     options.doors.forEach((door, index) => door.rotation.copy(initialRotations[index]));
     options.doors[0]?.parent?.updateMatrixWorld(true);
     options.doors.forEach((door) => door.updateMatrixWorld(true));
+  }
+  if (kernelError) {
+    return {
+      status: "incomplete",
+      verified: false,
+      states: requested,
+      checkedStates,
+      checkedPairs,
+      firstFailure: firstClearanceFailure,
+      diagnostics: [
+        `Replicad/OpenCascade indéterminé: ${kernelError}`,
+        ...(firstClearanceFailure
+          ? [
+              `un dégagement insuffisant avait été observé entre ${firstClearanceFailure.subject} et ${firstClearanceFailure.target} avant l'erreur noyau`,
+              ...firstClearanceFailure.diagnostics,
+            ]
+          : []),
+      ],
+    };
+  }
+  if (firstClearanceFailure) {
+    return {
+      status: "insufficient-clearance",
+      verified: false,
+      states: requested,
+      checkedStates,
+      checkedPairs,
+      firstFailure: firstClearanceFailure,
+      diagnostics: [
+        ...firstClearanceFailure.diagnostics,
+        "insufficient clearance is a blocking sampled-state result; the sweep found no positive-volume collision",
+      ],
+    };
   }
   const incomplete = Boolean(kernelError) || requested.length < totalStates;
   return {

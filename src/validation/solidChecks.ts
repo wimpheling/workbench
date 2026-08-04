@@ -1,4 +1,5 @@
 import { measureDistanceBetween, measureVolume, type Shape3D } from "replicad";
+import { cloneShape } from "../geometry/replicadTransform";
 
 export type SolidCheckStatus = "clear" | "collision" | "insufficient-clearance" | "indeterminate";
 export type SolidCheckResult = {
@@ -20,13 +21,6 @@ export type ClearanceCheck = {
   volumeTolerance?: number;
 };
 
-const cloneSolid = (shape: Shape3D): Shape3D => {
-  const candidate = shape as Shape3D & { clone?: () => Shape3D };
-  return typeof candidate.clone === "function"
-    ? candidate.clone()
-    : (shape.translate(0, 0, 0) as Shape3D);
-};
-
 export const checkSolidClearance = (
   solids: ReadonlyMap<string, Shape3D>,
   check: ClearanceCheck,
@@ -43,9 +37,9 @@ export const checkSolidClearance = (
       target: check.target,
     };
   try {
-    const intersection = cloneSolid(subject).intersect(cloneSolid(target));
+    const intersection = cloneShape(subject).intersect(cloneShape(target));
     const volume = intersection.isNull ? 0 : measureVolume(intersection);
-    const distance = measureDistanceBetween(cloneSolid(subject), cloneSolid(target));
+    const distance = measureDistanceBetween(cloneShape(subject), cloneShape(target));
     const collided = volume > (check.volumeTolerance ?? 1e-6);
     return {
       id: check.id,
@@ -79,7 +73,7 @@ export const checkSolidClearance = (
 
 export const checkSolidPairs = (solids: readonly SolidPair[], checks: readonly ClearanceCheck[]) =>
   checks.map((check) =>
-    checkSolidClearance(new Map(solids.map((solid) => [solid.id, solid.shape])), check),
+    checkSolidClearance(new Map(solids.map((solid) => [solid.id, cloneShape(solid.shape)])), check),
   );
 
 export type BroadPhaseBox = {

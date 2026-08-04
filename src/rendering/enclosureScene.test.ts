@@ -1,8 +1,31 @@
-import { Vector3 } from "three";
-import { describe, expect, it } from "vitest";
+import { Box3, Mesh, Vector3 } from "three";
+import { describe, expect, it, vi } from "vitest";
 import { makeEnclosureV2 } from "../domain/enclosureV2";
-import { applyDoorPose, buildEnclosureScene, transformShapeToWorld } from "./enclosureScene";
+import type { MotionSolidCheckResult } from "../validation/motionSolidChecks";
+import {
+  applyDoorPose,
+  buildEnclosureScene,
+  initializeOpenCascade,
+  transformShapeToWorld,
+} from "./enclosureScene";
 import { makeBaseBox, type Shape3D } from "replicad";
+
+const { checkDoorMotionSolidsMock, checkSolidPairsMock } = vi.hoisted(() => ({
+  checkDoorMotionSolidsMock: vi.fn(),
+  checkSolidPairsMock: vi.fn(),
+}));
+
+vi.mock("../validation/motionSolidChecks", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../validation/motionSolidChecks")>();
+  checkDoorMotionSolidsMock.mockImplementation(actual.checkDoorMotionSolids);
+  return { ...actual, checkDoorMotionSolids: checkDoorMotionSolidsMock };
+});
+
+vi.mock("../validation/solidChecks", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../validation/solidChecks")>();
+  checkSolidPairsMock.mockImplementation(actual.checkSolidPairs);
+  return { ...actual, checkSolidPairs: checkSolidPairsMock };
+});
 
 const dimensions = { width: 120, height: 100, depth: 80 };
 
@@ -114,6 +137,76 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(scene.validationReport).toEqual(expect.objectContaining({ issues: expect.any(Array) }));
   });
 
+  it("conserve le dégagement motion insuffisant comme warning dans le rapport du build complet", async () => {
+    const firstFailure: NonNullable<MotionSolidCheckResult["firstFailure"]> = {
+      id: "motion.left-door-panel.front-left-post",
+      status: "insufficient-clearance",
+      subject: "left-door-panel",
+      target: "part:front-left-post",
+      intersection: false,
+      distance: 1,
+      minimum: 2,
+      diagnostics: ["clearance 1 is below required 2"],
+      state: { "left-door.angle": -Math.PI / 4, "right-door.angle": Math.PI / 4 },
+    };
+    checkDoorMotionSolidsMock.mockReturnValueOnce({
+      status: "insufficient-clearance",
+      verified: false,
+      states: [firstFailure.state],
+      checkedStates: 81,
+      checkedPairs: [{ subject: firstFailure.subject, target: firstFailure.target }],
+      firstFailure,
+      diagnostics: ["insufficient clearance; no collision"],
+    } satisfies MotionSolidCheckResult);
+    checkSolidPairsMock.mockReturnValueOnce(
+      [
+        ["door:left-door", "door:right-door"],
+        ["door:left-door", "part:front-left-post"],
+        ["door:right-door", "part:front-right-post"],
+      ].map(([subject, target], index) => ({
+        id: `static.clear.${index}`,
+        status: "clear" as const,
+        subject,
+        target,
+        intersection: false,
+        distance: 2,
+        minimum: 2,
+        diagnostics: [],
+      })),
+    );
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+
+    expect(scene.motionSolidCheck.status).toBe("insufficient-clearance");
+    expect(scene.motionSolidCheck.firstFailure).toMatchObject({
+      status: "insufficient-clearance",
+      intersection: false,
+    });
+    expect(scene.validationReport.status).toBe("warnings");
+    expect(
+      scene.validationReport.issues.filter(
+        (issue) =>
+          issue.references.join("|") ===
+          [
+            scene.motionSolidCheck.firstFailure!.subject,
+            scene.motionSolidCheck.firstFailure!.target,
+          ].join("|"),
+      ),
+    ).toEqual([expect.objectContaining({ id: "motion.solid", severity: "warning" })]);
+  });
+
+  it("garde au moins 2 mm de dégagement physique entre chaque porte fermée et son montant avant", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    for (const id of [
+      "clearance.door-left-door.part:front-left-post",
+      "clearance.door-right-door.part:front-right-post",
+    ]) {
+      const check = scene.solidChecks.find((candidate) => candidate.id === id)!;
+      expect(check.status, `${id}: ${check.diagnostics.join("; ")}`).toBe("clear");
+      expect(check.intersection).toBe(false);
+      expect(check.distance).toBeGreaterThanOrEqual(2);
+    }
+  });
+
   it("retourne un rapport incomplet si l'initialisation OpenCascade échoue", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 }, async () => {
       throw new Error("WASM indisponible");
@@ -130,6 +223,84 @@ describe("production EnclosureV2 scene boundary", () => {
     const maxX = Math.max(...vertices.filter((_, index) => index % 3 === 0));
     expect(scene.doors[1].scale.x).toBe(-1);
     expect(maxX).toBeLessThan(scene.doors[1].position.x);
+  });
+
+  it("conserve la parité world-space des enveloppes Three.js et Replicad pour les portes fermées et ouvertes", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const poses = [
+      { "left-door.angle": 0, "right-door.angle": 0 },
+      { "left-door.angle": -Math.PI / 2, "right-door.angle": Math.PI / 2 },
+    ] as const;
+
+    for (const pose of poses) {
+      applyDoorPose(scene, pose);
+      for (const door of scene.doors) {
+        door.traverse((object) => {
+          if (!(object instanceof Mesh) || !object.userData.solid) return;
+          object.geometry.computeBoundingBox();
+          const threeBounds = object.geometry.boundingBox!.clone().applyMatrix4(object.matrixWorld);
+          const solidBounds = transformShapeToWorld(object.userData.solid as Shape3D, object)
+            .boundingBox.bounds;
+          const replicadBounds = new Box3(
+            new Vector3(...solidBounds[0]),
+            new Vector3(...solidBounds[1]),
+          );
+          expect(
+            replicadBounds.min.toArray(),
+            `${object.name} min @ ${JSON.stringify(pose)}`,
+          ).toEqual(
+            expect.arrayContaining(
+              threeBounds.min.toArray().map((value) => expect.closeTo(value, 6)),
+            ),
+          );
+          expect(
+            replicadBounds.max.toArray(),
+            `${object.name} max @ ${JSON.stringify(pose)}`,
+          ).toEqual(
+            expect.arrayContaining(
+              threeBounds.max.toArray().map((value) => expect.closeTo(value, 6)),
+            ),
+          );
+        });
+      }
+    }
+  });
+
+  it("applique rotation non orthogonale et scale uniforme dans l'ordre world-space", async () => {
+    await initializeOpenCascade();
+    const object = new Mesh();
+    object.position.set(7, -3, 11);
+    object.rotation.set(0.31, -0.47, 0.19);
+    object.scale.setScalar(1.7);
+    object.updateMatrixWorld(true);
+    const shape = makeBaseBox(2, 3, 5).translate(1, -2, 0.5) as Shape3D;
+
+    const localBounds = shape.boundingBox.bounds;
+    const expected = new Box3(
+      new Vector3(...localBounds[0]),
+      new Vector3(...localBounds[1]),
+    ).applyMatrix4(object.matrixWorld);
+    const bounds = transformShapeToWorld(shape, object).boundingBox.bounds;
+    expect(bounds[0]).toEqual(
+      expect.arrayContaining(expected.min.toArray().map((v) => expect.closeTo(v, 6))),
+    );
+    expect(bounds[1]).toEqual(
+      expect.arrayContaining(expected.max.toArray().map((v) => expect.closeTo(v, 6))),
+    );
+    expect(shape.isNull).toBe(false);
+  });
+
+  it("refuse explicitement un scale non uniforme non représentable par Replicad", async () => {
+    await initializeOpenCascade();
+    const object = new Mesh();
+    object.rotation.set(0.31, -0.47, 0.19);
+    object.scale.set(1.2, 0.8, 1.5);
+    object.updateMatrixWorld(true);
+    const shape = makeBaseBox(2, 3, 5) as Shape3D;
+    expect(() => transformShapeToWorld(shape, object)).toThrow(
+      /scale non uniforme|non-uniform scale/i,
+    );
+    expect(shape.isNull).toBe(false);
   });
 
   it("applique une pose absolue aux groupes existants sans perdre pivots ni miroir", async () => {

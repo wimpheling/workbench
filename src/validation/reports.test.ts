@@ -4,6 +4,7 @@ import { initializeOpenCascade } from "../rendering/enclosureScene";
 import { checkSolidPairs, type SolidCheckResult } from "./solidChecks";
 import { buildValidationReport } from "./reports";
 import type { ConstraintResult } from "./constraints";
+import type { MotionSolidCheckResult } from "./motionSolidChecks";
 
 const constraints: ConstraintResult[] = [
   {
@@ -103,5 +104,32 @@ describe("validation reports", () => {
     const report = buildValidationReport("revision", [], [], [], solids(0, 20));
     expect(report.status).toBe("valid");
     expect(report.issues).toHaveLength(0);
+  });
+
+  it("rapporte un dégagement motion insuffisant comme warning, pas comme collision", () => {
+    const motion: MotionSolidCheckResult = {
+      status: "insufficient-clearance",
+      verified: false,
+      states: [],
+      checkedStates: 4,
+      checkedPairs: [{ subject: "door", target: "post" }],
+      firstFailure: {
+        id: "motion.door.post",
+        status: "insufficient-clearance",
+        subject: "door",
+        target: "post",
+        intersection: false,
+        distance: 1,
+        minimum: 2,
+        diagnostics: ["clearance 1 is below required 2"],
+        state: { "left-door.angle": 0, "right-door.angle": 0 },
+      },
+      diagnostics: ["insufficient clearance; no collision"],
+    };
+
+    const report = buildValidationReport("revision", [], [], [], [], motion);
+    expect(report.status).toBe("warnings");
+    expect(report.issues[0]).toMatchObject({ severity: "warning", category: "clearance" });
+    expect(report.issues[0]?.message).not.toMatch(/collision found/i);
   });
 });

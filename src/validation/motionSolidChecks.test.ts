@@ -1,7 +1,34 @@
 import { Group, Mesh } from "three";
-import { describe, expect, it } from "vitest";
-import { buildEnclosureScene } from "../rendering/enclosureScene";
+import { makeBaseBox } from "replicad";
+import { beforeAll, describe, expect, it } from "vitest";
+import { buildEnclosureScene, initializeOpenCascade } from "../rendering/enclosureScene";
 import { checkDoorMotionSolids, cartesianDoorStates } from "./motionSolidChecks";
+
+beforeAll(async () => {
+  await initializeOpenCascade();
+});
+
+const motionFixture = () => {
+  const leftDoor = new Group();
+  leftDoor.name = "door:left-door";
+  const leftPanel = new Mesh();
+  leftPanel.name = "left-door-panel";
+  leftPanel.userData.solid = makeBaseBox(1, 1, 1).translate(10, 0, 0);
+  leftDoor.add(leftPanel);
+
+  const rightDoor = new Group();
+  rightDoor.name = "door:right-door";
+  const rightPanel = new Mesh();
+  rightPanel.name = "right-door-panel";
+  rightPanel.userData.solid = makeBaseBox(1, 1, 1).translate(12, 0, 0);
+  rightDoor.add(rightPanel);
+
+  const obstacle = new Mesh();
+  obstacle.name = "frame-obstacle";
+  obstacle.userData.solid = makeBaseBox(1, 1, 1).translate(0, 0, 10);
+
+  return { doors: [leftDoor, rightDoor], staticMeshes: [obstacle] };
+};
 
 describe("validation Replicad des mouvements de portes", () => {
   it("génère une grille cartésienne déterministe et respecte maxStates", () => {
@@ -34,23 +61,80 @@ describe("validation Replicad des mouvements de portes", () => {
     expect(result.diagnostics.join(" ")).toMatch(/budget|état/i);
   });
 
-  it("retourne la première collision avec les IDs mesh réels et les mesures", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
-    scene.doors[1].position.x = scene.doors[0].position.x;
+  it("signale le dégagement insuffisant puis donne la priorité à une collision ultérieure", () => {
+    const fixture = motionFixture();
     const result = checkDoorMotionSolids({
-      doors: scene.doors,
-      staticMeshes: [],
+      ...fixture,
       samples: 2,
       maxStates: 4,
     });
 
     expect(result.status).toBe("collision");
     expect(result.verified).toBe(false);
-    expect(result.diagnostics.join(" ")).toMatch(/collision/i);
-    expect(result.firstFailure?.subject).toMatch(/left-door|right-door/);
-    expect(result.firstFailure?.target).toMatch(/left-door|right-door/);
-    expect(result.firstFailure?.distance).toBeDefined();
+    expect(result.checkedStates).toBe(3);
+    expect(result.diagnostics.join(" ")).toMatch(/insufficient clearance/i);
+    expect(result.diagnostics.join(" ")).toMatch(/left-door-panel.*right-door-panel/i);
+    expect(result.firstFailure?.subject).toBe("left-door-panel");
+    expect(result.firstFailure?.target).toBe("frame-obstacle");
+    expect(result.firstFailure?.status).toBe("collision");
+    expect(result.firstFailure?.distance).toBe(0);
     expect(result.firstFailure?.intersection).toBe(true);
+    expect(result.firstFailure?.state).toEqual({
+      "left-door.angle": -Math.PI / 2,
+      "right-door.angle": 0,
+    });
+  });
+
+  it("conserve insufficient-clearance quand aucun état ne collisionne", () => {
+    const door = new Group();
+    door.name = "door:left-door";
+    const panel = new Mesh();
+    panel.name = "left-door-panel";
+    panel.userData.solid = makeBaseBox(1, 1, 1).translate(-0.5, -0.5, -0.5);
+    door.add(panel);
+    const obstacle = new Mesh();
+    obstacle.name = "near-obstacle";
+    obstacle.userData.solid = makeBaseBox(1, 1, 1).translate(3, -0.5, -0.5);
+
+    const result = checkDoorMotionSolids({
+      doors: [door],
+      staticMeshes: [obstacle],
+      samples: 2,
+      minimumClearance: 3,
+    });
+
+    expect(result.status).toBe("insufficient-clearance");
+    expect(result.firstFailure?.status).toBe("insufficient-clearance");
+    expect(result.firstFailure?.intersection).toBe(false);
+  });
+
+  it("devient incomplete si le noyau échoue après un dégagement insuffisant", () => {
+    const fixture = motionFixture();
+    const obstacle = fixture.staticMeshes[0];
+    const solid = obstacle.userData.solid as ReturnType<typeof makeBaseBox>;
+    const originalClone = solid.clone.bind(solid);
+    let clones = 0;
+    solid.clone = () => {
+      clones++;
+      if (clones === 2) throw new Error("kernel failure after clearance");
+      return originalClone();
+    };
+
+    const result = checkDoorMotionSolids({
+      ...fixture,
+      samples: 2,
+      maxStates: 2,
+    });
+
+    expect(result.status).toBe("incomplete");
+    expect(result.verified).toBe(false);
+    expect(result.firstFailure).toMatchObject({
+      status: "insufficient-clearance",
+      intersection: false,
+      subject: "left-door-panel",
+      target: "right-door-panel",
+    });
+    expect(result.diagnostics.join(" ")).toMatch(/kernel failure after clearance/i);
   });
 
   it("applique les angles absolus, conserve la réflexion droite et exclut les composants d'une même porte", async () => {
@@ -95,18 +179,32 @@ describe("validation Replicad des mouvements de portes", () => {
   it("convertit une erreur du noyau en état indéterminé sans faux clear", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     const mesh = scene.doors[0].getObjectByName("left-door-panel") as Mesh;
-    const solid = mesh.userData.solid as { intersect: (other: unknown) => unknown };
-    mesh.userData.solid = {
-      ...solid,
-      intersect: () => {
-        throw new Error("kernel failure");
-      },
+    const solid = mesh.userData.solid as ReturnType<typeof makeBaseBox>;
+    const originalClone = solid.clone.bind(solid);
+    const failingClone = (): typeof solid => {
+      const clone = originalClone();
+      let proxy: typeof solid;
+      proxy = new Proxy(clone, {
+        get(target, property, receiver) {
+          if (property === "clone" || property === "translate") return () => proxy;
+          if (property === "intersect")
+            return () => {
+              throw new Error("kernel failure");
+            };
+          return Reflect.get(target, property, receiver);
+        },
+      });
+      return proxy;
     };
+    solid.clone = failingClone;
     const other = new Group();
     other.name = "door:right-door";
+    const obstacle = new Mesh();
+    obstacle.name = "frame-obstacle";
+    obstacle.userData.solid = makeBaseBox(1, 1, 1).translate(100, 0, 0);
     const result = checkDoorMotionSolids({
       doors: [scene.doors[0], other],
-      staticMeshes: [],
+      staticMeshes: [obstacle],
       samples: 2,
       maxStates: 4,
     });
@@ -115,18 +213,27 @@ describe("validation Replicad des mouvements de portes", () => {
     expect(result.diagnostics.join(" ")).toMatch(/indéterminé|kernel/i);
   });
 
-  it("tolère un clone truthy mais non appelable sur un solide de mouvement", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
-    const mesh = scene.doors[0].getObjectByName("left-door-panel") as Mesh;
-    mesh.userData.solid = Object.assign(mesh.userData.solid, { clone: true });
+  it("rend un clone non appelable indéterminé sans consommer le solide source", async () => {
+    const door = new Group();
+    door.name = "door:left-door";
+    const mesh = new Mesh();
+    mesh.name = "left-door-panel";
+    const source = makeBaseBox(1, 1, 1);
+    mesh.userData.solid = source;
+    door.add(mesh);
+    const obstacle = new Mesh();
+    obstacle.name = "obstacle";
+    obstacle.userData.solid = makeBaseBox(1, 1, 1).translate(10, 0, 0);
+    Object.assign(source, { clone: true });
     const result = checkDoorMotionSolids({
-      doors: scene.doors,
-      staticMeshes: [],
+      doors: [door],
+      staticMeshes: [obstacle],
       samples: 2,
       maxStates: 1,
     });
-    expect(["collision", "incomplete"]).toContain(result.status);
+    expect(result.status).toBe("incomplete");
     expect(result.verified).toBe(false);
-    expect(result.diagnostics.join(" ")).not.toMatch(/clone is not a function/i);
+    expect(result.diagnostics.join(" ")).toMatch(/non clonable|clone/i);
+    expect(source.isNull).toBe(false);
   });
 });
