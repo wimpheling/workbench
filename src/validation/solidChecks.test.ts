@@ -36,7 +36,7 @@ describe("kernel-backed solid checks", () => {
     expect(result.distance).toBe(0);
   });
 
-  it("rend un solide non clonable indéterminé sans jamais le transformer", () => {
+  it("reports an uncloneable solid as indeterminate without transforming it", () => {
     let translations = 0;
     const frame = {
       clone: true,
@@ -48,12 +48,12 @@ describe("kernel-backed solid checks", () => {
     const result = checkSolidClearance(
       new Map([
         ["frame", frame],
-        ["door", box(20, 0, 0)],
+        ["door", box(5, 0, 0)],
       ]),
       check(5),
     );
     expect(result.status).toBe("indeterminate");
-    expect(result.diagnostics.join(" ")).toMatch(/non clonable|clone/i);
+    expect(result.diagnostics.join(" ")).toMatch(/not cloneable|clone/i);
     expect(translations).toBe(0);
   });
 
@@ -102,7 +102,7 @@ describe("kernel-backed solid checks", () => {
     });
   });
 
-  it("réutilise les mêmes solides dans plusieurs checks sans les supprimer", () => {
+  it("reuses the same solids across checks without consuming them", () => {
     const frame = box(0, 0, 0);
     const door = box(20, 0, 0);
     const results = checkSolidPairs(
@@ -119,7 +119,7 @@ describe("kernel-backed solid checks", () => {
     expect(door.rotate(17, [0, 0, 0], [0, 1, 0]).isNull).toBe(false);
   });
 
-  it("convertit une vraie défaillance intersect en diagnostic kernel", () => {
+  it("converts an actual intersection failure into a kernel diagnostic", () => {
     const frame = box(0, 0, 0);
     const originalClone = frame.clone.bind(frame);
     const failingClone = (): typeof frame => {
@@ -142,7 +142,7 @@ describe("kernel-backed solid checks", () => {
     const result = checkSolidClearance(
       new Map([
         ["frame", frame],
-        ["door", box(20, 0, 0)],
+        ["door", box(5, 0, 0)],
       ]),
       check(5),
     );

@@ -1,6 +1,8 @@
 export * from "./anchors";
 export * from "./context";
 export * from "./enclosureV2";
+export * from "./enclosureV2Design";
+export * from "./enclosureV2DesignConstraints";
 export * from "./frames";
 export * from "./ids";
 export * from "./profiles";
@@ -10,6 +12,7 @@ export * from "./configurations";
 export * from "./connections";
 export * from "./panels";
 export * from "./assemblies";
+export * from "./geometricConstraints";
 export * from "../validation/constraints";
 export * from "../validation/fitPolicies";
 export * from "../validation/kinematics";

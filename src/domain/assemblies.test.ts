@@ -32,23 +32,19 @@ describe("assemblies", () => {
     });
   });
 
-  it("builds an enclosure root hierarchy with a real prismatic service slider", () => {
+  it("builds an enclosure root hierarchy containing only the designed door assemblies", () => {
     const model = makeEnclosureV2({ width: 500, height: 400, depth: 300 });
     const assemblies = buildEnclosureAssemblies(model);
     const tree = buildAssemblyTree(assemblies);
-    const slider = assemblies.find((assembly) => assembly.id === "assembly:service-slider")!;
 
     expect(tree).toHaveLength(1);
     expect(tree[0]!.children.map((node) => node.assembly.id)).toEqual([
       "assembly:left-door",
       "assembly:right-door",
-      "assembly:service-slider",
     ]);
-    expect(slider.motions[0]!.motion.kind).toBe("prismatic");
-    expect(evaluateEnclosureAssemblyPose(model, "service")).toMatchObject({
+    expect(evaluateEnclosureAssemblyPose(model, "closed")).toMatchObject({
       "left-door.angle": 0,
       "right-door.angle": 0,
-      "service-slider.travel": model.serviceSlider!.travel,
     });
   });
 });

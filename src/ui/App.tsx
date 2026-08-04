@@ -20,6 +20,7 @@ import {
   type EditableDimensions,
 } from "./modelAuthoring";
 import { resolveRuntimeValidationState } from "./runtimeValidation";
+import { ValidationAssertionTree } from "./ValidationAssertionTree";
 import { createViewerPoseController } from "./viewerPoseController";
 
 export function App() {
@@ -267,45 +268,8 @@ export function App() {
                     ? "Review errors and warnings before fabrication."
                     : "No validation errors or warnings."}
                 </p>
-                <details class="validation-assertions">
-                  <summary>Detailed assertions ({report.assertions.length})</summary>
-                  <div class="validation-table-wrapper">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th scope="col">Status</th>
-                          <th scope="col">Assertion</th>
-                          <th scope="col">Method</th>
-                          <th scope="col">Measured</th>
-                          <th scope="col">Expected</th>
-                          <th scope="col">References</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <For each={report.assertions}>
-                          {(assertion) => (
-                            <tr data-status={assertion.status}>
-                              <td>{assertion.status}</td>
-                              <td>
-                                <code>{assertion.id}</code>
-                                <br />
-                                {assertion.message}
-                              </td>
-                              <td>{assertion.method}</td>
-                              <td>{assertion.measured ?? "—"}</td>
-                              <td>{assertion.expected ?? "—"}</td>
-                              <td>
-                                {assertion.references.length
-                                  ? assertion.references.join(", ")
-                                  : "—"}
-                              </td>
-                            </tr>
-                          )}
-                        </For>
-                      </tbody>
-                    </table>
-                  </div>
-                </details>
+                <h3>Constraint assertions ({report.assertions.length})</h3>
+                <ValidationAssertionTree tree={report.assertionTree} />
               </>
             );
           })()}

@@ -37,49 +37,17 @@ export const buildEnclosureAssemblies = (model: EnclosureModel): readonly Assemb
       })),
     };
   });
-  const slider = model.serviceSlider
-    ? [
-        {
-          id: `assembly:${model.serviceSlider.id}`,
-          name: model.serviceSlider.id,
-          frame: model.frame.id,
-          parts: [model.serviceSlider.id],
-          parent: rootId,
-          children: [],
-          motions: [
-            {
-              id: `${model.serviceSlider.id}.travel`,
-              motion: {
-                kind: "prismatic" as const,
-                axis: { x: 1, y: 0, z: 0 },
-                origin: model.serviceSlider.anchor as AnchorReference,
-                min: 0,
-                max: model.serviceSlider.travel,
-              },
-            },
-          ],
-          states: [
-            { id: "closed", motions: { [`${model.serviceSlider.id}.travel`]: 0 } },
-            {
-              id: "service",
-              motions: { [`${model.serviceSlider.id}.travel`]: model.serviceSlider.travel },
-            },
-          ],
-        } satisfies Assembly,
-      ]
-    : [];
   return [
     {
       id: rootId,
       name: "EnclosureV2",
       frame: model.frame.id,
       parts: model.members.map((member) => member.id),
-      children: [...doors, ...slider].map((assembly) => assembly.id),
+      children: doors.map((assembly) => assembly.id),
       motions: [],
       states: [],
     },
     ...doors,
-    ...slider,
   ];
 };
 

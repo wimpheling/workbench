@@ -18,13 +18,13 @@ export const resolveRuntimeValidationState = ({
   scene,
 }: RuntimeValidationInput): RuntimeValidationState => {
   if (loading) {
-    return { status: "loading", message: "Validation runtime en cours…" };
+    return { status: "loading", message: "Validation is running…" };
   }
 
   if (error || !scene) {
     return {
       status: "unavailable",
-      message: "Validation runtime indisponible : la scène n’a pas pu être construite.",
+      message: "Runtime validation is unavailable because the scene could not be built.",
     };
   }
 

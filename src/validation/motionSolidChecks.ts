@@ -179,10 +179,10 @@ export const checkDoorMotionSolids = (options: MotionSolidCheckOptions): MotionS
       checkedPairs,
       firstFailure: firstClearanceFailure,
       diagnostics: [
-        `Replicad/OpenCascade indéterminé: ${kernelError}`,
+        `Replicad/OpenCascade indeterminate: ${kernelError}`,
         ...(firstClearanceFailure
           ? [
-              `un dégagement insuffisant avait été observé entre ${firstClearanceFailure.subject} et ${firstClearanceFailure.target} avant l'erreur noyau`,
+              `insufficient clearance was observed between ${firstClearanceFailure.subject} and ${firstClearanceFailure.target} before the kernel error`,
               ...firstClearanceFailure.diagnostics,
             ]
           : []),
@@ -211,11 +211,11 @@ export const checkDoorMotionSolids = (options: MotionSolidCheckOptions): MotionS
     checkedStates,
     checkedPairs,
     diagnostics: [
-      ...(kernelError ? [`Replicad/OpenCascade indéterminé: ${kernelError}`] : []),
-      `clear signifie uniquement que les états échantillonnés ont été vérifiés; ce n'est PAS une preuve continue de l'absence de collision`,
+      ...(kernelError ? [`Replicad/OpenCascade indeterminate: ${kernelError}`] : []),
+      "clear means only that the sampled states were checked; it is NOT a continuous proof of collision freedom",
       ...(requested.length < totalStates
         ? [
-            `budget maxStates=${options.maxStates ?? totalStates}: ${requested.length}/${totalStates} états couverts`,
+            `maxStates budget=${options.maxStates ?? totalStates}: ${requested.length}/${totalStates} states covered`,
           ]
         : []),
     ],

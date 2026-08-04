@@ -17,7 +17,11 @@ import {
 } from "../domain/enclosureV2";
 import { getProfile } from "../domain/profiles";
 import { applyMemberTransform } from "./threeAdapter";
-import { checkSolidPairs, type SolidCheckResult, type SolidPair } from "../validation/solidChecks";
+import {
+  checkSolidClearance,
+  type SolidCheckResult,
+  type SolidPair,
+} from "../validation/solidChecks";
 import { buildValidationReport, type ValidationReport } from "../validation/reports";
 import { validateModel } from "../validation/constraints";
 import {
@@ -25,6 +29,7 @@ import {
   type MotionSolidCheckResult,
 } from "../validation/motionSolidChecks";
 import { transformShapeToWorld } from "../geometry/replicadTransform";
+import { createProfileSolid } from "./profileSolid";
 import { buildEnclosureAssemblies } from "../domain/assemblies";
 import {
   buildAssemblyTree,
@@ -74,10 +79,7 @@ function createExtrusionSolid(
   length: number,
   profileId: Parameters<typeof getProfile>[0],
 ): Shape3D {
-  const profile = getProfile(profileId);
-  // The domain basis maps local X to the member span, local Y to the profile side,
-  // and local Z to its wide face. Keep the profile section dimensions in mm.
-  return makeBaseBox(length, profile.section.x, profile.section.y) as Shape3D;
+  return createProfileSolid(length, profileId);
 }
 
 function shapeMesh(shape: Shape3D): BufferGeometry {
@@ -145,14 +147,67 @@ const indeterminateSolidCheck = (
   diagnostics: [error instanceof Error ? error.message : String(error)],
 });
 
-const collectDoorSolid = (door: Group): Shape3D => {
-  const solids: Shape3D[] = [];
+const collectDoorSolids = (door: Group): SolidPair[] => {
+  const solids: SolidPair[] = [];
   door.traverse((child) => {
     if (child instanceof Mesh && child.userData.solid) {
-      solids.push(transformShapeToWorld(child.userData.solid as Shape3D, child));
+      solids.push({
+        id: child.name,
+        shape: transformShapeToWorld(child.userData.solid as Shape3D, child),
+      });
     }
   });
-  return solids.slice(1).reduce((combined, solid) => combined.fuse(solid) as Shape3D, solids[0]);
+  return solids;
+};
+
+const checkSolidGroups = (
+  id: string,
+  subject: string,
+  target: string,
+  subjects: readonly SolidPair[],
+  targets: readonly SolidPair[],
+  minimum: number,
+): SolidCheckResult => {
+  const results = subjects.flatMap((subjectPart) =>
+    targets.map((targetPart) =>
+      checkSolidClearance(
+        new Map([
+          [subjectPart.id, subjectPart.shape],
+          [targetPart.id, targetPart.shape],
+        ]),
+        {
+          id: `${id}.${subjectPart.id}.${targetPart.id}`,
+          subject: subjectPart.id,
+          target: targetPart.id,
+          minimum,
+        },
+      ),
+    ),
+  );
+  const collision = results.find((result) => result.status === "collision");
+  const indeterminate = results.find((result) => result.status === "indeterminate");
+  const distance = Math.min(...results.flatMap((result) => result.distance ?? []));
+  const status = collision
+    ? "collision"
+    : indeterminate
+      ? "indeterminate"
+      : distance + 1e-6 < minimum
+        ? "insufficient-clearance"
+        : "clear";
+  return {
+    id,
+    status,
+    subject,
+    target,
+    minimum,
+    ...(Number.isFinite(distance) ? { distance } : {}),
+    intersection: Boolean(collision),
+    diagnostics: collision
+      ? [`${collision.subject} intersects ${collision.target}`, ...collision.diagnostics]
+      : indeterminate
+        ? [`${indeterminate.subject} vs ${indeterminate.target}`, ...indeterminate.diagnostics]
+        : [],
+  };
 };
 
 function createDoorMesh(
@@ -162,7 +217,12 @@ function createDoorMesh(
   name: string,
   profileId?: Parameters<typeof getProfile>[0],
 ): Mesh {
-  const solid = makeBaseBox(Math.max(length, 1), Math.max(side, 1), Math.max(depth, 1)) as Shape3D;
+  const solidDepth = Math.max(depth, 1);
+  const solid = profileId
+    ? createProfileSolid(Math.max(length, 1), profileId)
+    : (makeBaseBox(Math.max(length, 1), Math.max(side, 1), solidDepth).translateZ(
+        -solidDepth / 2,
+      ) as Shape3D);
   const geometry = shapeMesh(solid);
   const object = new Mesh(
     geometry,
@@ -179,7 +239,7 @@ function createDoorMesh(
   object.userData.geometryAdapter = "replicad";
   object.userData.solid = solid;
   object.userData.meshVertexCount = geometry.getAttribute("position").count;
-  if (profileId) object.userData.profileId = `profile:${profileId}`;
+  if (profileId) object.userData.profileId = profileId;
   else object.userData.partType = "door-panel";
   return object;
 }
@@ -190,31 +250,18 @@ function createDoor(model: EnclosureModel, id: string, width: number, height: nu
   const hinge = model.anchors[`anchor:${id === "left-door" ? "left" : "right"}-hinge`]!.position;
   door.position.set(hinge.x, hinge.y, hinge.z);
   if (id === "right-door") door.scale.x = -1;
-  const profile = "aluminium-3030" as Parameters<typeof getProfile>[0];
-  // The 3060 front post presents a 30 mm side toward the door; derive the
-  // offset from the catalog's established section width.
-  const frontPostSide = getProfile("profile:aluminium-3030").section.x;
-  const clearance = 2;
-  // Put the hinge line in front of the post's front face. A pivot on the post
-  // centreline is clear only while closed; the hinge-side stile sweeps back
-  // into the post as soon as the leaf rotates.
-  door.position.z += frontPostSide + 2 * clearance;
+  const profile = "profile:aluminium-3030" as Parameters<typeof getProfile>[0];
   const frame = new Group();
   frame.name = `${id}-frame`;
-  // The local door is positioned from its hinge edge. The front post occupies
-  // one profile side toward the door, so leave that side plus the clearance;
-  // the hinge pivot itself remains unchanged.
-  frame.position.x = width / 2 + frontPostSide + clearance;
-  // The bottom rail occupies the first 30 mm above the hinge anchor.  Raise
-  // the leaf by the configured clearance so its upright does not merely touch
-  // (or intersect) that rail in the closed state.
-  frame.position.y = clearance;
+  // The hinge anchor is the outside/front corner of the inset leaf. The rigid
+  // leaf extends inward in X and behind the front-face plane in Z.
+  frame.position.set(width / 2, 0, -15);
   door.add(frame);
   const verticalSide = getProfile("profile:aluminium-3030").section.x;
   const panelSide = 4;
   const verticals = [
-    [-(width / 2 - verticalSide / 2), height / 2, "left-montant"],
-    [width / 2 - verticalSide / 2, height / 2, "right-montant"],
+    [-(width / 2 - verticalSide / 2), height / 2, "left-upright"],
+    [width / 2 - verticalSide / 2, height / 2, "right-upright"],
   ] as const;
   for (const [x, y, name] of verticals) {
     const mesh = createDoorMesh(height, verticalSide, verticalSide, `${id}-${name}`, profile);
@@ -224,36 +271,21 @@ function createDoor(model: EnclosureModel, id: string, width: number, height: nu
     frame.add(mesh);
   }
   for (const [x, y, name] of [
-    [0, verticalSide / 2, "bottom-traverse"],
-    [0, height - verticalSide / 2, "top-traverse"],
+    [0, verticalSide / 2, "bottom-rail"],
+    [0, height - verticalSide / 2, "top-rail"],
   ] as const) {
     const mesh = createDoorMesh(width - 60, verticalSide, verticalSide, `${id}-${name}`, profile);
     mesh.position.set(x, y, 0);
     frame.add(mesh);
   }
   const panel = createDoorMesh(width - 50, height - 50, panelSide, `${id}-panel`);
-  panel.position.set(0, height / 2, verticalSide / 2 - panelSide / 2);
+  panel.position.set(0, height / 2, 0);
   frame.add(panel);
   return door;
 }
 
-function createServiceSlider(model: EnclosureModel): Group | undefined {
-  const slider = model.serviceSlider;
-  if (!slider) return undefined;
-  const anchor = model.anchors[slider.anchor]?.position;
-  if (!anchor) throw new Error(`Missing service slider anchor ${slider.anchor}`);
-  const group = new Group();
-  group.name = `assembly-object:${slider.id}`;
-  group.position.set(anchor.x, anchor.y, anchor.z);
-  const panel = createDoorMesh(slider.width, slider.height, 4, slider.id);
-  panel.position.set(slider.width / 2, slider.height / 2, 0);
-  panel.userData.partType = "service-slider";
-  group.add(panel);
-  return group;
-}
-
 export async function buildEnclosureScene(
-  dimensions: EnclosureDimensions,
+  clearDimensions: EnclosureDimensions,
   initializer: OpenCascadeInitializer = opencascade,
 ): Promise<EnclosureScene> {
   let initializationError: unknown;
@@ -262,7 +294,7 @@ export async function buildEnclosureScene(
   } catch (error) {
     initializationError = error;
   }
-  const model = makeEnclosureV2(dimensions);
+  const model = makeEnclosureV2(clearDimensions);
   const assemblies = buildEnclosureAssemblies(model);
   const root = new Group();
   root.name = model.frame.id;
@@ -286,17 +318,9 @@ export async function buildEnclosureScene(
     return object;
   });
 
-  const frontPostSide = getProfile("profile:aluminium-3030").section.x;
-  const seamClearance = model.doorSeamClearance ?? 2;
-  const sideClearance = frontPostSide + seamClearance;
-  // Each leaf starts after its front post and must leave the configured seam
-  // between the two meeting stiles.  Using half the enclosure width ignored
-  // the two post clearances, making the closed leaves overlap.
-  const doorWidth = (dimensions.width - 2 * sideClearance - seamClearance) / 2;
-  const doorHeight = dimensions.height - 90 - seamClearance;
   const assemblyObjects = new Map<string, Object3D>();
   const doors = (model.doors ?? []).map((door) => {
-    const object = createDoor(model, door.id, doorWidth, doorHeight);
+    const object = createDoor(model, door.id, door.nominalWidth, door.nominalHeight);
     object.userData.basePosition = object.position.clone();
     const assembly = assemblies.find((candidate) => candidate.parts.includes(door.id));
     if (!assembly) throw new Error(`Missing assembly for ${door.id}`);
@@ -305,18 +329,6 @@ export async function buildEnclosureScene(
     root.add(object);
     return object;
   });
-  const slider = createServiceSlider(model);
-  if (slider && model.serviceSlider) {
-    slider.userData.basePosition = slider.position.clone();
-    const assembly = assemblies.find((candidate) =>
-      candidate.parts.includes(model.serviceSlider!.id),
-    );
-    if (!assembly) throw new Error(`Missing assembly for ${model.serviceSlider.id}`);
-    slider.userData.assemblyId = assembly.id;
-    assemblyObjects.set(assembly.id, slider);
-    root.add(slider);
-  }
-
   root.updateMatrixWorld(true);
   const minimum = model.doorSeamClearance ?? 2;
   const motionSolidCheck: MotionSolidCheckResult = initializationError
@@ -352,12 +364,14 @@ export async function buildEnclosureScene(
   let solidChecks: SolidCheckResult[];
   try {
     if (initializationError) throw initializationError;
-    const solids: SolidPair[] = members.map((object) => ({
+    const memberSolids: SolidPair[] = members.map((object) => ({
       id: object.name,
       shape: transformShapeToWorld(object.userData.solid as Shape3D, object),
     }));
-    solids.push(...doors.map((door) => ({ id: door.name, shape: collectDoorSolid(door) })));
-    solidChecks = checkSolidPairs(solids, [
+    const doorSolids = new Map(doors.map((door) => [door.name, collectDoorSolids(door)]));
+    const memberGroups = new Map(memberSolids.map((solid) => [solid.id, [solid]]));
+    const groups = new Map([...memberGroups, ...doorSolids]);
+    solidChecks = [
       {
         id: solidIds[0],
         subject: "door:left-door",
@@ -388,7 +402,16 @@ export async function buildEnclosureScene(
         target: "part:front-bottom-rail",
         minimum,
       },
-    ]);
+    ].map((check) =>
+      checkSolidGroups(
+        check.id,
+        check.subject,
+        check.target,
+        groups.get(check.subject) ?? [],
+        groups.get(check.target) ?? [],
+        check.minimum,
+      ),
+    );
   } catch (error) {
     solidChecks = [
       indeterminateSolidCheck(solidIds[0], "door:left-door", "door:right-door", minimum, error),

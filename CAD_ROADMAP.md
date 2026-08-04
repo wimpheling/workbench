@@ -762,7 +762,7 @@ Acceptance criteria:
 
 - [x] Doors can be opened to a requested angle and returned to a valid closed state.
 - [ ] The model reports door/frame and door/door interference.
-- [x] The same motion API drives the rendered rear service-slider demonstration without another renderer-specific special case; full panel and roof product features remain separate work.
+- [ ] Reuse the generic motion API for a real sliding product feature when one is defined; the former renderer-only service-slider demonstration was removed from EnclosureV2.
 
 ### Phase 6 — Panels and bounded infill
 

@@ -5,7 +5,7 @@ import type { Shape3D } from "replicad";
 export const cloneShape = (shape: Shape3D): Shape3D => {
   const candidate = shape as Shape3D & { clone?: () => Shape3D };
   if (typeof candidate.clone !== "function") {
-    throw new Error("forme Replicad non clonable: clone est absent ou non appelable");
+    throw new Error("Replicad shape is not cloneable: clone is missing or not callable");
   }
   return candidate.clone().translate(0, 0, 0) as Shape3D;
 };
@@ -21,7 +21,7 @@ export const transformShapeToWorld = (shape: Shape3D, object: Object3D): Shape3D
   const uniformScale = magnitudes[0];
   if (magnitudes.some((value) => Math.abs(value - uniformScale) > 1e-9)) {
     throw new Error(
-      `scale non uniforme Three.js non représentable fidèlement par Replicad: ${scale.toArray().join(", ")}`,
+      `Non-uniform Three.js scale cannot be represented faithfully by Replicad: ${scale.toArray().join(", ")}`,
     );
   }
   const angleRadians = 2 * Math.acos(Math.max(-1, Math.min(1, quaternion.w)));

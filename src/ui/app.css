@@ -91,6 +91,97 @@ section {
   margin: 1.25rem 0;
 }
 
+.validation-assertion-tree {
+  border: 1px solid #3a4655;
+  border-radius: 0.5rem;
+  background: #171e27;
+}
+
+.validation-assertion-tree ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: none;
+}
+
+.validation-assertion-tree > ul {
+  padding: 0.25rem;
+}
+
+.validation-assertion-tree li {
+  margin: 0.25rem 0;
+}
+
+.validation-assertion-tree details > summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+}
+
+.validation-assertion-tree details > summary:hover {
+  background: #263241;
+}
+
+.validation-assertion-group > details > summary {
+  color: #f3f7fb;
+  font-weight: 700;
+}
+
+.validation-assertion-node > details > summary {
+  color: #d8e3ef;
+}
+
+.validation-assertion-status {
+  flex: 0 0 auto;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.validation-assertion-status[data-status="passed"] {
+  color: #baf4cb;
+  background: #164c2a;
+}
+
+.validation-assertion-status[data-status="failed"] {
+  color: #ffd0cc;
+  background: #69251f;
+}
+
+.validation-assertion-node dl {
+  display: grid;
+  grid-template-columns: minmax(10rem, max-content) minmax(0, 1fr);
+  gap: 0.35rem 1rem;
+  margin: 0.25rem 0.5rem 0.75rem 1.4rem;
+  padding: 0.75rem;
+  border-left: 2px solid #4d6075;
+  background: #111820;
+  color: #c7d4e2;
+  font-size: 0.9rem;
+}
+
+.validation-assertion-detail {
+  display: contents;
+}
+
+.validation-assertion-detail dt {
+  color: #99abc0;
+}
+
+.validation-assertion-detail dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.validation-assertion-orphan-detail {
+  color: #c7d4e2;
+}
+
 @media (max-width: 700px) {
   main {
     padding: 0.75rem;
@@ -99,5 +190,14 @@ section {
   .viewer-canvas {
     height: 65vh;
     min-height: 28rem;
+  }
+
+  .validation-assertion-node dl {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+
+  .validation-assertion-detail dt:not(:first-child) {
+    margin-top: 0.5rem;
   }
 }

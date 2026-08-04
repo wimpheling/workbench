@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createViewerPoseController } from "./viewerPoseController";
 
 describe("viewer pose controller", () => {
-  it("applique et rend exactement une fois par sélection, sans reconstruire", () => {
+  it("applies and renders exactly once per selection without rebuilding", () => {
     const applyPose = vi.fn();
     const render = vi.fn();
     const controller = createViewerPoseController({
@@ -20,7 +20,7 @@ describe("viewer pose controller", () => {
     expect(render).toHaveBeenCalledTimes(1);
   });
 
-  it("réapplique la pose sélectionnée quand une scène est reconstruite", () => {
+  it("reapplies the selected pose when a scene is rebuilt", () => {
     const applyPose = vi.fn();
     const render = vi.fn();
     const controller = createViewerPoseController({

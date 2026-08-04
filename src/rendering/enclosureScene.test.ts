@@ -10,21 +10,14 @@ import {
 } from "./enclosureScene";
 import { makeBaseBox, type Shape3D } from "replicad";
 
-const { checkDoorMotionSolidsMock, checkSolidPairsMock } = vi.hoisted(() => ({
+const { checkDoorMotionSolidsMock } = vi.hoisted(() => ({
   checkDoorMotionSolidsMock: vi.fn(),
-  checkSolidPairsMock: vi.fn(),
 }));
 
 vi.mock("../validation/motionSolidChecks", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../validation/motionSolidChecks")>();
   checkDoorMotionSolidsMock.mockImplementation(actual.checkDoorMotionSolids);
   return { ...actual, checkDoorMotionSolids: checkDoorMotionSolidsMock };
-});
-
-vi.mock("../validation/solidChecks", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../validation/solidChecks")>();
-  checkSolidPairsMock.mockImplementation(actual.checkSolidPairs);
-  return { ...actual, checkSolidPairs: checkSolidPairsMock };
 });
 
 const dimensions = { width: 120, height: 100, depth: 80 };
@@ -90,14 +83,27 @@ describe("production EnclosureV2 scene boundary", () => {
     object.geometry.computeBoundingBox();
     const bounds = object.geometry.boundingBox!;
     expect(bounds.max.x - bounds.min.x).toBeCloseTo(member.length);
-    expect(bounds.max.z - bounds.min.z).toBeCloseTo(60);
+    expect(bounds.max.y - bounds.min.y).toBeCloseTo(60);
+    expect(bounds.max.z - bounds.min.z).toBeCloseTo(30);
     const localSpan = new Vector3(1, 0, 0).applyQuaternion(object.quaternion);
     expect(localSpan.x).toBeCloseTo(member.transform.axis!.x);
     expect(localSpan.y).toBeCloseTo(member.transform.axis!.y);
     expect(localSpan.z).toBeCloseTo(member.transform.axis!.z);
   });
 
-  it("rend deux portes pivotées, chacune avec cinq meshes de parité legacy", async () => {
+  it("centres member solids on the domain origin before applying their placement", async () => {
+    const scene = await buildEnclosureScene(dimensions);
+
+    for (const object of scene.members) {
+      object.geometry.computeBoundingBox();
+      const center = object.geometry.boundingBox!.getCenter(new Vector3());
+      expect(center.x, `${object.name} local X`).toBeCloseTo(0);
+      expect(center.y, `${object.name} local Y`).toBeCloseTo(0);
+      expect(center.z, `${object.name} local Z`).toBeCloseTo(0);
+    }
+  });
+
+  it("renders two hinged inset doors with five meshes each", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     expect(scene.members).toHaveLength(16);
     expect(scene.doors).toHaveLength(2);
@@ -105,22 +111,25 @@ describe("production EnclosureV2 scene boundary", () => {
       "assembly:enclosure",
       "assembly:left-door",
       "assembly:right-door",
-      "assembly:service-slider",
     ]);
     expect([...scene.assemblyObjects.keys()]).toEqual([
       "assembly:left-door",
       "assembly:right-door",
-      "assembly:service-slider",
     ]);
     expect(scene.doors.map((door) => door.name)).toEqual(["door:left-door", "door:right-door"]);
-    expect(scene.doors[0].position.toArray()).toEqual([30, 30, 34]);
-    expect(scene.doors[1].position.toArray()).toEqual([1230, 30, 34]);
+    expect(scene.doors[0].position.toArray()).toEqual([3, 3, 30]);
+    expect(scene.doors[1].position.toArray()).toEqual([1197, 3, 30]);
     for (const door of scene.doors) {
       const meshes: any[] = [];
       door.traverse((child) => {
         if (child.type === "Mesh") meshes.push(child);
       });
       expect(meshes).toHaveLength(5);
+      for (const mesh of meshes) {
+        mesh.geometry.computeBoundingBox();
+        const center = mesh.geometry.boundingBox.getCenter(new Vector3());
+        expect(center.z, `${mesh.name} local Z`).toBeCloseTo(0);
+      }
       expect(
         meshes.filter((mesh) => mesh.userData.profileId === "profile:aluminium-3030"),
       ).toHaveLength(4);
@@ -135,7 +144,7 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(descendant.getWorldPosition(new Vector3()).z).not.toBeCloseTo(before.z);
   });
 
-  it("expose des contrôles solides world-space et un rapport prêt à afficher", async () => {
+  it("exposes world-space solid checks and a display-ready report", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     expect(scene.solidChecks.map((check) => check.id)).toEqual(
       expect.arrayContaining([
@@ -150,7 +159,7 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(scene.validationReport).toEqual(expect.objectContaining({ issues: expect.any(Array) }));
   });
 
-  it("conserve le dégagement motion insuffisant comme warning dans le rapport du build complet", async () => {
+  it("keeps insufficient motion clearance as a warning in the complete build report", async () => {
     const firstFailure: NonNullable<MotionSolidCheckResult["firstFailure"]> = {
       id: "motion.left-door-panel.front-left-post",
       status: "insufficient-clearance",
@@ -171,22 +180,6 @@ describe("production EnclosureV2 scene boundary", () => {
       firstFailure,
       diagnostics: ["insufficient clearance; no collision"],
     } satisfies MotionSolidCheckResult);
-    checkSolidPairsMock.mockReturnValueOnce(
-      [
-        ["door:left-door", "door:right-door"],
-        ["door:left-door", "part:front-left-post"],
-        ["door:right-door", "part:front-right-post"],
-      ].map(([subject, target], index) => ({
-        id: `static.clear.${index}`,
-        status: "clear" as const,
-        subject,
-        target,
-        intersection: false,
-        distance: 2,
-        minimum: 2,
-        diagnostics: [],
-      })),
-    );
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
 
     expect(scene.motionSolidCheck.status).toBe("insufficient-clearance");
@@ -207,7 +200,7 @@ describe("production EnclosureV2 scene boundary", () => {
     ).toEqual([expect.objectContaining({ id: "motion.solid", severity: "warning" })]);
   });
 
-  it("garde au moins 2 mm de dégagement physique entre chaque porte fermée et son montant avant", async () => {
+  it("keeps the configured clearance between each closed door and front post", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     for (const id of [
       "clearance.door-left-door.part:front-left-post",
@@ -220,7 +213,7 @@ describe("production EnclosureV2 scene boundary", () => {
     }
   });
 
-  it("keeps the closed door seam and bottom rail clear by the configured 2 mm", async () => {
+  it("keeps the closed door seam and bottom rail clear by the configured clearance", async () => {
     const scene = await buildEnclosureScene({ width: 1674, height: 740, depth: 1649 });
     for (const id of [
       "clearance.door-left-door.door-right-door",
@@ -238,15 +231,15 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(scene.motionSolidCheck.verified).toBe(true);
   });
 
-  it("retourne un rapport incomplet si l'initialisation OpenCascade échoue", async () => {
+  it("returns an incomplete report when OpenCascade initialization fails", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 }, async () => {
-      throw new Error("WASM indisponible");
+      throw new Error("WASM unavailable");
     });
     expect(scene.solidChecks.every((check) => check.status === "indeterminate")).toBe(true);
     expect(scene.validationReport.status).toBe("incomplete");
   });
 
-  it("applique la réflexion world-space du parent de la porte droite au solide", async () => {
+  it("applies the right-door parent reflection to the world-space solid", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     const panel = scene.doors[1].getObjectByName("right-door-panel")!;
     const worldSolid = transformShapeToWorld(makeBaseBox(10, 10, 10) as Shape3D, panel);
@@ -256,7 +249,7 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(maxX).toBeLessThan(scene.doors[1].position.x);
   });
 
-  it("conserve la parité world-space des enveloppes Three.js et Replicad pour les portes fermées et ouvertes", async () => {
+  it("keeps Three.js and Replicad world bounds aligned for closed and open doors", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     const poses = [
       { "left-door.angle": 0, "right-door.angle": 0 },
@@ -297,7 +290,7 @@ describe("production EnclosureV2 scene boundary", () => {
     }
   });
 
-  it("applique rotation non orthogonale et scale uniforme dans l'ordre world-space", async () => {
+  it("applies non-orthogonal rotation and uniform scale in world-space order", async () => {
     await initializeOpenCascade();
     const object = new Mesh();
     object.position.set(7, -3, 11);
@@ -321,20 +314,18 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(shape.isNull).toBe(false);
   });
 
-  it("refuse explicitement un scale non uniforme non représentable par Replicad", async () => {
+  it("explicitly rejects non-uniform scale that Replicad cannot represent", async () => {
     await initializeOpenCascade();
     const object = new Mesh();
     object.rotation.set(0.31, -0.47, 0.19);
     object.scale.set(1.2, 0.8, 1.5);
     object.updateMatrixWorld(true);
     const shape = makeBaseBox(2, 3, 5) as Shape3D;
-    expect(() => transformShapeToWorld(shape, object)).toThrow(
-      /scale non uniforme|non-uniform scale/i,
-    );
+    expect(() => transformShapeToWorld(shape, object)).toThrow(/non-uniform .*scale/i);
     expect(shape.isNull).toBe(false);
   });
 
-  it("applique une pose absolue aux groupes existants sans perdre pivots ni miroir", async () => {
+  it("applies an absolute pose without losing existing pivots or reflection", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     const left = scene.doors[0];
     const right = scene.doors[1];
@@ -352,7 +343,7 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(rightPanel).toBe(right.getObjectByName("right-door-panel"));
   });
 
-  it("ouvre puis referme les portes en conservant les pivots et l'identité des meshes", async () => {
+  it("opens and closes doors while preserving pivots and mesh identity", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     const doors = [...scene.doors];
     const meshes = doors.flatMap((door) => {
@@ -384,7 +375,7 @@ describe("production EnclosureV2 scene boundary", () => {
     ).toEqual(meshes);
   });
 
-  it("avance les deux panneaux vers Z positif à l'ouverture sans déplacer les pivots", async () => {
+  it("moves both panels toward positive Z when opening without moving their pivots", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     const doors = [...scene.doors];
     const rightDoor = doors.find((door) => door.name === "door:right-door")!;
@@ -400,20 +391,5 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(open[1]).toBeGreaterThan(closed[1]);
     expect(rightDoor.scale.x).toBe(-1);
     expect(doors.map((door) => door.position.toArray())).toEqual(pivots);
-  });
-
-  it("moves the service slider through the generic prismatic assembly path", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
-    const slider = scene.assemblyObjects.get("assembly:service-slider")!;
-    const initial = slider.position.clone();
-
-    applyAssemblyPose(scene, {
-      "left-door.angle": 0,
-      "right-door.angle": 0,
-      "service-slider.travel": scene.model.serviceSlider!.travel,
-    });
-    expect(slider.position.x).toBeCloseTo(initial.x + scene.model.serviceSlider!.travel);
-    expect(slider.position.y).toBeCloseTo(initial.y);
-    expect(slider.position.z).toBeCloseTo(initial.z);
   });
 });

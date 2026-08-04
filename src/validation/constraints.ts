@@ -1,6 +1,9 @@
 import type { Anchor } from "../domain/anchors";
 import type { Point3, Vector3 } from "../domain/frames";
 import type { EnclosureModel } from "../domain/enclosureV2";
+import { connectionIssues } from "../domain/connections";
+import { evaluateEnclosureV2DesignConstraints } from "../domain/enclosureV2DesignConstraints";
+import { enclosureV2StartingStructuralProfileAssignments } from "../domain/enclosureV2Design";
 import { evaluateFit, requiredFitPolicy } from "./fitPolicies";
 
 export type ConstraintSeverity = "error" | "warning";
@@ -14,6 +17,7 @@ export type ConstraintResult = {
   expected?: number;
 };
 const EPS = 1e-6;
+const EXPECTED_ENCLOSURE_V2_STRUCTURAL_CONNECTION_COUNT = 24;
 const result = (
   id: string,
   passed: boolean,
@@ -241,6 +245,18 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
     out.push(result("enclosure.dimensions.required", false, "enclosure dimensions are required"));
     return out;
   }
+  out.push(
+    ...evaluateEnclosureV2DesignConstraints(model).map((evaluation) =>
+      result(
+        evaluation.constraint.id,
+        evaluation.status === "satisfied",
+        evaluation.message,
+        evaluation.constraint.entities.map((entity) => entity.id),
+        evaluation.measured ?? undefined,
+        evaluation.expected ?? undefined,
+      ),
+    ),
+  );
   const referencedAnchors = new Set(model.members.flatMap((member) => [member.from, member.to]));
   for (const [id, anchor] of Object.entries(model.anchors)) {
     if (id !== anchor.id && id.startsWith("anchor:") && !referencedAnchors.has(anchor.id))
@@ -265,6 +281,67 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
         ),
       );
   }
+  const memberIds = new Set(model.members.map((member) => String(member.id)));
+  const connectionIds = new Set<string>();
+  out.push(
+    scalar(
+      "JOINT-001.complete-structural-topology",
+      model.connections.length === EXPECTED_ENCLOSURE_V2_STRUCTURAL_CONNECTION_COUNT,
+      model.connections.length,
+      EXPECTED_ENCLOSURE_V2_STRUCTURAL_CONNECTION_COUNT,
+      "the enclosure must declare its complete structural joint topology",
+      model.connections.map((connection) => connection.id),
+    ),
+    result(
+      "JOINT-002.structural-joint-types",
+      model.connections.every((connection) => connection.joint?.kind === "butt"),
+      "every EnclosureV2 structural connection must declare a butt joint",
+      model.connections.map((connection) => connection.id),
+    ),
+  );
+  for (const connection of model.connections) {
+    const duplicateId = connectionIds.has(connection.id);
+    connectionIds.add(connection.id);
+    out.push(
+      result(
+        `JOINT-001.${connection.id}.unique-id`,
+        !duplicateId,
+        duplicateId ? "connection IDs must be unique" : "connection ID is unique",
+        [connection.id],
+      ),
+      result(
+        `JOINT-001.${connection.id}.member-references`,
+        connection.parts.every((part) => memberIds.has(part)),
+        "connection parts must reference evaluated structural members",
+        [connection.id, ...connection.parts],
+      ),
+    );
+    for (const issue of connectionIssues([connection]))
+      out.push(result(issue.id, false, issue.message, issue.references));
+  }
+  for (const memberId of memberIds)
+    out.push(
+      result(
+        `JOINT-001.${memberId}.connected`,
+        model.connections.some((connection) => connection.parts.includes(memberId)),
+        `${memberId} must participate in the structural connection topology`,
+        [memberId],
+      ),
+    );
+  for (const assignment of enclosureV2StartingStructuralProfileAssignments) {
+    const expectedProfile = `profile:aluminium-${assignment.profile}`;
+    const member = model.members.find(
+      (candidate) => candidate.id === `part:${assignment.memberId}`,
+    );
+    out.push(
+      result(
+        `PROFILE-004.part:${assignment.memberId}.assignment`,
+        member?.profile === expectedProfile,
+        `${assignment.memberId} must use the explicitly assigned ${assignment.profile} profile`,
+        [`part:${assignment.memberId}`],
+      ),
+    );
+  }
   const sides = model.members.filter(
     (m) =>
       String(m.id).endsWith(":side-middle-left") || String(m.id).endsWith(":side-middle-right"),
@@ -273,17 +350,14 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
     const from = anchorPoint(model, member.from),
       to = anchorPoint(model, member.to);
     const midpoint = from && to ? (from.position.z + to.position.z) / 2 : NaN;
-    // Legacy enclosure supports sit 30 mm behind the clear-depth midpoint so
-    // their 3060 profile clears the side rails. The input depth is the clear
-    // dimension, not the outer profile envelope.
-    const expected = -model.dimensions.z / 2 - 30;
+    const expected = -model.innerClearDimensionsMm.depthMm / 2;
     out.push(
       scalar(
         `enclosure.${member.id}.depth-midpoint`,
         Number.isFinite(midpoint) && Math.abs(midpoint - expected) <= EPS,
         midpoint,
         expected,
-        "side support historical depth axis",
+        "side support must be centred on the clear-depth span",
         [member.id, member.from, member.to],
       ),
     );
@@ -328,15 +402,20 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
           seamFit.required,
         ),
       );
-      const opening = model.dimensions?.x ?? 0;
+      const opening = model.innerClearDimensionsMm.widthMm;
+      const covered =
+        a.nominalWidth +
+        b.nominalWidth +
+        model.designInput.frontDoorSideClearanceMm * 2 +
+        model.designInput.frontDoorCentreGapMm;
       out.push(
-        result(
+        scalar(
           "enclosure.doors.cover-opening",
-          a.nominalWidth + b.nominalWidth >= opening - EPS,
-          `doors cover opening: total ${a.nominalWidth}, expected at least ${opening}`,
-          [a.id, b.id],
-          a.nominalWidth + b.nominalWidth,
+          Math.abs(covered - opening) <= EPS,
+          covered,
           opening,
+          "door leaves and declared clearances partition the front opening",
+          [a.id, b.id],
         ),
       );
     }
@@ -404,6 +483,28 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
         ),
       );
     }
+  const requiredAccess = model.designInput.requiredFrontAccessEnvelopeMm;
+  if (requiredAccess) {
+    const practicalAccess = model.practicalFrontAccessEnvelopeMm;
+    out.push(
+      ClearanceAtLeast("ACCESS-005.usable-width", practicalAccess.widthMm, requiredAccess.widthMm, [
+        "practical-front-access-envelope",
+        "required-front-access-envelope",
+      ]),
+      ClearanceAtLeast(
+        "ACCESS-005.usable-height",
+        practicalAccess.heightMm,
+        requiredAccess.heightMm,
+        ["practical-front-access-envelope", "required-front-access-envelope"],
+      ),
+      ClearanceAtLeast(
+        "ACCESS-005.usable-thickness",
+        practicalAccess.thicknessMm,
+        requiredAccess.thicknessMm,
+        ["practical-front-access-envelope", "required-front-access-envelope"],
+      ),
+    );
+  }
   return out;
 }
 

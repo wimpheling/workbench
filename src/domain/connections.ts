@@ -1,9 +1,25 @@
 export type Side = "front" | "back" | "left" | "right" | "top" | "bottom";
+export type ButtJointTerminatingFace = "start" | "end";
+export type ButtJointSupportingFace = Side;
+/**
+ * Nominal structural contact. Geometry validation can later use the named
+ * faces to compare actual mating planes and overlap against this contract.
+ */
+export type ButtJoint = Readonly<{
+  kind: "butt";
+  terminatingMember: string;
+  supportingMember: string;
+  terminatingFace: ButtJointTerminatingFace;
+  supportingFace: ButtJointSupportingFace;
+  expectedContactAreaMm2: number;
+  toleranceMm: number;
+}>;
 export type Joint =
   | { kind: "box"; host: string; mate: string; side: Side; fingers: number; depth: number }
   | { kind: "halfLap"; host: string; mate: string; size: number; side: Side }
   | { kind: "tSlotBolt"; host: string; mate: string; bolt: string; nut: string }
-  | { kind: "angleBracket"; host: string; mate: string; hardware: string };
+  | { kind: "angleBracket"; host: string; mate: string; hardware: string }
+  | ButtJoint;
 export type HardwareRequirement = {
   id: string;
   specification: string;
@@ -38,6 +54,22 @@ export const tSlotConnection = (host: string, mate: string, bolt: string, nut: s
   bolt,
   nut,
 });
+export const buttJoint = (
+  terminatingMember: string,
+  supportingMember: string,
+  terminatingFace: ButtJointTerminatingFace,
+  supportingFace: ButtJointSupportingFace,
+  expectedContactAreaMm2: number,
+  toleranceMm: number,
+): ButtJoint => ({
+  kind: "butt",
+  terminatingMember,
+  supportingMember,
+  terminatingFace,
+  supportingFace,
+  expectedContactAreaMm2,
+  toleranceMm,
+});
 export const validateConnection = (connection: Connection): ConnectionIssue[] => {
   const issues: ConnectionIssue[] = [];
   if (connection.parts.length < 2)
@@ -68,6 +100,33 @@ export const validateConnection = (connection: Connection): ConnectionIssue[] =>
       message: "T-slot connection requires matching bolt and nut specifications",
       references: [joint.host, joint.mate],
     });
+  if (joint?.kind === "butt") {
+    const references = [joint.terminatingMember, joint.supportingMember];
+    if (
+      !joint.terminatingMember ||
+      !joint.supportingMember ||
+      joint.terminatingMember === joint.supportingMember ||
+      !connection.parts.includes(joint.terminatingMember) ||
+      !connection.parts.includes(joint.supportingMember)
+    )
+      issues.push({
+        id: `${connection.id}.butt-members`,
+        message: "butt joint members must be distinct declared connection parts",
+        references,
+      });
+    if (
+      !Number.isFinite(joint.expectedContactAreaMm2) ||
+      joint.expectedContactAreaMm2 <= 0 ||
+      !Number.isFinite(joint.toleranceMm) ||
+      joint.toleranceMm < 0
+    )
+      issues.push({
+        id: `${connection.id}.butt-parameters`,
+        message:
+          "butt joint contact area must be finite and positive and tolerance must be finite and non-negative",
+        references,
+      });
+  }
   return issues;
 };
 export const connectionHardware = (connections: readonly Connection[]): HardwareRequirement[] => {

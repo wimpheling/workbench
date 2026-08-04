@@ -30,8 +30,8 @@ const motionFixture = () => {
   return { doors: [leftDoor, rightDoor], staticMeshes: [obstacle] };
 };
 
-describe("validation Replicad des mouvements de portes", () => {
-  it("génère une grille cartésienne déterministe et respecte maxStates", () => {
+describe("Replicad door-motion validation", () => {
+  it("generates a deterministic Cartesian grid and respects maxStates", () => {
     const states = cartesianDoorStates({ samples: 3, maxStates: 4 });
     const completeGrid = cartesianDoorStates({ samples: 3 });
     expect(states).toHaveLength(4);
@@ -47,21 +47,21 @@ describe("validation Replicad des mouvements de portes", () => {
     });
   });
 
-  it("normalise les paramètres invalides sans NaN ni RangeError", () => {
+  it("normalizes invalid parameters without NaN or RangeError", () => {
     expect(cartesianDoorStates({ samples: 0, maxStates: -4 })).toEqual([]);
     const states = cartesianDoorStates({ samples: Number.NaN, maxStates: Number.NaN });
     expect(states).toHaveLength(81);
     expect(states.every((state) => Object.values(state).every(Number.isFinite))).toBe(true);
   });
 
-  it("marque incomplete quand le budget ne couvre pas toute la grille", () => {
+  it("reports incomplete when the budget does not cover the full grid", () => {
     const result = checkDoorMotionSolids({ doors: [], staticMeshes: [], samples: 3, maxStates: 2 });
     expect(result.status).toBe("incomplete");
     expect(result.verified).toBe(false);
-    expect(result.diagnostics.join(" ")).toMatch(/budget|état/i);
+    expect(result.diagnostics.join(" ")).toMatch(/budget|state/i);
   });
 
-  it("signale le dégagement insuffisant puis donne la priorité à une collision ultérieure", () => {
+  it("reports insufficient clearance but gives priority to a later collision", () => {
     const fixture = motionFixture();
     const result = checkDoorMotionSolids({
       ...fixture,
@@ -85,7 +85,7 @@ describe("validation Replicad des mouvements de portes", () => {
     });
   });
 
-  it("conserve insufficient-clearance quand aucun état ne collisionne", () => {
+  it("keeps insufficient-clearance when no state collides", () => {
     const door = new Group();
     door.name = "door:left-door";
     const panel = new Mesh();
@@ -108,7 +108,7 @@ describe("validation Replicad des mouvements de portes", () => {
     expect(result.firstFailure?.intersection).toBe(false);
   });
 
-  it("devient incomplete si le noyau échoue après un dégagement insuffisant", () => {
+  it("becomes incomplete when the kernel fails after an insufficient-clearance result", () => {
     const fixture = motionFixture();
     const obstacle = fixture.staticMeshes[0];
     const solid = obstacle.userData.solid as ReturnType<typeof makeBaseBox>;
@@ -137,7 +137,7 @@ describe("validation Replicad des mouvements de portes", () => {
     expect(result.diagnostics.join(" ")).toMatch(/kernel failure after clearance/i);
   });
 
-  it("applique les angles absolus, conserve la réflexion droite et exclut les composants d'une même porte", async () => {
+  it("applies absolute angles, preserves right-door reflection, and excludes same-door components", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     const result = checkDoorMotionSolids({
       doors: scene.doors,
@@ -148,14 +148,17 @@ describe("validation Replicad des mouvements de portes", () => {
     expect(scene.doors[0].rotation.y).toBe(0);
     expect(scene.doors[1].rotation.y).toBe(0);
     expect(scene.doors[1].scale.x).toBe(-1);
+    expect(result.status).toBe("clear");
     expect(
-      result.checkedPairs.some(
-        (pair) => pair.subject.includes("left-door") && pair.target.includes("right-door"),
+      result.checkedPairs.every(
+        (pair) =>
+          (pair.subject.includes("left-door") && pair.target.includes("right-door")) ||
+          (pair.subject.includes("right-door") && pair.target.includes("left-door")),
       ),
     ).toBe(true);
   });
 
-  it("restaure toujours la pose initiale et les matrices après le sweep", async () => {
+  it("always restores the initial pose and matrices after the sweep", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     scene.doors[0].rotation.set(0.1, 0.23, -0.2);
     scene.doors[1].rotation.y = -0.31;
@@ -169,14 +172,14 @@ describe("validation Replicad des mouvements de portes", () => {
     );
   });
 
-  it("documente que clear valide uniquement la grille échantillonnée", () => {
+  it("documents that clear validates only the sampled grid", () => {
     const result = checkDoorMotionSolids({ doors: [], staticMeshes: [], samples: 2 });
     expect(result.status).toBe("clear");
-    expect(result.diagnostics.join(" ")).toMatch(/échantillonnés/i);
-    expect(result.diagnostics.join(" ")).toMatch(/pas une preuve continue/i);
+    expect(result.diagnostics.join(" ")).toMatch(/sampled states/i);
+    expect(result.diagnostics.join(" ")).toMatch(/not a continuous proof/i);
   });
 
-  it("convertit une erreur du noyau en état indéterminé sans faux clear", async () => {
+  it("converts a kernel error into an indeterminate state without a false clear", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
     const mesh = scene.doors[0].getObjectByName("left-door-panel") as Mesh;
     const solid = mesh.userData.solid as ReturnType<typeof makeBaseBox>;
@@ -210,10 +213,10 @@ describe("validation Replicad des mouvements de portes", () => {
     });
     expect(result.status).toBe("incomplete");
     expect(result.verified).toBe(false);
-    expect(result.diagnostics.join(" ")).toMatch(/indéterminé|kernel/i);
+    expect(result.diagnostics.join(" ")).toMatch(/indeterminate|kernel/i);
   });
 
-  it("rend un clone non appelable indéterminé sans consommer le solide source", async () => {
+  it("reports a non-callable clone as indeterminate without consuming the source solid", async () => {
     const door = new Group();
     door.name = "door:left-door";
     const mesh = new Mesh();

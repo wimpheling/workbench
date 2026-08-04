@@ -64,20 +64,48 @@ describe("deterministic constraints", () => {
     ).toBe(false);
   });
 
-  it("uses canonical x dimensions when checking undersized doors", () => {
+  it("uses the explicit inner clear width when checking undersized doors", () => {
     const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
     const undersized = {
       ...model,
       doors: [
-        { id: "left-door", nominalWidth: 50 },
-        { id: "right-door", nominalWidth: 50 },
+        { id: "left-door", nominalWidth: 50, nominalHeight: 94 },
+        { id: "right-door", nominalWidth: 50, nominalHeight: 94 },
       ],
     };
     const failure = validateModel(undersized).find((r) => r.id === "enclosure.doors.cover-opening");
-    expect(failure).toMatchObject({ passed: false, measured: 100, expected: 120 });
+    expect(failure).toMatchObject({ passed: false, measured: 109, expected: 120 });
   });
 
-  it("validates side-middle supports against the historical depth axis", () => {
+  it("checks every required board dimension against the practical open-door envelope", () => {
+    const model = makeEnclosureV2({
+      innerClearWidthMm: 1200,
+      innerClearHeightMm: 800,
+      innerClearDepthMm: 600,
+      frontDoorSideClearanceMm: 3,
+      frontDoorTopClearanceMm: 3,
+      frontDoorBottomClearanceMm: 3,
+      frontDoorCentreGapMm: 3,
+      requiredFrontAccessEnvelopeMm: { widthMm: 1125, heightMm: 801, thicknessMm: 601 },
+    });
+    const accessFailures = validateModel(model).filter(
+      (entry) => entry.id.startsWith("ACCESS-005.") && !entry.passed,
+    );
+    expect(accessFailures).toHaveLength(3);
+    expect(accessFailures).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "ACCESS-005.usable-width", measured: 1124, expected: 1125 }),
+        expect.objectContaining({ id: "ACCESS-005.usable-height", measured: 800, expected: 801 }),
+        expect.objectContaining({
+          id: "ACCESS-005.usable-thickness",
+          measured: 600,
+          expected: 601,
+        }),
+      ]),
+    );
+  });
+
+  it("validates that side-middle supports remain centred on the clear-depth span", () => {
     const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
     const anchors = {
       ...model.anchors,
@@ -89,7 +117,7 @@ describe("deterministic constraints", () => {
     const failure = validateModel({ ...model, anchors }).find(
       (r) => r.id === "enclosure.part:side-middle-left.depth-midpoint",
     );
-    expect(failure).toMatchObject({ passed: false, measured: -50, expected: -70 });
+    expect(failure).toMatchObject({ passed: false, measured: -35, expected: -40 });
   });
 
   it("reports missing required front members and profile violations", () => {

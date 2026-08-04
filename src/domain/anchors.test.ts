@@ -27,13 +27,13 @@ describe("semantic anchors", () => {
 });
 
 describe("EnclosureV2 declarative frame", () => {
-  it("exposes historical profile-axis coordinates and derived members", async () => {
+  it("exposes clear-boundary profile coordinates and derived members", async () => {
     const { makeEnclosureV2 } = await import("./enclosureV2");
     const model = makeEnclosureV2({ width: mm(600), height: mm(500), depth: mm(400) });
-    expect(model.anchors["front-rail-bottom-left"].position).toEqual({ x: 0, y: 15, z: -30 });
-    expect(model.anchors["front-right-post-top"].position).toEqual({ x: 630, y: 440, z: 0 });
+    expect(model.anchors["front-rail-bottom-left"].position).toEqual({ x: -30, y: -15, z: 15 });
+    expect(model.anchors["front-right-post-top"].position).toEqual({ x: 630, y: 500, z: 15 });
     expect(model.members.find((member) => member.id === "part:front-top")?.length).toBe(660);
-    expect(model.members.find((member) => member.id === "part:side-middle-left")?.length).toBe(440);
+    expect(model.members.find((member) => member.id === "part:side-middle-left")?.length).toBe(500);
   });
 
   it("propagates dimension changes to rail lengths", async () => {
@@ -53,11 +53,11 @@ describe("EnclosureV2 declarative frame", () => {
     expect(member?.transform.basis).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1]);
   });
 
-  it("keeps the legacy front plane at zero and the back plane on negative Z", async () => {
+  it("keeps the clear front boundary at zero and structure outside it", async () => {
     const { makeEnclosureV2 } = await import("./enclosureV2");
     const model = makeEnclosureV2({ width: 600, height: 500, depth: 400 });
-    expect(model.anchors["anchor:left-hinge"].position.z).toBe(0);
-    expect(model.anchors["back-middle-bottom"].position.z).toBe(-445);
+    expect(model.anchors["anchor:left-hinge"].position.z).toBe(30);
+    expect(model.anchors["back-middle-bottom"].position.z).toBe(-415);
   });
 
   it("uses a right-handed basis with front wide faces normal to positive Z", async () => {
@@ -67,7 +67,7 @@ describe("EnclosureV2 declarative frame", () => {
     expect(member?.transform.basis).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1]);
   });
 
-  it("describes the complete legacy frame with semantic endpoints", async () => {
+  it("describes the complete frame with semantic endpoints", async () => {
     const { makeEnclosureV2 } = await import("./enclosureV2");
     const model = makeEnclosureV2({ width: 600, height: 500, depth: 400 });
     expect(model.members).toHaveLength(16);
@@ -117,7 +117,7 @@ describe("EnclosureV2 declarative frame", () => {
     const { makeEnclosureV2 } = await import("./enclosureV2");
     const model = makeEnclosureV2({ width: 600, height: 500, depth: 400 });
     const member = model.members.find((item) => item.id === "part:front-top");
-    expect(member?.transform.position).toEqual({ x: 330, y: 470, z: -30 });
+    expect(member?.transform.position).toEqual({ x: 300, y: 530, z: 15 });
     expect(member?.transform.rotation.z).toBe(0);
   });
 });

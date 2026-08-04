@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { ValidationReport } from "../validation/reports";
+import { buildValidationAssertionTree, type ValidationReport } from "../validation/reports";
 import { resolveRuntimeValidationState } from "./runtimeValidation";
 
 const report: ValidationReport = {
   status: "valid",
   issues: [],
   assertions: [],
+  assertionTree: buildValidationAssertionTree([]),
   modelRevision: "runtime-test-report",
 };
 
@@ -13,36 +14,37 @@ const otherReport: ValidationReport = {
   status: "valid",
   issues: [],
   assertions: [],
+  assertionTree: buildValidationAssertionTree([]),
   modelRevision: "runtime-test-other-report",
 };
 
 describe("resolveRuntimeValidationState", () => {
-  it("ne retourne aucun rapport pendant le chargement", () => {
+  it("returns no report while loading", () => {
     const state = resolveRuntimeValidationState({
       loading: true,
       error: undefined,
       scene: undefined,
     });
 
-    expect(state).toEqual({ status: "loading", message: "Validation runtime en cours…" });
+    expect(state).toEqual({ status: "loading", message: "Validation is running…" });
     expect("report" in state).toBe(false);
   });
 
-  it("ne retourne aucun rapport en cas d'erreur et expose un message", () => {
+  it("returns no report after an error and exposes a message", () => {
     const state = resolveRuntimeValidationState({
       loading: false,
-      error: new Error("OpenCascade indisponible"),
+      error: new Error("OpenCascade unavailable"),
       scene: undefined,
     });
 
     expect(state).toEqual({
       status: "unavailable",
-      message: "Validation runtime indisponible : la scène n’a pas pu être construite.",
+      message: "Runtime validation is unavailable because the scene could not be built.",
     });
     expect("report" in state).toBe(false);
   });
 
-  it("utilise exactement le rapport de validation de la scène", () => {
+  it("uses the exact validation report belonging to the scene", () => {
     const state = resolveRuntimeValidationState({
       loading: false,
       error: undefined,
@@ -54,7 +56,7 @@ describe("resolveRuntimeValidationState", () => {
     expect(state.status === "ready" && state.report).not.toBe(otherReport);
   });
 
-  it("n'affiche pas une donnée stale après un changement de dimensions", () => {
+  it("does not expose stale data after dimensions change", () => {
     const state = resolveRuntimeValidationState({
       loading: true,
       error: undefined,

@@ -36,7 +36,40 @@ export const checkSolidClearance = (
       subject: check.subject,
       target: check.target,
     };
+  if (typeof subject.clone !== "function" || typeof target.clone !== "function") {
+    return {
+      id: check.id,
+      status: "indeterminate",
+      minimum: check.minimum,
+      diagnostics: ["subject or target Replicad shape is not cloneable"],
+      subject: check.subject,
+      target: check.target,
+    };
+  }
   try {
+    // AABB separation is an authoritative no-collision broad phase. Besides
+    // avoiding unnecessary kernel work, it prevents OpenCascade boolean
+    // operations on disconnected compound/profile shapes from reporting
+    // spurious positive volumes when their world bounds are disjoint.
+    const [subjectMin, subjectMax] = subject.boundingBox.bounds;
+    const [targetMin, targetMax] = target.boundingBox.bounds;
+    const separation = Math.hypot(
+      Math.max(targetMin[0] - subjectMax[0], subjectMin[0] - targetMax[0], 0),
+      Math.max(targetMin[1] - subjectMax[1], subjectMin[1] - targetMax[1], 0),
+      Math.max(targetMin[2] - subjectMax[2], subjectMin[2] - targetMax[2], 0),
+    );
+    if (separation + 1e-6 >= check.minimum) {
+      return {
+        id: check.id,
+        status: "clear",
+        minimum: check.minimum,
+        distance: separation,
+        intersection: false,
+        diagnostics: [],
+        subject: check.subject,
+        target: check.target,
+      };
+    }
     const intersection = cloneShape(subject).intersect(cloneShape(target));
     const volume = intersection.isNull ? 0 : measureVolume(intersection);
     const distance = measureDistanceBetween(cloneShape(subject), cloneShape(target));
@@ -73,7 +106,7 @@ export const checkSolidClearance = (
 
 export const checkSolidPairs = (solids: readonly SolidPair[], checks: readonly ClearanceCheck[]) =>
   checks.map((check) =>
-    checkSolidClearance(new Map(solids.map((solid) => [solid.id, cloneShape(solid.shape)])), check),
+    checkSolidClearance(new Map(solids.map((solid) => [solid.id, solid.shape])), check),
   );
 
 export type BroadPhaseBox = {
