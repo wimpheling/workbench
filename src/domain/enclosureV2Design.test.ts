@@ -6,6 +6,7 @@ import {
   enclosureV2DesignSpecs,
   enclosureV2DoorFrameProfile,
   enclosureV2StartingStructuralProfileAssignments,
+  evaluateMainStructuralEnvelopeMm,
   evaluatePracticalFrontAccessEnvelopeMm,
   evaluateSymmetricInsetDoorDimensionsMm,
   validateEnclosureV2DesignInput,
@@ -20,31 +21,45 @@ const design = defaultEnclosureV2DesignInput({
 describe("EnclosureV2 design contract", () => {
   it("uses explicit millimetre clear-space names and derives symmetric inset leaves", () => {
     expect(evaluateSymmetricInsetDoorDimensionsMm(design)).toEqual({
-      frontOpeningClearWidthMm: 1200,
-      frontOpeningClearHeightMm: 800,
-      leafWidthMm: 595.5,
-      leafHeightMm: 794,
+      frontOpeningClearWidthMm: 1140,
+      frontOpeningClearHeightMm: 770,
+      leafWidthMm: 565.5,
+      leafHeightMm: 764,
     });
   });
 
   it("rejects invalid requirements and impossible derived door leaves", () => {
     expect(() =>
-      validateEnclosureV2DesignInput({ ...design, innerClearWidthMm: Number.NaN }),
+      validateEnclosureV2DesignInput({
+        ...design,
+        innerClearWidthMm: Number.NaN,
+      }),
     ).toThrow(/innerClearWidthMm.*finite and positive/i);
     expect(() =>
-      evaluateSymmetricInsetDoorDimensionsMm({ ...design, frontDoorCentreGapMm: 1200 }),
+      evaluateSymmetricInsetDoorDimensionsMm({
+        ...design,
+        frontDoorCentreGapMm: 1200,
+      }),
     ).toThrow(/derived front door leaf width.*finite and positive/i);
     expect(() =>
       validateEnclosureV2DesignInput({
         ...design,
-        requiredFrontAccessEnvelopeMm: { widthMm: 500, heightMm: 400, thicknessMm: 0 },
+        requiredFrontAccessEnvelopeMm: {
+          widthMm: 500,
+          heightMm: 400,
+          thicknessMm: 0,
+        },
       }),
     ).toThrow(/thicknessMm.*finite and positive/i);
   });
 
   it("adapts existing dimensions as clear requirements without importing placement", () => {
     expect(
-      designInputFromExistingEnclosureDimensions({ width: 1674, height: 740, depth: 1649 }),
+      designInputFromExistingEnclosureDimensions({
+        width: 1674,
+        height: 740,
+        depth: 1649,
+      }),
     ).toMatchObject({
       innerClearWidthMm: 1674,
       innerClearHeightMm: 740,
@@ -55,8 +70,8 @@ describe("EnclosureV2 design contract", () => {
 
   it("derives a conservative board envelope from 3030 frames and hinge keep-out", () => {
     expect(evaluatePracticalFrontAccessEnvelopeMm(design)).toMatchObject({
-      widthMm: 1124,
-      heightMm: 800,
+      widthMm: 1064,
+      heightMm: 770,
       thicknessMm: 600,
       fullyOpenDoorAngleDeg: 90,
       leftSideObstructionMm: 38,
@@ -67,6 +82,13 @@ describe("EnclosureV2 design contract", () => {
         fullyOpenDoorFrameSideIntrusionMm: 30,
         hingeSideKeepOutMm: 5,
       },
+    });
+  });
+
+  it("derives the main structural envelope from the clear cavity and 30 mm frame offset", () => {
+    expect(evaluateMainStructuralEnvelopeMm(design)).toEqual({
+      min: { x: -30, y: -30, z: -630 },
+      max: { x: 1230, y: 830, z: 30 },
     });
   });
 

@@ -15,7 +15,11 @@ describe("semantic anchors", () => {
 
   it("calculates pure midpoint, offset and between helpers", () => {
     expect(midpoint(left, right).position).toEqual({ x: 50, y: 0, z: 0 });
-    expect(offsetAlong(left, right, 25).position).toEqual({ x: 25, y: 0, z: 0 });
+    expect(offsetAlong(left, right, 25).position).toEqual({
+      x: 25,
+      y: 0,
+      z: 0,
+    });
     expect(betweenAnchors(left, right).length).toBe(100);
     expect(orientedAlong(left, right).axis).toEqual({ x: 1, y: 0, z: 0 });
   });
@@ -29,9 +33,21 @@ describe("semantic anchors", () => {
 describe("EnclosureV2 declarative frame", () => {
   it("exposes clear-boundary profile coordinates and derived members", async () => {
     const { makeEnclosureV2 } = await import("./enclosureV2");
-    const model = makeEnclosureV2({ width: mm(600), height: mm(500), depth: mm(400) });
-    expect(model.anchors["front-rail-bottom-left"].position).toEqual({ x: -30, y: -15, z: 15 });
-    expect(model.anchors["front-right-post-top"].position).toEqual({ x: 630, y: 500, z: 15 });
+    const model = makeEnclosureV2({
+      width: mm(600),
+      height: mm(500),
+      depth: mm(400),
+    });
+    expect(model.anchors["front-rail-bottom-left"].position).toEqual({
+      x: -30,
+      y: -15,
+      z: 15,
+    });
+    expect(model.anchors["front-right-post-top"].position).toEqual({
+      x: 600,
+      y: 470,
+      z: 15,
+    });
     expect(model.members.find((member) => member.id === "part:front-top")?.length).toBe(660);
     expect(model.members.find((member) => member.id === "part:side-middle-left")?.length).toBe(500);
   });
@@ -117,7 +133,7 @@ describe("EnclosureV2 declarative frame", () => {
     const { makeEnclosureV2 } = await import("./enclosureV2");
     const model = makeEnclosureV2({ width: 600, height: 500, depth: 400 });
     const member = model.members.find((item) => item.id === "part:front-top");
-    expect(member?.transform.position).toEqual({ x: 300, y: 530, z: 15 });
+    expect(member?.transform.position).toEqual({ x: 300, y: 500, z: 15 });
     expect(member?.transform.rotation.z).toBe(0);
   });
 });

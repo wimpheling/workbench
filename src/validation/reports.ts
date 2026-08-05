@@ -150,6 +150,9 @@ const assertionDetails = (assertion: ValidationAssertion): readonly ValidationAs
   ] as const;
 
 const groupForAssertion = (assertion: ValidationAssertion): readonly string[] => {
+  if (assertion.id.startsWith("BOUND-001.structural.")) return ["Envelope", "Structural members"];
+  if (assertion.id.startsWith("BOUND-001.closed-door.")) return ["Envelope", "Closed doors"];
+  if (assertion.id.startsWith("BOUND-002.")) return ["Envelope", "Main boundary"];
   if (assertion.id.startsWith("FRAME-")) return ["Frame", "Member placement"];
   if (assertion.id.startsWith("PROFILE-003")) return ["Profiles", "Cut lengths"];
   if (assertion.id.startsWith("PROFILE-004")) return ["Profiles", "Profile assignments"];

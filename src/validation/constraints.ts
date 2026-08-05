@@ -1,6 +1,12 @@
 import type { Anchor } from "../domain/anchors";
 import type { Point3, Vector3 } from "../domain/frames";
 import type { EnclosureModel } from "../domain/enclosureV2";
+import {
+  centeredNominalBounds,
+  transformedNominalBounds,
+  type NominalBounds,
+} from "../domain/nominalBounds";
+import { getProfile } from "../domain/profiles";
 import { connectionIssues } from "../domain/connections";
 import { evaluateEnclosureV2DesignConstraints } from "../domain/enclosureV2DesignConstraints";
 import { enclosureV2StartingStructuralProfileAssignments } from "../domain/enclosureV2Design";
@@ -52,7 +58,11 @@ const scalar = (
     expected,
   );
 const mag = (v: Vector3) => Math.hypot(v.x, v.y, v.z);
-const sub = (a: Point3, b: Point3): Vector3 => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
+const sub = (a: Point3, b: Point3): Vector3 => ({
+  x: a.x - b.x,
+  y: a.y - b.y,
+  z: a.z - b.z,
+});
 const dot = (a: Vector3, b: Vector3) => a.x * b.x + a.y * b.y + a.z * b.z;
 const crossMag = (a: Vector3, b: Vector3) =>
   Math.hypot(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
@@ -239,6 +249,123 @@ export const SupportedBy = (
 
 const anchorPoint = (model: EnclosureModel, ref: string) =>
   model.anchors[ref] ?? Object.values(model.anchors).find((a) => a.id === ref);
+
+const readablePartName = (id: string): string =>
+  id
+    .replace(/^(?:part:|door:)/, "")
+    .replaceAll("-", " ")
+    .replace(/^./, (character) => character.toLocaleUpperCase());
+
+type EnvelopeBoundary = Readonly<{
+  axis: "X" | "Y" | "Z";
+  side: "minimum" | "maximum";
+  measured: number;
+  permitted: number;
+  overflow: number;
+}>;
+
+const envelopeOverflows = (
+  bounds: NominalBounds,
+  envelope: NominalBounds,
+): readonly EnvelopeBoundary[] =>
+  [
+    {
+      axis: "X",
+      side: "minimum",
+      measured: bounds.min.x,
+      permitted: envelope.min.x,
+      overflow: envelope.min.x - bounds.min.x,
+    },
+    {
+      axis: "X",
+      side: "maximum",
+      measured: bounds.max.x,
+      permitted: envelope.max.x,
+      overflow: bounds.max.x - envelope.max.x,
+    },
+    {
+      axis: "Y",
+      side: "minimum",
+      measured: bounds.min.y,
+      permitted: envelope.min.y,
+      overflow: envelope.min.y - bounds.min.y,
+    },
+    {
+      axis: "Y",
+      side: "maximum",
+      measured: bounds.max.y,
+      permitted: envelope.max.y,
+      overflow: bounds.max.y - envelope.max.y,
+    },
+    {
+      axis: "Z",
+      side: "minimum",
+      measured: bounds.min.z,
+      permitted: envelope.min.z,
+      overflow: envelope.min.z - bounds.min.z,
+    },
+    {
+      axis: "Z",
+      side: "maximum",
+      measured: bounds.max.z,
+      permitted: envelope.max.z,
+      overflow: bounds.max.z - envelope.max.z,
+    },
+  ].filter((boundary) => boundary.overflow > EPS);
+
+const envelopeResult = (
+  id: string,
+  partDescription: string,
+  references: string[],
+  bounds: NominalBounds,
+  envelope: NominalBounds,
+): ConstraintResult => {
+  const overflows = envelopeOverflows(bounds, envelope);
+  if (overflows.length === 0)
+    return result(
+      id,
+      true,
+      `${partDescription} lies within the main enclosure envelope`,
+      references,
+    );
+  const [primary, ...additional] = overflows.sort((a, b) => b.overflow - a.overflow);
+  const describe = (overflow: EnvelopeBoundary) =>
+    `${overflow.axis} ${overflow.side} by ${overflow.overflow} mm (measured ${overflow.measured} mm, permitted ${overflow.side === "minimum" ? ">=" : "<="} ${overflow.permitted} mm)`;
+  return result(
+    id,
+    false,
+    `${partDescription} exceeds the main enclosure envelope at ${describe(primary)}${additional.length ? `; also ${additional.map(describe).join(", ")}` : ""}`,
+    references,
+    primary.measured,
+    primary.permitted,
+  );
+};
+
+const memberNominalBounds = (member: EnclosureModel["members"][number]): NominalBounds => {
+  const section = getProfile(member.profile).section;
+  return transformedNominalBounds(
+    centeredNominalBounds({ x: member.length, y: section.y, z: section.z }),
+    member.transform,
+  );
+};
+
+const closedDoorLeafBounds = (
+  model: EnclosureModel,
+  door: NonNullable<EnclosureModel["doors"]>[number],
+): NominalBounds | undefined => {
+  const hingeName =
+    door.id === "left-door" ? "left-hinge" : door.id === "right-door" ? "right-hinge" : undefined;
+  const hinge = hingeName ? anchorPoint(model, `anchor:${hingeName}`) : undefined;
+  if (!hinge) return undefined;
+  return transformedNominalBounds(
+    { min: { x: 0, y: 0, z: -30 }, max: { x: door.nominalWidth, y: door.nominalHeight, z: 0 } },
+    {
+      position: hinge.position,
+      rotation: { x: 0, y: 0, z: 0 },
+      ...(door.id === "right-door" ? { basis: [-1, 0, 0, 0, 1, 0, 0, 0, 1] } : {}),
+    },
+  );
+};
 export function validateModel(model: EnclosureModel): ConstraintResult[] {
   const out: ConstraintResult[] = [];
   if (!model.dimensions) {
@@ -280,6 +407,36 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
           [member.id],
         ),
       );
+  }
+  const envelope = model.mainStructuralEnvelopeMm;
+  for (const member of model.members)
+    out.push(
+      envelopeResult(
+        `BOUND-001.structural.${member.id}`,
+        `Structural member “${readablePartName(member.id)}”`,
+        [member.id],
+        memberNominalBounds(member),
+        envelope,
+      ),
+    );
+  for (const door of model.doors ?? []) {
+    const bounds = closedDoorLeafBounds(model, door);
+    out.push(
+      bounds
+        ? envelopeResult(
+            `BOUND-001.closed-door.${door.id}`,
+            `Closed door leaf “${readablePartName(door.id)}”`,
+            [door.id],
+            bounds,
+            envelope,
+          )
+        : result(
+            `BOUND-001.closed-door.${door.id}`,
+            false,
+            `Closed door leaf “${readablePartName(door.id)}” cannot be checked because its hinge anchor is missing`,
+            [door.id],
+          ),
+    );
   }
   const memberIds = new Set(model.members.map((member) => String(member.id)));
   const connectionIds = new Set<string>();
@@ -402,7 +559,7 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
           seamFit.required,
         ),
       );
-      const opening = model.innerClearDimensionsMm.widthMm;
+      const opening = model.frontOpeningClearDimensionsMm.widthMm;
       const covered =
         a.nominalWidth +
         b.nominalWidth +

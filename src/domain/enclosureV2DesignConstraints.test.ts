@@ -7,7 +7,7 @@ describe("EnclosureV2 executable design constraints", () => {
     const results = evaluateEnclosureV2DesignConstraints(
       makeEnclosureV2({ width: 1200, height: 800, depth: 600 }),
     );
-    expect(results).toHaveLength(35);
+    expect(results).toHaveLength(41);
     expect(results.every((result) => result.status === "satisfied")).toBe(true);
   });
 

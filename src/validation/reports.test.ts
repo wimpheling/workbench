@@ -136,6 +136,35 @@ describe("validation reports", () => {
     ]);
   });
 
+  it("groups main-envelope assertions by structural members and closed doors", () => {
+    const tree = buildValidationAssertionTree(
+      [
+        "BOUND-001.structural.part:front-top",
+        "BOUND-001.closed-door.right-door",
+        "BOUND-002.maximum-x",
+      ].map((id) => ({
+        id,
+        severity: "error" as const,
+        status: "passed" as const,
+        method: "deterministic constraint" as const,
+        sentence: "The named part lies within the main enclosure envelope.",
+        category: "model" as const,
+        message: "The named part lies within the main enclosure envelope.",
+        references: [],
+      })),
+    );
+    const envelope = tree.children.find(
+      (child) => child.kind === "group" && child.label === "Envelope",
+    );
+
+    expect(envelope).toMatchObject({ kind: "group", expandedByDefault: true });
+    expect(envelope?.kind === "group" && envelope.children.map((child) => child.label)).toEqual([
+      "Structural members",
+      "Closed doors",
+      "Main boundary",
+    ]);
+  });
+
   it("gives every EnclosureV2 assertion a standalone human-readable sentence", () => {
     const model = makeEnclosureV2({ width: 1200, height: 800, depth: 600 });
     const assertions = buildValidationReport(model.frame.id, validateModel(model)).assertions;

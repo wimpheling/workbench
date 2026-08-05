@@ -104,7 +104,11 @@ describe("production EnclosureV2 scene boundary", () => {
   });
 
   it("renders two hinged inset doors with five meshes each", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
     expect(scene.members).toHaveLength(16);
     expect(scene.doors).toHaveLength(2);
     expect(scene.assemblies.map((assembly) => assembly.id)).toEqual([
@@ -117,8 +121,8 @@ describe("production EnclosureV2 scene boundary", () => {
       "assembly:right-door",
     ]);
     expect(scene.doors.map((door) => door.name)).toEqual(["door:left-door", "door:right-door"]);
-    expect(scene.doors[0].position.toArray()).toEqual([3, 3, 30]);
-    expect(scene.doors[1].position.toArray()).toEqual([1197, 3, 30]);
+    expect(scene.doors[0].position.toArray()).toEqual([33, 3, 30]);
+    expect(scene.doors[1].position.toArray()).toEqual([1167, 3, 30]);
     for (const door of scene.doors) {
       const meshes: any[] = [];
       door.traverse((child) => {
@@ -145,7 +149,11 @@ describe("production EnclosureV2 scene boundary", () => {
   });
 
   it("exposes world-space solid checks and a display-ready report", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
     expect(scene.solidChecks.map((check) => check.id)).toEqual(
       expect.arrayContaining([
         "clearance.door-left-door.door-right-door",
@@ -169,7 +177,10 @@ describe("production EnclosureV2 scene boundary", () => {
       distance: 1,
       minimum: 2,
       diagnostics: ["clearance 1 is below required 2"],
-      state: { "left-door.angle": -Math.PI / 4, "right-door.angle": Math.PI / 4 },
+      state: {
+        "left-door.angle": -Math.PI / 4,
+        "right-door.angle": Math.PI / 4,
+      },
     };
     checkDoorMotionSolidsMock.mockReturnValueOnce({
       status: "insufficient-clearance",
@@ -180,7 +191,11 @@ describe("production EnclosureV2 scene boundary", () => {
       firstFailure,
       diagnostics: ["insufficient clearance; no collision"],
     } satisfies MotionSolidCheckResult);
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
 
     expect(scene.motionSolidCheck.status).toBe("insufficient-clearance");
     expect(scene.motionSolidCheck.firstFailure).toMatchObject({
@@ -201,7 +216,11 @@ describe("production EnclosureV2 scene boundary", () => {
   });
 
   it("keeps the configured clearance between each closed door and front post", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
     for (const id of [
       "clearance.door-left-door.part:front-left-post",
       "clearance.door-right-door.part:front-right-post",
@@ -214,7 +233,11 @@ describe("production EnclosureV2 scene boundary", () => {
   });
 
   it("keeps the closed door seam and bottom rail clear by the configured clearance", async () => {
-    const scene = await buildEnclosureScene({ width: 1674, height: 740, depth: 1649 });
+    const scene = await buildEnclosureScene({
+      width: 1674,
+      height: 740,
+      depth: 1649,
+    });
     for (const id of [
       "clearance.door-left-door.door-right-door",
       "clearance.door-left-door.part:front-bottom-rail",
@@ -240,17 +263,56 @@ describe("production EnclosureV2 scene boundary", () => {
   });
 
   it("applies the right-door parent reflection to the world-space solid", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
     const panel = scene.doors[1].getObjectByName("right-door-panel")!;
     const worldSolid = transformShapeToWorld(makeBaseBox(10, 10, 10) as Shape3D, panel);
-    const vertices = worldSolid.mesh({ tolerance: 0.01, angularTolerance: 0.1 }).vertices;
+    const vertices = worldSolid.mesh({
+      tolerance: 0.01,
+      angularTolerance: 0.1,
+    }).vertices;
     const maxX = Math.max(...vertices.filter((_, index) => index % 3 === 0));
     expect(scene.doors[1].scale.x).toBe(-1);
     expect(maxX).toBeLessThan(scene.doors[1].position.x);
   });
 
-  it("keeps Three.js and Replicad world bounds aligned for closed and open doors", async () => {
+  it("keeps rendered structure and closed doors inside the evaluated main envelope", async () => {
     const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const envelope = scene.model.mainStructuralEnvelopeMm;
+    const toleranceMm = 1e-6;
+
+    for (const object of [...scene.members, ...scene.doors]) {
+      const bounds = new Box3().setFromObject(object);
+      expect(bounds.min.x, `${object.name} minimum X`).toBeGreaterThanOrEqual(
+        envelope.min.x - toleranceMm,
+      );
+      expect(bounds.min.y, `${object.name} minimum Y`).toBeGreaterThanOrEqual(
+        envelope.min.y - toleranceMm,
+      );
+      expect(bounds.min.z, `${object.name} minimum Z`).toBeGreaterThanOrEqual(
+        envelope.min.z - toleranceMm,
+      );
+      expect(bounds.max.x, `${object.name} maximum X`).toBeLessThanOrEqual(
+        envelope.max.x + toleranceMm,
+      );
+      expect(bounds.max.y, `${object.name} maximum Y`).toBeLessThanOrEqual(
+        envelope.max.y + toleranceMm,
+      );
+      expect(bounds.max.z, `${object.name} maximum Z`).toBeLessThanOrEqual(
+        envelope.max.z + toleranceMm,
+      );
+    }
+  });
+
+  it("keeps Three.js and Replicad world bounds aligned for closed and open doors", async () => {
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
     const poses = [
       { "left-door.angle": 0, "right-door.angle": 0 },
       { "left-door.angle": -Math.PI / 2, "right-door.angle": Math.PI / 2 },
@@ -326,14 +388,21 @@ describe("production EnclosureV2 scene boundary", () => {
   });
 
   it("applies an absolute pose without losing existing pivots or reflection", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
     const left = scene.doors[0];
     const right = scene.doors[1];
     const leftPosition = left.position.toArray();
     const rightPosition = right.position.toArray();
     const leftPanel = left.getObjectByName("left-door-panel")!;
     const rightPanel = right.getObjectByName("right-door-panel")!;
-    applyAssemblyPose(scene, { "left-door.angle": Math.PI / 2, "right-door.angle": Math.PI / 2 });
+    applyAssemblyPose(scene, {
+      "left-door.angle": Math.PI / 2,
+      "right-door.angle": Math.PI / 2,
+    });
     expect(left.rotation.y).toBeCloseTo(Math.PI / 2);
     expect(right.rotation.y).toBeCloseTo(Math.PI / 2);
     expect(left.position.toArray()).toEqual(leftPosition);
@@ -344,7 +413,11 @@ describe("production EnclosureV2 scene boundary", () => {
   });
 
   it("opens and closes doors while preserving pivots and mesh identity", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
     const doors = [...scene.doors];
     const meshes = doors.flatMap((door) => {
       const result: any[] = [];
@@ -359,7 +432,10 @@ describe("production EnclosureV2 scene boundary", () => {
         .toArray();
     const closed = doors.map(panelPosition);
 
-    applyAssemblyPose(scene, { "left-door.angle": -Math.PI / 2, "right-door.angle": Math.PI / 2 });
+    applyAssemblyPose(scene, {
+      "left-door.angle": -Math.PI / 2,
+      "right-door.angle": Math.PI / 2,
+    });
     expect(doors.map(panelPosition)).not.toEqual(closed);
     expect(doors.map((door) => door.position.toArray())).toEqual(pivots);
 
@@ -376,7 +452,11 @@ describe("production EnclosureV2 scene boundary", () => {
   });
 
   it("moves both panels toward positive Z when opening without moving their pivots", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
     const doors = [...scene.doors];
     const rightDoor = doors.find((door) => door.name === "door:right-door")!;
     const pivots = doors.map((door) => door.position.toArray());
@@ -385,7 +465,10 @@ describe("production EnclosureV2 scene boundary", () => {
         .getObjectByName(`${door.name.slice("door:".length)}-panel`)!
         .getWorldPosition(new Vector3());
     const closed = doors.map(panelPosition).map((position) => position.z);
-    applyAssemblyPose(scene, { "left-door.angle": -Math.PI / 2, "right-door.angle": Math.PI / 2 });
+    applyAssemblyPose(scene, {
+      "left-door.angle": -Math.PI / 2,
+      "right-door.angle": Math.PI / 2,
+    });
     const open = doors.map(panelPosition).map((position) => position.z);
     expect(open[0]).toBeGreaterThan(closed[0]);
     expect(open[1]).toBeGreaterThan(closed[1]);

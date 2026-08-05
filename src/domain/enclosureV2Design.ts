@@ -1,4 +1,5 @@
 import type { Dimensions } from "./units";
+import type { NominalBounds } from "./nominalBounds";
 
 /**
  * The declarative design brief for the next EnclosureV2 evaluator.
@@ -61,6 +62,35 @@ export type EvaluatedInsetDoorDimensionsMm = Readonly<{
   leafHeightMm: number;
 }>;
 
+/**
+ * The front frame has 3060 posts with their 60 mm dimension across X and a
+ * 3060 top member with its 60 mm dimension across Y. Their inside faces
+ * define the usable front opening.
+ */
+export const frontFrameOpeningReductionMm = Object.freeze({
+  widthMm: 60,
+  heightMm: 30,
+});
+
+/** The 30-series frame extends this far beyond each clear-cavity boundary. */
+export const mainStructuralEnvelopeOffsetMm = 30;
+
+export const evaluateMainStructuralEnvelopeMm = (input: EnclosureV2DesignInput): NominalBounds => {
+  validateEnclosureV2DesignInput(input);
+  return Object.freeze({
+    min: Object.freeze({
+      x: -mainStructuralEnvelopeOffsetMm,
+      y: -mainStructuralEnvelopeOffsetMm,
+      z: -input.innerClearDepthMm - mainStructuralEnvelopeOffsetMm,
+    }),
+    max: Object.freeze({
+      x: input.innerClearWidthMm + mainStructuralEnvelopeOffsetMm,
+      y: input.innerClearHeightMm + mainStructuralEnvelopeOffsetMm,
+      z: mainStructuralEnvelopeOffsetMm,
+    }),
+  });
+};
+
 export const defaultEnclosureV2DoorClearancesMm = Object.freeze({
   frontDoorSideClearanceMm: 3,
   frontDoorTopClearanceMm: 3,
@@ -107,16 +137,17 @@ export const validateEnclosureV2DesignInput = (input: EnclosureV2DesignInput): v
 };
 
 /**
- * Inset leaves share the front opening symmetrically. The opening is the
- * requested clear inner width/height until the structural evaluator gives the
- * opening its own explicitly evaluated boundary faces.
+ * Inset leaves share the structurally bounded front opening symmetrically.
+ * The 3060 front posts take 30 mm from each side of the clear width and the
+ * top 3060 rail takes 30 mm from the clear height.
  */
 export const evaluateSymmetricInsetDoorDimensionsMm = (
   input: EnclosureV2DesignInput,
 ): EvaluatedInsetDoorDimensionsMm => {
   validateEnclosureV2DesignInput(input);
-  const frontOpeningClearWidthMm = input.innerClearWidthMm;
-  const frontOpeningClearHeightMm = input.innerClearHeightMm;
+  const frontOpeningClearWidthMm = input.innerClearWidthMm - frontFrameOpeningReductionMm.widthMm;
+  const frontOpeningClearHeightMm =
+    input.innerClearHeightMm - frontFrameOpeningReductionMm.heightMm;
   const leafWidthMm =
     (frontOpeningClearWidthMm - input.frontDoorSideClearanceMm * 2 - input.frontDoorCentreGapMm) /
     2;
@@ -124,7 +155,12 @@ export const evaluateSymmetricInsetDoorDimensionsMm = (
     frontOpeningClearHeightMm - input.frontDoorTopClearanceMm - input.frontDoorBottomClearanceMm;
   assertFinitePositive("derived front door leaf width", leafWidthMm);
   assertFinitePositive("derived front door leaf height", leafHeightMm);
-  return { frontOpeningClearWidthMm, frontOpeningClearHeightMm, leafWidthMm, leafHeightMm };
+  return {
+    frontOpeningClearWidthMm,
+    frontOpeningClearHeightMm,
+    leafWidthMm,
+    leafHeightMm,
+  };
 };
 
 const assertFiniteNonNegative = (name: string, value: number) => {
@@ -163,11 +199,17 @@ export const evaluatePracticalFrontAccessEnvelopeMm = (
   const rightSideObstructionMm = leftSideObstructionMm;
   const bottomObstructionMm = 0;
   const topObstructionMm = 0;
-  const widthMm = opening.frontOpeningClearWidthMm - leftSideObstructionMm - rightSideObstructionMm;
-  const heightMm = opening.frontOpeningClearHeightMm - bottomObstructionMm - topObstructionMm;
+  const widthMm = Math.max(
+    0,
+    opening.frontOpeningClearWidthMm - leftSideObstructionMm - rightSideObstructionMm,
+  );
+  const heightMm = Math.max(
+    0,
+    opening.frontOpeningClearHeightMm - bottomObstructionMm - topObstructionMm,
+  );
   const thicknessMm = input.innerClearDepthMm - assumptions.internalDepthKeepOutMm;
-  assertFinitePositive("derived practical front access width", widthMm);
-  assertFinitePositive("derived practical front access height", heightMm);
+  assertFiniteNonNegative("derived practical front access width", widthMm);
+  assertFiniteNonNegative("derived practical front access height", heightMm);
   assertFinitePositive("derived practical front access thickness", thicknessMm);
   return Object.freeze({
     widthMm,
@@ -213,6 +255,7 @@ export type EnclosureV2DesignSpecGroup =
   | "system"
   | "dimensions"
   | "frame"
+  | "envelope"
   | "topology"
   | "profiles"
   | "joints"
@@ -290,12 +333,26 @@ export const enclosureV2DesignSpecs = Object.freeze({
       "FRAME-005",
       "Horizontal boundary members are continuous full-length members; vertical posts fit between their top and bottom counterparts where their joint specifies that relationship.",
     ],
+    [
+      "FRAME-009",
+      "The front 3060 post axes lie on the left and right clear-volume boundary planes, and the front top 3060 axis lies on the top clear-volume boundary plane; all three members remain within the main structural box.",
+    ],
     ["FRAME-006", "Every structural member is fully constrained in position and orientation."],
     [
       "FRAME-007",
       "Changing a clear dimension preserves declared connections and profile orientations.",
     ],
     ["FRAME-008", "No renderer-only translation or rotation may repair a structural connection."],
+  ]),
+  envelope: specs("envelope", [
+    [
+      "BOUND-001",
+      "Every structural member and closed door leaf lies entirely within the main structural envelope.",
+    ],
+    [
+      "BOUND-002",
+      "The main structural envelope extends 30 mm beyond every clear-cavity boundary plane.",
+    ],
   ]),
   topology: specs("topology", [
     [
@@ -364,7 +421,7 @@ export const enclosureV2DesignSpecs = Object.freeze({
     ],
     [
       "OPENING-004",
-      "Until a feature deliberately narrows it, the front opening exposes the requested inner clear width and height.",
+      "The front 3060 frame deliberately reduces the front opening to innerClearWidthMm minus 60 mm by innerClearHeightMm minus 30 mm.",
     ],
   ]),
   doors: specs("doors", [

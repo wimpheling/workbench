@@ -64,7 +64,81 @@ describe("deterministic constraints", () => {
     ).toBe(false);
   });
 
-  it("uses the explicit inner clear width when checking undersized doors", () => {
+  it("keeps every structural member and closed door leaf inside the main envelope", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const envelopeAssertions = validateModel(model).filter((result) =>
+      result.id.startsWith("BOUND-001."),
+    );
+
+    expect(envelopeAssertions).toHaveLength(model.members.length + (model.doors?.length ?? 0));
+    expect(envelopeAssertions.every((result) => result.passed)).toBe(true);
+  });
+
+  it("rejects a main structural envelope that no longer matches the clear cavity", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const changed = {
+      ...model,
+      mainStructuralEnvelopeMm: {
+        ...model.mainStructuralEnvelopeMm,
+        max: { ...model.mainStructuralEnvelopeMm.max, x: 151 },
+      },
+    };
+
+    expect(
+      validateModel(changed).find((result) => result.id === "BOUND-002.maximum-x"),
+    ).toMatchObject({ passed: false, measured: 151, expected: 150 });
+  });
+
+  it("reports the structural part, boundary axis, overflow, measured value, and permitted value", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const outside = {
+      ...model,
+      members: model.members.map((member) =>
+        member.id === "part:front-left-post"
+          ? {
+              ...member,
+              transform: {
+                ...member.transform,
+                position: { ...member.transform.position, x: -1 },
+              },
+            }
+          : member,
+      ),
+    };
+
+    expect(
+      validateModel(outside).find(
+        (result) => result.id === "BOUND-001.structural.part:front-left-post",
+      ),
+    ).toMatchObject({ passed: false, measured: -31, expected: -30 });
+    expect(
+      validateModel(outside).find(
+        (result) => result.id === "BOUND-001.structural.part:front-left-post",
+      )?.message,
+    ).toContain(
+      "Structural member “Front left post” exceeds the main enclosure envelope at X minimum by 1 mm",
+    );
+  });
+
+  it("checks each closed door leaf from its hinge placement, including the reflected right leaf", () => {
+    const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
+    const outside = {
+      ...model,
+      doors: model.doors?.map((door) =>
+        door.id === "right-door" ? { ...door, nominalWidth: 200 } : door,
+      ),
+    };
+    const assertion = validateModel(outside).find(
+      (result) => result.id === "BOUND-001.closed-door.right-door",
+    );
+
+    expect(assertion).toMatchObject({ passed: false, measured: -113, expected: -30 });
+    expect(assertion?.message).toContain(
+      "Closed door leaf “Right door” exceeds the main enclosure envelope at X minimum by 83 mm",
+    );
+  });
+
+  it("uses the structurally bounded front opening when checking undersized doors", () => {
     const model = makeEnclosureV2({ width: 120, height: 100, depth: 80 });
     const undersized = {
       ...model,
@@ -74,7 +148,11 @@ describe("deterministic constraints", () => {
       ],
     };
     const failure = validateModel(undersized).find((r) => r.id === "enclosure.doors.cover-opening");
-    expect(failure).toMatchObject({ passed: false, measured: 109, expected: 120 });
+    expect(failure).toMatchObject({
+      passed: false,
+      measured: 109,
+      expected: 60,
+    });
   });
 
   it("checks every required board dimension against the practical open-door envelope", () => {
@@ -86,7 +164,11 @@ describe("deterministic constraints", () => {
       frontDoorTopClearanceMm: 3,
       frontDoorBottomClearanceMm: 3,
       frontDoorCentreGapMm: 3,
-      requiredFrontAccessEnvelopeMm: { widthMm: 1125, heightMm: 801, thicknessMm: 601 },
+      requiredFrontAccessEnvelopeMm: {
+        widthMm: 1125,
+        heightMm: 801,
+        thicknessMm: 601,
+      },
     });
     const accessFailures = validateModel(model).filter(
       (entry) => entry.id.startsWith("ACCESS-005.") && !entry.passed,
@@ -94,8 +176,16 @@ describe("deterministic constraints", () => {
     expect(accessFailures).toHaveLength(3);
     expect(accessFailures).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: "ACCESS-005.usable-width", measured: 1124, expected: 1125 }),
-        expect.objectContaining({ id: "ACCESS-005.usable-height", measured: 800, expected: 801 }),
+        expect.objectContaining({
+          id: "ACCESS-005.usable-width",
+          measured: 1064,
+          expected: 1125,
+        }),
+        expect.objectContaining({
+          id: "ACCESS-005.usable-height",
+          measured: 770,
+          expected: 801,
+        }),
         expect.objectContaining({
           id: "ACCESS-005.usable-thickness",
           measured: 600,
@@ -117,7 +207,11 @@ describe("deterministic constraints", () => {
     const failure = validateModel({ ...model, anchors }).find(
       (r) => r.id === "enclosure.part:side-middle-left.depth-midpoint",
     );
-    expect(failure).toMatchObject({ passed: false, measured: -35, expected: -40 });
+    expect(failure).toMatchObject({
+      passed: false,
+      measured: -35,
+      expected: -40,
+    });
   });
 
   it("reports missing required front members and profile violations", () => {

@@ -24,7 +24,7 @@ npm run build
 npm run validate:workflows
 ```
 
-The quality suite currently covers 30 test files / 145 tests. Build output is `dist/`.
+The quality suite currently covers 31 test files / 154 tests. Build output is `dist/`.
 
 ## Current limits
 

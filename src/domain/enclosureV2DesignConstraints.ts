@@ -5,6 +5,7 @@ import {
   type GeometricConstraintEvaluation,
   type GeometricPoint,
 } from "./geometricConstraints";
+import { frontFrameOpeningReductionMm, mainStructuralEnvelopeOffsetMm } from "./enclosureV2Design";
 
 const MM_TOLERANCE = 1e-6;
 const entity = (id: string, description: string) => ({ id, description });
@@ -14,8 +15,14 @@ type ExpectedMember = Readonly<{ center: GeometricPoint; lengthMm: number }>;
 const expectedMembers = (model: EnclosureModel): Readonly<Record<string, ExpectedMember>> => {
   const { widthMm: width, heightMm: height, depthMm: depth } = model.innerClearDimensionsMm;
   return {
-    "part:left-bottom-rail": { center: { x: -15, y: -15, z: -depth / 2 }, lengthMm: depth },
-    "part:left-top-rail": { center: { x: -15, y: height + 15, z: -depth / 2 }, lengthMm: depth },
+    "part:left-bottom-rail": {
+      center: { x: -15, y: -15, z: -depth / 2 },
+      lengthMm: depth,
+    },
+    "part:left-top-rail": {
+      center: { x: -15, y: height + 15, z: -depth / 2 },
+      lengthMm: depth,
+    },
     "part:right-bottom-rail": {
       center: { x: width + 15, y: -15, z: -depth / 2 },
       lengthMm: depth,
@@ -37,16 +44,24 @@ const expectedMembers = (model: EnclosureModel): Readonly<Record<string, Expecte
       lengthMm: width + 60,
     },
     "part:front-top": {
-      center: { x: width / 2, y: height + 30, z: 15 },
+      center: { x: width / 2, y: height, z: 15 },
       lengthMm: width + 60,
     },
     "part:front-left-post": {
-      center: { x: -30, y: height / 2, z: 15 },
-      lengthMm: height,
+      center: {
+        x: 0,
+        y: (height - frontFrameOpeningReductionMm.heightMm) / 2,
+        z: 15,
+      },
+      lengthMm: height - frontFrameOpeningReductionMm.heightMm,
     },
     "part:front-right-post": {
-      center: { x: width + 30, y: height / 2, z: 15 },
-      lengthMm: height,
+      center: {
+        x: width,
+        y: (height - frontFrameOpeningReductionMm.heightMm) / 2,
+        z: 15,
+      },
+      lengthMm: height - frontFrameOpeningReductionMm.heightMm,
     },
     "part:back-left-post": {
       center: { x: -15, y: height / 2, z: -depth - 15 },
@@ -104,6 +119,50 @@ export const buildEnclosureV2DesignConstraints = (
     });
   }
 
+  const { widthMm, heightMm, depthMm } = model.innerClearDimensionsMm;
+  const envelopeEntity = [entity("main-structural-envelope", "Main structural envelope")];
+  for (const boundary of [
+    {
+      name: "minimum X",
+      actual: model.mainStructuralEnvelopeMm.min.x,
+      expected: -mainStructuralEnvelopeOffsetMm,
+    },
+    {
+      name: "maximum X",
+      actual: model.mainStructuralEnvelopeMm.max.x,
+      expected: widthMm + mainStructuralEnvelopeOffsetMm,
+    },
+    {
+      name: "minimum Y",
+      actual: model.mainStructuralEnvelopeMm.min.y,
+      expected: -mainStructuralEnvelopeOffsetMm,
+    },
+    {
+      name: "maximum Y",
+      actual: model.mainStructuralEnvelopeMm.max.y,
+      expected: heightMm + mainStructuralEnvelopeOffsetMm,
+    },
+    {
+      name: "minimum Z",
+      actual: model.mainStructuralEnvelopeMm.min.z,
+      expected: -depthMm - mainStructuralEnvelopeOffsetMm,
+    },
+    {
+      name: "maximum Z",
+      actual: model.mainStructuralEnvelopeMm.max.z,
+      expected: mainStructuralEnvelopeOffsetMm,
+    },
+  ] as const)
+    constraints.push({
+      kind: "scalar-equality",
+      id: `BOUND-002.${boundary.name.toLocaleLowerCase().replace(" ", "-")}`,
+      description: `The main structural envelope ${boundary.name} boundary is fixed by the clear cavity and 30 mm frame offset.`,
+      entities: envelopeEntity,
+      tolerance: MM_TOLERANCE,
+      actual: boundary.actual,
+      expected: boundary.expected,
+    });
+
   const [leftDoor, rightDoor] = model.doors ?? [];
   if (leftDoor && rightDoor) {
     const doorEntities = [
@@ -140,7 +199,7 @@ export const buildEnclosureV2DesignConstraints = (
           rightDoor.nominalWidth +
           model.designInput.frontDoorSideClearanceMm * 2 +
           model.designInput.frontDoorCentreGapMm,
-        expected: model.innerClearDimensionsMm.widthMm,
+        expected: model.frontOpeningClearDimensionsMm.widthMm,
       },
     );
   }

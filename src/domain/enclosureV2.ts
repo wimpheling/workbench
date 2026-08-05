@@ -11,11 +11,14 @@ import { frameId, partId, profileId } from "./ids";
 import type { ProfileId } from "./ids";
 import type { Point3, Transform } from "./frames";
 import type { Dimensions } from "./units";
+import type { NominalBounds } from "./nominalBounds";
 import { buttJoint, type Connection } from "./connections";
 import {
   designInputFromExistingEnclosureDimensions,
+  evaluateMainStructuralEnvelopeMm,
   evaluatePracticalFrontAccessEnvelopeMm,
   evaluateSymmetricInsetDoorDimensionsMm,
+  frontFrameOpeningReductionMm,
   type EvaluatedPracticalFrontAccessEnvelopeMm,
   type EnclosureV2DesignInput,
 } from "./enclosureV2Design";
@@ -45,6 +48,8 @@ export type EnclosureModel = {
     heightMm: number;
     depthMm: number;
   };
+  mainStructuralEnvelopeMm: NominalBounds;
+  frontOpeningClearDimensionsMm: { widthMm: number; heightMm: number };
   /** Conservative face-on, axis-aligned board envelope with both doors open 90 degrees. */
   practicalFrontAccessEnvelopeMm: EvaluatedPracticalFrontAccessEnvelopeMm;
   /** @deprecated Use innerClearDimensionsMm. */
@@ -53,7 +58,11 @@ export type EnclosureModel = {
   doors?: readonly DoorRecord[];
   panels?: readonly PanelRecord[];
 };
-export type DoorRecord = { id: string; nominalWidth: number; nominalHeight: number };
+export type DoorRecord = {
+  id: string;
+  nominalWidth: number;
+  nominalHeight: number;
+};
 export type PanelRecord = {
   id: string;
   size: Point3;
@@ -109,6 +118,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
   const innerClearHeightMm = designInput.innerClearHeightMm;
   const innerClearDepthMm = designInput.innerClearDepthMm;
   const doorDimensions = evaluateSymmetricInsetDoorDimensionsMm(designInput);
+  const mainStructuralEnvelopeMm = evaluateMainStructuralEnvelopeMm(designInput);
   const practicalFrontAccessEnvelopeMm = evaluatePracticalFrontAccessEnvelopeMm(designInput);
   const anchors: Record<string, Anchor> = {};
   const add = (name: string, position: Point3) => {
@@ -120,7 +130,6 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
   // All structural centres are derived from those boundary planes and the
   // selected profile sections; none of these offsets belong to the renderer.
   const clearBoundaryProfileOffsetMm = PROFILE_3030_HALF_SIDE_MM;
-  const frontPostAxisOffsetMm = PROFILE_3060_HALF_WIDE_SIDE_MM;
   add(
     "left-rail-bottom-front",
     point(-clearBoundaryProfileOffsetMm, -clearBoundaryProfileOffsetMm, 0),
@@ -188,47 +197,48 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
   );
   add(
     "front-rail-bottom-left",
-    point(-frontPostAxisOffsetMm, -clearBoundaryProfileOffsetMm, clearBoundaryProfileOffsetMm),
+    point(
+      -PROFILE_3060_HALF_WIDE_SIDE_MM,
+      -clearBoundaryProfileOffsetMm,
+      clearBoundaryProfileOffsetMm,
+    ),
   );
   add(
     "front-rail-bottom-right",
     point(
-      innerClearWidthMm + frontPostAxisOffsetMm,
+      innerClearWidthMm + PROFILE_3060_HALF_WIDE_SIDE_MM,
       -clearBoundaryProfileOffsetMm,
       clearBoundaryProfileOffsetMm,
     ),
   );
   add(
     "front-rail-top-left",
-    point(
-      -frontPostAxisOffsetMm,
-      innerClearHeightMm + PROFILE_3060_HALF_WIDE_SIDE_MM,
-      clearBoundaryProfileOffsetMm,
-    ),
+    point(-PROFILE_3060_HALF_WIDE_SIDE_MM, innerClearHeightMm, clearBoundaryProfileOffsetMm),
   );
   add(
     "front-rail-top-right",
     point(
-      innerClearWidthMm + frontPostAxisOffsetMm,
-      innerClearHeightMm + PROFILE_3060_HALF_WIDE_SIDE_MM,
+      innerClearWidthMm + PROFILE_3060_HALF_WIDE_SIDE_MM,
+      innerClearHeightMm,
       clearBoundaryProfileOffsetMm,
     ),
   );
 
-  add("front-left-post-bottom", point(-frontPostAxisOffsetMm, 0, clearBoundaryProfileOffsetMm));
+  add("front-left-post-bottom", point(0, 0, clearBoundaryProfileOffsetMm));
   add(
     "front-left-post-top",
-    point(-frontPostAxisOffsetMm, innerClearHeightMm, clearBoundaryProfileOffsetMm),
+    point(
+      0,
+      innerClearHeightMm - frontFrameOpeningReductionMm.heightMm,
+      clearBoundaryProfileOffsetMm,
+    ),
   );
-  add(
-    "front-right-post-bottom",
-    point(innerClearWidthMm + frontPostAxisOffsetMm, 0, clearBoundaryProfileOffsetMm),
-  );
+  add("front-right-post-bottom", point(innerClearWidthMm, 0, clearBoundaryProfileOffsetMm));
   add(
     "front-right-post-top",
     point(
-      innerClearWidthMm + frontPostAxisOffsetMm,
-      innerClearHeightMm,
+      innerClearWidthMm,
+      innerClearHeightMm - frontFrameOpeningReductionMm.heightMm,
       clearBoundaryProfileOffsetMm,
     ),
   );
@@ -319,7 +329,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
   add(
     "left-hinge",
     point(
-      designInput.frontDoorSideClearanceMm,
+      PROFILE_3060_HALF_WIDE_SIDE_MM + designInput.frontDoorSideClearanceMm,
       designInput.frontDoorBottomClearanceMm,
       PROFILE_3030_SIDE_MM,
     ),
@@ -327,7 +337,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
   add(
     "right-hinge",
     point(
-      innerClearWidthMm - designInput.frontDoorSideClearanceMm,
+      innerClearWidthMm - PROFILE_3060_HALF_WIDE_SIDE_MM - designInput.frontDoorSideClearanceMm,
       designInput.frontDoorBottomClearanceMm,
       PROFILE_3030_SIDE_MM,
     ),
@@ -618,8 +628,17 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       heightMm: innerClearHeightMm,
       depthMm: innerClearDepthMm,
     },
+    mainStructuralEnvelopeMm,
+    frontOpeningClearDimensionsMm: {
+      widthMm: doorDimensions.frontOpeningClearWidthMm,
+      heightMm: doorDimensions.frontOpeningClearHeightMm,
+    },
     practicalFrontAccessEnvelopeMm,
-    dimensions: { x: innerClearWidthMm, y: innerClearHeightMm, z: innerClearDepthMm },
+    dimensions: {
+      x: innerClearWidthMm,
+      y: innerClearHeightMm,
+      z: innerClearDepthMm,
+    },
     doorSeamClearance: designInput.frontDoorCentreGapMm,
     doors: [
       {

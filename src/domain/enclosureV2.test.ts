@@ -28,8 +28,17 @@ describe("EnclosureV2 clear-volume design", () => {
       z: 15,
     });
 
-    expect(member("front-left-post").length).toBeCloseTo(740);
-    expect(member("front-left-post").transform.position).toMatchObject({ x: -30, y: 370, z: 15 });
+    expect(member("front-top").transform.position).toMatchObject({
+      x: 837,
+      y: 740,
+      z: 15,
+    });
+    expect(member("front-left-post").length).toBeCloseTo(710);
+    expect(member("front-left-post").transform.position).toMatchObject({
+      x: 0,
+      y: 355,
+      z: 15,
+    });
     expect(member("back-middle-support").length).toBeCloseTo(740);
     expect(member("back-middle-support").transform.position).toMatchObject({
       x: 837,
@@ -40,22 +49,39 @@ describe("EnclosureV2 clear-volume design", () => {
 
   it("places inset-door hinge axes on the outside/front leaf corners", () => {
     const model = makeEnclosureV2(historicalDimensions);
-    expect(model.anchors["anchor:left-hinge"]?.position).toEqual({ x: 3, y: 3, z: 30 });
-    expect(model.anchors["anchor:right-hinge"]?.position).toEqual({ x: 1671, y: 3, z: 30 });
+    expect(model.anchors["anchor:left-hinge"]?.position).toEqual({
+      x: 33,
+      y: 3,
+      z: 30,
+    });
+    expect(model.anchors["anchor:right-hinge"]?.position).toEqual({
+      x: 1641,
+      y: 3,
+      z: 30,
+    });
   });
 
   it("derives two symmetric inset leaves from the clear opening", () => {
     const model = makeEnclosureV2({ width: 1200, height: 800, depth: 600 });
     expect(model.doors).toHaveLength(2);
     expect(model.doors).toEqual([
-      { id: "left-door", nominalWidth: 595.5, nominalHeight: 794 },
-      { id: "right-door", nominalWidth: 595.5, nominalHeight: 794 },
+      { id: "left-door", nominalWidth: 565.5, nominalHeight: 764 },
+      { id: "right-door", nominalWidth: 565.5, nominalHeight: 764 },
     ]);
-    expect(model.innerClearDimensionsMm).toEqual({ widthMm: 1200, heightMm: 800, depthMm: 600 });
+    expect(model.innerClearDimensionsMm).toEqual({
+      widthMm: 1200,
+      heightMm: 800,
+      depthMm: 600,
+    });
+    expect(model.frontOpeningClearDimensionsMm).toEqual({ widthMm: 1140, heightMm: 770 });
+    expect(model.mainStructuralEnvelopeMm).toEqual({
+      min: { x: -30, y: -30, z: -630 },
+      max: { x: 1230, y: 830, z: 30 },
+    });
     expect(model.dimensions).toEqual({ x: 1200, y: 800, z: 600 });
     expect(model.practicalFrontAccessEnvelopeMm).toMatchObject({
-      widthMm: 1124,
-      heightMm: 800,
+      widthMm: 1064,
+      heightMm: 770,
       thicknessMm: 600,
       fullyOpenDoorAngleDeg: 90,
     });
@@ -121,9 +147,10 @@ describe("EnclosureV2 clear-volume design", () => {
 
   it("rejects an incomplete structural connection topology", () => {
     const model = makeEnclosureV2(historicalDimensions);
-    const failures = validateModel({ ...model, connections: model.connections.slice(1) }).filter(
-      (constraint) => !constraint.passed,
-    );
+    const failures = validateModel({
+      ...model,
+      connections: model.connections.slice(1),
+    }).filter((constraint) => !constraint.passed);
     expect(failures).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

@@ -4,6 +4,7 @@ export * from "./enclosureV2";
 export * from "./enclosureV2Design";
 export * from "./enclosureV2DesignConstraints";
 export * from "./frames";
+export * from "./nominalBounds";
 export * from "./ids";
 export * from "./profiles";
 export * from "./units";
