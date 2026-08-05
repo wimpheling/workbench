@@ -15,7 +15,14 @@ export type ButtJoint = Readonly<{
   toleranceMm: number;
 }>;
 export type Joint =
-  | { kind: "box"; host: string; mate: string; side: Side; fingers: number; depth: number }
+  | {
+      kind: "box";
+      host: string;
+      mate: string;
+      side: Side;
+      fingers: number;
+      depth: number;
+    }
   | { kind: "halfLap"; host: string; mate: string; size: number; side: Side }
   | { kind: "tSlotBolt"; host: string; mate: string; bolt: string; nut: string }
   | { kind: "angleBracket"; host: string; mate: string; hardware: string }
@@ -26,13 +33,27 @@ export type HardwareRequirement = {
   quantity: number;
   notes?: string[];
 };
+/** The physical item that clamps a nominal joint; separate from the mating-face contract. */
+export type StructuralConnectorSelection = Readonly<{
+  id: string;
+  /** A concealed connector leaves every exterior T-slot available to panels and seals. */
+  placement: "concealed-machined" | "external";
+  machining: "vendor-specification-required" | "none";
+  /** Which side of the supporting member receives an external angle bracket. */
+  mountingSide?: "toward-support-start" | "toward-support-end";
+}>;
 export type Connection = {
   id: string;
   parts: readonly string[];
   joint?: Joint;
+  connector?: StructuralConnectorSelection;
   hardware?: readonly HardwareRequirement[];
 };
-export type ConnectionIssue = { id: string; message: string; references: string[] };
+export type ConnectionIssue = {
+  id: string;
+  message: string;
+  references: string[];
+};
 export const boxJoint = (
   host: string,
   mate: string,
@@ -124,6 +145,21 @@ export const validateConnection = (connection: Connection): ConnectionIssue[] =>
         id: `${connection.id}.butt-parameters`,
         message:
           "butt joint contact area must be finite and positive and tolerance must be finite and non-negative",
+        references,
+      });
+    if (!connection.connector?.id)
+      issues.push({
+        id: `${connection.id}.connector`,
+        message: "structural butt joint requires a selected physical connector",
+        references,
+      });
+    if (
+      connection.connector?.placement === "external" &&
+      connection.connector.mountingSide === undefined
+    )
+      issues.push({
+        id: `${connection.id}.connector-mounting-side`,
+        message: "external angle bracket requires an explicit supporting-member side",
         references,
       });
   }

@@ -4,7 +4,11 @@ import { boxJoint, buttJoint, connectionHardware, validateConnection } from "./c
 describe("connections", () => {
   it("reports malformed box joints", () => {
     expect(
-      validateConnection({ id: "c", parts: ["a", "b"], joint: boxJoint("a", "b", "front", 0, 1) }),
+      validateConnection({
+        id: "c",
+        parts: ["a", "b"],
+        joint: boxJoint("a", "b", "front", 0, 1),
+      }),
     ).toHaveLength(1);
   });
   it("groups hardware quantities", () => {
@@ -28,6 +32,12 @@ describe("connections", () => {
       id: "joint:left-post-bottom",
       parts: ["part:left-post", "part:bottom-rail"],
       joint: buttJoint("part:left-post", "part:bottom-rail", "start", "top", 900, 0.1),
+      connector: {
+        id: "hardware:bracket",
+        placement: "external" as const,
+        machining: "none" as const,
+        mountingSide: "toward-support-end" as const,
+      },
     };
     expect(validateConnection(valid)).toEqual([]);
 

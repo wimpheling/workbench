@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeEnclosureV2 } from "./enclosureV2";
+import { validateMachiningPlan } from "./machining";
 import { validateModel } from "../validation/constraints";
 
 const historicalDimensions = { width: 1674, height: 740, depth: 1649 };
@@ -73,7 +74,10 @@ describe("EnclosureV2 clear-volume design", () => {
       heightMm: 800,
       depthMm: 600,
     });
-    expect(model.frontOpeningClearDimensionsMm).toEqual({ widthMm: 1140, heightMm: 770 });
+    expect(model.frontOpeningClearDimensionsMm).toEqual({
+      widthMm: 1140,
+      heightMm: 770,
+    });
     expect(model.mainStructuralEnvelopeMm).toEqual({
       min: { x: -30, y: -30, z: -630 },
       max: { x: 1230, y: 830, z: 30 },
@@ -122,12 +126,43 @@ describe("EnclosureV2 clear-volume design", () => {
         geometryFidelity: "technical-drawing-envelope",
       },
     });
+    const biFoldConstraints = validateModel(model).filter((constraint) =>
+      constraint.id.startsWith("BIFOLD-"),
+    );
+    expect(biFoldConstraints).toHaveLength(11);
+    expect(biFoldConstraints.every((constraint) => constraint.passed)).toBe(true);
   });
 
   it("models the complete structural topology as 24 nominal butt joints", () => {
     const model = makeEnclosureV2(historicalDimensions);
     expect(model.connections).toHaveLength(24);
     expect(model.connections.every((connection) => connection.joint?.kind === "butt")).toBe(true);
+    expect(model.accessOpenings.map((opening) => opening.id)).toEqual([
+      "access-opening:front-main",
+      "access-opening:left-rear",
+      "access-opening:back-right",
+    ]);
+    expect(model.connections.every((connection) => connection.connector)).toBe(true);
+    expect(
+      model.connections.filter(
+        (connection) => connection.connector?.id === "hardware:wolweiss-cac30un",
+      ),
+    ).toHaveLength(24);
+    expect(
+      model.connections.every(
+        (connection) => connection.connector?.placement === "concealed-machined",
+      ),
+    ).toBe(true);
+    expect(model.machiningPlan.operations).toHaveLength(24);
+    expect(validateMachiningPlan(model.machiningPlan)).toEqual([]);
+    expect(
+      model.machiningPlan.operations.every(
+        (operation) =>
+          operation.connectorProductCode === "CAC30UN" &&
+          operation.definition.status === "supplier-defined-pending" &&
+          operation.definition.pendingDetail === "dimensions-pending-vendor-drawing",
+      ),
+    ).toBe(true);
     expect(new Set(model.connections.flatMap((connection) => connection.parts))).toEqual(
       new Set(model.members.map((frameMember) => String(frameMember.id))),
     );

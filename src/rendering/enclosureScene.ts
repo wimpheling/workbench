@@ -1,10 +1,13 @@
 import {
+  Box3,
   BufferGeometry,
   Float32BufferAttribute,
   Group,
+  Matrix4,
   Mesh,
   MeshStandardMaterial,
   Object3D,
+  Quaternion,
   Vector3,
 } from "three";
 import { makeBaseBox, setOC, type Shape3D } from "replicad";
@@ -39,6 +42,12 @@ import {
   type AssemblyTreeNode,
   type MotionPose,
 } from "../validation/kinematics";
+import {
+  biFoldDoorPose,
+  type BiFoldDoorPose,
+  type EvaluatedBiFoldDoorLeaf,
+  type EvaluatedBiFoldDoorOpening,
+} from "../domain/bifoldDoors";
 
 export { transformShapeToWorld } from "../geometry/replicadTransform";
 
@@ -67,12 +76,12 @@ export function initializeOpenCascade(
     });
   }
   if (!openCascadePromise) {
-    openCascadePromise = initializer({ locateFile: () => wasmLocation(browserAsset) }).then(
-      (oc) => {
-        setOC(oc);
-        return oc;
-      },
-    );
+    openCascadePromise = initializer({
+      locateFile: () => wasmLocation(browserAsset),
+    }).then((oc) => {
+      setOC(oc);
+      return oc;
+    });
   }
   return openCascadePromise as Promise<OpenCascadeModule>;
 }
@@ -100,6 +109,15 @@ export type EnclosureScene = {
   doors: readonly Group[];
   /** Frame-mounted GLR3030 portions; they do not participate in door motion. */
   stationaryHinges: readonly Group[];
+  /** Calibrated visual previews for the selected external CBR brackets. */
+  structuralConnectors: readonly Group[];
+  /** Evaluated side/back bi-fold door assemblies, each with two transformable leaves. */
+  biFoldDoors: readonly Group[];
+  /** Conservative closed-state AABB conflicts; these block installation review. */
+  closedDoorConnectorEnvelopeConflicts: readonly Readonly<{
+    connectionId: string;
+    doorId: string;
+  }>[];
   assemblies: readonly Assembly[];
   assemblyTree: readonly AssemblyTreeNode[];
   assemblyObjects: ReadonlyMap<string, Object3D>;
@@ -325,6 +343,220 @@ function createDoor(
   return door;
 }
 
+const BI_FOLD_FRAME_PROFILE = "profile:aluminium-3030" as Parameters<typeof getProfile>[0];
+
+const biFoldMetadata = (opening: EvaluatedBiFoldDoorOpening) => ({
+  partType: "bi-fold-access-door",
+  renderStatus: "evaluated-leaf-frame-and-inset-panel",
+  openingId: opening.id,
+  accessFace: opening.face,
+  openingDirection: "outward",
+  parkingDirection: opening.parkingDirection,
+  interLeafHingeSelection: opening.interLeafHinge.hardwareSelection,
+  interLeafHingeCollisionProof: opening.interLeafHinge.collisionProofStatus,
+});
+
+function createBiFoldLeafFrame(
+  opening: EvaluatedBiFoldDoorOpening,
+  leaf: EvaluatedBiFoldDoorLeaf,
+  manufacturerCad: ManufacturerCad,
+): Group {
+  const frame = new Group();
+  frame.name = `bi-fold-leaf:${leaf.id}`;
+  Object.assign(frame.userData, biFoldMetadata(opening), {
+    partType: "bi-fold-leaf",
+    leafId: leaf.id,
+    leafRole: leaf.role,
+    frameProfile: leaf.frameProfile,
+    insetPanelInstallation: leaf.insetPanel.installation,
+    frameFitStatus: leaf.frameFitStatus,
+  });
+  frame.position.set(leaf.nominalWidthMm / 2, 0, 0);
+  const sideMm = leaf.frameFaceDepthMm;
+  for (const [x, name] of [
+    [-(leaf.nominalWidthMm / 2 - sideMm / 2), "hinge-upright"],
+    [leaf.nominalWidthMm / 2 - sideMm / 2, "free-upright"],
+  ] as const) {
+    const mesh = createDoorMesh(
+      leaf.nominalHeightMm,
+      sideMm,
+      sideMm,
+      `${leaf.id}-${name}`,
+      BI_FOLD_FRAME_PROFILE,
+      manufacturerCad,
+    );
+    mesh.rotation.z = Math.PI / 2;
+    mesh.position.set(x, leaf.nominalHeightMm / 2, 0);
+    mesh.userData.biFoldLeafId = leaf.id;
+    frame.add(mesh);
+  }
+  for (const [y, name] of [
+    [sideMm / 2, "bottom-rail"],
+    [leaf.nominalHeightMm - sideMm / 2, "top-rail"],
+  ] as const) {
+    const mesh = createDoorMesh(
+      Math.max(1, leaf.nominalWidthMm - sideMm * 2),
+      sideMm,
+      sideMm,
+      `${leaf.id}-${name}`,
+      BI_FOLD_FRAME_PROFILE,
+      manufacturerCad,
+    );
+    mesh.position.set(0, y, 0);
+    mesh.userData.biFoldLeafId = leaf.id;
+    frame.add(mesh);
+  }
+  const panel = createDoorMesh(
+    Math.max(1, leaf.insetPanel.cutWidthMm),
+    Math.max(1, leaf.insetPanel.cutHeightMm),
+    leaf.insetPanel.thicknessMm,
+    `${leaf.id}-inset-panel`,
+  );
+  panel.position.set(0, leaf.nominalHeightMm / 2, 0);
+  Object.assign(panel.userData, {
+    biFoldLeafId: leaf.id,
+    partType: "bi-fold-inset-panel",
+    installation: leaf.insetPanel.installation,
+  });
+  frame.add(panel);
+  return frame;
+}
+
+function createBiFoldGlrFrameHinge(
+  opening: EvaluatedBiFoldDoorOpening,
+  leaf: EvaluatedBiFoldDoorLeaf,
+  manufacturerCad: ManufacturerCad,
+): readonly [Group, Group] | readonly [] {
+  // GLR3030 is a 600 mm long supplier CAD component. Preserve its selection
+  // in metadata even when a tiny test enclosure cannot physically fit it.
+  if (leaf.nominalHeightMm < 600) return [];
+  const offsetY = (leaf.nominalHeightMm - 600) / 2 + 300;
+  const stationary = new Group();
+  stationary.name = `bi-fold-hinge:${leaf.id}:stationary`;
+  Object.assign(stationary.userData, biFoldMetadata(opening), {
+    partType: "bi-fold-frame-hinge-stationary",
+    hardwareId: "hardware:wolweiss-glr3030",
+    hardwareSelection: "selected",
+    geometryAdapter: "manufacturer-step",
+  });
+  const stationaryMesh = new Mesh(
+    manufacturerCad.glr3030StationaryGeometry.clone(),
+    new MeshStandardMaterial({
+      color: 0x65717d,
+      metalness: 0.75,
+      roughness: 0.28,
+    }),
+  );
+  stationaryMesh.name = `${leaf.id}-glr3030-stationary`;
+  stationaryMesh.position.y = offsetY;
+  stationary.add(stationaryMesh);
+
+  const moving = new Group();
+  moving.name = `bi-fold-hinge:${leaf.id}:leaf`;
+  Object.assign(moving.userData, biFoldMetadata(opening), {
+    partType: "bi-fold-frame-hinge-leaf",
+    hardwareId: "hardware:wolweiss-glr3030",
+    hardwareSelection: "selected",
+    geometryAdapter: "manufacturer-step",
+  });
+  const movingMesh = new Mesh(
+    manufacturerCad.glr3030LeafGeometry.clone(),
+    new MeshStandardMaterial({
+      color: 0x65717d,
+      metalness: 0.75,
+      roughness: 0.28,
+    }),
+  );
+  movingMesh.name = `${leaf.id}-glr3030-leaf`;
+  movingMesh.position.y = offsetY;
+  moving.add(movingMesh);
+  return [stationary, moving];
+}
+
+function createBiFoldDoor(
+  opening: EvaluatedBiFoldDoorOpening,
+  manufacturerCad: ManufacturerCad,
+): Group {
+  const group = new Group();
+  group.name = `bi-fold-door:${opening.id}`;
+  group.position.set(opening.framePivotMm.x, opening.framePivotMm.y, opening.framePivotMm.z);
+  // Local +X follows the closed leaf from its frame pivot to its folding mate.
+  // These two rotations map that axis along the intended half-face opening.
+  group.rotation.y = opening.face === "left" ? -Math.PI / 2 : Math.PI;
+  Object.assign(group.userData, biFoldMetadata(opening), {
+    openingWidthMm: opening.openingWidthMm,
+    openingHeightMm: opening.openingHeightMm,
+    frameHingeSelection: opening.frameHinge.hardwareSelection,
+    frameHingeGeometry: opening.frameHinge.geometryStatus,
+    poseState: "closed",
+  });
+
+  const [primaryLeaf, secondaryLeaf] = opening.leaves;
+  const primaryPivot = new Group();
+  primaryPivot.name = `bi-fold-pivot:${primaryLeaf.id}`;
+  primaryPivot.userData.biFoldRole = "primary-pivot";
+  primaryPivot.add(createBiFoldLeafFrame(opening, primaryLeaf, manufacturerCad));
+  const glr = createBiFoldGlrFrameHinge(opening, primaryLeaf, manufacturerCad);
+  if (glr.length) {
+    const [stationary, moving] = glr;
+    group.add(stationary);
+    primaryPivot.add(moving);
+  }
+  const secondaryPivot = new Group();
+  secondaryPivot.name = `bi-fold-pivot:${secondaryLeaf.id}`;
+  secondaryPivot.position.x = primaryLeaf.nominalWidthMm;
+  secondaryPivot.userData.biFoldRole = "secondary-pivot";
+  Object.assign(secondaryPivot.userData, {
+    interLeafHingeSelection: opening.interLeafHinge.hardwareSelection,
+    collisionProof: opening.interLeafHinge.collisionProofStatus,
+  });
+  secondaryPivot.add(createBiFoldLeafFrame(opening, secondaryLeaf, manufacturerCad));
+  primaryPivot.add(secondaryPivot);
+  group.add(primaryPivot);
+  return group;
+}
+
+/** Apply a named bi-fold pose to the evaluated nested pivots. */
+export const applyBiFoldDoorPose = (
+  door: Group,
+  opening: EvaluatedBiFoldDoorOpening,
+  state: BiFoldDoorPose["state"],
+): void => {
+  const pose = biFoldDoorPose(opening, state);
+  const primary = door.getObjectByName(`bi-fold-pivot:${opening.leaves[0].id}`);
+  const secondary = door.getObjectByName(`bi-fold-pivot:${opening.leaves[1].id}`);
+  if (!primary || !secondary) throw new Error(`Missing evaluated pivots for ${opening.id}`);
+  const sign = opening.outwardAngleSign;
+  primary.rotation.y = (pose.primaryLeafAngleDeg * sign * Math.PI) / 180;
+  secondary.rotation.y = (pose.secondaryLeafRelativeAngleDeg * sign * Math.PI) / 180;
+  door.userData.poseState = state;
+  door.updateMatrixWorld(true);
+};
+
+/** Interpolates the evaluated closed and open poses for UI animation. */
+export const applyBiFoldDoorOpenFraction = (
+  door: Group,
+  opening: EvaluatedBiFoldDoorOpening,
+  openFraction: number,
+): void => {
+  const fraction = Math.min(1, Math.max(0, openFraction));
+  const closed = biFoldDoorPose(opening, "closed");
+  const open = biFoldDoorPose(opening, "open");
+  const primary = door.getObjectByName(`bi-fold-pivot:${opening.leaves[0].id}`);
+  const secondary = door.getObjectByName(`bi-fold-pivot:${opening.leaves[1].id}`);
+  if (!primary || !secondary) throw new Error(`Missing evaluated pivots for ${opening.id}`);
+  const sign = opening.outwardAngleSign;
+  const primaryAngleDeg =
+    closed.primaryLeafAngleDeg + (open.primaryLeafAngleDeg - closed.primaryLeafAngleDeg) * fraction;
+  const secondaryAngleDeg =
+    closed.secondaryLeafRelativeAngleDeg +
+    (open.secondaryLeafRelativeAngleDeg - closed.secondaryLeafRelativeAngleDeg) * fraction;
+  primary.rotation.y = (primaryAngleDeg * sign * Math.PI) / 180;
+  secondary.rotation.y = (secondaryAngleDeg * sign * Math.PI) / 180;
+  door.userData.poseState = fraction === 0 ? "closed" : fraction === 1 ? "open" : "transitioning";
+  door.updateMatrixWorld(true);
+};
+
 /** The supplier CAD portion carried by the door leaf. */
 function createLeafHinge(
   id: string,
@@ -342,7 +574,11 @@ function createLeafHinge(
   visible.userData.geometryFidelity = hardware.geometryFidelity;
   const mesh = new Mesh(
     manufacturerCad.glr3030LeafGeometry.clone(),
-    new MeshStandardMaterial({ color: 0x65717d, metalness: 0.75, roughness: 0.28 }),
+    new MeshStandardMaterial({
+      color: 0x65717d,
+      metalness: 0.75,
+      roughness: 0.28,
+    }),
   );
   mesh.name = `${id}-hinge-glr3030-leaf`;
   mesh.position.set(0, hinge.leafBottomOffsetMm + hardware.overallHeightMm / 2, 0);
@@ -374,13 +610,101 @@ function createStationaryHinge(
   if (installation.leafId === "right-door") group.scale.x = -1;
   const mesh = new Mesh(
     manufacturerCad.glr3030StationaryGeometry.clone(),
-    new MeshStandardMaterial({ color: 0x65717d, metalness: 0.75, roughness: 0.28 }),
+    new MeshStandardMaterial({
+      color: 0x65717d,
+      metalness: 0.75,
+      roughness: 0.28,
+    }),
   );
   mesh.name = `${installation.leafId}-hinge-glr3030-stationary`;
   mesh.userData.partType = "door-hinge-glr3030-stationary";
   mesh.userData.hardwareId = installation.hardware.id;
   mesh.userData.geometryAdapter = "manufacturer-step";
   mesh.userData.manufacturerCadAsset = "GLR3030.step";
+  group.add(mesh);
+  return group;
+}
+
+function createExternalBracket(
+  connection: EnclosureModel["connections"][number],
+  memberObjects: readonly Object3D[],
+  manufacturerCad: ManufacturerCad,
+): Group | undefined {
+  if (connection.connector?.placement !== "external" || connection.joint?.kind !== "butt") {
+    return undefined;
+  }
+  const geometry =
+    connection.connector.id === "hardware:wolweiss-cbr3030"
+      ? manufacturerCad.cbr3030Geometry
+      : connection.connector.id === "hardware:wolweiss-cbr3060"
+        ? manufacturerCad.cbr3060Geometry
+        : undefined;
+  if (!geometry) return undefined;
+  const terminating = memberObjects.find(
+    (member) => member.name === connection.joint!.terminatingMember,
+  );
+  if (!terminating) throw new Error(`Missing render member for ${connection.id}`);
+  const sign = connection.joint.terminatingFace === "start" ? -1 : 1;
+  const jointPoint = terminating.localToWorld(
+    new Vector3((sign * terminating.userData.lengthMm) / 2, 0, 0),
+  );
+  const group = new Group();
+  group.name = `connector:${connection.id}`;
+  const supporting = memberObjects.find(
+    (member) => member.name === connection.joint!.supportingMember,
+  );
+  if (!supporting) throw new Error(`Missing render member for ${connection.id}`);
+  const terminatingRotation = terminating.getWorldQuaternion(new Quaternion());
+  const supportingRotation = supporting.getWorldQuaternion(new Quaternion());
+  const terminatingOutward = new Vector3(sign, 0, 0)
+    .applyQuaternion(terminatingRotation)
+    .normalize();
+  const supportingAxis = new Vector3(1, 0, 0).applyQuaternion(supportingRotation).normalize();
+  const supportDirection = supportingAxis.multiplyScalar(
+    connection.connector.mountingSide === "toward-support-start" ? -1 : 1,
+  );
+  const terminatingInterior = terminatingOutward.multiplyScalar(-1);
+  const localSupportDirection = supportDirection
+    .clone()
+    .applyQuaternion(terminatingRotation.clone().invert());
+  const terminatingProfile = getProfile(terminating.userData.profileId);
+  const terminatingHalfExtentAlongSupport =
+    (Math.abs(localSupportDirection.y) * terminatingProfile.section.y) / 2 +
+    (Math.abs(localSupportDirection.z) * terminatingProfile.section.z) / 2;
+  // The supplier datum is the line where the two rear mounting planes meet.
+  // Move that datum from the terminating centreline to its actual side face.
+  group.position
+    .copy(jointPoint)
+    .addScaledVector(supportDirection, terminatingHalfExtentAlongSupport);
+  const widthDirection = new Vector3()
+    .crossVectors(supportDirection, terminatingInterior)
+    .normalize();
+  // Manufacturer CAD is normalized to: X across bracket width, +Y along the
+  // supporting-member leg, +Z from the end face into the terminating member.
+  group.quaternion.setFromRotationMatrix(
+    new Matrix4().makeBasis(widthDirection, supportDirection, terminatingInterior),
+  );
+  group.userData.connectionId = connection.id;
+  group.userData.hardwareId = connection.connector.id;
+  group.userData.placementStatus = "installed-face-transform";
+  group.userData.mountingDatumMm = group.position.toArray();
+  group.userData.mountingSide = connection.connector.mountingSide;
+  group.userData.widthDirection = widthDirection.toArray();
+  group.userData.supportDirection = supportDirection.toArray();
+  group.userData.terminatingInteriorDirection = terminatingInterior.toArray();
+  group.userData.terminatingHalfExtentAlongSupportMm = terminatingHalfExtentAlongSupport;
+  const mesh = new Mesh(
+    geometry.clone(),
+    new MeshStandardMaterial({
+      color: 0x4b5563,
+      metalness: 0.8,
+      roughness: 0.25,
+    }),
+  );
+  mesh.name = `${connection.id}-${connection.connector.id}`;
+  mesh.userData.geometryAdapter = "manufacturer-step";
+  mesh.userData.manufacturerCadAsset =
+    connection.connector.id === "hardware:wolweiss-cbr3030" ? "CBR3030.step" : "CBR3060.step";
   group.add(mesh);
   return group;
 }
@@ -418,7 +742,11 @@ export async function buildEnclosureScene(
           : shapeMesh(solid!);
     const object = new Mesh(
       geometry,
-      new MeshStandardMaterial({ color: 0xb8c2cc, metalness: 0.7, roughness: 0.3 }),
+      new MeshStandardMaterial({
+        color: 0xb8c2cc,
+        metalness: 0.7,
+        roughness: 0.3,
+      }),
     );
     object.name = member.id;
     object.userData.memberId = member.id;
@@ -430,6 +758,7 @@ export async function buildEnclosureScene(
         member.profile === "profile:aluminium-3030" ? "AST03003004.step" : "AST03006006.step";
     }
     object.userData.meshVertexCount = geometry.getAttribute("position").count;
+    object.userData.lengthMm = member.length;
     applyMemberTransform(object, member);
     root.add(object);
     return object;
@@ -458,7 +787,32 @@ export async function buildEnclosureScene(
     root.add(object);
     return [object];
   });
+  const biFoldDoors = model.biFoldDoors.openings.map((opening) => {
+    const object = createBiFoldDoor(opening, manufacturerCad);
+    root.add(object);
+    return object;
+  });
+  // localToWorld must see evaluated member poses before connector joint points
+  // are calculated; otherwise it uses stale identity matrices.
   root.updateMatrixWorld(true);
+  const structuralConnectors = model.connections.flatMap((connection) => {
+    const object = createExternalBracket(connection, members, manufacturerCad);
+    if (!object) return [];
+    root.add(object);
+    return [object];
+  });
+  root.updateMatrixWorld(true);
+  const closedDoorConnectorEnvelopeConflicts = structuralConnectors.flatMap((connector) => {
+    const connectorBounds = new Box3().setFromObject(connector);
+    const doorIds = doors
+      .filter((door) => connectorBounds.intersectsBox(new Box3().setFromObject(door)))
+      .map((door) => door.name);
+    connector.userData.closedDoorEnvelopeConflicts = doorIds;
+    return doorIds.map((doorId) => ({
+      connectionId: connector.userData.connectionId as string,
+      doorId,
+    }));
+  });
   const minimum = model.doorSeamClearance ?? 2;
   const motionSolidCheck: MotionSolidCheckResult = initializationError
     ? {
@@ -575,7 +929,10 @@ export async function buildEnclosureScene(
     ];
   }
 
-  const revision = JSON.stringify({ dimensions: model.dimensions, members: model.members });
+  const revision = JSON.stringify({
+    dimensions: model.dimensions,
+    members: model.members,
+  });
   const validationReport = buildValidationReport(
     revision,
     validateModel(model),
@@ -592,6 +949,9 @@ export async function buildEnclosureScene(
     members,
     doors,
     stationaryHinges,
+    structuralConnectors,
+    biFoldDoors,
+    closedDoorConnectorEnvelopeConflicts,
     assemblies,
     assemblyTree: buildAssemblyTree(assemblies),
     assemblyObjects,
