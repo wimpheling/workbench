@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, refactor/viteplus-solidjs]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run validate:workflows
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+
+  frame3dd-optional:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run validate:workflows
+      - run: npm test -- --reporter=dot
+        env:
+          FRAME3DD_OPTIONAL: "true"
+      - run: |
+          if command -v frame3dd >/dev/null 2>&1; then
+            echo 'Frame3DD available; integration execution may be enabled here.'
+          else
+            echo 'Frame3DD unavailable; ordinary validation remains supported.'
+          fi
