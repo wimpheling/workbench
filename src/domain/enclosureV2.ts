@@ -22,6 +22,7 @@ import {
   type EvaluatedPracticalFrontAccessEnvelopeMm,
   type EnclosureV2DesignInput,
 } from "./enclosureV2Design";
+import { defaultEnclosureV2Standards } from "./enclosureV2Standards";
 
 export type EnclosureDimensions =
   | Dimensions
@@ -71,12 +72,16 @@ export type PanelRecord = {
 };
 
 const point = (x: number, y: number, z: number): Point3 => ({ x, y, z });
-const PROFILE_3030_SIDE_MM = 30;
-const PROFILE_3030_HALF_SIDE_MM = PROFILE_3030_SIDE_MM / 2;
-const PROFILE_3060_WIDE_SIDE_MM = 60;
-const PROFILE_3060_HALF_WIDE_SIDE_MM = PROFILE_3060_WIDE_SIDE_MM / 2;
-const STRUCTURAL_JOINT_TOLERANCE_MM = 0.1;
-const PROFILE_3030_END_ENVELOPE_AREA_MM2 = PROFILE_3030_SIDE_MM ** 2;
+const PROFILE_3030_SIDE_MM = defaultEnclosureV2Standards.profiles.aluminium3030.sideMm;
+const PROFILE_3030_HALF_SIDE_MM =
+  PROFILE_3030_SIDE_MM / defaultEnclosureV2Standards.geometry.halfSpanDivisor;
+const PROFILE_3060_WIDE_SIDE_MM = defaultEnclosureV2Standards.profiles.aluminium3060.wideSideMm;
+const PROFILE_3060_HALF_WIDE_SIDE_MM =
+  PROFILE_3060_WIDE_SIDE_MM / defaultEnclosureV2Standards.geometry.halfSpanDivisor;
+const HALF_SPAN_DIVISOR = defaultEnclosureV2Standards.geometry.halfSpanDivisor;
+const STRUCTURAL_JOINT_TOLERANCE_MM =
+  defaultEnclosureV2Standards.construction.structuralJointToleranceMm;
+const PROFILE_3030_END_ENVELOPE_AREA_MM2 = PROFILE_3030_SIDE_MM * PROFILE_3030_SIDE_MM;
 const PROFILE_3060_END_ENVELOPE_AREA_MM2 = PROFILE_3030_SIDE_MM * PROFILE_3060_WIDE_SIDE_MM;
 
 export function makeRail({
@@ -178,21 +183,32 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       -innerClearDepthMm,
     ),
   );
-  add("left-side-vertical-bottom", point(-clearBoundaryProfileOffsetMm, 0, -innerClearDepthMm / 2));
+  add(
+    "left-side-vertical-bottom",
+    point(-clearBoundaryProfileOffsetMm, 0, -innerClearDepthMm / HALF_SPAN_DIVISOR),
+  );
   add(
     "left-side-vertical-top",
-    point(-clearBoundaryProfileOffsetMm, innerClearHeightMm, -innerClearDepthMm / 2),
+    point(
+      -clearBoundaryProfileOffsetMm,
+      innerClearHeightMm,
+      -innerClearDepthMm / HALF_SPAN_DIVISOR,
+    ),
   );
   add(
     "right-side-vertical-bottom",
-    point(innerClearWidthMm + clearBoundaryProfileOffsetMm, 0, -innerClearDepthMm / 2),
+    point(
+      innerClearWidthMm + clearBoundaryProfileOffsetMm,
+      0,
+      -innerClearDepthMm / HALF_SPAN_DIVISOR,
+    ),
   );
   add(
     "right-side-vertical-top",
     point(
       innerClearWidthMm + clearBoundaryProfileOffsetMm,
       innerClearHeightMm,
-      -innerClearDepthMm / 2,
+      -innerClearDepthMm / HALF_SPAN_DIVISOR,
     ),
   );
   add(
@@ -272,12 +288,16 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
   );
   add(
     "back-middle-bottom",
-    point(innerClearWidthMm / 2, 0, -innerClearDepthMm - clearBoundaryProfileOffsetMm),
+    point(
+      innerClearWidthMm / HALF_SPAN_DIVISOR,
+      0,
+      -innerClearDepthMm - clearBoundaryProfileOffsetMm,
+    ),
   );
   add(
     "back-middle-top",
     point(
-      innerClearWidthMm / 2,
+      innerClearWidthMm / HALF_SPAN_DIVISOR,
       innerClearHeightMm,
       -innerClearDepthMm - clearBoundaryProfileOffsetMm,
     ),
@@ -316,12 +336,16 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
   );
   add(
     "top-tie-front",
-    point(innerClearWidthMm / 2, innerClearHeightMm + clearBoundaryProfileOffsetMm, 0),
+    point(
+      innerClearWidthMm / HALF_SPAN_DIVISOR,
+      innerClearHeightMm + clearBoundaryProfileOffsetMm,
+      0,
+    ),
   );
   add(
     "top-tie-back",
     point(
-      innerClearWidthMm / 2,
+      innerClearWidthMm / HALF_SPAN_DIVISOR,
       innerClearHeightMm + clearBoundaryProfileOffsetMm,
       -innerClearDepthMm,
     ),
@@ -456,7 +480,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "left-top-rail",
       "end",
       "bottom",
-      1800,
+      PROFILE_3060_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "side-middle-right-bottom",
@@ -464,7 +488,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "right-bottom-rail",
       "start",
       "top",
-      1800,
+      PROFILE_3060_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "side-middle-right-top",
@@ -472,7 +496,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "right-top-rail",
       "end",
       "bottom",
-      1800,
+      PROFILE_3060_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "front-left-post-bottom",
@@ -480,7 +504,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "front-bottom-rail",
       "start",
       "top",
-      1800,
+      PROFILE_3060_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "front-left-post-top",
@@ -488,7 +512,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "front-top",
       "end",
       "bottom",
-      1800,
+      PROFILE_3060_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "front-right-post-bottom",
@@ -496,7 +520,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "front-bottom-rail",
       "start",
       "top",
-      1800,
+      PROFILE_3060_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "front-right-post-top",
@@ -504,7 +528,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "front-top",
       "end",
       "bottom",
-      1800,
+      PROFILE_3060_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "back-left-post-bottom",
@@ -520,7 +544,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "back-top-rail",
       "end",
       "bottom",
-      900,
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "back-right-post-bottom",
@@ -528,7 +552,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "back-bottom-rail",
       "start",
       "top",
-      900,
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "back-right-post-top",
@@ -536,7 +560,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "back-top-rail",
       "end",
       "bottom",
-      900,
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "back-middle-bottom",
@@ -544,7 +568,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "back-bottom-rail",
       "start",
       "top",
-      1800,
+      PROFILE_3060_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "back-middle-top",
@@ -552,7 +576,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "back-top-rail",
       "end",
       "bottom",
-      1800,
+      PROFILE_3060_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "left-bottom-rail-front",
@@ -560,7 +584,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "front-bottom-rail",
       "start",
       "back",
-      900,
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "left-bottom-rail-back",
@@ -568,16 +592,23 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "back-bottom-rail",
       "end",
       "front",
-      900,
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
-    structuralButtJoint("left-top-rail-front", "left-top-rail", "front-top", "start", "back", 900),
+    structuralButtJoint(
+      "left-top-rail-front",
+      "left-top-rail",
+      "front-top",
+      "start",
+      "back",
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
+    ),
     structuralButtJoint(
       "left-top-rail-back",
       "left-top-rail",
       "back-top-rail",
       "end",
       "front",
-      900,
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "right-bottom-rail-front",
@@ -585,7 +616,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "front-bottom-rail",
       "start",
       "back",
-      900,
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "right-bottom-rail-back",
@@ -593,7 +624,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "back-bottom-rail",
       "end",
       "front",
-      900,
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "right-top-rail-front",
@@ -601,7 +632,7 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "front-top",
       "start",
       "back",
-      900,
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
     structuralButtJoint(
       "right-top-rail-back",
@@ -609,10 +640,24 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       "back-top-rail",
       "end",
       "front",
-      900,
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
-    structuralButtJoint("top-back-tie-front", "top-back-tie", "front-top", "start", "back", 900),
-    structuralButtJoint("top-back-tie-back", "top-back-tie", "back-top-rail", "end", "front", 900),
+    structuralButtJoint(
+      "top-back-tie-front",
+      "top-back-tie",
+      "front-top",
+      "start",
+      "back",
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
+    ),
+    structuralButtJoint(
+      "top-back-tie-back",
+      "top-back-tie",
+      "back-top-rail",
+      "end",
+      "front",
+      PROFILE_3030_END_ENVELOPE_AREA_MM2,
+    ),
   ];
   return {
     frame: {

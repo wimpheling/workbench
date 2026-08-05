@@ -2,6 +2,7 @@ export * from "./anchors";
 export * from "./context";
 export * from "./enclosureV2";
 export * from "./enclosureV2Design";
+export * from "./enclosureV2Standards";
 export * from "./enclosureV2DesignConstraints";
 export * from "./frames";
 export * from "./nominalBounds";

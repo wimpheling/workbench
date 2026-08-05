@@ -13,11 +13,11 @@ import {
 } from "../exports";
 import {
   defaultConfigurations,
-  defaultDimensions,
+  defaultEnclosureV2VariablesForAuthoring,
   motionStateIds,
   regenerateModel,
-  updateDimension,
-  type EditableDimensions,
+  updateVariable,
+  type EditableEnclosureV2Variables,
 } from "./modelAuthoring";
 import { resolveRuntimeValidationState } from "./runtimeValidation";
 import { ValidationAssertionTree } from "./ValidationAssertionTree";
@@ -26,15 +26,17 @@ import { createViewerPoseController } from "./viewerPoseController";
 export function App() {
   const [canvas, setCanvas] = createSignal<HTMLCanvasElement>();
   let viewer: ReturnType<typeof mountThreeViewer> | undefined;
-  const [dimensions, setDimensions] = createSignal<EditableDimensions>(defaultDimensions);
-  const [scene] = createResource(dimensions, (value) => buildEnclosureScene(value));
+  const [variables, setVariables] = createSignal<EditableEnclosureV2Variables>(
+    defaultEnclosureV2VariablesForAuthoring,
+  );
+  const [scene] = createResource(variables, (value) => buildEnclosureScene(value));
   const [showReport, setShowReport] = createSignal(true);
   const [configuration, setConfiguration] = createSignal("default");
   const [motionState, setMotionState] = createSignal("closed");
   const [selectedAssembly, setSelectedAssembly] = createSignal("assembly:enclosure");
   const [hiddenAssemblies, setHiddenAssemblies] = createSignal<ReadonlySet<string>>(new Set());
-  const regenerated = () => regenerateModel(dimensions());
-  const configurations = () => defaultConfigurations(dimensions());
+  const regenerated = () => regenerateModel(variables());
+  const configurations = () => defaultConfigurations(variables());
   const motions = () => motionStateIds(regenerated().model);
   const poseController = createViewerPoseController({
     resolvePose: (value: Awaited<ReturnType<typeof buildEnclosureScene>>, state: string) =>
@@ -97,19 +99,31 @@ export function App() {
             : `${scene()?.members.length ?? 0} members rendered.`}
       </p>
       <div class="toolbar">
-        <fieldset aria-label="Enclosure dimensions">
-          <legend>Dimensions (mm)</legend>
-          <For each={["width", "height", "depth"] as const}>
+        <fieldset aria-label="Enclosure variables">
+          <legend>Stakeholder variables (mm)</legend>
+          <For
+            each={
+              [
+                "innerClearWidthMm",
+                "innerClearHeightMm",
+                "innerClearDepthMm",
+                "frontDoorSideClearanceMm",
+                "frontDoorTopClearanceMm",
+                "frontDoorBottomClearanceMm",
+                "frontDoorCentreGapMm",
+              ] as const
+            }
+          >
             {(key) => (
               <label>
                 {key}{" "}
                 <input
                   type="number"
                   min="1"
-                  value={dimensions()[key]}
+                  value={variables()[key]}
                   onChange={(event) => {
-                    const next = updateDimension(dimensions(), key, event.currentTarget.value);
-                    if (next) setDimensions(next);
+                    const next = updateVariable(variables(), key, event.currentTarget.value);
+                    if (next) setVariables(next);
                   }}
                 />
               </label>

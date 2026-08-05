@@ -1,5 +1,6 @@
 import type { Dimensions } from "./units";
 import type { NominalBounds } from "./nominalBounds";
+import { defaultEnclosureV2Standards } from "./enclosureV2Standards";
 
 /**
  * The declarative design brief for the next EnclosureV2 evaluator.
@@ -7,7 +8,7 @@ import type { NominalBounds } from "./nominalBounds";
  * These inputs name empty, usable space. They deliberately do not encode the
  * historical renderer's anchor coordinates or member placements.
  */
-export type EnclosureV2DesignInput = Readonly<{
+export type EnclosureV2Variables = Readonly<{
   innerClearWidthMm: number;
   innerClearHeightMm: number;
   innerClearDepthMm: number;
@@ -17,6 +18,9 @@ export type EnclosureV2DesignInput = Readonly<{
   frontDoorCentreGapMm: number;
   requiredFrontAccessEnvelopeMm?: RequiredFrontAccessEnvelopeMm;
 }>;
+
+/** @deprecated Prefer the stakeholder-facing `EnclosureV2Variables` name. */
+export type EnclosureV2DesignInput = EnclosureV2Variables;
 
 export type RequiredFrontAccessEnvelopeMm = Readonly<{
   widthMm: number;
@@ -67,13 +71,12 @@ export type EvaluatedInsetDoorDimensionsMm = Readonly<{
  * 3060 top member with its 60 mm dimension across Y. Their inside faces
  * define the usable front opening.
  */
-export const frontFrameOpeningReductionMm = Object.freeze({
-  widthMm: 60,
-  heightMm: 30,
-});
+export const frontFrameOpeningReductionMm =
+  defaultEnclosureV2Standards.frame.frontOpeningReductionMm;
 
 /** The 30-series frame extends this far beyond each clear-cavity boundary. */
-export const mainStructuralEnvelopeOffsetMm = 30;
+export const mainStructuralEnvelopeOffsetMm =
+  defaultEnclosureV2Standards.frame.structuralEnvelopeOffsetMm;
 
 export const evaluateMainStructuralEnvelopeMm = (input: EnclosureV2DesignInput): NominalBounds => {
   validateEnclosureV2DesignInput(input);
@@ -100,19 +103,22 @@ export const defaultEnclosureV2DoorClearancesMm = Object.freeze({
 
 export const defaultFrontAccessObstructionAssumptionsMm = Object.freeze({
   // At 90 degrees the hinge-side stile conservatively reserves one profile width.
-  fullyOpenDoorFrameSideIntrusionMm: 30,
+  fullyOpenDoorFrameSideIntrusionMm: defaultEnclosureV2Standards.profiles.aluminium3030.sideMm,
   // Provisional hardware allowance until a physical hinge is selected.
-  hingeSideKeepOutMm: 5,
+  hingeSideKeepOutMm: defaultEnclosureV2Standards.access.hingeSideKeepOutMm,
   // No internal access hardware is modelled yet.
-  internalDepthKeepOutMm: 0,
+  internalDepthKeepOutMm: defaultEnclosureV2Standards.access.internalDepthKeepOutMm,
 } satisfies FrontAccessObstructionAssumptionsMm);
 
-export const defaultEnclosureV2DesignInput = (
+export const defaultEnclosureV2Variables = (
   dimensions: EnclosureV2DesignDimensions,
-): EnclosureV2DesignInput => ({
+): EnclosureV2Variables => ({
   ...dimensions,
   ...defaultEnclosureV2DoorClearancesMm,
 });
+
+/** @deprecated Prefer `defaultEnclosureV2Variables`. */
+export const defaultEnclosureV2DesignInput = defaultEnclosureV2Variables;
 
 const assertFinitePositive = (name: string, value: number) => {
   if (!Number.isFinite(value) || value <= 0)
@@ -120,7 +126,7 @@ const assertFinitePositive = (name: string, value: number) => {
 };
 
 /** Validates design requirements before any geometry is evaluated. */
-export const validateEnclosureV2DesignInput = (input: EnclosureV2DesignInput): void => {
+export const validateEnclosureV2Variables = (input: EnclosureV2Variables): void => {
   assertFinitePositive("innerClearWidthMm", input.innerClearWidthMm);
   assertFinitePositive("innerClearHeightMm", input.innerClearHeightMm);
   assertFinitePositive("innerClearDepthMm", input.innerClearDepthMm);
@@ -136,6 +142,9 @@ export const validateEnclosureV2DesignInput = (input: EnclosureV2DesignInput): v
   assertFinitePositive("requiredFrontAccessEnvelopeMm.thicknessMm", envelope.thicknessMm);
 };
 
+/** @deprecated Prefer `validateEnclosureV2Variables`. */
+export const validateEnclosureV2DesignInput = validateEnclosureV2Variables;
+
 /**
  * Inset leaves share the structurally bounded front opening symmetrically.
  * The 3060 front posts take 30 mm from each side of the clear width and the
@@ -149,8 +158,11 @@ export const evaluateSymmetricInsetDoorDimensionsMm = (
   const frontOpeningClearHeightMm =
     input.innerClearHeightMm - frontFrameOpeningReductionMm.heightMm;
   const leafWidthMm =
-    (frontOpeningClearWidthMm - input.frontDoorSideClearanceMm * 2 - input.frontDoorCentreGapMm) /
-    2;
+    (frontOpeningClearWidthMm -
+      input.frontDoorSideClearanceMm *
+        defaultEnclosureV2Standards.construction.symmetricDoorLeafCount -
+      input.frontDoorCentreGapMm) /
+    defaultEnclosureV2Standards.construction.symmetricDoorLeafCount;
   const leafHeightMm =
     frontOpeningClearHeightMm - input.frontDoorTopClearanceMm - input.frontDoorBottomClearanceMm;
   assertFinitePositive("derived front door leaf width", leafWidthMm);

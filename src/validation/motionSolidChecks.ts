@@ -1,6 +1,7 @@
 import { type Group, type Object3D } from "three";
 import type { Shape3D } from "replicad";
 import { cloneShape, transformShapeToWorld } from "../geometry/replicadTransform";
+import { defaultEnclosureV2Standards } from "../domain/enclosureV2Standards";
 import {
   checkSolidClearance,
   solidCheckStatusIsBlocking,
@@ -77,7 +78,9 @@ export const checkDoorMotionSolids = (options: MotionSolidCheckOptions): MotionS
   const samples = normaliseSamples(options.samples);
   const requested = cartesianDoorStates({ samples, maxStates: options.maxStates });
   const totalStates = samples * samples;
-  const minimum = options.minimumClearance ?? 2;
+  const minimum =
+    options.minimumClearance ??
+    defaultEnclosureV2Standards.validation.sampledDoorMotionMinimumClearanceMm;
   const checkedPairs: { subject: string; target: string }[] = [];
   let firstFailure: MotionSolidCheckResult["firstFailure"];
   let firstClearanceFailure: MotionSolidCheckResult["firstFailure"];
