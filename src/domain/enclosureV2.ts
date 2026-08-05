@@ -23,6 +23,9 @@ import {
   type EnclosureV2DesignInput,
 } from "./enclosureV2Design";
 import { defaultEnclosureV2Standards } from "./enclosureV2Standards";
+import { makeProvisionalDoorInterfaceSpec, type DoorInterfaceSpec } from "./doorInterfaces";
+import { makeProvisionalDoorInfillPanels, type DoorInfillPanel } from "./doorInfillPanels";
+import { makeCentredGlr3030Installations, type DoorHingeInstallation } from "./doorHardware";
 
 export type EnclosureDimensions =
   | Dimensions
@@ -57,6 +60,15 @@ export type EnclosureModel = {
   dimensions?: { x: number; y: number; z: number };
   doorSeamClearance?: number;
   doors?: readonly DoorRecord[];
+  /**
+   * Per-leaf clearance/containment boundary. Default records are explicitly
+   * provisional until hinge, stop, seal, and hardware evidence is selected.
+   */
+  doorInterfaceSpec: DoorInterfaceSpec;
+  /** Selected physical hinge envelopes; pivot placement awaits supplier CAD. */
+  doorHinges: readonly DoorHingeInstallation[];
+  /** Vendor-cut panel records retained by the four 3030 door-frame slots. */
+  doorInfillPanels: readonly DoorInfillPanel[];
   panels?: readonly PanelRecord[];
 };
 export type DoorRecord = {
@@ -659,6 +671,31 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
   ];
+  const doors = [
+    {
+      id: "left-door" as const,
+      nominalWidth: doorDimensions.leafWidthMm,
+      nominalHeight: doorDimensions.leafHeightMm,
+    },
+    {
+      id: "right-door" as const,
+      nominalWidth: doorDimensions.leafWidthMm,
+      nominalHeight: doorDimensions.leafHeightMm,
+    },
+  ];
+  const doorInfillPanels = makeProvisionalDoorInfillPanels(
+    doors.map((door) => ({
+      id: door.id,
+      nominalWidthMm: door.nominalWidth,
+      nominalHeightMm: door.nominalHeight,
+    })),
+    {
+      ...defaultEnclosureV2Standards.doorInfill,
+      frameProfile: profileId("aluminium-3030"),
+      frameProfileSectionMm: PROFILE_3030_SIDE_MM,
+    },
+  );
+  const doorHinges = makeCentredGlr3030Installations(doors);
   return {
     frame: {
       id: frameId("enclosure-root"),
@@ -685,17 +722,9 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       z: innerClearDepthMm,
     },
     doorSeamClearance: designInput.frontDoorCentreGapMm,
-    doors: [
-      {
-        id: "left-door",
-        nominalWidth: doorDimensions.leafWidthMm,
-        nominalHeight: doorDimensions.leafHeightMm,
-      },
-      {
-        id: "right-door",
-        nominalWidth: doorDimensions.leafWidthMm,
-        nominalHeight: doorDimensions.leafHeightMm,
-      },
-    ],
+    doorInterfaceSpec: makeProvisionalDoorInterfaceSpec(designInput, doorHinges),
+    doorHinges,
+    doorInfillPanels,
+    doors,
   };
 }

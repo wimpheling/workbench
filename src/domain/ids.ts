@@ -7,6 +7,7 @@ export type FrameId = StableId<"frame">;
 export type ProfileId = StableId<"profile">;
 export type MaterialId = StableId<"material">;
 export type CatalogId = StableId<"catalog">;
+export type HardwareId = StableId<"hardware">;
 export function stableId<Namespace extends string>(
   namespace: Namespace,
   value: string,
@@ -23,6 +24,7 @@ export const frameId = (value: string): FrameId => stableId("frame", value);
 export const profileId = (value: string): ProfileId => stableId("profile", value);
 export const materialId = (value: string): MaterialId => stableId("material", value);
 export const catalogId = (value: string): CatalogId => stableId("catalog", value);
+export const hardwareId = (value: string): HardwareId => stableId("hardware", value);
 // Branded IDs are runtime strings, but constructors are the only supported boundary.
 export type AnyStableId =
   | PartId
@@ -32,7 +34,8 @@ export type AnyStableId =
   | FrameId
   | ProfileId
   | MaterialId
-  | CatalogId;
+  | CatalogId
+  | HardwareId;
 export const isStableId = (value: string): value is AnyStableId => /^[a-z-]+:[^:]+$/.test(value);
 
 // IDs in the public model are branded; this helper is intentionally explicit for catalog lookup.

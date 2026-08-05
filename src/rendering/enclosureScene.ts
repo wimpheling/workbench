@@ -31,6 +31,8 @@ import {
 import { transformShapeToWorld } from "../geometry/replicadTransform";
 import { createProfileSolid } from "./profileSolid";
 import { buildEnclosureAssemblies } from "../domain/assemblies";
+import type { DoorHingeInstallation } from "../domain/doorHardware";
+import { loadManufacturerCad, type ManufacturerCad } from "./manufacturerCad";
 import {
   buildAssemblyTree,
   type Assembly,
@@ -96,6 +98,8 @@ export type EnclosureScene = {
   root: Group;
   members: readonly Object3D[];
   doors: readonly Group[];
+  /** Frame-mounted GLR3030 portions; they do not participate in door motion. */
+  stationaryHinges: readonly Group[];
   assemblies: readonly Assembly[];
   assemblyTree: readonly AssemblyTreeNode[];
   assemblyObjects: ReadonlyMap<string, Object3D>;
@@ -216,14 +220,20 @@ function createDoorMesh(
   depth: number,
   name: string,
   profileId?: Parameters<typeof getProfile>[0],
+  manufacturerCad?: ManufacturerCad,
 ): Mesh {
   const solidDepth = Math.max(depth, 1);
+  const usesManufacturerCad = profileId === "profile:aluminium-3030" && manufacturerCad;
   const solid = profileId
     ? createProfileSolid(Math.max(length, 1), profileId)
     : (makeBaseBox(Math.max(length, 1), Math.max(side, 1), solidDepth).translateZ(
         -solidDepth / 2,
       ) as Shape3D);
-  const geometry = shapeMesh(solid);
+  const geometry = usesManufacturerCad
+    ? manufacturerCad.profile3030Geometry
+        .clone()
+        .scale(length / manufacturerCad.profile3030StockLengthMm, 1, 1)
+    : shapeMesh(solid!);
   const object = new Mesh(
     geometry,
     new MeshStandardMaterial({
@@ -236,15 +246,22 @@ function createDoorMesh(
     }),
   );
   object.name = name;
-  object.userData.geometryAdapter = "replicad";
+  object.userData.geometryAdapter = usesManufacturerCad ? "manufacturer-step" : "replicad";
   object.userData.solid = solid;
+  if (usesManufacturerCad) object.userData.manufacturerCadAsset = "AST03003004.step";
   object.userData.meshVertexCount = geometry.getAttribute("position").count;
   if (profileId) object.userData.profileId = profileId;
   else object.userData.partType = "door-panel";
   return object;
 }
 
-function createDoor(model: EnclosureModel, id: string, width: number, height: number): Group {
+function createDoor(
+  model: EnclosureModel,
+  id: string,
+  width: number,
+  height: number,
+  manufacturerCad: ManufacturerCad,
+): Group {
   const door = new Group();
   door.name = `door:${id}`;
   const hinge = model.anchors[`anchor:${id === "left-door" ? "left" : "right"}-hinge`]!.position;
@@ -258,13 +275,21 @@ function createDoor(model: EnclosureModel, id: string, width: number, height: nu
   frame.position.set(width / 2, 0, -15);
   door.add(frame);
   const verticalSide = getProfile("profile:aluminium-3030").section.x;
-  const panelSide = 4;
+  const infill = model.doorInfillPanels.find((candidate) => candidate.leafId === id);
+  if (!infill) throw new Error(`Missing infill panel specification for ${id}`);
   const verticals = [
     [-(width / 2 - verticalSide / 2), height / 2, "left-upright"],
     [width / 2 - verticalSide / 2, height / 2, "right-upright"],
   ] as const;
   for (const [x, y, name] of verticals) {
-    const mesh = createDoorMesh(height, verticalSide, verticalSide, `${id}-${name}`, profile);
+    const mesh = createDoorMesh(
+      height,
+      verticalSide,
+      verticalSide,
+      `${id}-${name}`,
+      profile,
+      manufacturerCad,
+    );
     // Replicad boxes are longitudinal on local X; turn door uprights into Y.
     mesh.rotation.z = Math.PI / 2;
     mesh.position.set(x, y, 0);
@@ -274,14 +299,90 @@ function createDoor(model: EnclosureModel, id: string, width: number, height: nu
     [0, verticalSide / 2, "bottom-rail"],
     [0, height - verticalSide / 2, "top-rail"],
   ] as const) {
-    const mesh = createDoorMesh(width - 60, verticalSide, verticalSide, `${id}-${name}`, profile);
+    const mesh = createDoorMesh(
+      width - 60,
+      verticalSide,
+      verticalSide,
+      `${id}-${name}`,
+      profile,
+      manufacturerCad,
+    );
     mesh.position.set(x, y, 0);
     frame.add(mesh);
   }
-  const panel = createDoorMesh(width - 50, height - 50, panelSide, `${id}-panel`);
+  const panel = createDoorMesh(
+    infill.cutSizeMm.widthMm,
+    infill.cutSizeMm.heightMm,
+    infill.thicknessMm,
+    `${id}-panel`,
+  );
   panel.position.set(0, height / 2, 0);
   frame.add(panel);
+  const hingeInstallation = model.doorHinges.find((candidate) => candidate.leafId === id);
+  if (hingeInstallation?.fitStatus === "fits-leaf-height") {
+    door.add(createLeafHinge(id, hingeInstallation, manufacturerCad));
+  }
   return door;
+}
+
+/** The supplier CAD portion carried by the door leaf. */
+function createLeafHinge(
+  id: string,
+  hinge: DoorHingeInstallation,
+  manufacturerCad: ManufacturerCad,
+): Group {
+  if (hinge.leafBottomOffsetMm === undefined) {
+    throw new Error(`Cannot render an incompatible hinge on ${id}`);
+  }
+  const hardware = hinge.hardware;
+  const visible = new Group();
+  visible.name = `${id}-hinge-leaf`;
+  visible.userData.partType = "door-hinge-leaf";
+  visible.userData.hardwareId = hardware.id;
+  visible.userData.geometryFidelity = hardware.geometryFidelity;
+  const mesh = new Mesh(
+    manufacturerCad.glr3030LeafGeometry.clone(),
+    new MeshStandardMaterial({ color: 0x65717d, metalness: 0.75, roughness: 0.28 }),
+  );
+  mesh.name = `${id}-hinge-glr3030-leaf`;
+  mesh.position.set(0, hinge.leafBottomOffsetMm + hardware.overallHeightMm / 2, 0);
+  mesh.userData.partType = "door-hinge-glr3030-leaf";
+  mesh.userData.hardwareId = hardware.id;
+  mesh.userData.geometryAdapter = "manufacturer-step";
+  mesh.userData.manufacturerCadAsset = "GLR3030.step";
+  visible.add(mesh);
+  return visible;
+}
+
+function createStationaryHinge(
+  model: EnclosureModel,
+  installation: DoorHingeInstallation,
+  manufacturerCad: ManufacturerCad,
+): Group {
+  if (installation.leafBottomOffsetMm === undefined) {
+    throw new Error(`Cannot render an incompatible hinge on ${installation.leafId}`);
+  }
+  const side = installation.leafId === "left-door" ? "left" : "right";
+  const anchor = model.anchors[`anchor:${side}-hinge`]!.position;
+  const group = new Group();
+  group.name = `hinge:${installation.leafId}:stationary`;
+  group.position.set(
+    anchor.x,
+    anchor.y + installation.leafBottomOffsetMm + installation.hardware.overallHeightMm / 2,
+    anchor.z,
+  );
+  if (installation.leafId === "right-door") group.scale.x = -1;
+  const mesh = new Mesh(
+    manufacturerCad.glr3030StationaryGeometry.clone(),
+    new MeshStandardMaterial({ color: 0x65717d, metalness: 0.75, roughness: 0.28 }),
+  );
+  mesh.name = `${installation.leafId}-hinge-glr3030-stationary`;
+  mesh.userData.partType = "door-hinge-glr3030-stationary";
+  mesh.userData.hardwareId = installation.hardware.id;
+  mesh.userData.geometryAdapter = "manufacturer-step";
+  mesh.userData.manufacturerCadAsset = "GLR3030.step";
+  group.add(mesh);
+  return group;
 }
 
 export async function buildEnclosureScene(
@@ -295,14 +396,26 @@ export async function buildEnclosureScene(
     initializationError = error;
   }
   const model = makeEnclosureV2(clearDimensions);
+  const manufacturerCad = await loadManufacturerCad();
   const assemblies = buildEnclosureAssemblies(model);
   const root = new Group();
   root.name = model.frame.id;
   root.userData.frameId = model.frame.id;
 
   const members = model.members.map((member) => {
+    const usesManufacturerCad =
+      member.profile === "profile:aluminium-3030" || member.profile === "profile:aluminium-3060";
     const solid = createExtrusionSolid(member.length, member.profile);
-    const geometry = shapeMesh(solid);
+    const geometry =
+      member.profile === "profile:aluminium-3030"
+        ? manufacturerCad.profile3030Geometry
+            .clone()
+            .scale(member.length / manufacturerCad.profile3030StockLengthMm, 1, 1)
+        : member.profile === "profile:aluminium-3060"
+          ? manufacturerCad.profile3060Geometry
+              .clone()
+              .scale(member.length / manufacturerCad.profile3060StockLengthMm, 1, 1)
+          : shapeMesh(solid!);
     const object = new Mesh(
       geometry,
       new MeshStandardMaterial({ color: 0xb8c2cc, metalness: 0.7, roughness: 0.3 }),
@@ -310,8 +423,12 @@ export async function buildEnclosureScene(
     object.name = member.id;
     object.userData.memberId = member.id;
     object.userData.profileId = member.profile;
-    object.userData.geometryAdapter = "replicad";
+    object.userData.geometryAdapter = usesManufacturerCad ? "manufacturer-step" : "replicad";
     object.userData.solid = solid;
+    if (usesManufacturerCad) {
+      object.userData.manufacturerCadAsset =
+        member.profile === "profile:aluminium-3030" ? "AST03003004.step" : "AST03006006.step";
+    }
     object.userData.meshVertexCount = geometry.getAttribute("position").count;
     applyMemberTransform(object, member);
     root.add(object);
@@ -320,7 +437,13 @@ export async function buildEnclosureScene(
 
   const assemblyObjects = new Map<string, Object3D>();
   const doors = (model.doors ?? []).map((door) => {
-    const object = createDoor(model, door.id, door.nominalWidth, door.nominalHeight);
+    const object = createDoor(
+      model,
+      door.id,
+      door.nominalWidth,
+      door.nominalHeight,
+      manufacturerCad,
+    );
     object.userData.basePosition = object.position.clone();
     const assembly = assemblies.find((candidate) => candidate.parts.includes(door.id));
     if (!assembly) throw new Error(`Missing assembly for ${door.id}`);
@@ -328,6 +451,12 @@ export async function buildEnclosureScene(
     assemblyObjects.set(assembly.id, object);
     root.add(object);
     return object;
+  });
+  const stationaryHinges = model.doorHinges.flatMap((installation) => {
+    if (installation.fitStatus !== "fits-leaf-height") return [];
+    const object = createStationaryHinge(model, installation, manufacturerCad);
+    root.add(object);
+    return [object];
   });
   root.updateMatrixWorld(true);
   const minimum = model.doorSeamClearance ?? 2;
@@ -462,6 +591,7 @@ export async function buildEnclosureScene(
     root,
     members,
     doors,
+    stationaryHinges,
     assemblies,
     assemblyTree: buildAssemblyTree(assemblies),
     assemblyObjects,

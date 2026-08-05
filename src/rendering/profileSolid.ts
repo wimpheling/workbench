@@ -12,68 +12,72 @@ import type { ProfileId } from "../domain/ids";
  */
 export type ProfileSolid = Shape3D;
 
-const SLOT_LIP_MM = 11;
-const PROFILE_3030_OPENING_MM = 8;
-const PROFILE_3060_WIDE_OPENING_MM = 38;
-const PROFILE_3060_SIDE_RUN_MM = 8;
-
-const create3030Outline = () =>
-  draw([-15, 15])
-    .hLine(SLOT_LIP_MM)
-    .vLine(-SLOT_LIP_MM)
-    .hLine(PROFILE_3030_OPENING_MM)
-    .vLine(SLOT_LIP_MM)
-    .hLine(SLOT_LIP_MM)
-    .vLine(-SLOT_LIP_MM)
-    .hLine(-SLOT_LIP_MM)
-    .vLine(-PROFILE_3030_OPENING_MM)
-    .hLine(SLOT_LIP_MM)
-    .vLine(-SLOT_LIP_MM)
-    .hLine(-SLOT_LIP_MM)
-    .vLine(SLOT_LIP_MM)
-    .hLine(-PROFILE_3030_OPENING_MM)
-    .vLine(-SLOT_LIP_MM)
-    .hLine(-SLOT_LIP_MM)
-    .vLine(SLOT_LIP_MM)
-    .hLine(SLOT_LIP_MM)
-    .vLine(PROFILE_3030_OPENING_MM)
-    .hLine(-SLOT_LIP_MM)
-    .vLine(SLOT_LIP_MM)
+const create3030Outline = (slotOpeningMm: number) => {
+  const faceRunMm = (getProfile("profile:aluminium-3030").section.y - slotOpeningMm) / 2;
+  return draw([-15, 15])
+    .hLine(faceRunMm)
+    .vLine(-faceRunMm)
+    .hLine(slotOpeningMm)
+    .vLine(faceRunMm)
+    .hLine(faceRunMm)
+    .vLine(-faceRunMm)
+    .hLine(-faceRunMm)
+    .vLine(-slotOpeningMm)
+    .hLine(faceRunMm)
+    .vLine(-faceRunMm)
+    .hLine(-faceRunMm)
+    .vLine(faceRunMm)
+    .hLine(-slotOpeningMm)
+    .vLine(-faceRunMm)
+    .hLine(-faceRunMm)
+    .vLine(faceRunMm)
+    .hLine(faceRunMm)
+    .vLine(slotOpeningMm)
+    .hLine(-faceRunMm)
+    .vLine(faceRunMm)
     .close();
+};
 
-// This is the retained legacy 3060 section, expressed directly in millimetres.
-// The outline is intentionally not approximated with a box: its four exposed
-// faces retain the slot relief used by the original enclosure model.
-const create3060Outline = () =>
-  draw([-30, 15])
-    .hLine(SLOT_LIP_MM)
-    .vLine(-SLOT_LIP_MM)
-    .hLine(PROFILE_3060_WIDE_OPENING_MM)
-    .vLine(SLOT_LIP_MM)
-    .hLine(SLOT_LIP_MM)
-    .vLine(-SLOT_LIP_MM)
-    .hLine(-SLOT_LIP_MM)
-    .vLine(-PROFILE_3060_SIDE_RUN_MM)
-    .hLine(SLOT_LIP_MM)
-    .vLine(-SLOT_LIP_MM)
-    .hLine(-SLOT_LIP_MM)
-    .vLine(SLOT_LIP_MM)
-    .hLine(-PROFILE_3060_WIDE_OPENING_MM)
-    .vLine(-SLOT_LIP_MM)
-    .hLine(-SLOT_LIP_MM)
-    .vLine(SLOT_LIP_MM)
-    .hLine(SLOT_LIP_MM)
-    .vLine(PROFILE_3060_SIDE_RUN_MM)
-    .hLine(-SLOT_LIP_MM)
-    .vLine(SLOT_LIP_MM)
+const create3060Outline = (slotOpeningMm: number) => {
+  const profile = getProfile("profile:aluminium-3060");
+  const faceRunMm = (profile.section.z - slotOpeningMm) / 2;
+  const wideOpeningMm = profile.section.y - faceRunMm * 2;
+  return draw([-profile.section.y / 2, profile.section.x / 2])
+    .hLine(faceRunMm)
+    .vLine(-faceRunMm)
+    .hLine(wideOpeningMm)
+    .vLine(faceRunMm)
+    .hLine(faceRunMm)
+    .vLine(-faceRunMm)
+    .hLine(-faceRunMm)
+    .vLine(-slotOpeningMm)
+    .hLine(faceRunMm)
+    .vLine(-faceRunMm)
+    .hLine(-faceRunMm)
+    .vLine(faceRunMm)
+    .hLine(-wideOpeningMm)
+    .vLine(-faceRunMm)
+    .hLine(-faceRunMm)
+    .vLine(faceRunMm)
+    .hLine(faceRunMm)
+    .vLine(slotOpeningMm)
+    .hLine(-faceRunMm)
+    .vLine(faceRunMm)
     .close();
+};
 
+/*
+ * These outlines describe the declared outer section and vendor slot opening,
+ * not the hidden internal web geometry.  Keeping that distinction explicit
+ * prevents collision checks from being mistaken for imported manufacturer CAD.
+ */
 const outlineFor = (profileId: ProfileId) => {
+  const profile = getProfile(profileId);
   switch (profileId) {
     case "profile:aluminium-3030":
-      return create3030Outline();
+      return create3030Outline(profile.slotWidth);
     case "profile:aluminium-3060":
-      return create3060Outline();
+      return create3060Outline(profile.slotWidth);
     default:
       throw new Error(`Profile ${profileId} has no Replicad T-slot outline`);
   }

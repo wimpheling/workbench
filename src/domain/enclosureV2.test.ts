@@ -85,6 +85,43 @@ describe("EnclosureV2 clear-volume design", () => {
       thicknessMm: 600,
       fullyOpenDoorAngleDeg: 90,
     });
+    expect(model.doorInterfaceSpec).toMatchObject({
+      status: "provisional-unconfigured",
+      interfaces: expect.arrayContaining([
+        expect.objectContaining({
+          id: "left-door.meeting-stile",
+          hardPartClearance: {
+            status: "provisional-override",
+            sourceVariable: "frontDoorCentreGapMm",
+            nominalHardGapMm: 3,
+          },
+        }),
+      ]),
+    });
+    expect(model.doorInfillPanels).toHaveLength(2);
+    expect(model.doorHinges).toMatchObject([
+      {
+        leafId: "left-door",
+        hardware: { productCode: "GLR3030", overallHeightMm: 600 },
+        leafBottomOffsetMm: 82,
+        pivotPlacementStatus: "verified-from-supplier-step",
+      },
+      {
+        leafId: "right-door",
+        hardware: { productCode: "GLR3030", overallHeightMm: 600 },
+        leafBottomOffsetMm: 82,
+        pivotPlacementStatus: "verified-from-supplier-step",
+      },
+    ]);
+    expect(
+      model.doorInterfaceSpec.interfaces.find((entry) => entry.id === "left-door.hinge-edge"),
+    ).toMatchObject({
+      hardwareKeepOut: {
+        status: "selected-long-hinge",
+        productCode: "GLR3030",
+        geometryFidelity: "technical-drawing-envelope",
+      },
+    });
   });
 
   it("models the complete structural topology as 24 nominal butt joints", () => {

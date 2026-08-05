@@ -41,9 +41,9 @@ describe("production EnclosureV2 scene boundary", () => {
   it("creates a real mesh for every member from the profile catalog", async () => {
     const scene = await buildEnclosureScene(dimensions);
     expect(scene.members.every((object) => object.type === "Mesh")).toBe(true);
-    expect(scene.members.every((object) => object.userData.geometryAdapter === "replicad")).toBe(
-      true,
-    );
+    expect(
+      scene.members.every((object) => object.userData.geometryAdapter === "manufacturer-step"),
+    ).toBe(true);
     expect(scene.members.every((object) => object.userData.solid)).toBe(true);
     expect(scene.members.every((object) => object.userData.meshVertexCount > 0)).toBe(true);
   });
@@ -103,7 +103,7 @@ describe("production EnclosureV2 scene boundary", () => {
     }
   });
 
-  it("renders two hinged inset doors with five meshes each", async () => {
+  it("renders two hinged inset doors with their GLR3030 leaf-side hardware", async () => {
     const scene = await buildEnclosureScene({
       width: 1200,
       height: 800,
@@ -121,6 +121,10 @@ describe("production EnclosureV2 scene boundary", () => {
       "assembly:right-door",
     ]);
     expect(scene.doors.map((door) => door.name)).toEqual(["door:left-door", "door:right-door"]);
+    expect(scene.stationaryHinges.map((hinge) => hinge.name)).toEqual([
+      "hinge:left-door:stationary",
+      "hinge:right-door:stationary",
+    ]);
     expect(scene.doors[0].position.toArray()).toEqual([33, 3, 30]);
     expect(scene.doors[1].position.toArray()).toEqual([1167, 3, 30]);
     for (const door of scene.doors) {
@@ -128,7 +132,7 @@ describe("production EnclosureV2 scene boundary", () => {
       door.traverse((child) => {
         if (child.type === "Mesh") meshes.push(child);
       });
-      expect(meshes).toHaveLength(5);
+      expect(meshes).toHaveLength(6);
       for (const mesh of meshes) {
         mesh.geometry.computeBoundingBox();
         const center = mesh.geometry.boundingBox.getCenter(new Vector3());
@@ -138,6 +142,9 @@ describe("production EnclosureV2 scene boundary", () => {
         meshes.filter((mesh) => mesh.userData.profileId === "profile:aluminium-3030"),
       ).toHaveLength(4);
       expect(meshes.filter((mesh) => mesh.userData.partType === "door-panel")).toHaveLength(1);
+      expect(
+        meshes.filter((mesh) => mesh.userData.partType === "door-hinge-glr3030-leaf"),
+      ).toHaveLength(1);
     }
     const descendant = scene.doors[0].getObjectByName("left-door-panel")!;
     scene.root.updateMatrixWorld(true);
@@ -284,7 +291,18 @@ describe("production EnclosureV2 scene boundary", () => {
     const envelope = scene.model.mainStructuralEnvelopeMm;
     const toleranceMm = 1e-6;
 
-    for (const object of [...scene.members, ...scene.doors]) {
+    const doorFrameParts = scene.doors.flatMap((door) => {
+      const meshes: Mesh[] = [];
+      door.traverse((child) => {
+        if (child instanceof Mesh && !String(child.userData.partType).startsWith("door-hinge")) {
+          meshes.push(child);
+        }
+      });
+      return meshes;
+    });
+    // `mainStructuralEnvelopeMm` intentionally bounds the structural frame and
+    // closed door leaves. The external hinge envelope is evaluated separately.
+    for (const object of [...scene.members, ...doorFrameParts]) {
       const bounds = new Box3().setFromObject(object);
       expect(bounds.min.x, `${object.name} minimum X`).toBeGreaterThanOrEqual(
         envelope.min.x - toleranceMm,
@@ -323,6 +341,10 @@ describe("production EnclosureV2 scene boundary", () => {
       for (const door of scene.doors) {
         door.traverse((object) => {
           if (!(object instanceof Mesh) || !object.userData.solid) return;
+          // Actual supplier STEP visual geometry supersedes the parametric
+          // solid used by the collision evaluator until that evaluator also
+          // consumes the supplier B-rep.
+          if (object.userData.geometryAdapter === "manufacturer-step") return;
           object.geometry.computeBoundingBox();
           const threeBounds = object.geometry.boundingBox!.clone().applyMatrix4(object.matrixWorld);
           const solidBounds = transformShapeToWorld(object.userData.solid as Shape3D, object)
@@ -350,6 +372,21 @@ describe("production EnclosureV2 scene boundary", () => {
         });
       }
     }
+  });
+
+  it("moves only the leaf-side GLR3030 CAD geometry with its door", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const leaf = scene.doors[0].getObjectByName("left-door-hinge-glr3030-leaf")!;
+    const stationary = scene.stationaryHinges[0].getObjectByName(
+      "left-door-hinge-glr3030-stationary",
+    )!;
+    scene.root.updateMatrixWorld(true);
+    const leafBefore = leaf.localToWorld(new Vector3(20, 0, 0)).clone();
+    const stationaryBefore = stationary.getWorldPosition(new Vector3()).clone();
+    applyAssemblyPose(scene, { "left-door.angle": -Math.PI / 2 });
+    scene.root.updateMatrixWorld(true);
+    expect(leaf.localToWorld(new Vector3(20, 0, 0)).distanceTo(leafBefore)).toBeGreaterThan(1);
+    expect(stationary.getWorldPosition(new Vector3())).toEqual(stationaryBefore);
   });
 
   it("applies non-orthogonal rotation and uniform scale in world-space order", async () => {

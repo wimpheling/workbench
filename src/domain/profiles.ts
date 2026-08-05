@@ -7,6 +7,17 @@ export type Profile = {
   geometry: "tSlot" | "box" | "custom";
   material: "aluminium";
   slotWidth: number;
+  /** Traceable supplier catalogue data for the selected physical extrusion. */
+  supplier: Readonly<{
+    manufacturer: string;
+    distributor: string;
+    productCode: string;
+    productUrl: string;
+    alloyTemper: string;
+    slotCount: number;
+  }>;
+  /** The rendered section is parametric until vendor CAD is imported. */
+  sectionGeometryFidelity: "parametric-slot-opening";
   stockLengths?: readonly number[];
   pricePerLength?: number;
   currency?: string;
@@ -16,22 +27,40 @@ const freeze = <T extends object>(value: T): Readonly<T> => Object.freeze(value)
 export const aluminiumProfiles: readonly Profile[] = Object.freeze([
   {
     id: profileId("aluminium-3030"),
-    label: "Aluminium 3030",
+    label: "Wolweiss 30×30, 4 slots (AST03003004)",
     section: freeze({ x: 30, y: 30, z: 30 }),
     geometry: "tSlot",
     material: "aluminium",
-    slotWidth: 8,
+    slotWidth: 8.2,
+    supplier: freeze({
+      manufacturer: "Wolweiss",
+      distributor: "Reiman",
+      productCode: "AST03003004",
+      productUrl: "https://reiman.pt/pt/ast03003004-aluminium-profile-30x30-4-slots/",
+      alloyTemper: "EN AW-6063 T5",
+      slotCount: 4,
+    }),
+    sectionGeometryFidelity: "parametric-slot-opening",
     stockLengths: [6000],
     pricePerLength: 0.018,
     currency: "EUR",
   },
   {
     id: profileId("aluminium-3060"),
-    label: "Aluminium 3060",
+    label: "Wolweiss 30×60, 6 slots (AST03006006)",
     section: freeze({ x: 30, y: 60, z: 30 }),
     geometry: "tSlot",
     material: "aluminium",
-    slotWidth: 8,
+    slotWidth: 8.2,
+    supplier: freeze({
+      manufacturer: "Wolweiss",
+      distributor: "Reiman",
+      productCode: "AST03006006",
+      productUrl: "https://reiman.pt/pt/ast03006006-aluminium-profile-30x60-6-slots/",
+      alloyTemper: "EN AW-6063 T5",
+      slotCount: 6,
+    }),
+    sectionGeometryFidelity: "parametric-slot-opening",
     stockLengths: [6000],
     pricePerLength: 0.027,
     currency: "EUR",

@@ -39,3 +39,5 @@ Known non-blocking build warnings include Replicad `fs`/`path`/`crypto` browser 
 `.github/workflows/pages.yml` deploys `dist/` from `main` (or manual dispatch) using GitHub Actions. Run `npm run validate:workflows` locally to check its contract. Repository Pages settings, environment approval, and the remote deployment URL require authenticated GitHub access and cannot be verified from this checkout.
 
 See `CAD_ROADMAP.md` for the audited implemented scope, remaining plan, and explicit blockers.
+See `DOOR_CLEARANCES.md` for the hardware-first checklist used to replace the
+provisional door gaps.
