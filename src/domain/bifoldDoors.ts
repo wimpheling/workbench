@@ -128,10 +128,30 @@ export type EvaluatedBiFoldDoorFrameHinge = Readonly<{
 
 export type EvaluatedBiFoldDoorInterLeafHinge = Readonly<{
   kind: "primary-to-secondary";
-  hardwareSelection: "unselected";
-  geometryStatus: "not-rendered";
-  installationStatus: "requirement-only";
-  collisionProofStatus: "not-available-without-selected-hardware";
+  /** Elesa CFG.30/30: a genuine two-leaf hinge for 30 mm profiles. */
+  hardwareSelection: "elesa-cfg-30-30-sh-6-c33";
+  openingAngleDeg: 180;
+  geometryStatus: "supplier-step";
+  installationStatus: "selected-m6-slot-nut";
+  collisionProofStatus: "component-cad-pending-installation-clearance-proof";
+}>;
+
+/**
+ * The GSD is the stationary top track. The printed shoe is deliberately a
+ * low-load, replaceable guide—not a weight-bearing door suspension.
+ */
+export type EvaluatedBiFoldDoorGuide = Readonly<{
+  trackSelection: "wolweiss-gsd082-3000kit";
+  trackInstallation: "top-frame-slot-8";
+  trackLengthMm: 3000;
+  trackGeometryStatus: "supplier-step";
+  shoeSelection: "printed-replaceable-guide-shoe";
+  shoeMaterial: "petg-or-asa";
+  shoeInstallation: "secondary-free-stile-two-m6-slot-nuts";
+  loadRole: "lateral-guidance-only";
+  /** Transverse guide-line datum relative to the frame-hinge axis. */
+  guideLineOffsetMm: 0;
+  kinematicsStatus: "datum-driven-free-stile-track-constrained";
 }>;
 
 export type EvaluatedBiFoldDoorLeaf = Readonly<{
@@ -164,10 +184,11 @@ export type EvaluatedBiFoldDoorOpening = Readonly<{
   poses: readonly [BiFoldDoorPose, BiFoldDoorPose, BiFoldDoorPose];
   frameHinge: EvaluatedBiFoldDoorFrameHinge;
   interLeafHinge: EvaluatedBiFoldDoorInterLeafHinge;
+  guide: EvaluatedBiFoldDoorGuide;
 }>;
 
 export type EvaluatedBiFoldDoorPlan = Readonly<{
-  status: "evaluated-provisional-interleaf-hardware";
+  status: "evaluated-guided-bifold-hardware";
   openings: readonly [EvaluatedBiFoldDoorOpening, EvaluatedBiFoldDoorOpening];
 }>;
 
@@ -346,7 +367,35 @@ export const makeBiFoldDoorPlan = (input: BiFoldDoorPlanInput): BiFoldDoorPlan =
   });
 };
 
-const evaluatedPoses = (): readonly [BiFoldDoorPose, BiFoldDoorPose, BiFoldDoorPose] =>
+/**
+ * Solves the two-link closure against the guide line C=(s,d). The print-on
+ * guide arm is designed to put its roller centre on d=0, the hinge-axis plane.
+ */
+export const guidedBiFoldPose = (
+  primaryLeafWidthMm: number,
+  secondaryLeafWidthMm: number,
+  guideLineOffsetMm: number,
+  primaryLeafAngleDeg: number,
+): BiFoldDoorPose => {
+  const theta = (primaryLeafAngleDeg * Math.PI) / 180;
+  const hingeX = primaryLeafWidthMm * Math.cos(theta);
+  const hingeDepth = primaryLeafWidthMm * Math.sin(theta);
+  const deltaDepth = guideLineOffsetMm - hingeDepth;
+  const radicand = secondaryLeafWidthMm ** 2 - deltaDepth ** 2;
+  if (radicand < -1e-6) throw new Error("Guide line is unreachable for the requested bi-fold pose");
+  const guideX = hingeX + Math.sqrt(Math.max(0, radicand));
+  const secondaryWorldAngle = Math.atan2(deltaDepth, guideX - hingeX);
+  return Object.freeze({
+    state: primaryLeafAngleDeg === 0 ? "closed" : "open",
+    primaryLeafAngleDeg,
+    secondaryLeafRelativeAngleDeg: (secondaryWorldAngle * 180) / Math.PI - primaryLeafAngleDeg,
+  });
+};
+
+const evaluatedPoses = (
+  primaryLeafWidthMm: number,
+  secondaryLeafWidthMm: number,
+): readonly [BiFoldDoorPose, BiFoldDoorPose, BiFoldDoorPose] =>
   Object.freeze([
     Object.freeze({
       state: "closed",
@@ -354,15 +403,11 @@ const evaluatedPoses = (): readonly [BiFoldDoorPose, BiFoldDoorPose, BiFoldDoorP
       secondaryLeafRelativeAngleDeg: 0,
     }),
     Object.freeze({
-      state: "open",
-      primaryLeafAngleDeg: 90,
-      // The two leaves fold face-to-face as they clear the opening.
-      secondaryLeafRelativeAngleDeg: 180,
+      ...guidedBiFoldPose(primaryLeafWidthMm, secondaryLeafWidthMm, 0, 90),
     }),
     Object.freeze({
+      ...guidedBiFoldPose(primaryLeafWidthMm, secondaryLeafWidthMm, 0, 90),
       state: "parked",
-      primaryLeafAngleDeg: 90,
-      secondaryLeafRelativeAngleDeg: 180,
     }),
   ]);
 
@@ -452,7 +497,10 @@ export const evaluateBiFoldDoorPlan = (
           input.insetPanelThicknessMm,
         ),
       ]) as EvaluatedBiFoldDoorOpening["leaves"],
-      poses: evaluatedPoses() as EvaluatedBiFoldDoorOpening["poses"],
+      poses: evaluatedPoses(
+        primaryWidthMm,
+        secondaryWidthMm,
+      ) as EvaluatedBiFoldDoorOpening["poses"],
       frameHinge: Object.freeze({
         kind: "frame-to-primary",
         hardwareSelection: "wolweiss-glr3030",
@@ -461,10 +509,23 @@ export const evaluateBiFoldDoorPlan = (
       }),
       interLeafHinge: Object.freeze({
         kind: "primary-to-secondary",
-        hardwareSelection: "unselected",
-        geometryStatus: "not-rendered",
-        installationStatus: "requirement-only",
-        collisionProofStatus: "not-available-without-selected-hardware",
+        hardwareSelection: "elesa-cfg-30-30-sh-6-c33",
+        openingAngleDeg: 180,
+        geometryStatus: "supplier-step",
+        installationStatus: "selected-m6-slot-nut",
+        collisionProofStatus: "component-cad-pending-installation-clearance-proof",
+      }),
+      guide: Object.freeze({
+        trackSelection: "wolweiss-gsd082-3000kit",
+        trackInstallation: "top-frame-slot-8",
+        trackLengthMm: 3000,
+        trackGeometryStatus: "supplier-step",
+        shoeSelection: "printed-replaceable-guide-shoe",
+        shoeMaterial: "petg-or-asa",
+        shoeInstallation: "secondary-free-stile-two-m6-slot-nuts",
+        loadRole: "lateral-guidance-only",
+        guideLineOffsetMm: 0,
+        kinematicsStatus: "datum-driven-free-stile-track-constrained",
       }),
     });
   };
@@ -472,7 +533,7 @@ export const evaluateBiFoldDoorPlan = (
   const leftWidthMm = input.innerClearDepthMm / 2;
   const backWidthMm = input.innerClearWidthMm / 2;
   return Object.freeze({
-    status: "evaluated-provisional-interleaf-hardware",
+    status: "evaluated-guided-bifold-hardware",
     openings: Object.freeze([
       // The left-rear opening is hinged from the rear-left corner and closes
       // forward over the rear half of the left face.

@@ -172,23 +172,25 @@ describe("production EnclosureV2 scene boundary", () => {
     expect(scene.biFoldDoors.map((opening) => opening.userData)).toEqual([
       expect.objectContaining({
         partType: "bi-fold-access-door",
-        renderStatus: "evaluated-leaf-frame-and-inset-panel",
+        renderStatus: "evaluated-guided-leaf-frame-and-inset-panel",
         accessFace: "left",
         parkingDirection: "toward-back",
         openingWidthMm: 300,
         openingHeightMm: 794,
         frameHingeSelection: "wolweiss-glr3030",
-        interLeafHingeSelection: "unselected",
+        interLeafHingeSelection: "elesa-cfg-30-30-sh-6-c33",
+        guideTrackSelection: "wolweiss-gsd082-3000kit",
       }),
       expect.objectContaining({
         partType: "bi-fold-access-door",
-        renderStatus: "evaluated-leaf-frame-and-inset-panel",
+        renderStatus: "evaluated-guided-leaf-frame-and-inset-panel",
         accessFace: "back",
         parkingDirection: "toward-right",
         openingWidthMm: 600,
         openingHeightMm: 794,
         frameHingeSelection: "wolweiss-glr3030",
-        interLeafHingeSelection: "unselected",
+        interLeafHingeSelection: "elesa-cfg-30-30-sh-6-c33",
+        guideTrackSelection: "wolweiss-gsd082-3000kit",
       }),
     ]);
 
@@ -226,15 +228,23 @@ describe("production EnclosureV2 scene boundary", () => {
     const leftSecondary = leftDoor.getObjectByName("bi-fold-pivot:left-rear-access-secondary")!;
     applyBiFoldDoorPose(leftDoor, leftOpening, "open");
     expect(leftPrimary.rotation.y).toBeCloseTo(-Math.PI / 2);
-    expect(leftSecondary.rotation.y).toBeCloseTo(-Math.PI);
+    expect(leftSecondary.rotation.y).toBeCloseTo(Math.PI);
     applyBiFoldDoorPose(backDoor, backOpening, "parked");
     const backPrimary = backDoor.getObjectByName("bi-fold-pivot:back-right-access-primary")!;
     const backSecondary = backDoor.getObjectByName("bi-fold-pivot:back-right-access-secondary")!;
     expect(backPrimary.rotation.y).toBeCloseTo(-Math.PI / 2);
-    expect(backSecondary.rotation.y).toBeCloseTo(-Math.PI);
+    expect(backSecondary.rotation.y).toBeCloseTo(Math.PI);
     expect(backDoor.userData.poseState).toBe("parked");
     expect(backDoor.userData.interLeafHingeCollisionProof).toBe(
-      "not-available-without-selected-hardware",
+      "component-cad-pending-installation-clearance-proof",
+    );
+    const hardwareAssets: string[] = [];
+    backDoor.traverse((child) => {
+      if (typeof child.userData.manufacturerCadAsset === "string")
+        hardwareAssets.push(child.userData.manufacturerCadAsset);
+    });
+    expect(hardwareAssets).toEqual(
+      expect.arrayContaining(["GSD082.3000KIT.step", "Hinges CFG.30_30 SH-6-C33 (0).stp"]),
     );
   });
 

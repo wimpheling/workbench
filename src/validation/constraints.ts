@@ -1,6 +1,7 @@
 import type { Anchor } from "../domain/anchors";
 import type { Point3, Vector3 } from "../domain/frames";
 import type { EnclosureModel } from "../domain/enclosureV2";
+import { guidedBiFoldPose } from "../domain/bifoldDoors";
 import {
   centeredNominalBounds,
   transformedNominalBounds,
@@ -440,14 +441,44 @@ const biFoldDoorConstraintResults = (model: EnclosureModel): ConstraintResult[] 
         [expectedOpening.id],
       ),
       result(
-        `BIFOLD-005.${expectedOpening.id}.interleaf-hinge-limit`,
-        opening?.interLeafHinge.hardwareSelection === "unselected" &&
-          opening.interLeafHinge.collisionProofStatus === "not-available-without-selected-hardware",
-        `${expectedOpening.id} inter-leaf motion cannot claim hardware collision proof before a hinge is selected`,
+        `BIFOLD-005.${expectedOpening.id}.interleaf-hinge-selection`,
+        opening?.interLeafHinge.hardwareSelection === "elesa-cfg-30-30-sh-6-c33" &&
+          opening.interLeafHinge.openingAngleDeg === 180 &&
+          opening.interLeafHinge.geometryStatus === "supplier-step",
+        `${expectedOpening.id} primary-to-secondary hinge must use the selected 180° CFG supplier CAD`,
         [expectedOpening.id],
-        undefined,
-        undefined,
-        "warning",
+      ),
+      result(
+        `BIFOLD-006.${expectedOpening.id}.top-guide-selection`,
+        opening?.guide.trackSelection === "wolweiss-gsd082-3000kit" &&
+          opening.guide.trackInstallation === "top-frame-slot-8" &&
+          opening.guide.trackGeometryStatus === "supplier-step" &&
+          opening.guide.shoeSelection === "printed-replaceable-guide-shoe" &&
+          opening.guide.loadRole === "lateral-guidance-only",
+        `${expectedOpening.id} requires a supplier-CAD GSD top track and a non-load-bearing printed guide shoe`,
+        [expectedOpening.id],
+      ),
+      result(
+        `BIFOLD-007.${expectedOpening.id}.guided-fold-kinematics`,
+        (() => {
+          if (!opening) return false;
+          try {
+            for (let angleDeg = 0; angleDeg <= 90; angleDeg += 1) {
+              const pose = guidedBiFoldPose(
+                opening.leaves[0].nominalWidthMm,
+                opening.leaves[1].nominalWidthMm,
+                opening.guide.guideLineOffsetMm,
+                angleDeg,
+              );
+              if (!Number.isFinite(pose.secondaryLeafRelativeAngleDeg)) return false;
+            }
+            return true;
+          } catch {
+            return false;
+          }
+        })(),
+        `${expectedOpening.id} must remain guide-reachable through the full 0–90° sweep from its hinge and guide datums`,
+        [expectedOpening.id],
       ),
     );
   }

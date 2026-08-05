@@ -24,9 +24,9 @@ const input: BiFoldDoorPlanInput = {
       closedPrimaryLeafAngleDeg: 0,
       closedSecondaryLeafRelativeAngleDeg: 0,
       openPrimaryLeafAngleDeg: 90,
-      openSecondaryLeafRelativeAngleDeg: 180,
+      openSecondaryLeafRelativeAngleDeg: -180,
       parkedPrimaryLeafAngleDeg: 90,
-      parkedSecondaryLeafRelativeAngleDeg: 180,
+      parkedSecondaryLeafRelativeAngleDeg: -180,
     },
     keepOut: {
       exteriorPrimaryLeafSweepProjectionMm: 200,
@@ -55,9 +55,9 @@ const input: BiFoldDoorPlanInput = {
       closedPrimaryLeafAngleDeg: 0,
       closedSecondaryLeafRelativeAngleDeg: 0,
       openPrimaryLeafAngleDeg: 90,
-      openSecondaryLeafRelativeAngleDeg: 180,
+      openSecondaryLeafRelativeAngleDeg: -180,
       parkedPrimaryLeafAngleDeg: 90,
-      parkedSecondaryLeafRelativeAngleDeg: 180,
+      parkedSecondaryLeafRelativeAngleDeg: -180,
     },
     keepOut: {
       exteriorPrimaryLeafSweepProjectionMm: 300,
@@ -137,12 +137,12 @@ describe("bi-fold access-door requirements", () => {
       {
         state: "open",
         primaryLeafAngleDeg: 90,
-        secondaryLeafRelativeAngleDeg: 180,
+        secondaryLeafRelativeAngleDeg: -180,
       },
       {
         state: "parked",
         primaryLeafAngleDeg: 90,
-        secondaryLeafRelativeAngleDeg: 180,
+        secondaryLeafRelativeAngleDeg: -180,
       },
     ]);
     expect(leftRear.keepOut).toEqual(input.leftRearAccess.keepOut);
@@ -190,7 +190,7 @@ describe("evaluated bi-fold door plan", () => {
     });
     const [left, back] = plan.openings;
 
-    expect(plan.status).toBe("evaluated-provisional-interleaf-hardware");
+    expect(plan.status).toBe("evaluated-guided-bifold-hardware");
     expect(left).toMatchObject({
       id: "left-rear-access",
       openingWidthMm: 824.5,
@@ -220,8 +220,15 @@ describe("evaluated bi-fold door plan", () => {
         geometryStatus: "supplier-step",
       });
       expect(opening.interLeafHinge).toMatchObject({
-        hardwareSelection: "unselected",
-        collisionProofStatus: "not-available-without-selected-hardware",
+        hardwareSelection: "elesa-cfg-30-30-sh-6-c33",
+        geometryStatus: "supplier-step",
+        openingAngleDeg: 180,
+      });
+      expect(opening.guide).toMatchObject({
+        trackSelection: "wolweiss-gsd082-3000kit",
+        trackGeometryStatus: "supplier-step",
+        shoeSelection: "printed-replaceable-guide-shoe",
+        kinematicsStatus: "datum-driven-free-stile-track-constrained",
       });
     }
   });
