@@ -1,7 +1,6 @@
 import { createEffect, createResource, createSignal, For, onCleanup } from "solid-js";
 import { applyAssemblyPose, buildEnclosureScene } from "../rendering/enclosureScene";
 import { mountThreeViewer } from "../rendering/viewer";
-import { evaluateEnclosureAssemblyPose } from "../domain/assemblies";
 import { buildManufacturingReport, manufacturingReportJson } from "../domain/manufacturing";
 import {
   defaultDrawingViews,
@@ -14,14 +13,16 @@ import {
 import {
   defaultConfigurations,
   defaultEnclosureV2VariablesForAuthoring,
-  motionStateIds,
   regenerateModel,
   updateVariable,
   type EditableEnclosureV2Variables,
 } from "./modelAuthoring";
 import { resolveRuntimeValidationState } from "./runtimeValidation";
 import { ValidationAssertionTree } from "./ValidationAssertionTree";
-import { createViewerPoseController } from "./viewerPoseController";
+import { createDoorPoseAnimator } from "./doorPoseAnimator";
+
+const DOOR_OPEN_ANGLE_RAD = Math.PI / 2;
+const DOOR_ANIMATION_DURATION_MS = 400;
 
 export function App() {
   const [canvas, setCanvas] = createSignal<HTMLCanvasElement>();
@@ -32,16 +33,18 @@ export function App() {
   const [scene] = createResource(variables, (value) => buildEnclosureScene(value));
   const [showReport, setShowReport] = createSignal(true);
   const [configuration, setConfiguration] = createSignal("default");
-  const [motionState, setMotionState] = createSignal("closed");
+  const [doorsOpen, setDoorsOpen] = createSignal(false);
   const [selectedAssembly, setSelectedAssembly] = createSignal("assembly:enclosure");
   const [hiddenAssemblies, setHiddenAssemblies] = createSignal<ReadonlySet<string>>(new Set());
   const regenerated = () => regenerateModel(variables());
   const configurations = () => defaultConfigurations(variables());
-  const motions = () => motionStateIds(regenerated().model);
-  const poseController = createViewerPoseController({
-    resolvePose: (value: Awaited<ReturnType<typeof buildEnclosureScene>>, state: string) =>
-      evaluateEnclosureAssemblyPose(value.model, state),
-    applyPose: (value, pose) => applyAssemblyPose(value, pose),
+  const doorAnimator = createDoorPoseAnimator({
+    durationMs: DOOR_ANIMATION_DURATION_MS,
+    applyOpenFraction: (value: Awaited<ReturnType<typeof buildEnclosureScene>>, openFraction) =>
+      applyAssemblyPose(value, {
+        "left-door.angle": -DOOR_OPEN_ANGLE_RAD * openFraction,
+        "right-door.angle": DOOR_OPEN_ANGLE_RAD * openFraction,
+      }),
   });
 
   createEffect(() => {
@@ -50,17 +53,13 @@ export function App() {
     if (!value || !element) return;
     viewer?.dispose();
     viewer = mountThreeViewer(element, value.root);
-    poseController.setScene(value, viewer.render);
+    doorAnimator.setScene(value, viewer.render);
     onCleanup(() => {
       viewer?.dispose();
       viewer = undefined;
     });
   });
-  createEffect(() => {
-    const value = scene();
-    const state = motionState();
-    if (value && viewer) poseController.select(state);
-  });
+  onCleanup(() => doorAnimator.dispose());
   const download = (name: string, content: string, type: string) => {
     const url = URL.createObjectURL(new Blob([content], { type }));
     const link = document.createElement("a");
@@ -141,15 +140,17 @@ export function App() {
             </For>
           </select>
         </label>
-        <label>
-          Motion state{" "}
-          <select
-            value={motionState()}
-            onChange={(event) => setMotionState(event.currentTarget.value)}
-          >
-            <For each={motions()}>{(state) => <option value={state}>{state}</option>}</For>
-          </select>
-        </label>
+        <button
+          type="button"
+          aria-pressed={doorsOpen()}
+          onClick={() => {
+            const next = !doorsOpen();
+            setDoorsOpen(next);
+            doorAnimator.animateTo(next);
+          }}
+        >
+          {doorsOpen() ? "Close doors" : "Open doors"}
+        </button>
         <button type="button" onClick={() => setShowReport(!showReport())}>
           {showReport() ? "Hide report" : "Show validation report"}
         </button>
