@@ -29,7 +29,11 @@ import { makeProvisionalDoorInterfaceSpec, type DoorInterfaceSpec } from "./door
 import { makeProvisionalDoorInfillPanels, type DoorInfillPanel } from "./doorInfillPanels";
 import { makeCentredGlr3030Installations, type DoorHingeInstallation } from "./doorHardware";
 import { agreedAccessOpenings, type AccessOpening } from "./accessOpenings";
-import { evaluateBiFoldDoorPlan, type EvaluatedBiFoldDoorPlan } from "./bifoldDoors";
+import {
+  biFoldGuideInstallationVariablesMm,
+  evaluateBiFoldDoorPlan,
+  type EvaluatedBiFoldDoorPlan,
+} from "./bifoldDoors";
 
 export type EnclosureDimensions =
   | Dimensions
@@ -779,6 +783,9 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
     frameFaceDepthMm: PROFILE_3030_SIDE_MM,
     insetPanelThicknessMm: defaultEnclosureV2Standards.doorInfill.thicknessMm,
     exteriorFrameOffsetMm: PROFILE_3030_SIDE_MM,
+    topGuideHeadroomMm:
+      biFoldGuideInstallationVariablesMm.gsd082SectionHeightMm +
+      biFoldGuideInstallationVariablesMm.doorTopRunningClearanceMm,
   });
   return {
     frame: {

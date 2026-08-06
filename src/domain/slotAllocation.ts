@@ -164,6 +164,65 @@ export const makeTSlotAllocationPlan = (
   return plan;
 };
 
+export type BiFoldInterLeafSlotAllocation = Readonly<{
+  status: "inside-hinge-separated-from-inset-panel-channel";
+  panelFace: "face-a";
+  hingeFace: "face-b";
+  plan: TSlotAllocationPlan;
+}>;
+
+/**
+ * Reserve the two meeting stiles used by an inside-mounted bi-fold hinge.
+ * Face A points laterally into each panel opening; face B is the enclosure-side
+ * door-plane face. The distinct faces are the mechanical fact this plan proves.
+ */
+export const makeBiFoldInterLeafSlotAllocation = (
+  openingId: string,
+  primaryMeetingStile: PartId,
+  secondaryMeetingStile: PartId,
+): BiFoldInterLeafSlotAllocation => {
+  const panelFace = "face-a" as const;
+  const hingeFace = "face-b" as const;
+  const allocations: TSlotFaceAllocation[] = [];
+  for (const [role, memberId] of [
+    ["primary", primaryMeetingStile],
+    ["secondary", secondaryMeetingStile],
+  ] as const) {
+    const channel = Object.freeze({
+      id: tSlotChannelId(`${openingId}-${role}-inset-panel`),
+      coverage: "full-member-length" as const,
+    });
+    allocations.push(
+      Object.freeze({
+        id: tSlotAllocationId(`${openingId}-${role}-panel-retainer`),
+        memberId,
+        face: panelFace,
+        use: "inset-panel-retainer",
+        continuousChannel: channel,
+      }),
+      Object.freeze({
+        id: tSlotAllocationId(`${openingId}-${role}-panel-gasket`),
+        memberId,
+        face: panelFace,
+        use: "gasket",
+        continuousChannel: channel,
+      }),
+      Object.freeze({
+        id: tSlotAllocationId(`${openingId}-${role}-inside-cfg-hinge`),
+        memberId,
+        face: hingeFace,
+        use: "hinge",
+      }),
+    );
+  }
+  return Object.freeze({
+    status: "inside-hinge-separated-from-inset-panel-channel",
+    panelFace,
+    hingeFace,
+    plan: makeTSlotAllocationPlan(`slot-allocation-plan:${openingId}-interleaf`, allocations),
+  });
+};
+
 export type DoorFrameMemberRole = "top-rail" | "bottom-rail" | "hinge-stile" | "latch-stile";
 
 export type DoorFrameMemberIds = Readonly<Record<DoorFrameMemberRole, PartId>>;

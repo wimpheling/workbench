@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { partId } from "./ids";
 import {
+  makeBiFoldInterLeafSlotAllocation,
   makeDoorFrameSlotAllocation,
   makeTSlotAllocationPlan,
   tSlotAllocationId,
@@ -65,6 +66,21 @@ const doorInput: DoorFrameSlotAllocationInput = {
 };
 
 describe("T-slot allocation", () => {
+  it("keeps inside bi-fold hinge mounting off both inset-panel channels", () => {
+    const allocation = makeBiFoldInterLeafSlotAllocation(
+      "left-rear-access",
+      partId("left-rear-primary-free-upright"),
+      partId("left-rear-secondary-hinge-upright"),
+    );
+    expect(allocation).toMatchObject({
+      status: "inside-hinge-separated-from-inset-panel-channel",
+      panelFace: "face-a",
+      hingeFace: "face-b",
+    });
+    expect(validateTSlotAllocationPlan(allocation.plan)).toEqual([]);
+    expect(allocation.plan.allocations.filter((entry) => entry.use === "hinge")).toHaveLength(2);
+  });
+
   it("permits one continuous inset-panel retainer and gasket channel", () => {
     const plan = makeTSlotAllocationPlan("slot-allocation-plan:test", [
       slot("retainer", "inset-panel-retainer", panelChannel),

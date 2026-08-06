@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   evaluateBiFoldDoorPlan,
+  guidedBiFoldPose,
   makeBiFoldDoorPlan,
   validateBiFoldDoorPlanInput,
   type BiFoldDoorPlanInput,
@@ -177,7 +178,7 @@ describe("bi-fold access-door requirements", () => {
 });
 
 describe("evaluated bi-fold door plan", () => {
-  it("derives full-height half-face openings, equal leaves, inset panels, and named poses", () => {
+  it("derives full-height half-face openings, hinge-offset leaves, inset panels, and named poses", () => {
     const plan = evaluateBiFoldDoorPlan({
       innerClearWidthMm: 1674,
       innerClearHeightMm: 740,
@@ -187,6 +188,7 @@ describe("evaluated bi-fold door plan", () => {
       frameFaceDepthMm: 30,
       insetPanelThicknessMm: 4,
       exteriorFrameOffsetMm: 30,
+      topGuideHeadroomMm: 30,
     });
     const [left, back] = plan.openings;
 
@@ -194,7 +196,7 @@ describe("evaluated bi-fold door plan", () => {
     expect(left).toMatchObject({
       id: "left-rear-access",
       openingWidthMm: 824.5,
-      openingHeightMm: 734,
+      openingHeightMm: 704,
       framePivotMm: { x: -30, y: 3, z: -1679 },
       outwardAngleSign: -1,
       parkingDirection: "toward-back",
@@ -202,13 +204,13 @@ describe("evaluated bi-fold door plan", () => {
     expect(back).toMatchObject({
       id: "back-right-access",
       openingWidthMm: 837,
-      openingHeightMm: 734,
+      openingHeightMm: 704,
       framePivotMm: { x: 1704, y: 3, z: -1679 },
       outwardAngleSign: -1,
       parkingDirection: "toward-right",
     });
     for (const opening of plan.openings) {
-      expect(opening.leaves[0].nominalWidthMm).toBe(opening.leaves[1].nominalWidthMm);
+      expect(opening.leaves[1].nominalWidthMm - opening.leaves[0].nominalWidthMm).toBe(23);
       expect(opening.leaves.every((leaf) => leaf.frameFitStatus === "fits")).toBe(true);
       expect(
         opening.leaves.every(
@@ -218,18 +220,75 @@ describe("evaluated bi-fold door plan", () => {
       expect(opening.frameHinge).toMatchObject({
         hardwareSelection: "wolweiss-glr3030",
         geometryStatus: "supplier-step",
+        mountingSide: "external-visible",
+        pivotOffsetFromLeafMidplaneMm: 23,
+        pivotToMountingPlaneMm: 8,
+        boundaryOffsetFromOpeningOriginMm: 30,
       });
       expect(opening.interLeafHinge).toMatchObject({
         hardwareSelection: "elesa-cfg-30-30-sh-6-c33",
         geometryStatus: "supplier-step",
         openingAngleDeg: 180,
+        mountingSide: "inside-door-faces",
+        pivotOffsetFromLeafMidplaneMm: -23,
+        pivotToMountingPlaneMm: 8,
+        slotAllocation: expect.objectContaining({
+          status: "inside-hinge-separated-from-inset-panel-channel",
+          panelFace: "face-a",
+          hingeFace: "face-b",
+        }),
       });
       expect(opening.guide).toMatchObject({
         trackSelection: "wolweiss-gsd082-3000kit",
+        trackInstallation: "underside-slot-of-top-frame-rail",
+        headroomMm: 30,
+        doorTopRunningClearanceMm: 5.25,
         trackGeometryStatus: "supplier-step",
         shoeSelection: "printed-replaceable-guide-shoe",
+        carriageRetention: "opposed-keeper-captive-in-gsd-channel",
+        rollerOffsetFromLeafMidplaneMm: 0,
         kinematicsStatus: "datum-driven-free-stile-track-constrained",
       });
     }
+  });
+
+  it("solves the guided fold from the real inside-mounted CFG pivot offset", () => {
+    const primaryWidthMm = 300;
+    const secondaryWidthMm = 323;
+    const framePivotOffsetMm = 23;
+    const pivotOffsetMm = -23;
+    for (let angleDeg = 0; angleDeg <= 90; angleDeg += 1) {
+      const pose = guidedBiFoldPose(
+        primaryWidthMm,
+        secondaryWidthMm,
+        0,
+        framePivotOffsetMm,
+        pivotOffsetMm,
+        0,
+        angleDeg,
+      );
+      const primaryAngleRad = (angleDeg * Math.PI) / 180;
+      const secondaryWorldAngleRad =
+        ((angleDeg + pose.secondaryLeafRelativeAngleDeg) * Math.PI) / 180;
+      const hingeDepthMm =
+        framePivotOffsetMm +
+        primaryWidthMm * Math.sin(primaryAngleRad) +
+        (pivotOffsetMm - framePivotOffsetMm) * Math.cos(primaryAngleRad);
+      const rollerDepthMm =
+        hingeDepthMm +
+        secondaryWidthMm * Math.sin(secondaryWorldAngleRad) -
+        pivotOffsetMm * Math.cos(secondaryWorldAngleRad);
+      expect(rollerDepthMm).toBeCloseTo(0, 8);
+    }
+    const parked = guidedBiFoldPose(
+      primaryWidthMm,
+      secondaryWidthMm,
+      0,
+      framePivotOffsetMm,
+      pivotOffsetMm,
+      0,
+      90,
+    );
+    expect(parked.secondaryLeafRelativeAngleDeg).toBeCloseTo(-180, 8);
   });
 });

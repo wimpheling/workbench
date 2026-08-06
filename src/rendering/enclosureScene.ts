@@ -45,6 +45,7 @@ import {
 } from "../validation/kinematics";
 import {
   biFoldDoorPose,
+  biFoldGuideInstallationVariablesMm,
   guidedBiFoldPose,
   type BiFoldDoorPose,
   type EvaluatedBiFoldDoorLeaf,
@@ -444,17 +445,15 @@ function createBiFoldGlrFrameHinge(
     hardwareSelection: "selected",
     geometryAdapter: "manufacturer-step",
   });
-  const stationaryMesh = new Mesh(
-    manufacturerCad.glr3030StationaryGeometry.clone(),
-    new MeshStandardMaterial({
-      color: 0x65717d,
-      metalness: 0.75,
-      roughness: 0.28,
-    }),
-  );
-  stationaryMesh.name = `${leaf.id}-glr3030-stationary`;
-  stationaryMesh.position.y = offsetY;
-  stationary.add(stationaryMesh);
+  for (const [index, geometry] of manufacturerCad.glr3030StationaryGeometries.entries()) {
+    const stationaryMesh = new Mesh(
+      geometry.clone(),
+      new MeshStandardMaterial({ color: 0x65717d, metalness: 0.75, roughness: 0.28 }),
+    );
+    stationaryMesh.name = `${leaf.id}-glr3030-stationary-${index + 1}`;
+    stationaryMesh.position.y = offsetY;
+    stationary.add(stationaryMesh);
+  }
 
   const moving = new Group();
   moving.name = `bi-fold-hinge:${leaf.id}:leaf`;
@@ -464,17 +463,15 @@ function createBiFoldGlrFrameHinge(
     hardwareSelection: "selected",
     geometryAdapter: "manufacturer-step",
   });
-  const movingMesh = new Mesh(
-    manufacturerCad.glr3030LeafGeometry.clone(),
-    new MeshStandardMaterial({
-      color: 0x65717d,
-      metalness: 0.75,
-      roughness: 0.28,
-    }),
-  );
-  movingMesh.name = `${leaf.id}-glr3030-leaf`;
-  movingMesh.position.y = offsetY;
-  moving.add(movingMesh);
+  for (const [index, geometry] of manufacturerCad.glr3030LeafGeometries.entries()) {
+    const movingMesh = new Mesh(
+      geometry.clone(),
+      new MeshStandardMaterial({ color: 0x65717d, metalness: 0.75, roughness: 0.28 }),
+    );
+    movingMesh.name = `${leaf.id}-glr3030-leaf-${index + 1}`;
+    movingMesh.position.y = offsetY;
+    moving.add(movingMesh);
+  }
   return [stationary, moving];
 }
 
@@ -482,48 +479,72 @@ function createBiFoldGlrFrameHinge(
 function createBiFoldInterLeafHinges(
   opening: EvaluatedBiFoldDoorOpening,
   primaryLeaf: EvaluatedBiFoldDoorLeaf,
-  secondaryLeaf: EvaluatedBiFoldDoorLeaf,
   manufacturerCad: ManufacturerCad,
-): readonly [Group, Group] {
+): Readonly<{ primaryWing: Group; pin: Group; secondaryWing: Group }> {
   const primary = new Group();
-  primary.name = `bi-fold-interleaf-hinge:${opening.id}:primary-plates`;
+  primary.name = `bi-fold-interleaf-hinge:${opening.id}:primary-wing`;
+  primary.userData.cfgPivotRole = "primary-wing";
+  const pin = new Group();
+  pin.name = `bi-fold-interleaf-hinge:${opening.id}:pin`;
+  pin.userData.cfgPivotRole = "pin";
   const secondary = new Group();
-  secondary.name = `bi-fold-interleaf-hinge:${opening.id}:secondary-plates`;
+  secondary.name = `bi-fold-interleaf-hinge:${opening.id}:secondary-wing`;
+  secondary.userData.cfgPivotRole = "secondary-wing";
   const heights = [90, primaryLeaf.nominalHeightMm / 2, primaryLeaf.nominalHeightMm - 90];
   for (const [index, y] of heights.entries()) {
     const primaryPlate = new Mesh(
-      manufacturerCad.cfg3030PrimaryGeometry.clone(),
+      manufacturerCad.cfg3030PrimaryWingGeometry.clone(),
       new MeshStandardMaterial({ color: 0x22272d, metalness: 0.15, roughness: 0.42 }),
     );
     primaryPlate.name = `${opening.id}-cfg-primary-${index + 1}`;
-    primaryPlate.position.set(primaryLeaf.nominalWidthMm, y, 22);
+    // CAD Z is the pin axis. CAD Y=-8 is the mounting plane; this rotation
+    // makes the barrel project into the enclosure from the inside door face.
+    primaryPlate.rotation.x = -Math.PI / 2;
+    primaryPlate.position.y = y;
     Object.assign(primaryPlate.userData, {
       partType: "bi-fold-interleaf-hinge",
       hardwareId: "hardware:elesa-cfg-30-30-sh-6-c33",
-      geometryAdapter: "manufacturer-step",
+      geometryAdapter: "manufacturer-step-solid",
       manufacturerCadAsset: "Hinges CFG.30_30 SH-6-C33 (0).stp",
     });
     primary.add(primaryPlate);
+    const hingePin = new Mesh(
+      manufacturerCad.cfg3030PinGeometry.clone(),
+      new MeshStandardMaterial({ color: 0x444a50, metalness: 0.65, roughness: 0.3 }),
+    );
+    hingePin.name = `${opening.id}-cfg-pin-${index + 1}`;
+    hingePin.rotation.x = -Math.PI / 2;
+    hingePin.position.y = y;
+    Object.assign(hingePin.userData, {
+      partType: "bi-fold-interleaf-hinge-pin",
+      hardwareId: "hardware:elesa-cfg-30-30-sh-6-c33",
+      geometryAdapter: "manufacturer-step-solid",
+      manufacturerCadAsset: "Hinges CFG.30_30 SH-6-C33 (0).stp",
+    });
+    pin.add(hingePin);
     const secondaryPlate = new Mesh(
-      manufacturerCad.cfg3030SecondaryGeometry.clone(),
+      manufacturerCad.cfg3030SecondaryWingGeometry.clone(),
       new MeshStandardMaterial({ color: 0x22272d, metalness: 0.15, roughness: 0.42 }),
     );
     secondaryPlate.name = `${opening.id}-cfg-secondary-${index + 1}`;
-    secondaryPlate.position.set(0, y, 22);
+    secondaryPlate.rotation.x = -Math.PI / 2;
+    secondaryPlate.position.y = y;
     Object.assign(secondaryPlate.userData, {
       partType: "bi-fold-interleaf-hinge",
       hardwareId: "hardware:elesa-cfg-30-30-sh-6-c33",
-      geometryAdapter: "manufacturer-step",
+      geometryAdapter: "manufacturer-step-solid",
       manufacturerCadAsset: "Hinges CFG.30_30 SH-6-C33 (0).stp",
     });
     secondary.add(secondaryPlate);
   }
-  return [primary, secondary];
+  return { primaryWing: primary, pin, secondaryWing: secondary };
 }
 
 /**
- * A deliberately simple envelope until Reiman's GSD section CAD is obtained.
- * The shoe is printed, replaceable, and only locates the free stile laterally.
+ * The GSD snaps into the downward-facing slot of the upper 3030 rail. The
+ * reserved headroom lowers the door below it. The printed carriage is fastened
+ * to the secondary free stile and captive in the track; it does not suspend
+ * the door, whose weight remains on the frame and inter-leaf hinges.
  */
 function createBiFoldGuide(
   opening: EvaluatedBiFoldDoorOpening,
@@ -538,10 +559,19 @@ function createBiFoldGuide(
     new MeshStandardMaterial({ color: 0x7d848b, metalness: 0.15, roughness: 0.65 }),
   );
   track.name = `bi-fold-guide-track:${opening.id}`;
-  // GSD082 is an insert for the slot in the top enclosure rail. Its datum is
-  // deliberately overlapped with that rail, rather than floating at the door
-  // plane. The shoe reaches up from the secondary leaf into the track.
-  track.position.set(guideLengthMm / 2, opening.openingHeightMm + 15, 15);
+  track.position.set(
+    opening.frameHinge.boundaryOffsetFromOpeningOriginMm + guideLengthMm / 2,
+    // The STEP is centred for rendering; put its snap-foot datum into the
+    // underside slot of the upper rail, not in the middle of door headroom.
+    // The deliberate overlap is the physical slot engagement, not a gap.
+    // The supplier section fills the reserved headroom. Its lower face sits
+    // only at the calculated door-running clearance—not a full 30 mm above
+    // the door—while its upper face engages the top rail's underside slot.
+    opening.openingHeightMm +
+      opening.guide.doorTopRunningClearanceMm +
+      biFoldGuideInstallationVariablesMm.gsd082SectionHeightMm / 2,
+    -opening.frameHinge.boundaryOffsetFromOpeningOriginMm / 2 + opening.guide.guideLineOffsetMm,
+  );
   Object.assign(track.userData, {
     partType: "bi-fold-guide-track",
     hardwareId: "hardware:wolweiss-gsd082-3000kit",
@@ -549,11 +579,25 @@ function createBiFoldGuide(
     geometryAdapter: "manufacturer-step",
     manufacturerCadAsset: "GSD082.3000KIT.step",
     loadRole: opening.guide.loadRole,
+    mountingRelation: "snapped-into-downward-facing-top-rail-slot",
   });
   const shoe = new Group();
   shoe.name = `bi-fold-guide-shoe:${opening.id}`;
+  Object.assign(shoe.userData, {
+    partType: "bi-fold-guide-carriage",
+    hardwareId: "hardware:printed-replaceable-guide-shoe",
+    material: opening.guide.shoeMaterial,
+    installation: opening.guide.shoeInstallation,
+    retention: opening.guide.carriageRetention,
+    loadRole: opening.guide.loadRole,
+    geometryAdapter: "printable-envelope-pending-final-print",
+  });
   const arm = createDoorMesh(14, 48, 8, `${opening.id}-printed-guide-arm`);
-  arm.position.set(secondaryLeaf.nominalWidthMm, secondaryLeaf.nominalHeightMm + 9, 15);
+  arm.position.set(
+    secondaryLeaf.nominalWidthMm,
+    secondaryLeaf.nominalHeightMm + 9,
+    opening.guide.rollerOffsetFromLeafMidplaneMm,
+  );
   Object.assign(arm.userData, {
     partType: "bi-fold-guide-arm",
     hardwareId: "hardware:printed-replaceable-guide-shoe",
@@ -563,13 +607,34 @@ function createBiFoldGuide(
     geometryAdapter: "printable-envelope-pending-gsd-cad",
   });
   shoe.add(arm);
+  // The bridge joins the stile-mounted arm to the running roller.  Its two
+  // opposed keeper blocks straddle the GSD channel, preventing lift-out while
+  // allowing the roller to translate along the supplier track.
+  const carriageBridge = createDoorMesh(18, 12, 30, `${opening.id}-printed-guide-carriage`);
+  carriageBridge.position.set(
+    secondaryLeaf.nominalWidthMm,
+    secondaryLeaf.nominalHeightMm + 31,
+    opening.guide.rollerOffsetFromLeafMidplaneMm,
+  );
+  Object.assign(carriageBridge.userData, {
+    partType: "bi-fold-guide-carriage-bridge",
+    hardwareId: "hardware:printed-replaceable-guide-shoe",
+    retention: opening.guide.carriageRetention,
+    function: "joins-free-stile-arm-to-captive-follower",
+    geometryAdapter: "printable-envelope-pending-final-print",
+  });
+  shoe.add(carriageBridge);
   const roller = new Mesh(
     new CylinderGeometry(3.8, 3.8, 8, 20),
     new MeshStandardMaterial({ color: 0x252a2f, metalness: 0.2, roughness: 0.45 }),
   );
   roller.name = `${opening.id}-printed-guide-roller`;
   roller.rotation.z = Math.PI / 2;
-  roller.position.set(secondaryLeaf.nominalWidthMm, secondaryLeaf.nominalHeightMm + 31, 15);
+  roller.position.set(
+    secondaryLeaf.nominalWidthMm,
+    secondaryLeaf.nominalHeightMm + 31,
+    opening.guide.rollerOffsetFromLeafMidplaneMm,
+  );
   Object.assign(roller.userData, {
     partType: "bi-fold-guide-roller",
     hardwareId: "hardware:printed-replaceable-guide-shoe",
@@ -578,6 +643,22 @@ function createBiFoldGuide(
     geometryAdapter: "printable-envelope-pending-final-print",
   });
   shoe.add(roller);
+  for (const [index, offset] of [-16, 16].entries()) {
+    const keeper = createDoorMesh(10, 10, 8, `${opening.id}-printed-guide-keeper-${index + 1}`);
+    keeper.position.set(
+      secondaryLeaf.nominalWidthMm,
+      secondaryLeaf.nominalHeightMm + 31,
+      opening.guide.rollerOffsetFromLeafMidplaneMm + offset,
+    );
+    Object.assign(keeper.userData, {
+      partType: "bi-fold-guide-carriage-keeper",
+      hardwareId: "hardware:printed-replaceable-guide-shoe",
+      retention: "opposed-keeper-captive-in-gsd-channel",
+      function: "anti-lift-retention",
+      geometryAdapter: "printable-envelope-pending-final-print",
+    });
+    shoe.add(keeper);
+  }
   return [track, shoe];
 }
 
@@ -600,38 +681,66 @@ function createBiFoldDoor(
   });
 
   const [primaryLeaf, secondaryLeaf] = opening.leaves;
+  const frameHingeAxis = new Group();
+  frameHingeAxis.name = `bi-fold-frame-hinge-axis:${opening.id}`;
+  const closedLeafMidplaneOffsetMm = -opening.frameHinge.boundaryOffsetFromOpeningOriginMm / 2;
+  frameHingeAxis.position.set(
+    opening.frameHinge.boundaryOffsetFromOpeningOriginMm,
+    0,
+    closedLeafMidplaneOffsetMm + opening.frameHinge.pivotOffsetFromLeafMidplaneMm,
+  );
+  Object.assign(frameHingeAxis.userData, {
+    partType: "bi-fold-frame-hinge-axis",
+    mountingSide: opening.frameHinge.mountingSide,
+    pivotOffsetFromLeafMidplaneMm: opening.frameHinge.pivotOffsetFromLeafMidplaneMm,
+  });
   const primaryPivot = new Group();
   primaryPivot.name = `bi-fold-pivot:${primaryLeaf.id}`;
   primaryPivot.userData.biFoldRole = "primary-pivot";
-  primaryPivot.add(createBiFoldLeafFrame(opening, primaryLeaf, manufacturerCad));
+  const primaryLeafMount = new Group();
+  primaryLeafMount.name = `bi-fold-leaf-mount:${primaryLeaf.id}`;
+  primaryLeafMount.position.z = -opening.frameHinge.pivotOffsetFromLeafMidplaneMm;
+  primaryLeafMount.add(createBiFoldLeafFrame(opening, primaryLeaf, manufacturerCad));
   const glr = createBiFoldGlrFrameHinge(opening, primaryLeaf, manufacturerCad);
   if (glr.length) {
     const [stationary, moving] = glr;
-    group.add(stationary);
+    frameHingeAxis.add(stationary);
     primaryPivot.add(moving);
   }
+  const interLeafAxis = new Group();
+  interLeafAxis.name = `bi-fold-interleaf-axis:${opening.id}`;
+  interLeafAxis.position.set(
+    primaryLeaf.nominalWidthMm,
+    0,
+    opening.interLeafHinge.pivotOffsetFromLeafMidplaneMm,
+  );
+  Object.assign(interLeafAxis.userData, {
+    partType: "bi-fold-interleaf-axis",
+    mountingSide: opening.interLeafHinge.mountingSide,
+    pivotOffsetFromLeafMidplaneMm: opening.interLeafHinge.pivotOffsetFromLeafMidplaneMm,
+  });
   const secondaryPivot = new Group();
   secondaryPivot.name = `bi-fold-pivot:${secondaryLeaf.id}`;
-  secondaryPivot.position.x = primaryLeaf.nominalWidthMm;
   secondaryPivot.userData.biFoldRole = "secondary-pivot";
   Object.assign(secondaryPivot.userData, {
     interLeafHingeSelection: opening.interLeafHinge.hardwareSelection,
     collisionProof: opening.interLeafHinge.collisionProofStatus,
   });
-  secondaryPivot.add(createBiFoldLeafFrame(opening, secondaryLeaf, manufacturerCad));
-  const [primaryHingePlates, secondaryHingePlates] = createBiFoldInterLeafHinges(
-    opening,
-    primaryLeaf,
-    secondaryLeaf,
-    manufacturerCad,
-  );
-  primaryPivot.add(primaryHingePlates);
-  secondaryPivot.add(secondaryHingePlates);
+  const secondaryLeafMount = new Group();
+  secondaryLeafMount.name = `bi-fold-leaf-mount:${secondaryLeaf.id}`;
+  secondaryLeafMount.position.z = -opening.interLeafHinge.pivotOffsetFromLeafMidplaneMm;
+  secondaryLeafMount.add(createBiFoldLeafFrame(opening, secondaryLeaf, manufacturerCad));
+  const cfg = createBiFoldInterLeafHinges(opening, primaryLeaf, manufacturerCad);
+  interLeafAxis.add(cfg.primaryWing, cfg.pin);
+  secondaryPivot.add(cfg.secondaryWing, secondaryLeafMount);
   const [guideTrack, guideShoe] = createBiFoldGuide(opening, secondaryLeaf, manufacturerCad);
   group.add(guideTrack);
-  secondaryPivot.add(guideShoe);
-  primaryPivot.add(secondaryPivot);
-  group.add(primaryPivot);
+  secondaryLeafMount.add(guideShoe);
+  interLeafAxis.add(secondaryPivot);
+  primaryLeafMount.add(interLeafAxis);
+  primaryPivot.add(primaryLeafMount);
+  frameHingeAxis.add(primaryPivot);
+  group.add(frameHingeAxis);
   return group;
 }
 
@@ -671,6 +780,9 @@ export const applyBiFoldDoorOpenFraction = (
     opening.leaves[0].nominalWidthMm,
     opening.leaves[1].nominalWidthMm,
     opening.guide.guideLineOffsetMm,
+    opening.frameHinge.pivotOffsetFromLeafMidplaneMm,
+    opening.interLeafHinge.pivotOffsetFromLeafMidplaneMm,
+    opening.guide.rollerOffsetFromLeafMidplaneMm,
     primaryAngleDeg,
   ).secondaryLeafRelativeAngleDeg;
   primary.rotation.y = (primaryAngleDeg * sign * Math.PI) / 180;
@@ -694,21 +806,19 @@ function createLeafHinge(
   visible.userData.partType = "door-hinge-leaf";
   visible.userData.hardwareId = hardware.id;
   visible.userData.geometryFidelity = hardware.geometryFidelity;
-  const mesh = new Mesh(
-    manufacturerCad.glr3030LeafGeometry.clone(),
-    new MeshStandardMaterial({
-      color: 0x65717d,
-      metalness: 0.75,
-      roughness: 0.28,
-    }),
-  );
-  mesh.name = `${id}-hinge-glr3030-leaf`;
-  mesh.position.set(0, hinge.leafBottomOffsetMm + hardware.overallHeightMm / 2, 0);
-  mesh.userData.partType = "door-hinge-glr3030-leaf";
-  mesh.userData.hardwareId = hardware.id;
-  mesh.userData.geometryAdapter = "manufacturer-step";
-  mesh.userData.manufacturerCadAsset = "GLR3030.step";
-  visible.add(mesh);
+  for (const [index, geometry] of manufacturerCad.glr3030LeafGeometries.entries()) {
+    const mesh = new Mesh(
+      geometry.clone(),
+      new MeshStandardMaterial({ color: 0x65717d, metalness: 0.75, roughness: 0.28 }),
+    );
+    mesh.name = `${id}-hinge-glr3030-leaf-${index + 1}`;
+    mesh.position.set(0, hinge.leafBottomOffsetMm + hardware.overallHeightMm / 2, 0);
+    mesh.userData.partType = "door-hinge-glr3030-leaf";
+    mesh.userData.hardwareId = hardware.id;
+    mesh.userData.geometryAdapter = "manufacturer-step-shell";
+    mesh.userData.manufacturerCadAsset = "GLR3030.step";
+    visible.add(mesh);
+  }
   return visible;
 }
 
@@ -730,20 +840,18 @@ function createStationaryHinge(
     anchor.z,
   );
   if (installation.leafId === "right-door") group.scale.x = -1;
-  const mesh = new Mesh(
-    manufacturerCad.glr3030StationaryGeometry.clone(),
-    new MeshStandardMaterial({
-      color: 0x65717d,
-      metalness: 0.75,
-      roughness: 0.28,
-    }),
-  );
-  mesh.name = `${installation.leafId}-hinge-glr3030-stationary`;
-  mesh.userData.partType = "door-hinge-glr3030-stationary";
-  mesh.userData.hardwareId = installation.hardware.id;
-  mesh.userData.geometryAdapter = "manufacturer-step";
-  mesh.userData.manufacturerCadAsset = "GLR3030.step";
-  group.add(mesh);
+  for (const [index, geometry] of manufacturerCad.glr3030StationaryGeometries.entries()) {
+    const mesh = new Mesh(
+      geometry.clone(),
+      new MeshStandardMaterial({ color: 0x65717d, metalness: 0.75, roughness: 0.28 }),
+    );
+    mesh.name = `${installation.leafId}-hinge-glr3030-stationary-${index + 1}`;
+    mesh.userData.partType = "door-hinge-glr3030-stationary";
+    mesh.userData.hardwareId = installation.hardware.id;
+    mesh.userData.geometryAdapter = "manufacturer-step-shell";
+    mesh.userData.manufacturerCadAsset = "GLR3030.step";
+    group.add(mesh);
+  }
   return group;
 }
 

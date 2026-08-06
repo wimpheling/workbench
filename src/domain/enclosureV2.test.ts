@@ -129,7 +129,7 @@ describe("EnclosureV2 clear-volume design", () => {
     const biFoldConstraints = validateModel(model).filter((constraint) =>
       constraint.id.startsWith("BIFOLD-"),
     );
-    expect(biFoldConstraints).toHaveLength(15);
+    expect(biFoldConstraints).toHaveLength(17);
     expect(biFoldConstraints.every((constraint) => constraint.passed)).toBe(true);
   });
 

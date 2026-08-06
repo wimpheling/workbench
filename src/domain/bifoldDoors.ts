@@ -1,3 +1,19 @@
+import { partId } from "./ids";
+import {
+  makeBiFoldInterLeafSlotAllocation,
+  type BiFoldInterLeafSlotAllocation,
+} from "./slotAllocation";
+
+/**
+ * Installation dimensions derived from the selected GSD082.3000KIT section.
+ * Keeping these beside the hardware selection makes the remaining door-head
+ * clearance explicit, rather than rendering the whole track as empty space.
+ */
+export const biFoldGuideInstallationVariablesMm = Object.freeze({
+  gsd082SectionHeightMm: 24.75,
+  doorTopRunningClearanceMm: 3,
+});
+
 /**
  * The two additional access openings agreed for the enclosure.  They are
  * deliberately independent of EnclosureV2 until the multi-face frame layout
@@ -115,15 +131,21 @@ export type BiFoldDoorPlan = Readonly<{
 }>;
 
 /**
- * World-space, evaluated access opening data.  The connector and frame hinge
- * are real selections; the hinge between leaves is intentionally only a
- * requirement until a supplier model is selected.
+ * World-space, evaluated access opening data. Both hinge interfaces and the
+ * guide track are selected supplier parts; the printed follower remains a
+ * project-owned part derived from their calibrated datums.
  */
 export type EvaluatedBiFoldDoorFrameHinge = Readonly<{
   kind: "frame-to-primary";
   hardwareSelection: "wolweiss-glr3030";
   geometryStatus: "supplier-step";
   installationStatus: "pose-evaluated";
+  mountingSide: "external-visible";
+  pivotToMountingPlaneMm: number;
+  /** Positive from the closed leaf centre-plane toward the exterior. */
+  pivotOffsetFromLeafMidplaneMm: number;
+  /** From the legacy opening-corner datum to the post/leaf boundary. */
+  boundaryOffsetFromOpeningOriginMm: number;
 }>;
 
 export type EvaluatedBiFoldDoorInterLeafHinge = Readonly<{
@@ -133,6 +155,11 @@ export type EvaluatedBiFoldDoorInterLeafHinge = Readonly<{
   openingAngleDeg: 180;
   geometryStatus: "supplier-step";
   installationStatus: "selected-m6-slot-nut";
+  mountingSide: "inside-door-faces";
+  /** Signed from the leaf centre-plane toward the enclosure interior. */
+  pivotOffsetFromLeafMidplaneMm: number;
+  pivotToMountingPlaneMm: number;
+  slotAllocation: BiFoldInterLeafSlotAllocation;
   collisionProofStatus: "component-cad-pending-installation-clearance-proof";
 }>;
 
@@ -142,15 +169,26 @@ export type EvaluatedBiFoldDoorInterLeafHinge = Readonly<{
  */
 export type EvaluatedBiFoldDoorGuide = Readonly<{
   trackSelection: "wolweiss-gsd082-3000kit";
-  trackInstallation: "top-frame-slot-8";
+  trackInstallation: "underside-slot-of-top-frame-rail";
   trackLengthMm: 3000;
+  /** Reserved vertical stack below the upper frame rail for track and roller. */
+  headroomMm: number;
+  /** The deliberate gap between the door top and the underside of the track. */
+  doorTopRunningClearanceMm: number;
   trackGeometryStatus: "supplier-step";
   shoeSelection: "printed-replaceable-guide-shoe";
   shoeMaterial: "petg-or-asa";
   shoeInstallation: "secondary-free-stile-two-m6-slot-nuts";
+  /**
+   * The printed body is mechanically retained by opposed keepers in the GSD
+   * channel.  It is a captive follower, not merely a roller touching a rail.
+   */
+  carriageRetention: "opposed-keeper-captive-in-gsd-channel";
   loadRole: "lateral-guidance-only";
   /** Transverse guide-line datum relative to the frame-hinge axis. */
   guideLineOffsetMm: 0;
+  /** The printed follower centres the roller on the closed leaf mid-plane. */
+  rollerOffsetFromLeafMidplaneMm: 0;
   kinematicsStatus: "datum-driven-free-stile-track-constrained";
 }>;
 
@@ -202,6 +240,7 @@ export type BiFoldDoorEvaluationInputMm = Readonly<{
   insetPanelThicknessMm: number;
   /** Exterior offset of the closed door-frame mid-plane from each face. */
   exteriorFrameOffsetMm: number;
+  topGuideHeadroomMm: number;
 }>;
 
 const assertFiniteNonNegative = (name: string, value: number): void => {
@@ -375,16 +414,27 @@ export const guidedBiFoldPose = (
   primaryLeafWidthMm: number,
   secondaryLeafWidthMm: number,
   guideLineOffsetMm: number,
+  framePivotOffsetFromLeafMidplaneMm: number,
+  interLeafPivotOffsetMm: number,
+  guideRollerOffsetFromLeafMidplaneMm: number,
   primaryLeafAngleDeg: number,
 ): BiFoldDoorPose => {
   const theta = (primaryLeafAngleDeg * Math.PI) / 180;
-  const hingeX = primaryLeafWidthMm * Math.cos(theta);
-  const hingeDepth = primaryLeafWidthMm * Math.sin(theta);
-  const deltaDepth = guideLineOffsetMm - hingeDepth;
-  const radicand = secondaryLeafWidthMm ** 2 - deltaDepth ** 2;
-  if (radicand < -1e-6) throw new Error("Guide line is unreachable for the requested bi-fold pose");
-  const guideX = hingeX + Math.sqrt(Math.max(0, radicand));
-  const secondaryWorldAngle = Math.atan2(deltaDepth, guideX - hingeX);
+  const hingeDepth =
+    framePivotOffsetFromLeafMidplaneMm +
+    primaryLeafWidthMm * Math.sin(theta) +
+    (interLeafPivotOffsetMm - framePivotOffsetFromLeafMidplaneMm) * Math.cos(theta);
+  const rollerDepthFromPivotMm = guideRollerOffsetFromLeafMidplaneMm - interLeafPivotOffsetMm;
+  const targetDepthMm = guideLineOffsetMm - hingeDepth;
+  const linkageRadiusMm = Math.hypot(secondaryLeafWidthMm, rollerDepthFromPivotMm);
+  if (Math.abs(targetDepthMm) > linkageRadiusMm + 1e-6)
+    throw new Error("Guide line is unreachable for the requested bi-fold pose");
+
+  const phaseRad = Math.atan2(rollerDepthFromPivotMm, secondaryLeafWidthMm);
+  const normalizedTarget = Math.max(-1, Math.min(1, targetDepthMm / linkageRadiusMm));
+  // This branch is continuous from the closed installation, where both leaf
+  // centre-planes are collinear and the roller is already on the guide line.
+  const secondaryWorldAngle = Math.asin(normalizedTarget) - phaseRad;
   return Object.freeze({
     state: primaryLeafAngleDeg === 0 ? "closed" : "open",
     primaryLeafAngleDeg,
@@ -395,6 +445,8 @@ export const guidedBiFoldPose = (
 const evaluatedPoses = (
   primaryLeafWidthMm: number,
   secondaryLeafWidthMm: number,
+  framePivotOffsetFromLeafMidplaneMm: number,
+  interLeafPivotOffsetMm: number,
 ): readonly [BiFoldDoorPose, BiFoldDoorPose, BiFoldDoorPose] =>
   Object.freeze([
     Object.freeze({
@@ -403,10 +455,26 @@ const evaluatedPoses = (
       secondaryLeafRelativeAngleDeg: 0,
     }),
     Object.freeze({
-      ...guidedBiFoldPose(primaryLeafWidthMm, secondaryLeafWidthMm, 0, 90),
+      ...guidedBiFoldPose(
+        primaryLeafWidthMm,
+        secondaryLeafWidthMm,
+        0,
+        framePivotOffsetFromLeafMidplaneMm,
+        interLeafPivotOffsetMm,
+        0,
+        90,
+      ),
     }),
     Object.freeze({
-      ...guidedBiFoldPose(primaryLeafWidthMm, secondaryLeafWidthMm, 0, 90),
+      ...guidedBiFoldPose(
+        primaryLeafWidthMm,
+        secondaryLeafWidthMm,
+        0,
+        framePivotOffsetFromLeafMidplaneMm,
+        interLeafPivotOffsetMm,
+        0,
+        90,
+      ),
       state: "parked",
     }),
   ]);
@@ -464,13 +532,28 @@ export const evaluateBiFoldDoorPlan = (
     framePivotMm: Readonly<{ x: number; y: number; z: number }>,
     outwardAngleSign: 1 | -1,
   ): EvaluatedBiFoldDoorOpening => {
-    const openingHeightMm = input.innerClearHeightMm - input.perimeterClearanceMm * 2;
+    const minimumGuideHeadroomMm =
+      biFoldGuideInstallationVariablesMm.gsd082SectionHeightMm +
+      biFoldGuideInstallationVariablesMm.doorTopRunningClearanceMm;
+    if (input.topGuideHeadroomMm < minimumGuideHeadroomMm)
+      throw new Error(
+        `topGuideHeadroomMm must reserve ${minimumGuideHeadroomMm} mm for the selected GSD082 track and door running clearance`,
+      );
+    const openingHeightMm =
+      input.innerClearHeightMm - input.perimeterClearanceMm * 2 - input.topGuideHeadroomMm;
     const usableWidthMm =
       openingWidthMm - input.perimeterClearanceMm * 2 - input.meetingClearanceMm;
     if (openingHeightMm <= 0 || usableWidthMm <= 0)
       throw new Error(`${id} has no usable opening after named clearances`);
-    const primaryWidthMm = usableWidthMm / 2;
-    const secondaryWidthMm = usableWidthMm / 2;
+    const glrPivotToMountingPlaneMm = 8;
+    const framePivotOffsetFromLeafMidplaneMm =
+      input.frameFaceDepthMm / 2 + glrPivotToMountingPlaneMm;
+    const primaryWidthMm = (usableWidthMm - framePivotOffsetFromLeafMidplaneMm) / 2;
+    const secondaryWidthMm = usableWidthMm - primaryWidthMm;
+    if (primaryWidthMm <= 0)
+      throw new Error(`${id} is too narrow for the selected external frame-hinge offset`);
+    const cfgPivotToMountingPlaneMm = 8;
+    const interLeafPivotOffsetMm = -(input.frameFaceDepthMm / 2 + cfgPivotToMountingPlaneMm);
     return Object.freeze({
       id,
       face,
@@ -500,12 +583,18 @@ export const evaluateBiFoldDoorPlan = (
       poses: evaluatedPoses(
         primaryWidthMm,
         secondaryWidthMm,
+        framePivotOffsetFromLeafMidplaneMm,
+        interLeafPivotOffsetMm,
       ) as EvaluatedBiFoldDoorOpening["poses"],
       frameHinge: Object.freeze({
         kind: "frame-to-primary",
         hardwareSelection: "wolweiss-glr3030",
         geometryStatus: "supplier-step",
         installationStatus: "pose-evaluated",
+        mountingSide: "external-visible",
+        pivotToMountingPlaneMm: glrPivotToMountingPlaneMm,
+        pivotOffsetFromLeafMidplaneMm: framePivotOffsetFromLeafMidplaneMm,
+        boundaryOffsetFromOpeningOriginMm: input.frameFaceDepthMm,
       }),
       interLeafHinge: Object.freeze({
         kind: "primary-to-secondary",
@@ -513,18 +602,31 @@ export const evaluateBiFoldDoorPlan = (
         openingAngleDeg: 180,
         geometryStatus: "supplier-step",
         installationStatus: "selected-m6-slot-nut",
+        mountingSide: "inside-door-faces",
+        pivotOffsetFromLeafMidplaneMm: interLeafPivotOffsetMm,
+        pivotToMountingPlaneMm: cfgPivotToMountingPlaneMm,
+        slotAllocation: makeBiFoldInterLeafSlotAllocation(
+          id,
+          partId(`${id}-primary-free-upright`),
+          partId(`${id}-secondary-hinge-upright`),
+        ),
         collisionProofStatus: "component-cad-pending-installation-clearance-proof",
       }),
       guide: Object.freeze({
         trackSelection: "wolweiss-gsd082-3000kit",
-        trackInstallation: "top-frame-slot-8",
+        trackInstallation: "underside-slot-of-top-frame-rail",
         trackLengthMm: 3000,
+        headroomMm: input.topGuideHeadroomMm,
+        doorTopRunningClearanceMm:
+          input.topGuideHeadroomMm - biFoldGuideInstallationVariablesMm.gsd082SectionHeightMm,
         trackGeometryStatus: "supplier-step",
         shoeSelection: "printed-replaceable-guide-shoe",
         shoeMaterial: "petg-or-asa",
         shoeInstallation: "secondary-free-stile-two-m6-slot-nuts",
+        carriageRetention: "opposed-keeper-captive-in-gsd-channel",
         loadRole: "lateral-guidance-only",
         guideLineOffsetMm: 0,
+        rollerOffsetFromLeafMidplaneMm: 0,
         kinematicsStatus: "datum-driven-free-stile-track-constrained",
       }),
     });

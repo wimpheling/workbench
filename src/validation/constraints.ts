@@ -1,7 +1,7 @@
 import type { Anchor } from "../domain/anchors";
 import type { Point3, Vector3 } from "../domain/frames";
 import type { EnclosureModel } from "../domain/enclosureV2";
-import { guidedBiFoldPose } from "../domain/bifoldDoors";
+import { biFoldGuideInstallationVariablesMm, guidedBiFoldPose } from "../domain/bifoldDoors";
 import {
   centeredNominalBounds,
   transformedNominalBounds,
@@ -421,8 +421,12 @@ const biFoldDoorConstraintResults = (model: EnclosureModel): ConstraintResult[] 
       result(
         `BIFOLD-002.${expectedOpening.id}.leaf-frames`,
         opening?.leaves.length === 2 &&
-          Math.abs(opening.leaves[0].nominalWidthMm - opening.leaves[1].nominalWidthMm) <= EPS,
-        `${expectedOpening.id} must have two equal evaluated 3030 leaves`,
+          Math.abs(
+            opening.leaves[1].nominalWidthMm -
+              opening.leaves[0].nominalWidthMm -
+              opening.frameHinge.pivotOffsetFromLeafMidplaneMm,
+          ) <= EPS,
+        `${expectedOpening.id} secondary leaf must absorb the external GLR pivot eccentricity`,
         opening?.leaves.map((leaf) => leaf.id) ?? [expectedOpening.id],
       ),
       result(
@@ -436,26 +440,41 @@ const biFoldDoorConstraintResults = (model: EnclosureModel): ConstraintResult[] 
       result(
         `BIFOLD-004.${expectedOpening.id}.frame-hinge-selection`,
         opening?.frameHinge.hardwareSelection === "wolweiss-glr3030" &&
-          opening.frameHinge.geometryStatus === "supplier-step",
-        `${expectedOpening.id} frame-to-primary hinge must use the selected GLR3030 supplier CAD`,
+          opening.frameHinge.geometryStatus === "supplier-step" &&
+          opening.frameHinge.mountingSide === "external-visible" &&
+          opening.frameHinge.pivotOffsetFromLeafMidplaneMm > 0,
+        `${expectedOpening.id} frame-to-primary hinge must use externally mounted GLR3030 supplier CAD`,
         [expectedOpening.id],
       ),
       result(
         `BIFOLD-005.${expectedOpening.id}.interleaf-hinge-selection`,
         opening?.interLeafHinge.hardwareSelection === "elesa-cfg-30-30-sh-6-c33" &&
           opening.interLeafHinge.openingAngleDeg === 180 &&
-          opening.interLeafHinge.geometryStatus === "supplier-step",
-        `${expectedOpening.id} primary-to-secondary hinge must use the selected 180° CFG supplier CAD`,
+          opening.interLeafHinge.geometryStatus === "supplier-step" &&
+          opening.interLeafHinge.mountingSide === "inside-door-faces" &&
+          opening.interLeafHinge.pivotOffsetFromLeafMidplaneMm < 0 &&
+          Math.abs(
+            opening.interLeafHinge.pivotOffsetFromLeafMidplaneMm +
+              opening.leaves[0].frameFaceDepthMm / 2 +
+              opening.interLeafHinge.pivotToMountingPlaneMm,
+          ) <= EPS,
+        `${expectedOpening.id} primary-to-secondary hinge must use the selected 180° CFG supplier CAD on the inside door faces`,
         [expectedOpening.id],
       ),
       result(
         `BIFOLD-006.${expectedOpening.id}.top-guide-selection`,
         opening?.guide.trackSelection === "wolweiss-gsd082-3000kit" &&
-          opening.guide.trackInstallation === "top-frame-slot-8" &&
+          opening.guide.trackInstallation === "underside-slot-of-top-frame-rail" &&
           opening.guide.trackGeometryStatus === "supplier-step" &&
           opening.guide.shoeSelection === "printed-replaceable-guide-shoe" &&
-          opening.guide.loadRole === "lateral-guidance-only",
-        `${expectedOpening.id} requires a supplier-CAD GSD top track and a non-load-bearing printed guide shoe`,
+          opening.guide.carriageRetention === "opposed-keeper-captive-in-gsd-channel" &&
+          opening.guide.loadRole === "lateral-guidance-only" &&
+          opening.guide.doorTopRunningClearanceMm >=
+            biFoldGuideInstallationVariablesMm.doorTopRunningClearanceMm &&
+          opening.guide.headroomMm >=
+            biFoldGuideInstallationVariablesMm.gsd082SectionHeightMm +
+              biFoldGuideInstallationVariablesMm.doorTopRunningClearanceMm,
+        `${expectedOpening.id} requires a captive printed carriage in a GSD track snapped below the top rail, with a 3 mm running gap below its 24.75 mm section`,
         [expectedOpening.id],
       ),
       result(
@@ -468,6 +487,9 @@ const biFoldDoorConstraintResults = (model: EnclosureModel): ConstraintResult[] 
                 opening.leaves[0].nominalWidthMm,
                 opening.leaves[1].nominalWidthMm,
                 opening.guide.guideLineOffsetMm,
+                opening.frameHinge.pivotOffsetFromLeafMidplaneMm,
+                opening.interLeafHinge.pivotOffsetFromLeafMidplaneMm,
+                opening.guide.rollerOffsetFromLeafMidplaneMm,
                 angleDeg,
               );
               if (!Number.isFinite(pose.secondaryLeafRelativeAngleDeg)) return false;
@@ -478,6 +500,21 @@ const biFoldDoorConstraintResults = (model: EnclosureModel): ConstraintResult[] 
           }
         })(),
         `${expectedOpening.id} must remain guide-reachable through the full 0–90° sweep from its hinge and guide datums`,
+        [expectedOpening.id],
+      ),
+      result(
+        `BIFOLD-008.${expectedOpening.id}.interleaf-slot-allocation`,
+        (() => {
+          if (!opening) return false;
+          const allocation = opening.interLeafHinge.slotAllocation;
+          return (
+            allocation.status === "inside-hinge-separated-from-inset-panel-channel" &&
+            allocation.hingeFace !== allocation.panelFace &&
+            validateTSlotAllocationPlan(allocation.plan).length === 0 &&
+            allocation.plan.allocations.filter((entry) => entry.use === "hinge").length === 2
+          );
+        })(),
+        `${expectedOpening.id} inside CFG mounting slots must remain distinct from both inset-panel channels`,
         [expectedOpening.id],
       ),
     );

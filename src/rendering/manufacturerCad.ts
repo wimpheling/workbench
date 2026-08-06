@@ -1,4 +1,4 @@
-import { importSTEP, type Shape3D } from "replicad";
+import { importSTEP, Shell, Solid, type Shape3D } from "replicad";
 import { BufferGeometry, Float32BufferAttribute, Matrix4, Vector3 } from "three";
 import profile3030Step from "../../AST03003004.step?raw";
 import profile3060Step from "../../AST03006006.step?raw";
@@ -14,23 +14,28 @@ export type ManufacturerCad = Readonly<{
   profile3030StockLengthMm: number;
   profile3060Geometry: BufferGeometry;
   profile3060StockLengthMm: number;
-  /** Local Y is the hinge axis; its CAD barrel axis is at the local origin. */
-  glr3030LeafGeometry: BufferGeometry;
-  glr3030StationaryGeometry: BufferGeometry;
+  /** Local Y is the hinge axis; every supplier OPEN_SHELL remains intact. */
+  glr3030LeafGeometries: readonly BufferGeometry[];
+  glr3030StationaryGeometries: readonly BufferGeometry[];
+  glr3030PivotToMountingPlaneMm: number;
   cbr3030Geometry: BufferGeometry;
   cbr3060Geometry: BufferGeometry;
   /** Local X follows the downloaded 1 m GSD082 reference segment. */
   gsd082GuideGeometry: BufferGeometry;
   gsd082GuideCadReferenceLengthMm: number;
   /** Exact CAD for the two-leaf Elesa CFG.30/30 inter-leaf hinge. */
-  cfg3030PrimaryGeometry: BufferGeometry;
-  cfg3030SecondaryGeometry: BufferGeometry;
+  cfg3030PrimaryWingGeometry: BufferGeometry;
+  cfg3030PinGeometry: BufferGeometry;
+  cfg3030SecondaryWingGeometry: BufferGeometry;
+  /** CAD Y=-8 is the mounting plane and CAD Z is the pin axis. */
+  cfg3030PivotToMountingPlaneMm: number;
 }>;
 
 const profile3030StockLengthMm = 100;
 const profile3060StockLengthMm = 100;
 const gsd082GuideCadReferenceLengthMm = 1000;
-const glr3030BarrelRadiusMm = 8;
+const glr3030PivotToMountingPlaneMm = 8;
+const cfg3030PivotToMountingPlaneMm = 8;
 // Supplier STEP coordinates are arbitrary. These measured contact-plane datums
 // make both CBR assets use the same installation frame: X crosses the 26 mm
 // bracket width, +Y follows the horizontal leg, and +Z follows the upright leg.
@@ -83,97 +88,84 @@ const orientLongestAxisToX = (geometry: BufferGeometry): BufferGeometry => {
   return geometry;
 };
 
-const splitGlr3030AtPivot = (geometry: BufferGeometry) => {
-  const positions = geometry.getAttribute("position");
-  const indices = geometry.getIndex();
-  if (!indices) throw new Error("GLR3030 STEP mesh must be indexed");
-  const stationaryIndices: number[] = [];
-  const leafIndices: number[] = [];
-  for (let offset = 0; offset < indices.count; offset += 3) {
-    const triangle = [indices.getX(offset), indices.getX(offset + 1), indices.getX(offset + 2)];
-    const isBarrel = triangle.every(
-      (vertex) =>
-        Math.hypot(positions.getX(vertex), positions.getZ(vertex)) <= glr3030BarrelRadiusMm,
-    );
-    const centroidX = triangle.reduce((sum, vertex) => sum + positions.getX(vertex), 0) / 3;
-    const destination = !isBarrel && centroidX > 0 ? leafIndices : stationaryIndices;
-    destination.push(...triangle);
-  }
-  const leaf = geometry.clone();
-  leaf.setIndex(leafIndices);
-  leaf.computeBoundingBox();
-  const stationary = geometry.clone();
-  stationary.setIndex(stationaryIndices);
-  stationary.computeBoundingBox();
-  return { leaf, stationary };
+type ShapeWithShellTopology = Shape3D & {
+  _listTopo(topo: "shell"): Array<ConstructorParameters<typeof Shell>[0]>;
 };
 
 /**
- * Preserve supplier rigid bodies. Unlike a geometric half-space split, this
- * never cuts a pin or a hinge wing: connected triangle components are kept
- * intact and then assigned by their centre relative to the pivot datum.
+ * GLR3030 is supplied as seven open shells rather than solids. Keep those
+ * authored shell bodies intact: the single 500 mm shell is the moving leaf;
+ * the two end blocks, spacers, and pin caps form the stationary side.
  */
-const splitCfg3030RigidBodiesAtPivot = (geometry: BufferGeometry) => {
-  const positions = geometry.getAttribute("position");
-  const indices = geometry.getIndex();
-  if (!indices) throw new Error("CFG STEP mesh must be indexed");
-  const triangleCount = indices.count / 3;
-  const parent = Array.from({ length: triangleCount }, (_, index) => index);
-  const find = (index: number): number => {
-    if (parent[index] === index) return index;
-    parent[index] = find(parent[index]!);
-    return parent[index]!;
+const glr3030RigidBodies = (shape: Shape3D) => {
+  const [minimum, maximum] = shape.boundingBox.bounds;
+  const pivot = {
+    x: (minimum[0] + maximum[0]) / 2,
+    y: (minimum[1] + maximum[1]) / 2,
+    z: (minimum[2] + maximum[2]) / 2,
   };
-  const join = (left: number, right: number): void => {
-    const leftRoot = find(left);
-    const rightRoot = find(right);
-    if (leftRoot !== rightRoot) parent[rightRoot] = leftRoot;
+  const shells = (shape as ShapeWithShellTopology)
+    ._listTopo("shell")
+    .map((shell) => new Shell(shell));
+  if (shells.length !== 7)
+    throw new Error(`GLR3030 STEP must contain exactly seven open shells; got ${shells.length}`);
+  const classified = shells.map((shell) => {
+    const [shellMinimum, shellMaximum] = shell.boundingBox.bounds;
+    return { shell, supplierAxisExtentMm: shellMaximum[2] - shellMinimum[2] };
+  });
+  const moving = classified.filter((body) => body.supplierAxisExtentMm > 400);
+  if (moving.length !== 1) throw new Error("GLR3030 STEP must contain one long moving-leaf shell");
+  const orientFromSupplierDatum = (shell: Shell): BufferGeometry => {
+    const geometry = meshGeometry(shell, false);
+    geometry.translate(-pivot.x, -pivot.y, -pivot.z);
+    // Supplier Z becomes vertical local Y. This sign puts CAD Y=-8 on the
+    // profile mounting plane and the pin 8 mm farther outside the enclosure.
+    geometry.rotateX(Math.PI / 2);
+    geometry.computeBoundingBox();
+    return geometry;
   };
-  const firstTriangleByVertex = new Map<number, number>();
-  for (let offset = 0; offset < indices.count; offset += 3) {
-    const triangleIndex = offset / 3;
-    for (const vertex of [
-      indices.getX(offset),
-      indices.getX(offset + 1),
-      indices.getX(offset + 2),
-    ]) {
-      const first = firstTriangleByVertex.get(vertex);
-      if (first === undefined) firstTriangleByVertex.set(vertex, triangleIndex);
-      else join(first, triangleIndex);
-    }
-  }
-  const components = new Map<number, number[]>();
-  for (let triangle = 0; triangle < triangleCount; triangle += 1) {
-    const root = find(triangle);
-    const triangles = components.get(root) ?? [];
-    triangles.push(triangle);
-    components.set(root, triangles);
-  }
-  const primaryIndices: number[] = [];
-  const secondaryIndices: number[] = [];
-  for (const triangles of components.values()) {
-    let sumX = 0;
-    let vertexCount = 0;
-    for (const triangle of triangles)
-      for (let localIndex = 0; localIndex < 3; localIndex += 1) {
-        sumX += positions.getX(indices.getX(triangle * 3 + localIndex));
-        vertexCount += 1;
-      }
-    const target = sumX / vertexCount <= 0 ? primaryIndices : secondaryIndices;
-    for (const triangle of triangles)
-      target.push(
-        indices.getX(triangle * 3),
-        indices.getX(triangle * 3 + 1),
-        indices.getX(triangle * 3 + 2),
-      );
-  }
-  const primary = geometry.clone();
-  primary.setIndex(primaryIndices);
-  primary.computeBoundingBox();
-  const secondary = geometry.clone();
-  secondary.setIndex(secondaryIndices);
-  secondary.computeBoundingBox();
-  return { primary, secondary };
+  return {
+    leaf: moving.map((body) => orientFromSupplierDatum(body.shell)),
+    stationary: classified
+      .filter((body) => body !== moving[0])
+      .map((body) => orientFromSupplierDatum(body.shell)),
+  };
+};
+
+type ShapeWithSolidTopology = Shape3D & {
+  _listTopo(topo: "solid"): Array<ConstructorParameters<typeof Solid>[0]>;
+};
+
+/**
+ * Mesh the three supplier-authored solids independently. Replicad's compound
+ * mesh does not share vertices between adjacent B-rep faces, so triangle
+ * connectivity is not a rigid-body boundary and must never be used here.
+ */
+const cfg3030RigidBodies = (shape: Shape3D) => {
+  const solidShapes = (shape as ShapeWithSolidTopology)
+    ._listTopo("solid")
+    .map((solid) => new Solid(solid));
+  if (solidShapes.length !== 3)
+    throw new Error(`CFG STEP must contain exactly three solids; got ${solidShapes.length}`);
+
+  const classified = solidShapes.map((solid) => {
+    const [minimum, maximum] = solid.boundingBox.bounds;
+    return {
+      solid,
+      centreX: (minimum[0] + maximum[0]) / 2,
+      extentX: maximum[0] - minimum[0],
+    };
+  });
+  const pin = classified.find((body) => body.extentX < cfg3030PivotToMountingPlaneMm * 2);
+  const wings = classified.filter((body) => body !== pin).sort((a, b) => a.centreX - b.centreX);
+  if (!pin || wings.length !== 2 || wings[0]!.centreX >= 0 || wings[1]!.centreX <= 0)
+    throw new Error("CFG STEP solids do not match the calibrated left-wing/pin/right-wing layout");
+
+  return {
+    primaryWing: meshGeometry(wings[0]!.solid, false),
+    pin: meshGeometry(pin.solid, false),
+    secondaryWing: meshGeometry(wings[1]!.solid, false),
+  };
 };
 
 export const loadManufacturerCad = (): Promise<ManufacturerCad> => {
@@ -195,28 +187,25 @@ export const loadManufacturerCad = (): Promise<ManufacturerCad> => {
       // Supplier 3060 STEP also runs along Y. Render members conventionally along X.
       profile3060Geometry.rotateZ(Math.PI / 2);
       profile3060Geometry.computeBoundingBox();
-      const glr3030Geometry = meshGeometry(glr3030);
-      // Supplier GLR3030 STEP runs along Z. Door local Y is vertical.
-      glr3030Geometry.rotateX(-Math.PI / 2);
-      glr3030Geometry.computeBoundingBox();
-      const glr3030Parts = splitGlr3030AtPivot(glr3030Geometry);
+      const glr3030Parts = glr3030RigidBodies(glr3030);
       const gsd082GuideGeometry = orientLongestAxisToX(meshGeometry(gsd082));
-      const cfg3030Parts = splitCfg3030RigidBodiesAtPivot(
-        orientLongestAxisToX(meshGeometry(cfg3030)),
-      );
+      const cfg3030Parts = cfg3030RigidBodies(cfg3030);
       return Object.freeze({
         profile3030Geometry,
         profile3030StockLengthMm,
         profile3060Geometry,
         profile3060StockLengthMm,
-        glr3030LeafGeometry: glr3030Parts.leaf,
-        glr3030StationaryGeometry: glr3030Parts.stationary,
+        glr3030LeafGeometries: Object.freeze(glr3030Parts.leaf),
+        glr3030StationaryGeometries: Object.freeze(glr3030Parts.stationary),
+        glr3030PivotToMountingPlaneMm,
         cbr3030Geometry: cbr3030Geometry(cbr3030),
         cbr3060Geometry: cbr3060Geometry(cbr3060),
         gsd082GuideGeometry,
         gsd082GuideCadReferenceLengthMm,
-        cfg3030PrimaryGeometry: cfg3030Parts.primary,
-        cfg3030SecondaryGeometry: cfg3030Parts.secondary,
+        cfg3030PrimaryWingGeometry: cfg3030Parts.primaryWing,
+        cfg3030PinGeometry: cfg3030Parts.pin,
+        cfg3030SecondaryWingGeometry: cfg3030Parts.secondaryWing,
+        cfg3030PivotToMountingPlaneMm,
       });
     });
   }
