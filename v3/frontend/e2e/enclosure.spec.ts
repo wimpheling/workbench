@@ -1,0 +1,67 @@
+import { test, expect } from "@playwright/test";
+test("actual enclosure evaluates, moves doors, exports and rejects bad dimensions", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/");
+  await expect(page.getByRole("status")).toContainText("Quotation draft", {
+    timeout: 120000,
+  });
+  await expect(page.locator("canvas")).toBeVisible();
+  await page.screenshot({
+    path: "../artifacts/enclosure-desktop.png",
+    fullPage: true,
+  });
+  await page.getByRole("checkbox", { name: "Roof", exact: true }).uncheck();
+  await page.getByRole("checkbox", { name: "Clearances", exact: true }).check();
+  for (const label of [
+    "Front · left leaf",
+    "Front · right leaf",
+    "Left wall · rear bifold",
+    "Rear wall · right bifold",
+  ]) {
+    const response = page.waitForResponse(
+      (r) => r.url().endsWith("/api/evaluate") && r.request().method() === "POST",
+    );
+    await page.getByRole("slider", { name: label }).fill("0.6");
+    expect((await response).ok()).toBe(true);
+    await expect(page.getByRole("status")).toContainText("Quotation draft", {
+      timeout: 120000,
+    });
+  }
+  await page.getByRole("button", { name: "Supplier files", exact: true }).click();
+  await page.getByRole("spinbutton", { name: "Internal width", exact: true }).fill("");
+  await expect(page.getByRole("alert")).toContainText("Enter a valid number");
+  await expect(page.getByRole("button", { name: /Order list/ })).toBeDisabled();
+  await page.getByRole("spinbutton", { name: "Internal width", exact: true }).fill("1674");
+  await expect(page.getByRole("button", { name: /Order list/ })).toBeEnabled({
+    timeout: 120000,
+  });
+  const downloading = page.waitForEvent("download");
+  await page.getByRole("button", { name: /Order list/ }).click();
+  const download = await downloading;
+  expect(await download.failure()).toBeNull();
+  await download.saveAs("../artifacts/browser-order-list.csv");
+  const changed = page.waitForResponse((r) => r.url().endsWith("/api/evaluate"));
+  await page.getByRole("spinbutton", { name: "Internal width", exact: true }).fill("1700");
+  expect((await changed).ok()).toBe(true);
+  await expect(page.getByRole("status")).toContainText("Quotation draft", {
+    timeout: 120000,
+  });
+  const rejected = page.waitForResponse((r) => r.url().endsWith("/api/evaluate"));
+  await page.getByRole("spinbutton", { name: "Internal width", exact: true }).fill("100");
+  expect((await rejected).status()).toBe(422);
+  await expect(page.getByRole("alert")).toContainText("width_mm");
+  await expect(page.getByRole("button", { name: /Complete supplier pack/ })).toBeDisabled();
+  await page.getByRole("spinbutton", { name: "Internal width", exact: true }).fill("1674");
+  await expect(page.getByRole("status")).toContainText("Quotation draft", {
+    timeout: 120000,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: "../artifacts/enclosure-mobile.png",
+    fullPage: true,
+  });
+  expect(errors).toEqual([]);
+});
