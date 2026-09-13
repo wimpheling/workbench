@@ -41,6 +41,8 @@ describe("supplier STEP assets", () => {
     expect(cad.glr3030LeafGeometries[0]!.boundingBox!.min.x).toBeCloseTo(-8);
     expect(cad.glr3030LeafGeometries[0]!.boundingBox!.max.x).toBeCloseTo(28);
     expect(cad.gsd082GuideGeometry.getIndex()!.count).toBeGreaterThan(0);
+    expect(cad.gsd082TopFrameSlotDatumYmm).toBeCloseTo(12.375);
+    expect(cad.gsd082DoorRunningDatumYmm).toBeCloseTo(-12.375);
     expect(cad.cfg3030PrimaryWingGeometry.getIndex()!.count).toBeGreaterThan(0);
     expect(cad.cfg3030PinGeometry.getIndex()!.count).toBeGreaterThan(0);
     expect(cad.cfg3030SecondaryWingGeometry.getIndex()!.count).toBeGreaterThan(0);

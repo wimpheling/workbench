@@ -177,7 +177,7 @@ describe("production EnclosureV2 scene boundary", () => {
         accessFace: "left",
         parkingDirection: "toward-back",
         openingWidthMm: 300,
-        openingHeightMm: 766.25,
+        openingHeightMm: 769.25,
         frameHingeSelection: "wolweiss-glr3030",
         interLeafHingeSelection: "elesa-cfg-30-30-sh-6-c33",
         guideTrackSelection: "wolweiss-gsd082-3000kit",
@@ -188,7 +188,7 @@ describe("production EnclosureV2 scene boundary", () => {
         accessFace: "back",
         parkingDirection: "toward-right",
         openingWidthMm: 600,
-        openingHeightMm: 766.25,
+        openingHeightMm: 769.25,
         frameHingeSelection: "wolweiss-glr3030",
         interLeafHingeSelection: "elesa-cfg-30-30-sh-6-c33",
         guideTrackSelection: "wolweiss-gsd082-3000kit",
@@ -273,6 +273,17 @@ describe("production EnclosureV2 scene boundary", () => {
 
     expect(carriage.userData.retention).toBe("opposed-keeper-captive-in-gsd-channel");
     expect(keepers).toHaveLength(2);
+    expect(track.userData.mountingDatum).toBe("supplier-step-upper-face-to-top-rail-underside");
+    door.updateMatrixWorld(true);
+    const trackBounds = new Box3().setFromObject(track);
+    const doorTopRail = door.getObjectByName(`${opening.leaves[1].id}-top-rail`)!;
+    const doorTopBounds = new Box3().setFromObject(doorTopRail);
+    // This is an adapter-level proof using the actual supplier mesh, rather
+    // than merely the domain's nominal section height.
+    expect(trackBounds.max.y).toBeCloseTo(scene.model.innerClearDimensionsMm.heightMm);
+    expect(trackBounds.min.y - doorTopBounds.max.y).toBeCloseTo(
+      opening.guide.doorTopRunningClearanceMm,
+    );
 
     expect(primaryMesh.position.x).toBe(0);
     expect(primaryMesh.position.z).toBe(0);

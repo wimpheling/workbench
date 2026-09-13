@@ -45,7 +45,6 @@ import {
 } from "../validation/kinematics";
 import {
   biFoldDoorPose,
-  biFoldGuideInstallationVariablesMm,
   guidedBiFoldPose,
   type BiFoldDoorPose,
   type EvaluatedBiFoldDoorLeaf,
@@ -564,12 +563,10 @@ function createBiFoldGuide(
     // The STEP is centred for rendering; put its snap-foot datum into the
     // underside slot of the upper rail, not in the middle of door headroom.
     // The deliberate overlap is the physical slot engagement, not a gap.
-    // The supplier section fills the reserved headroom. Its lower face sits
-    // only at the calculated door-running clearance—not a full 30 mm above
-    // the door—while its upper face engages the top rail's underside slot.
-    opening.openingHeightMm +
-      opening.guide.doorTopRunningClearanceMm +
-      biFoldGuideInstallationVariablesMm.gsd082SectionHeightMm / 2,
+    // Place the *actual upper face* of the oriented supplier STEP against the
+    // top rail's underside datum. This must never be derived from the mesh
+    // centre: it is the physical slot engagement that retains the guide.
+    opening.openingHeightMm + opening.guide.headroomMm - manufacturerCad.gsd082TopFrameSlotDatumYmm,
     -opening.frameHinge.boundaryOffsetFromOpeningOriginMm / 2 + opening.guide.guideLineOffsetMm,
   );
   Object.assign(track.userData, {
@@ -580,6 +577,8 @@ function createBiFoldGuide(
     manufacturerCadAsset: "GSD082.3000KIT.step",
     loadRole: opening.guide.loadRole,
     mountingRelation: "snapped-into-downward-facing-top-rail-slot",
+    mountingDatum: "supplier-step-upper-face-to-top-rail-underside",
+    doorRunningDatum: "supplier-step-lower-face",
   });
   const shoe = new Group();
   shoe.name = `bi-fold-guide-shoe:${opening.id}`;

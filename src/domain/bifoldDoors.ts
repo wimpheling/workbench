@@ -539,8 +539,12 @@ export const evaluateBiFoldDoorPlan = (
       throw new Error(
         `topGuideHeadroomMm must reserve ${minimumGuideHeadroomMm} mm for the selected GSD082 track and door running clearance`,
       );
+    // Bottom perimeter clearance is retained. At the head, the guide stack
+    // replaces a generic gap: the GSD's upper mounting datum meets the
+    // underside of the top frame rail, then its section and running clearance
+    // determine the door top exactly.
     const openingHeightMm =
-      input.innerClearHeightMm - input.perimeterClearanceMm * 2 - input.topGuideHeadroomMm;
+      input.innerClearHeightMm - input.perimeterClearanceMm - input.topGuideHeadroomMm;
     const usableWidthMm =
       openingWidthMm - input.perimeterClearanceMm * 2 - input.meetingClearanceMm;
     if (openingHeightMm <= 0 || usableWidthMm <= 0)

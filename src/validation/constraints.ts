@@ -517,6 +517,25 @@ const biFoldDoorConstraintResults = (model: EnclosureModel): ConstraintResult[] 
         `${expectedOpening.id} inside CFG mounting slots must remain distinct from both inset-panel channels`,
         [expectedOpening.id],
       ),
+      result(
+        `BIFOLD-009.${expectedOpening.id}.guide-datum-chain`,
+        (() => {
+          if (!opening) return false;
+          const doorTopMm = opening.framePivotMm.y + opening.openingHeightMm;
+          const guideUndersideMm = doorTopMm + opening.guide.doorTopRunningClearanceMm;
+          const guideTopMountingDatumMm =
+            guideUndersideMm + biFoldGuideInstallationVariablesMm.gsd082SectionHeightMm;
+          return (
+            Math.abs(
+              opening.guide.doorTopRunningClearanceMm -
+                biFoldGuideInstallationVariablesMm.doorTopRunningClearanceMm,
+            ) <= EPS &&
+            Math.abs(guideTopMountingDatumMm - model.innerClearDimensionsMm.heightMm) <= EPS
+          );
+        })(),
+        `${expectedOpening.id} must form a continuous datum chain: top-frame underside → engaged GSD section → door running clearance → door top`,
+        [expectedOpening.id],
+      ),
     );
   }
   return out;

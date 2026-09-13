@@ -23,6 +23,9 @@ export type ManufacturerCad = Readonly<{
   /** Local X follows the downloaded 1 m GSD082 reference segment. */
   gsd082GuideGeometry: BufferGeometry;
   gsd082GuideCadReferenceLengthMm: number;
+  /** Local Y datums measured from the centred supplier STEP geometry. */
+  gsd082TopFrameSlotDatumYmm: number;
+  gsd082DoorRunningDatumYmm: number;
   /** Exact CAD for the two-leaf Elesa CFG.30/30 inter-leaf hinge. */
   cfg3030PrimaryWingGeometry: BufferGeometry;
   cfg3030PinGeometry: BufferGeometry;
@@ -189,6 +192,12 @@ export const loadManufacturerCad = (): Promise<ManufacturerCad> => {
       profile3060Geometry.computeBoundingBox();
       const glr3030Parts = glr3030RigidBodies(glr3030);
       const gsd082GuideGeometry = orientLongestAxisToX(meshGeometry(gsd082));
+      // Do not infer installation from the mesh centre. These are actual
+      // extrema of the oriented supplier geometry: the upper datum engages
+      // the downward-facing 3030 slot and the lower datum faces the door.
+      gsd082GuideGeometry.computeBoundingBox();
+      const gsd082TopFrameSlotDatumYmm = gsd082GuideGeometry.boundingBox!.max.y;
+      const gsd082DoorRunningDatumYmm = gsd082GuideGeometry.boundingBox!.min.y;
       const cfg3030Parts = cfg3030RigidBodies(cfg3030);
       return Object.freeze({
         profile3030Geometry,
@@ -202,6 +211,8 @@ export const loadManufacturerCad = (): Promise<ManufacturerCad> => {
         cbr3060Geometry: cbr3060Geometry(cbr3060),
         gsd082GuideGeometry,
         gsd082GuideCadReferenceLengthMm,
+        gsd082TopFrameSlotDatumYmm,
+        gsd082DoorRunningDatumYmm,
         cfg3030PrimaryWingGeometry: cfg3030Parts.primaryWing,
         cfg3030PinGeometry: cfg3030Parts.pin,
         cfg3030SecondaryWingGeometry: cfg3030Parts.secondaryWing,

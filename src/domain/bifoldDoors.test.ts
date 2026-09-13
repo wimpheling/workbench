@@ -196,7 +196,7 @@ describe("evaluated bi-fold door plan", () => {
     expect(left).toMatchObject({
       id: "left-rear-access",
       openingWidthMm: 824.5,
-      openingHeightMm: 704,
+      openingHeightMm: 707,
       framePivotMm: { x: -30, y: 3, z: -1679 },
       outwardAngleSign: -1,
       parkingDirection: "toward-back",
@@ -204,7 +204,7 @@ describe("evaluated bi-fold door plan", () => {
     expect(back).toMatchObject({
       id: "back-right-access",
       openingWidthMm: 837,
-      openingHeightMm: 704,
+      openingHeightMm: 707,
       framePivotMm: { x: 1704, y: 3, z: -1679 },
       outwardAngleSign: -1,
       parkingDirection: "toward-right",

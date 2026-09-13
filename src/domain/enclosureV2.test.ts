@@ -129,7 +129,7 @@ describe("EnclosureV2 clear-volume design", () => {
     const biFoldConstraints = validateModel(model).filter((constraint) =>
       constraint.id.startsWith("BIFOLD-"),
     );
-    expect(biFoldConstraints).toHaveLength(17);
+    expect(biFoldConstraints).toHaveLength(19);
     expect(biFoldConstraints.every((constraint) => constraint.passed)).toBe(true);
   });
 
@@ -187,6 +187,29 @@ describe("EnclosureV2 clear-volume design", () => {
         terminatingMember?.profile === "profile:aluminium-3060" ? 1800 : 900,
       );
     }
+  });
+
+  it("rejects a bi-fold guide that is not joined continuously to the top-frame datum", () => {
+    const model = makeEnclosureV2(historicalDimensions);
+    const [left, back] = model.biFoldDoors.openings;
+    const invalid = {
+      ...model,
+      biFoldDoors: {
+        ...model.biFoldDoors,
+        openings: [
+          {
+            ...left!,
+            guide: { ...left!.guide, doorTopRunningClearanceMm: 4 },
+          },
+          back!,
+        ],
+      },
+    };
+    expect(
+      validateModel(invalid).find(
+        (constraint) => constraint.id === "BIFOLD-009.left-rear-access.guide-datum-chain",
+      ),
+    ).toMatchObject({ passed: false, severity: "error" });
   });
 
   it("reports unknown structural connection members and invalid butt parameters", () => {
