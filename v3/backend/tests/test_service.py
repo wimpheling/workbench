@@ -28,6 +28,7 @@ def test_defaults_and_real_geometry(client, evaluation):
     assert client.get("/api/health").json()["status"] == "ok"
     assert client.get("/api/defaults").json()["width_mm"] == 1674
     assert evaluation["model"]["revision"] == evaluation["report"]["revision"]
+    assert evaluation["mesh_pose"] == "closed"
     assert len(evaluation["meshes"]) == len(evaluation["model"]["parts"])
     for mesh in evaluation["meshes"]:
         assert len(mesh["positions"]) % 3 == 0
@@ -72,17 +73,18 @@ def test_front_astragal_sequence_is_enforced_at_http_boundary(client, endpoint):
     assert "right" in response.json()["detail"].lower()
 
 
-def test_pose_changes_meshes_without_changing_design_or_report(client, evaluation):
+def test_pose_changes_keep_canonical_meshes_without_changing_design_or_report(client, evaluation):
     response = client.post(
         "/api/evaluate", json={"pose": {"front-left": 0.5, "front-right": 1, "left-rear": 0.5}}
     )
     assert response.status_code == 200
     opened = response.json()
+    assert opened["mesh_pose"] == "closed"
     assert opened["model"]["revision"] == evaluation["model"]["revision"]
     assert opened["report"] == evaluation["report"]
     before = {m["id"]: m["positions"] for m in evaluation["meshes"]}
     after = {m["id"]: m["positions"] for m in opened["meshes"]}
-    assert any(before[id] != after[id] for id in before if id.startswith("front-left"))
+    assert after == before
     assert before["panel-roof"] == after["panel-roof"]
 
 

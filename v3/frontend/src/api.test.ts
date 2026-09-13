@@ -50,8 +50,8 @@ describe("revision safety", () => {
   it("is insensitive to parameter insertion order", () => {
     expect(signature({ a: 1, b: 2 }, { x: 0 })).toBe(signature({ b: 2, a: 1 }, { x: 0 }));
   });
-  it("distinguishes pose changes", () => {
-    expect(signature({ a: 1 }, { x: 0 })).not.toBe(signature({ a: 1 }, { x: 1 }));
+  it("does not create a design revision for pose changes", () => {
+    expect(signature({ a: 1 }, { x: 0 })).toBe(signature({ a: 1 }, { x: 1 }));
   });
   it("permits quotation exports of evaluated incomplete designs", () => {
     expect(canExport(result, false, "current", "current")).toBe(true);

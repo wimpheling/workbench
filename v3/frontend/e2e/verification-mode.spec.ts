@@ -70,6 +70,9 @@ test("automatic switch preserves live preview, manual evidence, and export gatin
   await page.getByRole("slider", { name: "Left wall · rear bifold" }).fill("0.5");
   await expect(page.getByRole("status")).toContainText("Preview only");
   expect(calls.filter((c) => c === "evaluate")).toHaveLength(verifiedCount);
+  await page.getByRole("button", { name: "Play opening sequence" }).click();
+  await page.waitForTimeout(200);
+  expect(calls.filter((c) => c === "evaluate")).toHaveLength(verifiedCount);
   await page.getByRole("button", { name: "Supplier files", exact: true }).click();
   await expect(page.getByRole("button", { name: /Order list/ })).toBeDisabled();
   await page.getByRole("button", { name: "Verify now", exact: true }).click();

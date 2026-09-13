@@ -103,13 +103,16 @@ def defaults():
 def evaluate(request: EvaluationRequest):
     with kernel_lock:
         model, shapes, report = evaluated(request)
-        posed_shapes = build_shapes(model, request.pose) if any(request.pose.values()) else shapes
         return JSONResponse(
             content={
                 "model": model,
                 "report": report,
                 "pose": request.pose,
-                "meshes": tessellate(posed_shapes),
+                "mesh_pose": "closed",
+                # Meshes stay at the canonical closed pose. Door metadata in
+                # model.parts/model.doors is the authoritative transform
+                # description consumed by the browser on animation frames.
+                "meshes": tessellate(shapes),
             },
             headers={"X-Design-Revision": model["revision"], "X-Verification-State": "evaluated"},
         )
@@ -120,13 +123,13 @@ def preview(request: EvaluationRequest):
     """Build current geometry without running or implying engineering verification."""
     with kernel_lock:
         model, shapes, _ = evaluated(request, verification=False)
-        posed_shapes = build_shapes(model, request.pose) if any(request.pose.values()) else shapes
         return JSONResponse(
             content={
                 "model": model,
                 "report": None,
                 "pose": request.pose,
-                "meshes": tessellate(posed_shapes),
+                "mesh_pose": "closed",
+                "meshes": tessellate(shapes),
             },
             headers={"X-Design-Revision": model["revision"], "X-Verification-State": "preview"},
         )

@@ -64,6 +64,14 @@ The first acceptance run below covered solid clearance and kinematics but missed
 
 ## Current acceptance evidence — containment revision
 
+### Live door preview revision — 2026-09-13
+
+- [x] Canonical closed meshes are returned by `/api/evaluate` and `/api/preview`; pose changes no longer tessellate or transfer a second full posed assembly.
+- [x] SolidJS/Three applies smooth client-side rigid transforms from backend `model.doors` and `motion_leaf` metadata for both front swing leaves, both bifold leaves and both moving carriages.
+- [x] Front opening/closing order remains explicit in the playback sequence: right fully opens before left; left fully closes before right. Playback cancels on parameter/material edits, verification mode changes, manual verification and component teardown.
+- [x] Frontend transform fixtures match `core.pose_model` endpoint positions for all four doors; local slider/playback frames do not call `/api/evaluate` or `/api/preview`, including with Automatic verification disabled.
+- [x] Pose-only viewer state does not change the design revision or hide current report evidence; parameter changes still invalidate evidence and preserve unverified-preview export protection.
+
 - Model revision **`661c38797236d6cd`**: **1,085 pass, 0 fail, 55 unknown**. Physical release remains blocked by unresolved evidence.
 - **76 backend tests**, **9 frontend unit tests** and **3 browser tests** pass. The actual production browser flow covers door order, all four controls, preview-only edits, manual verification, stale-export protection, downloads, invalid-input recovery and desktop/mobile layouts. Two of those browser scenarios exercise cancellation/queued-request races with controlled responses.
 - Python lint/format, frontend type check/build and root check/build pass. The original application has **196 passing tests**, and its existing uncommitted diff was compared byte-for-byte and preserved.
