@@ -1,5 +1,6 @@
 import { createSignal, createMemo, createEffect, onMount, For, Show, onCleanup } from "solid-js";
 import Viewer from "./Viewer";
+import { playbackPhases } from "./playback";
 import {
   type Evaluation,
   type Parameters,
@@ -167,53 +168,10 @@ export default function App() {
     stopPlayback();
     const closed = Object.fromEntries(doors.map(([id]) => [id, 0]));
     const opened = Object.fromEntries(doors.map(([id]) => [id, 1]));
-    const phases: {
-      ids: string[];
-      from: Record<string, number>;
-      to: Record<string, number>;
-      duration: number;
-    }[] =
-      direction === "opening"
-        ? [
-            {
-              ids: ["front-right"],
-              from: closed,
-              to: { ...closed, "front-right": 1 },
-              duration: 800,
-            },
-            {
-              ids: ["front-left"],
-              from: { ...closed, "front-right": 1 },
-              to: { ...opened, "front-left": 1 },
-              duration: 800,
-            },
-            {
-              ids: ["left-rear", "back-right"],
-              from: { ...opened, "front-left": 1 },
-              to: opened,
-              duration: 900,
-            },
-          ]
-        : [
-            {
-              ids: ["left-rear", "back-right"],
-              from: opened,
-              to: { ...opened, "left-rear": 0, "back-right": 0 },
-              duration: 900,
-            },
-            {
-              ids: ["front-left"],
-              from: { ...opened, "left-rear": 0, "back-right": 0 },
-              to: { ...closed, "front-right": 1 },
-              duration: 800,
-            },
-            {
-              ids: ["front-right"],
-              from: { ...closed, "front-right": 1 },
-              to: closed,
-              duration: 800,
-            },
-          ];
+    const phases = playbackPhases(
+      direction,
+      doors.map(([id]) => id),
+    );
     setPlaying(direction);
     let phase = 0;
     setPose({ ...(direction === "opening" ? closed : opened) });

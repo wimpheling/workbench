@@ -21,7 +21,6 @@ npm run dev
 npm test
 npm run check
 npm run build
-npm run validate:workflows
 ```
 
 The quality suite currently covers 31 test files / 154 tests. Build output is `dist/`.
@@ -33,10 +32,6 @@ The manufacturing report currently covers the aluminium frame and extrusion cut 
 Frame3DD is an optional external structural sidecar. The code can serialize inputs, parse saved results, and return an explicit `unavailable` diagnostic; Frame3DD is not installed or configured locally and is never required for rendering, ordinary validation, or exports. It is simplified screening, not engineering certification.
 
 Known non-blocking build warnings include Replicad `fs`/`path`/`crypto` browser externalization and a large WASM/JavaScript bundle.
-
-## GitHub Pages
-
-`.github/workflows/pages.yml` deploys `dist/` from `main` (or manual dispatch) using GitHub Actions. Run `npm run validate:workflows` locally to check its contract. Repository Pages settings, environment approval, and the remote deployment URL require authenticated GitHub access and cannot be verified from this checkout.
 
 See `CAD_ROADMAP.md` for the audited implemented scope, remaining plan, and explicit blockers.
 See `DOOR_CLEARANCES.md` for the hardware-first checklist used to replace the
