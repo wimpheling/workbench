@@ -3,7 +3,7 @@ import math
 import cadquery as cq
 import pytest
 from enclosure.core import build_model, pose_model
-from enclosure.verification import check_solid_pair, swept_box, verify
+from enclosure.verification import check_barrier_region, check_solid_pair, swept_box, verify
 
 
 def test_zero_clearance_does_not_authorize_penetration():
@@ -42,7 +42,10 @@ def test_independent_bifold_bounds_enclose_core_poses():
             original = {p["id"]: p for p in model["parts"]}
             bounds = {id: swept_box(original[id], door, lower, upper) for id in door["part_ids"]}
             for f in [lower, (lower + upper) / 2, upper]:
-                posed = pose_model(model, {door["id"]: f})
+                pose = {door["id"]: f}
+                if door["id"] == "front-left":
+                    pose["front-right"] = 1.0
+                posed = pose_model(model, pose)
                 for p in posed["parts"]:
                     if p["id"] not in bounds:
                         continue
@@ -237,3 +240,130 @@ def test_actual_mating_face_area_is_measured(monkeypatch):
     report = verify(model, shapes)
     check = next(c for c in report["checks"] if c["id"] == "joint.contact.ab")
     assert check["status"] == "pass" and check["measured"] == pytest.approx(100)
+
+
+def test_barrier_coverage_rejects_shortened_displaced_and_missing_stock():
+    region = {
+        "normal_axis": 1,
+        "plane_mm": 0.0,
+        "min_mm": [-4.0, -4.0],
+        "max_mm": [4.0, 4.0],
+        "part_ids": ["seal"],
+    }
+    full = cq.Workplane("XY").box(12, 4, 12).val()
+    assert check_barrier_region({"seal": full}, region, 1.0, 0.5)["status"] == "pass"
+    assert (
+        check_barrier_region({"seal": full.translate((1, 0, 0))}, region, 1.0, 0.5)["status"]
+        == "fail"
+    )
+    assert (
+        check_barrier_region({"seal": cq.Workplane("XY").box(10, 4, 12).val()}, region, 1.0, 0.5)[
+            "status"
+        ]
+        == "fail"
+    )
+    assert check_barrier_region({}, region, 1.0, 0.5)["status"] == "fail"
+
+
+def test_barrier_external_bounds_cannot_hide_a_hole():
+    region = {
+        "normal_axis": 2,
+        "plane_mm": 0.0,
+        "min_mm": [-4.0, -4.0],
+        "max_mm": [4.0, 4.0],
+        "part_ids": ["seal"],
+    }
+    stock = cq.Workplane("XY").box(10, 10, 4).val()
+    perforated = stock.cut(cq.Solid.makeCylinder(1, 8, cq.Vector(0, 0, -4)))
+    result = check_barrier_region({"seal": perforated}, region)
+    assert result["status"] == "fail"
+    assert result["measured"] == pytest.approx(math.pi, rel=1e-5)
+
+
+def test_removed_containment_obligation_is_failure(fast_verify):
+    model = build_model()
+    missing = model["containment"].pop(0)["id"]
+    report = fast_verify(model)
+    assert (
+        next(c for c in report["checks"] if c["id"] == f"containment.obligation.{missing}")[
+            "status"
+        ]
+        == "fail"
+    )
+
+
+def test_moving_target_with_displaced_seal_cannot_hide_missing_coverage(fast_verify):
+    model = build_model()
+    entry = next(e for e in model["containment"] if e.get("coverage_regions"))
+    entry["coverage_regions"][0]["plane_mm"] += 50
+    report = fast_verify(model)
+    assert (
+        next(c for c in report["checks"] if c["id"] == f"containment.obligation.{entry['id']}")[
+            "status"
+        ]
+        == "fail"
+    )
+
+
+def test_actual_infill_regions_expand_when_panel_shrinks():
+    from enclosure.verification import actual_infill_gap_regions
+
+    model = build_model()
+    before = dict(actual_infill_gap_regions(model))
+    pane = next(p for p in model["parts"] if p["id"] == "front-left-a-infill")
+    pane["size"][0] -= 20
+    after = dict(actual_infill_gap_regions(model))
+    for id in ("front-left-a.0", "front-left-a.1"):
+        assert after[id]["max_mm"][0] - after[id]["min_mm"][0] == pytest.approx(
+            before[id]["max_mm"][0] - before[id]["min_mm"][0] + 10
+        )
+
+
+@pytest.fixture
+def geometry_only_verify(monkeypatch):
+    monkeypatch.setattr(
+        "enclosure.verification._motion_check",
+        lambda *args: dict(
+            id="motion.continuous",
+            status="unknown",
+            category="motion",
+            message="Motion is outside this targeted geometry test",
+            references=[],
+        ),
+    )
+    return verify
+
+
+def test_nominal_baffle_blocks_every_direct_segment_and_retains_free_path(geometry_only_verify):
+    report = geometry_only_verify(build_model())
+    for id in (
+        "airflow.direct_path.makeup-air-inlet",
+        "airflow.minimum_path.makeup-air-inlet",
+        "airflow.channels.makeup-air-inlet",
+        "containment.collar.roof-hose-interface",
+    ):
+        check = next(c for c in report["checks"] if c["id"] == id)
+        assert check["status"] == "pass", check
+
+
+def test_shortened_internal_baffle_opens_direct_path(geometry_only_verify):
+    model = build_model()
+    part = next(p for p in model["parts"] if p["id"] == "air-inlet-baffle-internal-turn")
+    part["size"][2] = 10
+    report = geometry_only_verify(model)
+    assert (
+        next(c for c in report["checks"] if c["id"] == "airflow.direct_path.makeup-air-inlet")[
+            "status"
+        ]
+        == "fail"
+    )
+
+
+def test_large_hose_does_not_silently_outgrow_inlet(geometry_only_verify):
+    report = geometry_only_verify(build_model({"hose_diameter_mm": 200}))
+    assert (
+        next(c for c in report["checks"] if c["id"] == "airflow.minimum_path.makeup-air-inlet")[
+            "status"
+        ]
+        == "fail"
+    )

@@ -701,3 +701,33 @@ footer span {
   color: #436342;
   font-size: 11px;
 }
+
+.verification-controls {
+  border-bottom: 1px solid #dbe3d5;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.verification-controls label {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.verification-controls input {
+  accent-color: #235443;
+}
+.verification-controls button {
+  background: #235443;
+  color: white;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+.verification-controls p {
+  margin: 0;
+}

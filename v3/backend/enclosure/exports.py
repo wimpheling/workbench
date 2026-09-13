@@ -79,6 +79,7 @@ def drawing_groups(model: dict) -> list[dict]:
                 part.get("edge_finish"),
                 part.get("end_treatment"),
                 part.get("machining"),
+                part.get("cutouts"),
                 part.get("geometry_fidelity"),
             ],
             sort_keys=True,
@@ -131,6 +132,11 @@ def supplier_csv(model: dict, report: dict, categories: set[str] | None = None) 
             "edge_or_end_finish",
             "machining",
             "geometry_fidelity",
+            "nominal_envelope_x_mm",
+            "nominal_envelope_y_mm",
+            "nominal_envelope_z_mm",
+            "seal_specification",
+            "cutouts",
         ]
     )
     for part in physical_parts(model):
@@ -152,6 +158,9 @@ def supplier_csv(model: dict, report: dict, categories: set[str] | None = None) 
             part.get("edge_finish", part.get("end_treatment", "Supplier confirmation required")),
             json.dumps(part.get("machining", part.get("holes", [])), ensure_ascii=False),
             part.get("geometry_fidelity", "unknown"),
+            *part.get("size", ["", "", ""]),
+            json.dumps(part.get("seal_spec", {}), ensure_ascii=False),
+            json.dumps(part.get("cutouts", []), ensure_ascii=False),
         ]
         writer.writerow([_safe_cell(v) for v in row])
     return out.getvalue().encode("utf-8-sig")
@@ -194,6 +203,16 @@ class PartDrawing(Flowable):
             c.circle(x + hx * scale, y + hy * scale, d * scale / 2)
             c.drawString(
                 x, y + h * scale + 13, f"Hole: diameter {d:g} mm; centre ({hx:g}, {hy:g}) mm"
+            )
+        for cutout in p.get("cutouts", []):
+            if cutout.get("kind") != "rectangle":
+                raise ValueError(f"Unsupported supplier cutout: {cutout.get('kind')}")
+            cx, cy, cw, ch = (cutout[key] for key in ("x_mm", "y_mm", "width_mm", "height_mm"))
+            c.rect(x + cx * scale, y + cy * scale, cw * scale, ch * scale)
+            c.drawString(
+                x,
+                y + h * scale + 13,
+                f"Cutout {cw:g} x {ch:g} mm; lower-left ({cx:g}, {cy:g}) mm",
             )
         c.drawString(
             x,
@@ -316,6 +335,11 @@ def supplier_pdf(model: dict, report: dict) -> bytes:
     for line in assembly_notes(model).splitlines():
         if line.strip():
             story.append(para(line))
+    if model.get("containment"):
+        story.extend([PageBreak(), para("Seals and airflow / Juntas e ventilação", "Heading1")])
+        for line in containment_notes(model).splitlines():
+            if line.strip():
+                story.append(para(line))
     for view in ("front", "left", "back", "top"):
         story.extend(
             [
@@ -339,18 +363,21 @@ def supplier_pdf(model: dict, report: dict) -> bytes:
                 ),
             ]
         )
-        rows = [[para("Part"), para("Product reference"), para("Qty")]]
+        rows = [
+            [para("Part"), para("Product reference"), para("Nominal envelope, mm"), para("Qty")]
+        ]
         rows.extend(
             [
                 [
                     para(part["id"]),
                     para(part.get("product_code") or "Selection pending"),
+                    para(" × ".join(f"{v:g}" for v in part["size"])),
                     para(part.get("quantity", 1)),
                 ]
                 for part in hardware
             ]
         )
-        table = Table(rows, colWidths=[285, 175, 40], repeatRows=1)
+        table = Table(rows, colWidths=[230, 130, 115, 25], repeatRows=1)
         table.setStyle(
             TableStyle(
                 [
@@ -405,7 +432,11 @@ def supplier_pdf(model: dict, report: dict) -> bytes:
             story.append(
                 para(f"Hole schedule (local origin lower-left): {json.dumps(part['holes'])}")
             )
-        elif part["category"] == "glass":
+        if part.get("cutouts"):
+            story.append(
+                para(f"Cutout schedule (local origin lower-left): {json.dumps(part['cutouts'])}")
+            )
+        if part["category"] == "glass" and not part.get("holes") and not part.get("cutouts"):
             story.append(
                 para(
                     "No holes or cutouts are currently declared. Supplier must confirm retention, edge finish and any required processing before tempering; do not treat absence of holes as an approved mounting design."
@@ -449,6 +480,15 @@ def panel_dxf(model: dict, report: dict) -> bytes:
                 hole["diameter_mm"] / 2,
                 dxfattribs={"layer": "HOLES"},
             )
+        for cutout in part.get("cutouts", []):
+            if cutout.get("kind") != "rectangle":
+                raise ValueError(f"Unsupported supplier cutout: {cutout.get('kind')}")
+            cx, cy, cw, ch = (cutout[key] for key in ("x_mm", "y_mm", "width_mm", "height_mm"))
+            msp.add_lwpolyline(
+                [(x + cx, cy), (x + cx + cw, cy), (x + cx + cw, cy + ch), (x + cx, cy + ch)],
+                close=True,
+                dxfattribs={"layer": "HOLES"},
+            )
         msp.add_text(
             f"{part['id']} qty={part.get('quantity', 1)} {w:g} x {h:g} x {t:g} mm",
             dxfattribs={"height": 10, "layer": "ANNOTATIONS"},
@@ -484,9 +524,40 @@ def assembly_notes(model: dict) -> str:
             "6. Verify closed perimeter and meeting gaps, then traverse each front and bifold door slowly. Confirm guide retention and usable access.",
             "7. Fit roof panels and hose support. Jog the actual machine through its permitted travel while observing cable and hose clearance.",
             "8. Record frame squareness, measured gaps and completed installation checks against this design revision.",
+            "9. For the containment revision, follow the seal/airflow specification and front-door sequence. Confirm all rubber corner joints, membrane folds, hose collar and base-to-table seal; verify inward airflow with extraction operating and repeat at representative filter loading.",
             "This guidance does not specify unconfirmed drill patterns, tightening torques, glass processing or supplier-specific installation sequences.",
         ]
     )
+
+
+def containment_notes(model: dict) -> str:
+    if not model.get("containment"):
+        return "No containment specification is declared in this model."
+    sequence = model.get("door_sequence", {})
+    lines = [
+        f"SEAL AND AIRFLOW DESIGN PROPOSAL - revision {model['revision']} - millimetres",
+        "Nominal barriers are not a dust-performance certification. Use verification.json for measured coverage and unresolved evidence.",
+        "Close front leaves: "
+        + " then ".join(sequence.get("closing", []))
+        + ". Open: "
+        + " then ".join(sequence.get("opening", []))
+        + ".",
+        "Supplier must select rubber grade/profile, free section, installed compression, corner treatment, clamping/adhesive and fixing pitch. Continuous glass-compatible packing and setting support must be confirmed before tempering. Dimensions in hardware.csv are candidate installed envelopes, not approved catalogue sizes.",
+        "Bifold meeting covers need a supplier-confirmed flexible fold, clamp layout and endurance allowance; their displayed rigid pose is not a simulation of rubber deformation.",
+        "The bifold guide sits above the header and connects through an offset support arm outside the seals. Request a finished supplier-provided adapter assembly, its bearings, fasteners and load/stiffness confirmation; the nominal stock envelopes do not specify customer metalworking.",
+        "Seal the base against a flat continuous supporting table. The tabletop, its load capacity and cable/service penetrations need confirmation.",
+        "Retain the roof collar and clamp the independently supported hose. Confirm bend radius and clearance through full machine travel.",
+        "Use passive makeup air and extraction at the dust shoe, with vacuum exhaust outside the enclosure. Keep the baffled inlet clear and accessible for cleaning. No inlet fan or extractor performance is assumed.",
+    ]
+    for entry in model["containment"]:
+        if entry.get("kind") == "baffled-air-inlet":
+            lines.append(
+                f"Inlet {entry['id']}: opening {entry.get('opening_size_mm')} mm; nominal opening area {entry.get('opening_area_mm2')} mm²; declared throat area {entry.get('throat_area_mm2')} mm². These geometric areas do not establish available flow or pressure loss."
+            )
+    lines.append(
+        "Commissioning: measure extraction flow with the actual shoe, hose and filter; check inward leakage and particle escape at closed seams, confirm machine cooling, and inspect seals after repeated door cycles. No required airflow is claimed without the selected extractor and installation evidence."
+    )
+    return "\n".join(lines)
 
 
 def export_file(kind: str, model: dict, report: dict, shapes: dict) -> tuple[bytes, str, str]:
@@ -525,6 +596,7 @@ def export_file(kind: str, model: dict, report: dict, shapes: dict) -> tuple[byt
         archive.writestr("glass-panels.csv", supplier_csv(model, report, {"glass"}))
         archive.writestr("wood-panels.csv", supplier_csv(model, report, {"panel"}))
         archive.writestr("hardware.csv", supplier_csv(model, report, {"hardware"}))
+        archive.writestr("containment-and-airflow.txt", containment_notes(model))
         archive.writestr("supplier-drawings.pdf", supplier_pdf(model, report))
         archive.writestr("panel-outlines.dxf", panel_dxf(model, report))
         archive.writestr("assembly.step", assembly_step(model, shapes))

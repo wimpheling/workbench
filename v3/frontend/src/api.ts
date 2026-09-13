@@ -41,7 +41,7 @@ export interface Evaluation {
     summary: Record<string, number>;
     coverage: Record<string, unknown>;
     order_ready: boolean;
-  };
+  } | null;
   meshes: { id: string; positions: number[]; indices: number[] }[];
 }
 export async function readResponse<T>(response: Response): Promise<T> {
@@ -70,15 +70,21 @@ export function canExport(
   evaluated: string,
 ): boolean {
   return (
-    !!result &&
+    !!result?.report &&
     !pending &&
     current === evaluated &&
     result.model.revision === result.report.revision
   );
 }
-export async function evaluate(parameters: Parameters, pose: Pose): Promise<Evaluation> {
+export async function evaluate(
+  parameters: Parameters,
+  pose: Pose,
+  verify = true,
+  signal?: AbortSignal,
+): Promise<Evaluation> {
   return readResponse(
-    await fetch("/api/evaluate", {
+    await fetch(verify ? "/api/evaluate" : "/api/preview", {
+      signal,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ parameters, pose }),

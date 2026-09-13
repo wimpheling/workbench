@@ -42,20 +42,30 @@ class EvaluationRequest(BaseModel):
 
 
 @lru_cache(maxsize=3)
-def _evaluate_cached(parameter_json: str):
+def _geometry_cached(parameter_json: str):
     model = build_model(json.loads(parameter_json))
     shapes = build_shapes(model)
+    return model, shapes
+
+
+@lru_cache(maxsize=3)
+def _evaluate_cached(parameter_json: str):
+    model, shapes = _geometry_cached(parameter_json)
     report = verify(model, shapes)
     return model, shapes, report
 
 
-def evaluated(request: EvaluationRequest):
+def evaluated(request: EvaluationRequest, *, verification: bool = True):
     try:
         # Validate and normalize before cache lookup; unknown parameters fail explicitly.
         candidate = build_model(request.parameters)
         pose_model(candidate, request.pose)
         key = json.dumps(candidate["parameters"], sort_keys=True, allow_nan=False)
-        model, shapes, report = _evaluate_cached(key)
+        if verification:
+            model, shapes, report = _evaluate_cached(key)
+        else:
+            model, shapes = _geometry_cached(key)
+            report = None
     except (ValueError, TypeError, KeyError, OverflowError) as exc:
         raise HTTPException(422, detail=str(exc)) from exc
     if request.expected_revision is not None and request.expected_revision != model["revision"]:
@@ -94,12 +104,32 @@ def evaluate(request: EvaluationRequest):
     with kernel_lock:
         model, shapes, report = evaluated(request)
         posed_shapes = build_shapes(model, request.pose) if any(request.pose.values()) else shapes
-        return {
-            "model": model,
-            "report": report,
-            "pose": request.pose,
-            "meshes": tessellate(posed_shapes),
-        }
+        return JSONResponse(
+            content={
+                "model": model,
+                "report": report,
+                "pose": request.pose,
+                "meshes": tessellate(posed_shapes),
+            },
+            headers={"X-Design-Revision": model["revision"], "X-Verification-State": "evaluated"},
+        )
+
+
+@app.post("/api/preview")
+def preview(request: EvaluationRequest):
+    """Build current geometry without running or implying engineering verification."""
+    with kernel_lock:
+        model, shapes, _ = evaluated(request, verification=False)
+        posed_shapes = build_shapes(model, request.pose) if any(request.pose.values()) else shapes
+        return JSONResponse(
+            content={
+                "model": model,
+                "report": None,
+                "pose": request.pose,
+                "meshes": tessellate(posed_shapes),
+            },
+            headers={"X-Design-Revision": model["revision"], "X-Verification-State": "preview"},
+        )
 
 
 @app.post("/api/export/{kind}")

@@ -55,7 +55,12 @@ export default function Viewer(props: {
       geometry.computeVertexNormals();
       const transparent = reference || part.category === "glass";
       const material = new THREE.MeshStandardMaterial({
-        color: props.selected === part.id ? "#f6c85f" : (colors[part.category] ?? "#7d9792"),
+        color:
+          props.selected === part.id
+            ? "#f6c85f"
+            : /rubber|epdm/i.test(part.material)
+              ? "#28312d"
+              : (colors[part.category] ?? "#7d9792"),
         metalness: part.category === "extrusion" ? 0.5 : 0.05,
         roughness: 0.58,
         transparent,
@@ -79,7 +84,9 @@ export default function Viewer(props: {
     const center = box.getCenter(new THREE.Vector3());
     const span = Math.max(size.x, size.y, size.z, 100);
     camera.position.copy(center).add(new THREE.Vector3(span * 1.25, -span * 1.55, span * 1.1));
-    camera.near = 0.1;
+    // Millimetre-scale near clipping preserves depth precision between thin
+    // panel faces and seals when viewing the metre-scale assembly.
+    camera.near = Math.max(1, span / 200);
     camera.far = span * 40;
     camera.updateProjectionMatrix();
     controls.target.copy(center);

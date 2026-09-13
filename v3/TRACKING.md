@@ -48,7 +48,34 @@ Branch: `rebuild/v3-verified-enclosure`, based on the existing enclosure branch.
 - [x] Supervisor reviews false passes and remaining scope against original audit.
 - [x] Remaining hard evidence blockers documented with exact consequences.
 
-## Acceptance evidence — 2026-09-13
+## Containment and verification controls revision
+
+The first acceptance run below covered solid clearance and kinematics but missed the user's dust-containment objective. Its results do not establish that the door gaps are acceptable. This revision adds a separate, mandatory containment assessment.
+
+- [x] Continuous panel-edge seals and overlapping door perimeter barriers.
+- [x] Covered front meeting seam with an explicit closing order and flexible bifold meeting seals.
+- [x] Deliberate baffled makeup-air inlet, roof hose collar and base interface.
+- [x] Independent seam coverage and airflow-geometry checks, including broken-model tests.
+- [x] Geometry-only HTTP preview that never invokes verification.
+- [x] Automatic-verification toggle, manual verification and unverified-preview export protection.
+- [x] Supplier schedules and assembly notes include seal and airflow specifications.
+- [x] Integrated backend, frontend, browser and original-application checks.
+- [x] Final geometry review and regenerated quotation artifacts.
+
+## Current acceptance evidence — containment revision
+
+- Model revision **`661c38797236d6cd`**: **1,085 pass, 0 fail, 55 unknown**. Physical release remains blocked by unresolved evidence.
+- **76 backend tests**, **9 frontend unit tests** and **3 browser tests** pass. The actual production browser flow covers door order, all four controls, preview-only edits, manual verification, stale-export protection, downloads, invalid-input recovery and desktop/mobile layouts. Two of those browser scenarios exercise cancellation/queued-request races with controlled responses.
+- Python lint/format, frontend type check/build and root check/build pass. The original application has **196 passing tests**, and its existing uncommitted diff was compared byte-for-byte and preserved.
+- **288 physical parts** plus two references; all **41,328** closed physical pairs checked. Motion accounts for **36,127** pairs: **33,449** bounded clear, **2,605** rigid-invariant, **73** unresolved. No unresolved interval is reported collision-free.
+- Local seam coverage, independently derived pane gaps, roof collar/bore, inlet aperture, full air-channel volumes, geometric area allowance and all straight opening-to-exit segments are checked. Missing/shortened/displaced/perforated barriers and an oversized hose have negative regression tests.
+- Supervisor review found that the initial new header buried the old guide path despite its proxy-related `unknown` status. Guides were moved overhead with explicit nominal adapter members and mating features. A regression rejects the old buried-guide geometry; adapter supply, stiffness, bearings and stationary supports remain unconfirmed.
+- Additional diagnostic sampling found zero straight-through openings in **7,411 rays across the four walls**. This is supplementary sampling, not an exhaustive boundary or airflow certificate; roof/base are excluded from that diagnostic. The actual CAD test suite provides the repeatable local certificates.
+- Final quotation pack independently parsed: **37-page PDF**, **16 DXF panel outlines** including the rectangular vent cutout, **288 STEP solids**, seal/hardware specifications and door/airflow assembly notes. The generated PDF and actual viewer were visually reviewed.
+- Generated artifacts under ignored `v3/artifacts/`: `enclosure-661c38797236d6cd-quotation-pack.zip`, extracted current supplier files, `boundary-sampling.json`, its diagnostic script, screenshots and `air-inlet-section.svg`.
+- Full browser acceptance used the built application served directly by the backend at port 8000 (`PLAYWRIGHT_BASE_URL`), after an earlier development-server process interruption. A browser inspector-cache limit was avoided by testing revision/state headers rather than duplicating large mesh response bodies; HTTP tests separately inspect those bodies.
+
+## Initial acceptance evidence — 2026-09-13 (before containment revision)
 
 - Backend: **54 tests passed**, including actual CAD, adversarial validation, HTTP requests and supplier-file parsing.
 - Frontend: **8 unit tests passed**, TypeScript check and production build passed.
@@ -66,10 +93,13 @@ The software is operational. The physical enclosure is **not released for purcha
 
 - [ ] Match the configurable machine envelope to the actual Shapeoko 5 Pro 4×4, spindle/router and dust shoe.
 - [ ] Confirm hose bend radius, suspended support and clearance over the actual full CNC travel.
-- [ ] Establish that purchased hinges, interleaf hinges, guide and carriage realize the proposed bifold axes and travel without custom fabrication; resolve the 24 proxy motion interactions with confirmed geometry.
+- [ ] Establish that purchased hinges, interleaf hinges, guide and carriage realize the proposed bifold axes and travel without custom fabrication; resolve the remaining proxy/contact motion interactions with confirmed geometry.
 - [ ] Confirm bracket orientations, mounting patterns, fastener lengths and quantities, rail/roof attachment and installation tool access.
 - [ ] Select compatible glass/wood panel retention, glass thickness/edge finish and any processing required before tempering.
 - [ ] Confirm latch/strike/stop engagement and adjustment provisions for each door; closed solids alone do not prove closure hardware works.
+- [ ] Confirm supplier seal profiles, free section, compression range, corner joints, membrane folding and glass packing/setting support.
+- [ ] Obtain the finished overhead guide adapters, bearings and track supports with confirmed stiffness, load capacity and mounting schedules.
+- [ ] Confirm the continuous supporting tabletop and commission inward airflow, dust capture and cooling with the selected vacuum, hose, dust shoe and filter.
 - [ ] Confirm supplier cutting tolerances and allowances for frame squareness, door sag and roof loading.
 
 Quotation exports include candidate dimensions and these blockers; no supplier communication or order has been sent. Completion of implementation checkboxes above does not imply completion of these physical evidence requirements.

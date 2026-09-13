@@ -3,6 +3,10 @@ test("actual enclosure evaluates, moves doors, exports and rejects bad dimension
   page,
 }) => {
   const errors: string[] = [];
+  let verificationRequests = 0;
+  page.on("request", (request) => {
+    if (request.url().endsWith("/api/evaluate")) verificationRequests++;
+  });
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await expect(page.getByRole("status")).toContainText("Quotation draft", {
@@ -15,21 +19,46 @@ test("actual enclosure evaluates, moves doors, exports and rejects bad dimension
   });
   await page.getByRole("checkbox", { name: "Roof", exact: true }).uncheck();
   await page.getByRole("checkbox", { name: "Clearances", exact: true }).check();
-  for (const label of [
-    "Front · left leaf",
-    "Front · right leaf",
-    "Left wall · rear bifold",
-    "Rear wall · right bifold",
+  for (const [label, opening] of [
+    ["Front · right leaf", "1"],
+    ["Front · left leaf", "0.6"],
+    ["Left wall · rear bifold", "0.6"],
+    ["Rear wall · right bifold", "0.6"],
   ]) {
     const response = page.waitForResponse(
       (r) => r.url().endsWith("/api/evaluate") && r.request().method() === "POST",
     );
-    await page.getByRole("slider", { name: label }).fill("0.6");
+    await page.getByRole("slider", { name: label }).fill(opening);
     expect((await response).ok()).toBe(true);
     await expect(page.getByRole("status")).toContainText("Quotation draft", {
       timeout: 120000,
     });
   }
+  await page.getByRole("checkbox", { name: "Automatic verification" }).uncheck();
+  const verifiedBeforePreview = verificationRequests;
+  const previewResponse = page.waitForResponse((r) => r.url().endsWith("/api/preview"));
+  await page.getByRole("spinbutton", { name: "Internal width", exact: true }).fill("1680");
+  const preview = await previewResponse;
+  expect(preview.ok()).toBe(true);
+  const previewRevision = preview.headers()["x-design-revision"];
+  expect(previewRevision).toMatch(/^[a-f0-9]{16}$/);
+  expect(preview.headers()["x-verification-state"]).toBe("preview");
+  await expect(page.getByRole("status")).toContainText("Preview only", { timeout: 120000 });
+  expect(verificationRequests).toBe(verifiedBeforePreview);
+  await page.getByRole("button", { name: "Supplier files", exact: true }).click();
+  await expect(page.getByRole("button", { name: /Order list/ })).toBeDisabled();
+  const manualResponse = page.waitForResponse((r) => r.url().endsWith("/api/evaluate"));
+  await page.getByRole("button", { name: "Verify now", exact: true }).click();
+  const manual = await manualResponse;
+  expect(manual.ok()).toBe(true);
+  expect(manual.headers()["x-design-revision"]).toBe(previewRevision);
+  expect(manual.headers()["x-verification-state"]).toBe("evaluated");
+  await expect(page.getByRole("status")).toContainText("Quotation draft", { timeout: 120000 });
+  await expect(page.getByRole("button", { name: /Order list/ })).toBeEnabled();
+  const automaticResponse = page.waitForResponse((r) => r.url().endsWith("/api/evaluate"));
+  await page.getByRole("checkbox", { name: "Automatic verification" }).check();
+  expect((await automaticResponse).ok()).toBe(true);
+  await expect(page.getByRole("status")).toContainText("Quotation draft", { timeout: 120000 });
   await page.getByRole("button", { name: "Supplier files", exact: true }).click();
   await page.getByRole("spinbutton", { name: "Internal width", exact: true }).fill("");
   await expect(page.getByRole("alert")).toContainText("Enter a valid number");

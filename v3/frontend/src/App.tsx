@@ -44,10 +44,15 @@ export default function App() {
   const [exporting, setExporting] = createSignal("");
   let timer: ReturnType<typeof setTimeout> | undefined;
   let running = false;
-  let queued = false;
+  let queued: boolean | undefined;
+  let controller: AbortController | undefined;
+  let epoch = 0;
+  const [autoVerify, setAutoVerify] = createSignal(true);
+  const [verifying, setVerifying] = createSignal(false);
   let disposed = false;
   const current = createMemo(() => signature(parameters(), pose()));
   const stale = createMemo(() => current() !== evaluated());
+  const report = createMemo(() => (!stale() && !invalidFields().length ? result()?.report : null));
   const exportAllowed = createMemo(
     () => !invalidFields().length && canExport(result(), busy(), current(), evaluated()),
   );
@@ -56,27 +61,32 @@ export default function App() {
       ? "Enter valid measurements"
       : stale()
         ? "Changes awaiting verification"
-        : result()?.report.order_ready
-          ? "Ready to order"
-          : result()?.report.status === "invalid"
-            ? "Design needs correction"
-            : "Quotation draft · evidence needed",
+        : !report()
+          ? "Preview only · verification needed"
+          : report()?.order_ready
+            ? "Ready to order"
+            : report()?.status === "invalid"
+              ? "Design needs correction"
+              : "Quotation draft · evidence needed",
   );
-  async function run() {
+  async function run(verify = autoVerify()) {
     if (invalidFields().length) return;
     if (running) {
-      queued = true;
+      queued = verify;
       return;
     }
     running = true;
     setBusy(true);
+    setVerifying(verify);
+    controller = new AbortController();
+    const requestEpoch = epoch;
     const key = current();
     const input = { ...parameters() },
       angles = { ...pose() };
     try {
-      const next = await evaluate(input, angles);
-      if (!disposed && key === current()) {
-        if (next.model.revision !== next.report.revision)
+      const next = await evaluate(input, angles, verify, controller.signal);
+      if (!disposed && key === current() && requestEpoch === epoch) {
+        if (verify && (!next.report || next.model.revision !== next.report.revision))
           throw new Error(
             "The geometry and verification revisions do not match. Please evaluate again.",
           );
@@ -85,14 +95,21 @@ export default function App() {
         setError("");
       }
     } catch (e) {
-      if (!disposed && key === current()) setError(e instanceof Error ? e.message : String(e));
+      if (
+        !disposed &&
+        key === current() &&
+        requestEpoch === epoch &&
+        !(e instanceof DOMException && e.name === "AbortError")
+      )
+        setError(e instanceof Error ? e.message : String(e));
     } finally {
       running = false;
       if (!disposed) {
         setBusy(false);
-        if (queued) {
-          queued = false;
-          void run();
+        if (queued !== undefined) {
+          const nextMode = queued;
+          queued = undefined;
+          void run(nextMode);
         }
       }
     }
@@ -104,6 +121,18 @@ export default function App() {
     if (!loaded() || invalid) return;
     timer = setTimeout(() => void run(), 350);
   });
+  function toggleAuto(enabled: boolean) {
+    clearTimeout(timer);
+    queued = undefined;
+    epoch++;
+    controller?.abort();
+    setAutoVerify(enabled);
+    if (enabled || busy() || stale() || !result()) void run(enabled);
+  }
+  function verifyNow() {
+    clearTimeout(timer);
+    void run(true);
+  }
   async function load() {
     try {
       setError("");
@@ -119,6 +148,7 @@ export default function App() {
   onMount(() => void load());
   onCleanup(() => {
     disposed = true;
+    controller?.abort();
     clearTimeout(timer);
   });
   function update(id: string, value: string) {
@@ -142,8 +172,8 @@ export default function App() {
   }
   const checks = createMemo(
     () =>
-      result()
-        ?.report.checks.filter((c) => filter() === "all" || c.status === filter())
+      report()
+        ?.checks.filter((c) => filter() === "all" || c.status === filter())
         .sort(
           (a, b) =>
             ({ fail: 0, unknown: 1, pass: 2 })[a.status] -
@@ -171,10 +201,10 @@ export default function App() {
             <p>Configure your enclosure. Inspect the fit. Know what remains to be confirmed.</p>
           </div>
           <div
-            class={`status-pill ${result()?.report.order_ready ? "pass" : result()?.report.status === "invalid" ? "fail" : "unknown"}`}
+            class={`status-pill ${report()?.order_ready ? "pass" : report()?.status === "invalid" ? "fail" : "unknown"}`}
             role="status"
           >
-            {busy() ? "◌ Verifying enclosure…" : status()}
+            {busy() ? (verifying() ? "◌ Verifying enclosure…" : "◌ Updating preview…") : status()}
           </div>
         </div>
         <Show when={invalidFields().length}>
@@ -193,6 +223,27 @@ export default function App() {
         </Show>
         <div class="workspace">
           <aside class="settings">
+            <div class="verification-controls">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={autoVerify()}
+                  onChange={(e) => toggleAuto(e.currentTarget.checked)}
+                />{" "}
+                Automatic verification
+              </label>
+              <button
+                disabled={!loaded() || !!invalidFields().length || (busy() && verifying())}
+                onClick={verifyNow}
+              >
+                Verify now
+              </button>
+              <p class="muted">
+                {autoVerify()
+                  ? "Changes update geometry and verification."
+                  : "Geometry stays live. Verify when you are ready to review the evidence."}
+              </p>
+            </div>
             <div class="section-heading">
               <h2>Your enclosure</h2>
               <span>mm</span>
@@ -284,6 +335,14 @@ export default function App() {
                     max="1"
                     step="0.02"
                     value={pose()[id]}
+                    disabled={
+                      id === "front-left"
+                        ? pose()["front-right"] < 1 && pose()["front-left"] === 0
+                        : id === "front-right"
+                          ? pose()["front-left"] > 0
+                          : false
+                    }
+                    aria-describedby={id.startsWith("front-") ? "front-door-sequence" : undefined}
                     onInput={(e) =>
                       setPose((p) => ({
                         ...p,
@@ -294,9 +353,27 @@ export default function App() {
                 </label>
               )}
             </For>
+            <p class="muted" id="front-door-sequence">
+              Open the right front leaf fully before opening the left. Close the left completely
+              before closing the right.
+            </p>
             <p class="muted">
               Preview poses update after adjustment. See the report for verified motion coverage.
             </p>
+            <details class="containment-note">
+              <summary>Dust containment & airflow intent</summary>
+              <p class="muted">
+                Rubber seals bridge the assembly clearances when doors close. Close the left front
+                leaf first, then the right leaf with its overlapping meeting strip. Open the right
+                leaf fully first, then the left. Seal compression and hardware fit remain
+                installation checks.
+              </p>
+              <p class="muted">
+                A baffled makeup-air inlet supplies the dust-shoe extraction path. Vacuum selection
+                and measured airflow must establish whether extraction is adequate. Seal fit and
+                dust containment require installation checks.
+              </p>
+            </details>
           </aside>
           <section class="preview">
             <div class="preview-heading">
@@ -408,8 +485,8 @@ export default function App() {
                             : "Passed"}{" "}
                       <b>
                         {value === "all"
-                          ? (result()?.report.checks.length ?? 0)
-                          : (result()?.report.summary[value] ?? 0)}
+                          ? (report()?.checks.length ?? 0)
+                          : (report()?.summary[value] ?? 0)}
                       </b>
                     </button>
                   )}
@@ -417,12 +494,12 @@ export default function App() {
               </div>
             </div>
             <Show
-              when={result()}
+              when={report()}
               fallback={
                 <p class="empty">
                   {busy()
                     ? "Building geometry and checking requirements…"
-                    : "Connect to the enclosure service to evaluate your design."}
+                    : "No current verification report. Select Verify now to check this design."}
                 </p>
               }
             >
@@ -474,7 +551,7 @@ export default function App() {
                     </p>
                   )}
                 </For>
-                <pre>{JSON.stringify(result()?.report.coverage, null, 2)}</pre>
+                <pre>{JSON.stringify(report()?.coverage, null, 2)}</pre>
               </details>
             </Show>
           </Show>
@@ -541,11 +618,11 @@ export default function App() {
                 </p>
               </div>
               <span class="status-pill unknown">
-                {result()?.report.order_ready ? "Ready to order" : "REQUEST FOR QUOTATION"}
+                {report()?.order_ready ? "Ready to order" : "REQUEST FOR QUOTATION"}
               </span>
             </div>
             <p class="export-note">
-              {result()?.report.order_ready
+              {report()?.order_ready
                 ? "The evaluated requirements are satisfied. Check quantities and delivery details with your suppliers."
                 : "These files are quotation drafts. Unresolved specifications and failed checks travel with the design; do not use them as approved cutting instructions."}{" "}
               Glass specifications must include all machining before tempering.

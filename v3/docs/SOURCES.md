@@ -14,3 +14,9 @@ Supplier reference review: 2026-09-13. Existing repository assets were identifie
 | Geometry kernel                           | [OpenCascade BRepCheck](https://occt3d.com/dev/doc/refman/html/class_b_rep_check___analyzer.html) | Shape validity is evidence about topology/geometry, not physical assembly or structural certification.                                                                                                |
 
 No supplier cutting/processing tolerance, hardware load rating, panel-retention detail or glass suitability is inferred merely from a product name. Missing evidence blocks final order release. Quotation packs request the needed confirmation and preserve candidate dimensions for discussion.
+
+## Airflow design basis
+
+[HSE, Controlling airborne contaminants at work (HSG258)](https://www.hse.gov.uk/pubns/priced/hsg258.pdf) describes extraction enclosures drawing replacement air inward. [HSE, Wood dust: Controlling the risks (WIS23)](https://www.hse.gov.uk/pubns/wis23.pdf) discusses capture at woodworking machines and airflow indication. These support the proposed direction of operation: passive makeup air through a deliberate inlet, removal through the dust shoe, and the extractor located outside the enclosure. They do not establish the required flow for this particular machine, shoe, hose and vacuum.
+
+The baffle layout, seal sizes and any geometric free-area measurements are project design proposals, not supplier-certified dust-control performance. Actual extraction flow, pressure losses, leakage direction, filter condition and machine cooling require commissioning evidence. No seal product, compression curve or flexible-seal endurance rating has yet been selected.

@@ -47,6 +47,66 @@ def _conservative(part):
     return "envelope" in fidelity and "orientation" not in fidelity
 
 
+def check_barrier_region(shapes, region, required_overlap_mm=0.0, cut_tolerance_mm=0.0):
+    """Measure a continuous barrier through actual solids, including any holes.
+
+    The target is a 0.02 mm thick plate inside the nominal sealing stock. Its
+    in-plane footprint is the protected gap plus overlap and worst-case cut
+    allowances. Subtracting actual barrier solids measures every uncovered
+    region, rather than inferring coverage from external bounding boxes.
+    """
+    import cadquery as cq
+
+    axis = region["normal_axis"]
+    if axis not in (0, 1, 2):
+        raise ValueError("Barrier axis must be 0, 1 or 2")
+    low, high = region["min_mm"], region["max_mm"]
+    if not _finite(low) or not _finite(high) or len(low) != 2 or len(high) != 2:
+        raise ValueError("Barrier requires two finite in-plane coordinates")
+    if (
+        not _finite([region["plane_mm"], required_overlap_mm, cut_tolerance_mm])
+        or min(required_overlap_mm, cut_tolerance_mm) < 0
+    ):
+        raise ValueError("Barrier overlap, plane and tolerance must be finite and nonnegative")
+    axes = [i for i in range(3) if i != axis]
+    allowance = required_overlap_mm + 2 * cut_tolerance_mm
+    thickness = 0.02
+    size, center = [thickness] * 3, [0.0] * 3
+    center[axis] = region["plane_mm"]
+    for index, target_axis in enumerate(axes):
+        size[target_axis] = high[index] - low[index] + 2 * allowance
+        if size[target_axis] <= 0:
+            raise ValueError("Barrier footprint must have positive area")
+        center[target_axis] = (low[index] + high[index]) / 2
+    target = cq.Workplane("XY").box(*size).translate(tuple(center)).val()
+    remaining = target
+    target_bounds = _bbox(target)
+    for id in region["part_ids"]:
+        if id not in shapes:
+            return {
+                "status": "fail",
+                "message": "Required barrier solid is missing",
+                "references": [id],
+            }
+        if _box_distance(target_bounds, _bbox(shapes[id])) > KERNEL_LENGTH_TOLERANCE_MM:
+            continue
+        remaining = remaining.cut(shapes[id])
+        if remaining.Volume() / thickness <= 1e-4:
+            break
+    missing_area = remaining.Volume() / thickness
+    return {
+        "status": "pass" if missing_area <= 1e-4 else "fail",
+        "message": "Actual continuous barrier footprint after overlap and opposing cut allowances",
+        "references": region["part_ids"],
+        "measured": missing_area,
+        "required": 0.0,
+        "unit": "mm² uncovered",
+        "method": "OpenCascade difference of thin target plate and actual barrier solids",
+        "overlap_mm": required_overlap_mm,
+        "opposing_cut_allowance_mm": 2 * cut_tolerance_mm,
+    }
+
+
 def check_solid_pair(a, b, clearance_mm=0.0, permitted_overlap_mm3=0.0):
     """Zero required clearance still prohibits positive-volume penetration."""
     if not math.isfinite(clearance_mm) or clearance_mm < 0:
@@ -91,6 +151,66 @@ def check_solid_pair(a, b, clearance_mm=0.0, permitted_overlap_mm3=0.0):
             "status": "unknown",
             "message": f"Geometry kernel could not establish clearance: {exc}",
         }
+
+
+def actual_infill_gap_regions(model):
+    """Derive gaps from actual panel/frame dimensions, independent of seam targets."""
+    by_id = {p["id"]: p for p in model["parts"]}
+    regions = []
+    for panel in model["parts"]:
+        if not panel["id"].endswith("-infill"):
+            continue
+        prefix = panel["id"][: -len("-infill")]
+        frame = [
+            by_id[prefix + suffix] for suffix in ("-stile-a", "-stile-b", "-rail-low", "-rail-high")
+        ]
+        theta = math.radians(panel["rotation_deg"])
+        c, s = math.cos(theta), math.sin(theta)
+
+        def local_bounds(part, c=c, s=s):
+            x, y, z = part["position"]
+            center = [x * c + y * s, -x * s + y * c, z]
+            return (
+                [center[i] - part["size"][i] / 2 for i in range(3)],
+                [center[i] + part["size"][i] / 2 for i in range(3)],
+            )
+
+        pmin, pmax = local_bounds(panel)
+        left, right, bottom, top = [local_bounds(p) for p in frame]
+        rectangles = [
+            ([left[1][0], pmin[2]], [pmin[0], pmax[2]]),
+            ([pmax[0], pmin[2]], [right[0][0], pmax[2]]),
+            ([pmin[0], bottom[1][2]], [pmax[0], pmin[2]]),
+            ([pmin[0], pmax[2]], [pmax[0], top[0][2]]),
+        ]
+        normal_axis = 0 if abs(s) > 0.5 else 1
+        inplane_axis = 1 - normal_axis
+        y = (pmin[1] + pmax[1]) / 2
+        for index, (low, high) in enumerate(rectangles):
+            if any(high[i] <= low[i] for i in range(2)):
+                continue
+            corners = [
+                [x * c - y * s, x * s + y * c, z]
+                for x, z in itertools.product((low[0], high[0]), (low[1], high[1]))
+            ]
+            regions.append(
+                (
+                    f"{prefix}.{index}",
+                    dict(
+                        normal_axis=normal_axis,
+                        plane_mm=corners[0][normal_axis],
+                        min_mm=[min(v[inplane_axis] for v in corners), low[1]],
+                        max_mm=[max(v[inplane_axis] for v in corners), high[1]],
+                        part_ids=[
+                            p["id"]
+                            for p in model["parts"]
+                            if p.get("assembly") == panel.get("assembly")
+                            and p.get("physical", True)
+                        ],
+                    ),
+                )
+            )
+    return regions
 
 
 def _trig_range(a, b, lo, hi):
@@ -158,6 +278,20 @@ def swept_box(part, door, low=0.0, high=1.0):
 def _motion_check(model, shapes, closed_results):
     from .core import pose_model
 
+    sequence = model.get("door_sequence")
+    if sequence:
+        if sequence.get("closing") != ["front-left", "front-right"] or sequence.get("opening") != [
+            "front-right",
+            "front-left",
+        ]:
+            raise ValueError("Unsupported front door sequence; motion domain cannot be inferred")
+        try:
+            pose_model(model, {"front-left": 0.5, "front-right": 0.5})
+        except ValueError:
+            pass
+        else:
+            raise ValueError("Declared front sequence is not enforced by pose evaluation")
+
     doors = {d["id"]: d for d in model.get("doors", [])}
     members = {id: d for d in doors.values() for id in d["part_ids"]}
     moving = {
@@ -201,6 +335,15 @@ def _motion_check(model, shapes, closed_results):
         active = sorted({d["id"] for p, d in ((a, da), (b, db)) if d and p.get("motion_leaf")})
         budget = 256 if not any(_conservative(p) for p in (a, b)) else 48
         stack = [{id: (0.0, 1.0) for id in active}]
+        if sequence and "front-left" in active:
+            # Include the complete two-stage allowed domain, never waive
+            # front-to-front collisions or other independently moving doors.
+            stage = dict(stack[0], **{"front-right": (1.0, 1.0)})
+            if "front-right" in active:
+                first = dict(stack[0], **{"front-left": (0.0, 0.0)})
+                stack = [first, stage]
+            else:
+                stack = [stage]
         visits = 0
         outcome = "pass"
         while stack:
@@ -324,7 +467,7 @@ def _motion_check(model, shapes, closed_results):
         "id": "motion.continuous",
         "status": "fail" if failed else "unknown" if unresolved else "pass",
         "category": "motion",
-        "message": "All independent door combinations bounded analytically; unresolved bound intersections are not clearance proofs",
+        "message": "Permitted door travel assessed with analytic bounds; unresolved bound intersections are not clearance proofs",
         "references": list(doors),
         "method": "analytic trigonometric corner extrema with adaptive interval subdivision; rigid-link invariance",
         "measured": {
@@ -337,6 +480,9 @@ def _motion_check(model, shapes, closed_results):
         "collision_witnesses": failed,
         "unresolved_examples": unresolved,
         "subdivision_budget_per_pair": {"actual_solids": 256, "proxy_envelopes": 48},
+        "front_operating_domain": "left=0, right∈[0,1] OR right=1, left∈[0,1]"
+        if sequence
+        else "independent",
     }
 
 
@@ -948,6 +1094,315 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
             "access",
             f"Loading evidence unavailable: {exc}",
         )
+    expected_containment = (canonical or {}).get("containment", [])
+    actual_containment = {entry["id"]: entry for entry in model.get("containment", [])}
+    for entry in expected_containment:
+        id = entry["id"]
+        actual = actual_containment.get(id)
+        if actual != entry:
+            add(
+                f"containment.obligation.{id}",
+                "fail",
+                "containment",
+                "Barrier obligation is missing or differs from the canonical seam definition",
+                entry.get("part_ids", []),
+            )
+        for index, region in enumerate(entry.get("coverage_regions", [])):
+            try:
+                outcome = check_barrier_region(
+                    shapes,
+                    region,
+                    region.get("required_overlap_mm", entry.get("required_overlap_mm", 0.0)),
+                    parameters.get("cut_tolerance_mm", 0.0),
+                )
+                add(f"containment.coverage.{id}.{index}", category="containment", **outcome)
+            except Exception as exc:  # noqa: BLE001 - failed geometric evidence cannot certify coverage
+                add(
+                    f"containment.coverage.{id}.{index}",
+                    "unknown",
+                    "containment",
+                    f"Barrier coverage could not be established: {exc}",
+                    region.get("part_ids", []),
+                )
+        if entry.get("kind") == "annular-collar":
+            try:
+                import cadquery as cq
+
+                radius = (
+                    entry["required_outer_diameter_mm"] / 2 + 2 * parameters["cut_tolerance_mm"]
+                )
+                inner = entry["inner_diameter_mm"] / 2
+                x, y = entry["center_mm"]
+                z = entry["plane_mm"]
+                plate = cq.Solid.makeCylinder(radius, 0.02, cq.Vector(x, y, z - 0.01)).cut(
+                    cq.Solid.makeCylinder(inner, 0.04, cq.Vector(x, y, z - 0.02))
+                )
+                remaining = plate
+                for pid in entry["part_ids"]:
+                    remaining = remaining.cut(shapes[pid])
+                    if remaining.Volume() / 0.02 <= 1e-4:
+                        break
+                missing = remaining.Volume() / 0.02
+                add(
+                    f"containment.collar.{id}",
+                    "pass" if missing <= 1e-4 else "fail",
+                    "containment",
+                    "Actual annular collar covers the roof-hole perimeter with required radial overlap",
+                    entry["part_ids"],
+                    measured=missing,
+                    required=0,
+                    unit="mm² uncovered",
+                    method="OpenCascade annular target subtraction",
+                )
+                roof = by_id["panel-roof"]
+                bore = cq.Solid.makeCylinder(
+                    entry["opening_diameter_mm"] / 2 - 1e-5,
+                    roof["size"][2] + 0.02,
+                    cq.Vector(x, y, roof["position"][2] - roof["size"][2] / 2 - 0.01),
+                )
+                overlap = bore.intersect(shapes["panel-roof"]).Volume()
+                add(
+                    f"airflow.roof_bore.{id}",
+                    "pass" if overlap < 1e-5 else "fail",
+                    "airflow",
+                    "Declared roof hose opening is present in actual panel geometry",
+                    ["panel-roof"],
+                    measured=overlap,
+                    required=0,
+                    unit="mm³ obstruction",
+                )
+            except Exception as exc:  # noqa: BLE001 - kernel and missing parts cannot establish collar coverage
+                add(
+                    f"containment.collar.{id}",
+                    "unknown",
+                    "containment",
+                    f"Collar coverage unavailable: {exc}",
+                    entry.get("part_ids", []),
+                )
+        elif not entry.get("coverage_regions"):
+            add(
+                f"containment.coverage.{id}",
+                "unknown",
+                "containment",
+                "No measurable barrier region has been declared",
+                entry.get("part_ids", []),
+            )
+        if entry.get("kind") == "baffled-air-inlet":
+            try:
+                import cadquery as cq
+
+                wall = by_id[entry["wall_part_id"]]
+                axis = entry["normal_axis"]
+                axes = [i for i in range(3) if i != axis]
+                center = list(entry["opening_center_mm"])
+                center[axis] = wall["position"][axis]
+                size = [0.0, 0.0, 0.0]
+                size[axis] = wall["size"][axis] + 0.02
+                for i, k in enumerate(axes):
+                    size[k] = entry["opening_size_mm"][i] - 0.00002
+                passage = cq.Workplane("XY").box(*size).translate(tuple(center)).val()
+                obstruction = passage.intersect(shapes[wall["id"]]).Volume()
+                add(
+                    f"airflow.inlet_opening.{id}",
+                    "pass" if obstruction < 1e-5 else "fail",
+                    "airflow",
+                    "Actual wall cutout admits the declared makeup-air aperture",
+                    [wall["id"]],
+                    measured=obstruction,
+                    required=0,
+                    unit="mm³ obstruction",
+                )
+                face = shapes["air-inlet-baffle-face"].BoundingBox()
+                left = shapes["air-inlet-baffle-left"].BoundingBox()
+                right = shapes["air-inlet-baffle-right"].BoundingBox()
+                wallbox = shapes[wall["id"]].BoundingBox()
+                width = right.ymin - left.ymax
+                turn = shapes["air-inlet-baffle-internal-turn"].BoundingBox()
+                top = shapes["air-inlet-baffle-top"].BoundingBox()
+                depth = face.xmin - turn.xmax
+                area = max(0.0, width) * max(0.0, depth)
+                desired = entry["throat_area_mm2"]
+                throat = (
+                    cq.Workplane("XY")
+                    .box(max(depth, 0.001), max(width, 0.001), 0.02)
+                    .translate(
+                        (
+                            (face.xmin + turn.xmax) / 2,
+                            (right.ymin + left.ymax) / 2,
+                            face.zmin - 0.01,
+                        )
+                    )
+                    .val()
+                )
+                obstruction = sum(
+                    throat.intersect(shapes[pid]).Volume() for pid in entry["part_ids"]
+                )
+                add(
+                    f"airflow.throat.{id}",
+                    "pass" if area + 1e-4 >= desired and obstruction < 1e-5 else "fail",
+                    "airflow",
+                    "Actual bottom baffle throat preserves the declared free area",
+                    entry["part_ids"],
+                    measured=area,
+                    required=desired,
+                    unit="mm²",
+                    obstruction_mm3=obstruction,
+                )
+                areas = {
+                    "wall_opening": math.prod(entry["opening_size_mm"]),
+                    "bottom_exit": area,
+                    "inner_channel": max(0.0, turn.xmin - wallbox.xmax) * max(0.0, width),
+                    "top_turn": max(0.0, top.zmin - turn.zmax) * max(0.0, width),
+                }
+                minimum = min(areas.values())
+                required = (
+                    entry.get("minimum_area_ratio_to_hose", 2.0)
+                    * math.pi
+                    * (parameters["hose_diameter_mm"] / 2) ** 2
+                )
+                add(
+                    f"airflow.minimum_path.{id}",
+                    "pass" if minimum + 1e-4 >= required else "fail",
+                    "airflow",
+                    "Every declared passage retains the geometric free-area allowance relative to the hose; this is not a flow-rate prediction",
+                    entry["part_ids"],
+                    measured=minimum,
+                    required=required,
+                    unit="mm²",
+                    passage_areas_mm2=areas,
+                )
+                blocked = []
+                confirmed_blockage = False
+                for name, xlo, xhi, zlo, zhi in (
+                    (
+                        "inner",
+                        wallbox.xmax,
+                        turn.xmin,
+                        center[2] - entry["opening_size_mm"][1] / 2,
+                        top.zmin,
+                    ),
+                    ("turn", turn.xmin, turn.xmax, turn.zmax, top.zmin),
+                    ("outer", turn.xmax, face.xmin, face.zmin, top.zmin),
+                ):
+                    if xhi <= xlo or zhi <= zlo:
+                        blocked.append(name)
+                        confirmed_blockage = True
+                        continue
+                    channel = (
+                        cq.Workplane("XY")
+                        .box(xhi - xlo, width, zhi - zlo)
+                        .translate(((xhi + xlo) / 2, (right.ymin + left.ymax) / 2, (zhi + zlo) / 2))
+                        .val()
+                    )
+                    for part in physical:
+                        outcome = (
+                            check_solid_pair(channel, shapes[part["id"]])
+                            if part["id"] in shapes
+                            else {"status": "unknown"}
+                        )
+                        if outcome["status"] != "pass":
+                            blocked.append(f"{name}:{part['id']}")
+                            confirmed_blockage = confirmed_blockage or (
+                                outcome["status"] == "fail" and not _conservative(part)
+                            )
+                add(
+                    f"airflow.channels.{id}",
+                    "fail" if confirmed_blockage else "unknown" if blocked else "pass",
+                    "airflow",
+                    "Entire declared inner, upper-turn and outer air-channel volumes remain unobstructed by modeled physical parts",
+                    blocked,
+                    method="actual free-channel prism intersection against all physical solids",
+                )
+                # Every line from the wall aperture to the bottom exit crosses
+                # the internal-turn plane. Rational interpolation is monotone
+                # in each endpoint coordinate, so endpoint extrema enclose all
+                # such intersections, not just a sampled collection of rays.
+                plane = turn.xmin
+                wx, yc, zc = entry["opening_center_mm"]
+                ow, oh = entry["opening_size_mm"]
+                intersections = []
+                for oy, oz, ex, ey in itertools.product(
+                    (yc - ow / 2, yc + ow / 2),
+                    (zc - oh / 2, zc + oh / 2),
+                    (turn.xmax, face.xmin),
+                    (left.ymax, right.ymin),
+                ):
+                    fraction = (plane - wx) / (ex - wx)
+                    if not 0 <= fraction <= 1:
+                        raise ValueError("Baffle plane does not separate aperture and exit")
+                    intersections.append(
+                        (oy + fraction * (ey - oy), oz + fraction * (face.zmin - oz))
+                    )
+                ymin, ymax = min(q[0] for q in intersections), max(q[0] for q in intersections)
+                zmin, zmax = min(q[1] for q in intersections), max(q[1] for q in intersections)
+                wire = cq.Wire.makePolygon(
+                    [
+                        cq.Vector(plane, ymin, zmin),
+                        cq.Vector(plane, ymax, zmin),
+                        cq.Vector(plane, ymax, zmax),
+                        cq.Vector(plane, ymin, zmax),
+                    ],
+                    close=True,
+                )
+                target = cq.Face.makeFromWires(wire)
+                for pid in ("air-inlet-baffle-internal-turn", "air-inlet-baffle-bottom-return"):
+                    target = target.cut(shapes[pid])
+                    if target.Area() < 1e-4:
+                        break
+                missing = target.Area()
+                add(
+                    f"airflow.direct_path.{id}",
+                    "pass" if missing < 1e-4 else "fail",
+                    "airflow",
+                    "Actual baffle and return block the full analytically bounded family of straight opening-to-exit segments",
+                    entry["part_ids"],
+                    measured=missing,
+                    required=0,
+                    unit="mm² uncovered at interception plane",
+                    method="analytic endpoint extrema followed by actual planar-face difference",
+                )
+                add(
+                    f"airflow.performance.{id}",
+                    "unknown",
+                    "airflow",
+                    "Free area and baffled geometry do not establish flow rate, negative pressure or dust capture; extractor, filters, hose losses and commissioning measurements required",
+                    entry["part_ids"],
+                )
+            except Exception as exc:  # noqa: BLE001 - geometry failures retain missing airflow evidence
+                add(
+                    f"airflow.geometry.{id}",
+                    "unknown",
+                    "airflow",
+                    f"Air inlet geometry unavailable: {exc}",
+                    entry.get("part_ids", []),
+                )
+    if expected_containment:
+        try:
+            for gap_id, region in actual_infill_gap_regions(model):
+                outcome = check_barrier_region(shapes, region)
+                add(f"containment.actual_infill.{gap_id}", category="containment", **outcome)
+        except Exception as exc:  # noqa: BLE001 - unresolved gap geometry cannot certify enclosure closure
+            add(
+                "containment.actual_infill",
+                "unknown",
+                "containment",
+                f"Actual infill gap coverage unavailable: {exc}",
+            )
+        add(
+            "containment.boundary_completeness",
+            "unknown",
+            "containment",
+            "Named seam coverage and panel-edge coverage do not establish a complete sealed enclosure boundary; hinge-offset corridors, header, base, roof and intentional penetrations require complete interface evidence",
+            method="explicit limit of local barrier certificates",
+        )
+        add(
+            "containment.physical_performance",
+            "unknown",
+            "containment",
+            "Nominal barrier footprint does not establish real rubber compression, flexible seam travel, particulate leakage or extraction performance; supplier and assembled tests required",
+            method="explicit physical evidence boundary",
+        )
+
     category_bindings = {
         "inventory": ["integrity"],
         "joints": ["assembly"],
@@ -956,6 +1411,10 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
         "workpiece-access": ["access"],
         "machine-fit": ["machine"],
         "supplier-readiness": ["assumptions"],
+        "containment": ["containment"],
+        "dust-containment": ["containment"],
+        "containment-continuity": ["containment", "airflow"],
+        "airflow": ["airflow"],
     }
     for requirement in model.get("requirements", []):
         evidence = [

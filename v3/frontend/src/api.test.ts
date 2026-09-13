@@ -61,7 +61,12 @@ describe("revision safety", () => {
     expect(canExport(result, false, "b", "a")).toBe(false);
     expect(canExport(undefined, false, "a", "a")).toBe(false);
     expect(
-      canExport({ ...result, report: { ...result.report, revision: "b" } }, false, "a", "a"),
+      canExport({ ...result, report: { ...result.report!, revision: "b" } }, false, "a", "a"),
     ).toBe(false);
   });
+});
+
+it("never exports an unverified preview", () => {
+  const preview = { model: { revision: "a" }, report: null } as Evaluation;
+  expect(canExport(preview, false, "same", "same")).toBe(false);
 });

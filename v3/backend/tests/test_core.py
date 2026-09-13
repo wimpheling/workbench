@@ -119,3 +119,116 @@ def test_front_brackets_clear_closed_leaves():
 def test_structural_mating_normals_oppose():
     for joint in build_model()["joints"]:
         assert sum(a * b for a, b in zip(joint["normal_a"], joint["normal_b"])) == pytest.approx(-1)
+
+
+def test_front_astragal_sequence_is_enforced():
+    model = build_model()
+    with pytest.raises(ValueError, match="Open right front leaf fully"):
+        pose_model(model, {"front-left": 0.01, "front-right": 0.99})
+    pose_model(model, {"front-right": 0.5})
+    pose_model(model, {"front-right": 1, "front-left": 0.5})
+
+
+def test_fixed_panels_lap_frame_and_roof_has_gasket_bearing():
+    model = build_model()
+    parts = {p["id"]: p for p in model["parts"]}
+    assert parts["panel-right"]["size"][1:] == [1709, 800]
+    assert parts["panel-right"]["position"][0] - parts["panel-right"]["size"][0] / 2 == 1706
+    assert parts["panel-roof"]["position"][2] - parts["panel-roof"]["size"][2] / 2 == 772
+    assert len([p for p in parts if p.startswith("roof-perimeter-gasket-")]) == 4
+
+
+def test_roof_collar_is_a_real_annulus():
+    model = build_model()
+    collar = next(p for p in model["parts"] if p["id"] == "roof-hose-collar")
+    shape = build_shapes({**model, "parts": [collar]})[collar["id"]]
+    outer = collar["geometry"]["outer_diameter_mm"]
+    inner = collar["geometry"]["inner_diameter_mm"]
+    assert shape.Volume() == pytest.approx(math.pi * (outer**2 - inner**2) / 4 * collar["size"][2])
+
+
+def test_wall_vent_cutout_matches_supplier_rectangle():
+    model = build_model()
+    wall = next(p for p in model["parts"] if p["id"] == "panel-right")
+    hole = wall["cutouts"][0]
+    shape = build_shapes({**model, "parts": [wall]})[wall["id"]]
+    assert shape.Volume() == pytest.approx(
+        math.prod(wall["size"]) - hole["width_mm"] * hole["height_mm"] * wall["size"][0]
+    )
+    assert hole["x_mm"] + hole["width_mm"] / 2 == wall["size"][1] / 2
+    assert hole["y_mm"] + hole["height_mm"] / 2 - wall["size"][2] / 2 == hole["center_local_mm"][2]
+
+
+def test_packing_bridges_glass_to_continuous_retainer():
+    model = build_model()
+    parts = {p["id"]: p for p in model["parts"]}
+    pane = parts["front-left-a-infill"]
+    packing = parts["front-left-a-infill-left-packing-out"]
+    bead = parts["front-left-a-infill-left-retainer-out"]
+    assert (
+        packing["motion_local"][1] - packing["size"][1] / 2
+        == pane["motion_local"][1] + pane["size"][1] / 2
+    )
+    assert (
+        packing["motion_local"][1] + packing["size"][1] / 2
+        == bead["motion_local"][1] - bead["size"][1] / 2
+    )
+
+
+def test_baffle_actual_solids_block_diagonal_opening_to_exit_rays():
+    import cadquery as cq
+
+    model = build_model()
+    vent = next(e for e in model["containment"] if e["id"] == "makeup-air-inlet")
+    selected = [p for p in model["parts"] if p["id"] in vent["part_ids"]]
+    shapes = build_shapes({**model, "parts": selected})
+    barrier = cq.Compound.makeCompound(list(shapes.values()))
+    x, y, z = vent["opening_center_mm"]
+    width, height = vent["opening_size_mm"]
+    for startz in [z - height / 2, z + height / 2]:
+        for exitx in [vent["exit_min_mm"][0] + 0.1, vent["exit_max_mm"][0] - 0.1]:
+            line = cq.Edge.makeLine((x, y, startz), (exitx, y, vent["exit_min_mm"][2]))
+            common = barrier.intersect(line)
+            assert sum(edge.Length() for edge in common.Edges()) > 0
+    assert vent["minimum_path_area_mm2"] >= 2 * vent["hose_area_mm2"]
+
+
+def test_overhead_guides_clear_closed_header_in_every_checked_pose():
+    model = build_model()
+    assert not any(p["id"].endswith("-closure-stop") for p in model["parts"])
+    for fraction in (0, 0.5, 1):
+        posed = pose_model(model, {"left-rear": fraction, "back-right": fraction})
+        for did in ("left-rear", "back-right"):
+            selected = [
+                p
+                for p in posed["parts"]
+                if p["id"].startswith(did + "-")
+                and (
+                    "-guide-adapter-" in p["id"]
+                    or "-perimeter-top-" in p["id"]
+                    or p["id"] in (did + "-track", did + "-carriage")
+                )
+            ]
+            shapes = build_shapes({**posed, "parts": selected})
+            headers = [p for p in selected if "-perimeter-top-" in p["id"]]
+            hardware = [p for p in selected if p not in headers]
+            for a in headers:
+                for b in hardware:
+                    assert shapes[a["id"]].intersect(shapes[b["id"]]).Volume() < 1e-5, (
+                        a["id"],
+                        b["id"],
+                        fraction,
+                    )
+
+
+def test_old_buried_guide_layout_is_rejected_by_actual_geometry():
+    from enclosure.verification import check_solid_pair
+
+    model = build_model()
+    parts = {p["id"]: p for p in model["parts"]}
+    track = dict(parts["left-rear-track"])
+    track["position"] = list(track["position"])
+    track["position"][2] -= 100
+    header = parts["left-rear-perimeter-top-stop"]
+    shapes = build_shapes({**model, "parts": [track, header]})
+    assert check_solid_pair(shapes[track["id"]], shapes[header["id"]])["status"] == "fail"

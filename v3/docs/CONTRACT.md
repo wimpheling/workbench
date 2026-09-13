@@ -19,4 +19,8 @@ Verification JSON: `{status: valid|invalid|incomplete, revision, checks:[{id,sta
 
 HTTP: GET `/api/defaults` -> parameters; POST `/api/evaluate` with `{parameters, pose?}` -> `{model, report, meshes:[{id,positions:[...],indices:[...]}]}` (mesh coordinates WORLD millimetres); POST `/api/export/{format}` same payload returns file. Formats: `pack` ZIP, `pdf`, `csv`, `dxf`, `step`, `json`. GET `/api/health`. Validation error HTTP 422 with readable detail. Frontend has configurable `/api` proxy to localhost:8000. Heavy evaluation is server-side; identify stale responses by revision/request sequencing.
 
+POST `/api/preview` accepts the same inputs and returns current model/meshes with `report: null`. It never invokes verification, even when a cached report exists. The frontend's automatic-verification toggle selects preview versus evaluation, with a manual verification action. Changed settings invalidate displayed evidence immediately; preview-only responses cannot enable supplier exports. Aborting a client request prevents a late result from replacing current state; it does not promise cancellation of a CAD operation already executing on the server.
+
+Evaluation and preview responses include `X-Design-Revision` and `X-Verification-State` (`evaluated` or `preview`). These identify the response without requiring an extra copy of its mesh body; the authoritative report remains in the evaluated JSON payload.
+
 Dependencies: Python 3.12, CadQuery, scipy, numpy, fastapi, uvicorn, pydantic, reportlab, ezdxf, pytest, httpx. Frontend SolidJS, Three.js, Vite, TypeScript. Pin/install dependencies and commit lockfiles. No deployment or provider messaging.
