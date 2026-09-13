@@ -6,6 +6,15 @@ Extrusions use actual retained AST03003004 and AST03006006 supplier STEP end fac
 
 ## Doors
 
+Both bifold hinge lines now use the retained Elesa+Ganter CFG.30/30 SH-6-C33
+STEP assembly: two independently moving molded leaves and the real pin, including
+knuckles and countersunk holes. Three complete hinges per joint give twelve
+complete hinges across the two bifolds. Source geometry is never scaled or
+reconstructed; see [asset provenance and datums](../backend/enclosure/assets/CFG3030.md).
+Frame and interleaf mounting faces are oriented oppositely about their common
+pin datums. This supersedes the earlier wing-envelope representation, not the
+outstanding screw/insert, tolerance and load validation requirements.
+
 Front leaves swing outward from axes outside the front frame. No fixed centre obstruction is introduced. The right leaf carries an exterior meeting astragal: the permitted domain is right leaf moving with left closed, or left leaf moving with right fully open. Core pose validation and UI controls enforce this order; motion verification evaluates both stages while retaining independent combinations with the bifolds. Front infills default to glass, bifold infills to wood. Continuous opposing retaining beads, edge gaskets and soft face packing replace isolated clips; glass setting support, fixing pitch and compatible rubber profiles remain supplier questions.
 
 Each bifold uses the revision C offset, unequal-link mechanism in `bifold.py`. The left opening spans half the depth; the rear opening defaults to 750 mm (`back_opening_width_mm`). Parking pivots are at the rear-left and rear-right corners. Both open outward to 88°. CFG.30/30 hinges use 5 mm jamb/meeting gaps; the secondary leaf is 40 mm wider. Default leaf widths are 384.75/424.75 mm left and 347.5/387.5 mm rear, all 682 mm high. Bifold infills default to 4 mm polycarbonate.

@@ -450,7 +450,8 @@ export default function App() {
             <p data-testid="bifold-prototype-note">
               Bifold prototype · A1 mini PETG guides, CFG hinges, 88° parking.
               Rear opening 750 mm by default. Drilled carrier and closed-stop
-              tabs modeled; head sealing, parked stops/catches and physical
+              tabs modeled; vendor STEP frame/interleaf hinges fitted. Head
+              sealing, parked stops/catches and physical
               load/wear validation remain pending. Not released for manufacture.
             </p>
             <For each={doors}>

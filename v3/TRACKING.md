@@ -1,5 +1,22 @@
 # V3 delivery tracking
 
+## Real bifold hinges — 2026-09-13
+
+- [x] Replace both frame and interleaf placeholder wings with the supplied
+  Elesa+Ganter CFG.30/30 SH-6-C33 STEP leaves and pins, without scaling or
+  invented knuckles. Three hinges per joint, twelve complete hinges total.
+- [x] Place real mounting planes and fixing centres against the extrusion
+  faces/slot centres; rotate each leaf with its own frame/door and retain pin
+  contact at five tested poses. Kernel tests check validity and no overlap.
+- [x] Default report now has 1,311 pass, 3 fail, 84 unknown. The remaining
+  failures are unchanged head sealing failures, not hinge solid interference.
+- [x] Focused browser acceptance checks all 36 vendor component meshes and
+  independent door animation. Half-open screenshot inspected. The initial cold
+  native evaluation exceeded the old 120-second event timeout; the test now
+  permits 300 seconds within its existing 600-second overall allowance.
+- [ ] Confirm fixing screw lengths, slot inserts, combined loads and tolerance
+  allowances physically; STEP geometry alone does not approve the installation.
+
 ## Mechanical correction pass — 2026-09-13
 
 - [x] Remove confirmed rigid clashes using supplier header relief, candidate

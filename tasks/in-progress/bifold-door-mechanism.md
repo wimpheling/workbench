@@ -756,6 +756,22 @@ and 11 engineering tests, lint/format, type checking and production build pass.
 The revision C browser acceptance test passes against the rebuilt/restarted
 port-8000 v3 app; its screenshot was inspected. Physical release remains blocked.
 
+### Real vendor hinge correction — 2026-09-13
+
+Both frame and interleaf hinges now use the retained Elesa+Ganter CFG.30/30
+SH-6-C33 STEP assembly, not rectangular wing placeholders. The two molded
+leaves (including knuckles, bores and countersinks) and the steel pin remain
+unscaled vendor solids. Three hinges per joint give twelve purchased complete
+hinges across the two bifolds. Each leaf moves with its actual supporting
+frame or leaf; frame mounting reverses the mounting face with a rigid rotation.
+Source and coordinate details are in `v3/backend/enclosure/assets/CFG3030.md`.
+
+Real-solid tests check pin contact, no leaf/pin penetration and no leaf/leaf
+penetration at five poses on both hinge lines of both openings. The default
+report is now 1,311 pass, 3 fail, 84 unknown, with the same head sealing
+failures. Mounting screws/inserts, engagement and load acceptance remain
+unconfirmed; these vendor solids do not certify the full door installation.
+
 ## Implementation plan
 
 - [x] Agree on the mechanism route before changing geometry

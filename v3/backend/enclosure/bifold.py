@@ -275,29 +275,39 @@ def add_bifolds(part, leaf, doors, parameters):
             holes=[dict(axis="y", center=[0, zz], diameter_mm=6.5) for zz in (4.6, -25.4)],
             mounting="Two M6 slot nuts on exterior free-stile face; supplier must confirm screws, engagement and PETG clamp stress",
         )
-        # The two wings remain on their respective rigid bodies. Installation
-        # envelopes are NOT represented as calibrated supplier hinge solids.
+        # Vendor leaves and pin articulate about the source STEP's real Z axis.
+        from .profiles import hinge_component
+
         for i, z in enumerate([BOTTOM + 90, (BOTTOM + H - HEAD) / 2, H - HEAD - 90]):
-            for kind, anchor, normal in [("frame", [0, 0, 0], 8), ("interleaf", closed_elbow, -8)]:
-                for side in (-1, 1):
+            for kind, anchor in [("frame", [0, 0, 0]), ("interleaf", closed_elbow)]:
+                for side, component in [(-1, "negative"), (1, "positive"), (0, "pin")]:
                     motion = (
                         None
-                        if kind == "frame" and side == -1
-                        else ("a" if kind == "frame" or side == -1 else "b")
+                        if kind == "frame" and side != 1
+                        else ("a" if kind == "frame" or side != 1 else "b")
                     )
-                    local = [side * 17.5, normal, z]
-                    if kind == "interleaf" and side == -1:
+                    _, centre, size = hinge_component(component, kind == "frame")
+                    local = _add(centre, [0, 0, z])
+                    if kind == "interleaf" and side != 1:
                         local = _add(local, anchor)
                     add(
-                        f"{kind}-hinge-{i}-wing-{side}",
-                        [16, 6, 30],
+                        f"{kind}-hinge-{i}-" + ("pin" if side == 0 else f"wing-{side}"),
+                        size,
                         local,
                         motion,
                         product_code="CFG.30/30 SH-6-C33",
-                        material="PA / steel pin",
-                        geometry_fidelity="unconfirmed-hinge-wing-envelope",
-                        quantity=0.5,
-                        purchase_unit="complete two-wing hinge",
+                        material="nickel-plated steel"
+                        if side == 0
+                        else "PA glass-fibre reinforced, RAL 7040",
+                        geometry_fidelity="supplier-step-solid",
+                        cad_asset="CFG3030.stp",
+                        cad_component=component,
+                        hinge_exterior=kind == "frame",
+                        mounting_orientation_confirmed=False,
+                        quantity=0 if side == 0 else 0.5,
+                        purchase_unit="complete two-leaf hinge including pin",
+                        source="https://www.elesa-ganter.com/siteassets/PDF/EN/CFG..pdf",
+                        mounting="Real STEP axis and mounting faces; M6 countersunk screws and supplied slot inserts. Fastener engagement, loads and tolerances pending.",
                     )
         # Small positive stops act on the primary stile near its pivot. The
         # secondary free stile never reaches this x band. Continuous rigid

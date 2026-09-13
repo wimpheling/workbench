@@ -656,6 +656,10 @@ def build_shapes(model, pose=None):
             from .profiles import extrusion
 
             shape = extrusion(p["cut_length_mm"], p["length_axis"], p["product_code"])
+        elif p.get("cad_asset") == "CFG3030.stp":
+            from .profiles import hinge_component
+
+            shape = hinge_component(p["cad_component"], p["hinge_exterior"])[0]
         elif p.get("cad_asset") == "CIB08T.step":
             from .profiles import inner_bracket
 

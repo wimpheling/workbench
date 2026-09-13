@@ -80,9 +80,15 @@ def test_centred_header_relief_is_converted_to_drawing_origin(specification):
     model, report, shapes = specification
     rail = model["parts"][0]
     rail["size"] = [500, 60, 30]
-    rail["cutouts"] = [dict(kind="rectangle", normal_axis=2,
-                           width_mm=15.5, height_mm=15.5,
-                           center_local_mm=[-242.25, -22.25, 0])]
+    rail["cutouts"] = [
+        dict(
+            kind="rectangle",
+            normal_axis=2,
+            width_mm=15.5,
+            height_mm=15.5,
+            center_local_mm=[-242.25, -22.25, 0],
+        )
+    ]
     data, _, _ = export_file("pdf", model, report, shapes)
     text = " ".join(page.extract_text() for page in PdfReader(io.BytesIO(data)).pages)
     assert "lower-left (0, 0) mm" in text

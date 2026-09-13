@@ -76,7 +76,9 @@ export default function Viewer(props: {
                 ? "#df8a42"
                 : glazing
                   ? colors.glass
-                  : (colors[part.category] ?? "#7d9792"),
+                  : part.material.includes("RAL 7040")
+                    ? "#9da1aa"
+                    : (colors[part.category] ?? "#7d9792"),
         metalness: part.category === "extrusion" ? 0.5 : 0.05,
         roughness: 0.58,
         transparent,

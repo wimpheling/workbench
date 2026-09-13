@@ -9,8 +9,9 @@ test("revision C prototype is served by v3 and animates without CAD requests", a
   page.on("request", (r) => {
     if (r.url().endsWith("/api/evaluate")) evaluations++;
   });
-  const evaluated = page.waitForResponse((r) =>
-    r.url().endsWith("/api/evaluate"),
+  const evaluated = page.waitForResponse(
+    (r) => r.url().endsWith("/api/evaluate"),
+    { timeout: 300000 }, // Cold native verification includes articulated vendor solids.
   );
   await page.goto("/");
   const response = await evaluated;
@@ -31,6 +32,14 @@ test("revision C prototype is served by v3 and animates without CAD requests", a
   expect(bifolds[1].opening_width_mm).toBe(750);
   expect(bifolds[1].guide.module_length_mm).toBeCloseTo(133.84);
   expect(data.report).toBeNull();
+  const hinges = data.model.parts.filter(
+    (p: { cad_asset?: string }) => p.cad_asset === "CFG3030.stp",
+  );
+  expect(hinges).toHaveLength(36);
+  expect(hinges.filter((p: { cad_component: string }) => p.cad_component === "pin")).toHaveLength(12);
+  for (const hinge of hinges) {
+    expect(data.meshes.find((m: { id: string }) => m.id === hinge.id).positions.length).toBeGreaterThan(100);
+  }
   await expect(page.getByTestId("bifold-prototype-note")).toContainText(
     "A1 mini PETG",
   );
@@ -47,6 +56,9 @@ test("revision C prototype is served by v3 and animates without CAD requests", a
     await page
       .getByRole("slider", { name: "Rear wall · right bifold" })
       .fill(fraction);
+    if (fraction === "0.5") {
+      await page.screenshot({ path: "../artifacts/vendor-hinges-half-open.png", fullPage: true });
+    }
   }
   expect(evaluations).toBe(count);
   expect(errors).toEqual([]);

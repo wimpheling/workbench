@@ -10,6 +10,7 @@ ASSET_SHA256 = hashlib.sha256(
     + (ASSET.parent / "CBR3030.step").read_bytes()
     + (ASSET.parent / "AST03006006.step").read_bytes()
     + (ASSET.parent / "CIB08T.step").read_bytes()
+    + (ASSET.parent / "CFG3030.stp").read_bytes()
 ).hexdigest()
 
 
@@ -68,3 +69,24 @@ def inner_bracket():
         (-(bb.xmin + bb.xmax) / 2, -(bb.ymin + bb.ymax) / 2, -(bb.zmin + bb.zmax) / 2)
     )
     return shape.rotate((0, 0, 0), (1, 0, 0), 90).rotate((0, 0, 0), (0, 0, 1), -90)
+
+
+@lru_cache(maxsize=6)
+def hinge_component(component, exterior=False):
+    """Unscaled vendor solids; return centred geometry and its pin-relative datum.
+
+    CFG source pin is the Z axis, mounting plane Y=-8. Frame hinges mount
+    on the opposite face: a rigid X rotation reverses Y and Z, not handedness.
+    """
+    import cadquery as cq
+
+    solids = cq.importers.importStep(str(ASSET.parent / "CFG3030.stp")).val().Solids()
+    if len(solids) != 3:
+        raise ValueError("CFG vendor assembly must contain two leaves and one pin")
+    index = {"positive": 0, "pin": 1, "negative": 2}[component]
+    shape = solids[index]
+    if exterior:
+        shape = shape.rotate((0, 0, 0), (1, 0, 0), 180)
+    bb = shape.BoundingBox()
+    centre = [(bb.xmin + bb.xmax) / 2, (bb.ymin + bb.ymax) / 2, (bb.zmin + bb.zmax) / 2]
+    return shape.translate(tuple(-v for v in centre)), centre, [bb.xlen, bb.ylen, bb.zlen]

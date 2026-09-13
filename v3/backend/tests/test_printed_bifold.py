@@ -7,6 +7,34 @@ from enclosure.core import build_model, build_shapes, pose_model
 from enclosure.verification import swept_box
 
 
+@pytest.mark.parametrize("did", ["left-rear", "back-right"])
+@pytest.mark.parametrize("kind", ["frame", "interleaf"])
+def test_vendor_hinge_leaves_and_pin_stay_connected_through_travel(did, kind):
+    import cadquery as cq
+    from enclosure.profiles import ASSET, hinge_component
+
+    source = cq.importers.importStep(str(ASSET.parent / "CFG3030.stp")).val().Solids()
+    model = build_model()
+    ids = [f"{did}-{kind}-hinge-0-{suffix}" for suffix in ("wing--1", "wing-1", "pin")]
+    for fraction in (0, 0.25, 0.5, 0.75, 1):
+        posed = pose_model(model, {did: fraction})
+        parts = [p for p in posed["parts"] if p["id"] in ids]
+        assert len(parts) == 3
+        shapes = build_shapes({**posed, "parts": parts})
+        pin = shapes[ids[2]]
+        for p in parts:
+            assert p["cad_asset"] == "CFG3030.stp"
+            shape, _, _ = hinge_component(p["cad_component"], kind == "frame")
+            assert shapes[p["id"]].Volume() == pytest.approx(shape.Volume())
+            assert shapes[p["id"]].isValid()
+        assert pin.Volume() == pytest.approx(source[1].Volume())
+        for pid in ids[:2]:
+            # Actual knuckle bores remain on the real pin, not merely nearby boxes.
+            assert shapes[pid].distance(pin) < 1e-5
+            assert shapes[pid].intersect(pin).Volume() < 1e-5
+        assert shapes[ids[0]].intersect(shapes[ids[1]]).Volume() < 1e-5
+
+
 def test_browser_fixture_is_current_backend_output():
     samples = json.loads(
         (
