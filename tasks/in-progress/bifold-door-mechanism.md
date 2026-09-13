@@ -772,6 +772,18 @@ report is now 1,311 pass, 3 fail, 84 unknown, with the same head sealing
 failures. Mounting screws/inserts, engagement and load acceptance remain
 unconfirmed; these vendor solids do not certify the full door installation.
 
+### Roller availability / STEP retrieval — 2026-09-13
+
+Exact Reiman roller and bush listings now have browser-checked prices and
+quantity-dependent dispatch estimates: two rollers and four bushes total
+€23.00 at displayed tax-inclusive unit prices, excluding shipping, with
+3–4-day dispatch shown. Elpro lists the exact 10 mm Essentra spacer in stock,
+but sells to businesses only; its small-order Portugal shipping is expensive.
+See `engineering/bifold-assembly/roller-sourcing-2026-09-13.md` for dated
+evidence, links and limitations. This does not establish purchase eligibility
+or reserve stock. STEP imports remain blocked on obtaining the genuine files;
+Reiman requires login and no substitute geometry has been relabelled as STEP.
+
 ## Implementation plan
 
 - [x] Agree on the mechanism route before changing geometry
@@ -779,6 +791,8 @@ unconfirmed; these vendor solids do not certify the full door installation.
   - [x] Record the user's choice of a conventional retained-frame assembly
   - [x] Resolve the wood/aluminium decision: retain aluminium frames and 4 mm panels
 - [ ] Specify the complete assembly
+  - [x] Check exact roller/bush listings and the 10 mm spacer sourcing route; record current prices, dispatch, stock and B2B restrictions
+  - [ ] Obtain and import genuine roller, bush and spacer STEP files; Reiman downloads require sign-in
   - [x] Produce revision A with exact catalogue candidates, supplier routes and preliminary component quantities
   - [x] Document the load path, guide cross-section proposal, mounting preparation and adjustment targets
   - [x] Calculate preliminary leaf masses, hinge moments and header beam deflection
