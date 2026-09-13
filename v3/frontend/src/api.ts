@@ -12,6 +12,8 @@ export interface Part {
   assembly?: string;
   geometry_fidelity?: string;
   quantity?: number;
+  motion_leaf?: "a" | "b" | "slider";
+  motion_local?: number[];
   [key: string]: unknown;
 }
 export interface Check {
@@ -31,7 +33,16 @@ export interface Evaluation {
     parameters: Parameters;
     parts: Part[];
     assumptions: { id: string; description: string; confirmed: boolean }[];
-    doors: unknown;
+    doors: {
+      id: string;
+      type: "swing" | "bifold";
+      pivot: number[];
+      base_deg: number;
+      opening_sign: number;
+      max_angle_deg: number;
+      link_length_mm: number;
+      [key: string]: unknown;
+    }[];
     [key: string]: unknown;
   };
   report: {
@@ -42,6 +53,7 @@ export interface Evaluation {
     coverage: Record<string, unknown>;
     order_ready: boolean;
   } | null;
+  mesh_pose?: "closed";
   meshes: { id: string; positions: number[]; indices: number[] }[];
 }
 export async function readResponse<T>(response: Response): Promise<T> {
@@ -58,10 +70,10 @@ export async function readResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 export function signature(parameters: Parameters, pose: Pose): string {
-  return JSON.stringify([
-    Object.entries(parameters).sort(([a], [b]) => a.localeCompare(b)),
-    Object.entries(pose).sort(([a], [b]) => a.localeCompare(b)),
-  ]);
+  // Pose is a reversible viewer state. Design revisions and verification
+  // remain bound to dimensional/material parameters only.
+  void pose;
+  return JSON.stringify(Object.entries(parameters).sort(([a], [b]) => a.localeCompare(b)));
 }
 export function canExport(
   result: Evaluation | undefined,

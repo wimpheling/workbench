@@ -49,8 +49,11 @@ export default function App() {
   let epoch = 0;
   const [autoVerify, setAutoVerify] = createSignal(true);
   const [verifying, setVerifying] = createSignal(false);
+  const [playing, setPlaying] = createSignal<"opening" | "closing" | "">("");
   let disposed = false;
-  const current = createMemo(() => signature(parameters(), pose()));
+  let playbackFrame = 0;
+  let playbackStart = 0;
+  const current = createMemo(() => signature(parameters(), {}));
   const stale = createMemo(() => current() !== evaluated());
   const report = createMemo(() => (!stale() && !invalidFields().length ? result()?.report : null));
   const exportAllowed = createMemo(
@@ -122,6 +125,7 @@ export default function App() {
     timer = setTimeout(() => void run(), 350);
   });
   function toggleAuto(enabled: boolean) {
+    stopPlayback();
     clearTimeout(timer);
     queued = undefined;
     epoch++;
@@ -130,6 +134,7 @@ export default function App() {
     if (enabled || busy() || stale() || !result()) void run(enabled);
   }
   function verifyNow() {
+    stopPlayback();
     clearTimeout(timer);
     void run(true);
   }
@@ -148,10 +153,98 @@ export default function App() {
   onMount(() => void load());
   onCleanup(() => {
     disposed = true;
+    stopPlayback();
     controller?.abort();
     clearTimeout(timer);
   });
+  function stopPlayback() {
+    if (playbackFrame) cancelAnimationFrame(playbackFrame);
+    playbackFrame = 0;
+    setPlaying("");
+  }
+  function play(direction: "opening" | "closing") {
+    if (!loaded()) return;
+    stopPlayback();
+    const closed = Object.fromEntries(doors.map(([id]) => [id, 0]));
+    const opened = Object.fromEntries(doors.map(([id]) => [id, 1]));
+    const phases: {
+      ids: string[];
+      from: Record<string, number>;
+      to: Record<string, number>;
+      duration: number;
+    }[] =
+      direction === "opening"
+        ? [
+            {
+              ids: ["front-right"],
+              from: closed,
+              to: { ...closed, "front-right": 1 },
+              duration: 800,
+            },
+            {
+              ids: ["front-left"],
+              from: { ...closed, "front-right": 1 },
+              to: { ...opened, "front-left": 1 },
+              duration: 800,
+            },
+            {
+              ids: ["left-rear", "back-right"],
+              from: { ...opened, "front-left": 1 },
+              to: opened,
+              duration: 900,
+            },
+          ]
+        : [
+            {
+              ids: ["left-rear", "back-right"],
+              from: opened,
+              to: { ...opened, "left-rear": 0, "back-right": 0 },
+              duration: 900,
+            },
+            {
+              ids: ["front-left"],
+              from: { ...opened, "left-rear": 0, "back-right": 0 },
+              to: { ...closed, "front-right": 1 },
+              duration: 800,
+            },
+            {
+              ids: ["front-right"],
+              from: { ...closed, "front-right": 1 },
+              to: closed,
+              duration: 800,
+            },
+          ];
+    setPlaying(direction);
+    let phase = 0;
+    setPose({ ...(direction === "opening" ? closed : opened) });
+    playbackStart = performance.now();
+    const tick = (now: number) => {
+      if (disposed || !playing() || phase >= phases.length) {
+        playbackFrame = 0;
+        setPlaying("");
+        return;
+      }
+      const current = phases[phase];
+      const progress = Math.min(1, (now - playbackStart) / current.duration);
+      const next = { ...current.from };
+      for (const id of current.ids) {
+        next[id] = current.from[id] + (current.to[id] - current.from[id]) * progress;
+      }
+      setPose(next);
+      if (progress >= 1) {
+        phase += 1;
+        playbackStart = now;
+      }
+      playbackFrame = requestAnimationFrame(tick);
+    };
+    playbackFrame = requestAnimationFrame(tick);
+  }
+  function changePose(id: string, value: number) {
+    stopPlayback();
+    setPose((p) => ({ ...p, [id]: value }));
+  }
   function update(id: string, value: string) {
+    stopPlayback();
     const n = Number(value);
     const valid = !!value.trim() && Number.isFinite(n);
     setInvalidFields((fields) =>
@@ -299,12 +392,13 @@ export default function App() {
                   <select
                     aria-label={id.replaceAll("_", " ")}
                     value={String(value)}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      stopPlayback();
                       setParameters((p) => ({
                         ...p,
                         [id]: e.currentTarget.value,
-                      }))
-                    }
+                      }));
+                    }}
                   >
                     <option value="wood">Wood</option>
                     <option value="glass">Glass</option>
@@ -314,12 +408,31 @@ export default function App() {
             </For>
             <div class="section-heading doors-heading">
               <h2>Open & close</h2>
-              <button
-                class="text-button"
-                onClick={() => setPose(Object.fromEntries(doors.map(([id]) => [id, 0])))}
-              >
-                Close all
-              </button>
+              <div class="door-actions">
+                <button
+                  class="text-button"
+                  onClick={() => {
+                    stopPlayback();
+                    setPose(Object.fromEntries(doors.map(([id]) => [id, 0])));
+                  }}
+                >
+                  Close all
+                </button>
+                <button
+                  class="text-button"
+                  aria-label="Play opening sequence"
+                  onClick={() => play("opening")}
+                >
+                  {playing() === "opening" ? "Opening…" : "Play opening"}
+                </button>
+                <button
+                  class="text-button"
+                  aria-label="Play closing sequence"
+                  onClick={() => play("closing")}
+                >
+                  {playing() === "closing" ? "Closing…" : "Play closing"}
+                </button>
+              </div>
             </div>
             <For each={doors}>
               {([id, label]) => (
@@ -343,12 +456,7 @@ export default function App() {
                           : false
                     }
                     aria-describedby={id.startsWith("front-") ? "front-door-sequence" : undefined}
-                    onInput={(e) =>
-                      setPose((p) => ({
-                        ...p,
-                        [id]: Number(e.currentTarget.value),
-                      }))
-                    }
+                    onInput={(e) => changePose(id, Number(e.currentTarget.value))}
                   />
                 </label>
               )}
@@ -407,6 +515,7 @@ export default function App() {
             </div>
             <Viewer
               result={result()}
+              pose={pose()}
               roof={roof()}
               walls={walls()}
               references={references()}

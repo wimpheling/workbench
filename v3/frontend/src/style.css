@@ -205,6 +205,12 @@ h2 {
   font-size: 11px;
   text-align: left;
 }
+.door-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 .door-control {
   display: block;
   margin-top: 16px;

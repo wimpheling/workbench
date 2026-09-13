@@ -35,6 +35,8 @@ For frontend development, start the Python service and run `npm run dev` in `v3/
 5. Read failures and unresolved evidence. A successful constraint solve is only one piece of evidence; it does not imply clearance or order readiness.
 6. Export a supplier quotation pack for review. All dimensions, geometry and evidence share one design revision. Changing parameters invalidates the previous export selection until evaluation finishes.
 
+Door sliders and the **Play opening / Play closing** controls animate the canonical CAD meshes in the browser. Motion uses the `model.doors` kinematics and each part's `motion_leaf` metadata, so pose frames do not call the native CAD service or verification endpoint. The right front leaf opens before the left; closing reverses that order. Changing dimensions/materials, switching verification mode or starting a manual verification cancels playback cleanly. A parameter edit with Automatic verification off still requests a geometry-only `/api/preview`; pose-only changes do not.
+
 Coordinate convention: X right, Y toward the rear, Z up; front wall at Y=0; all lengths are millimetres. Clear dimensions exclude the surrounding frame. The machine and hose envelopes are configurable **unconfirmed assumptions**, not specifications silently substituted from the newer Shapeoko 5.1.
 
 ## Door seals and airflow

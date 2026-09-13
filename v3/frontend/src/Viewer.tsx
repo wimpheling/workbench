@@ -1,9 +1,11 @@
 import { createEffect, on, onCleanup, onMount } from "solid-js";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import type { Evaluation } from "./api";
+import type { Evaluation, Pose } from "./api";
+import { applyPoseToMesh } from "./motion";
 export default function Viewer(props: {
   result?: Evaluation;
+  pose: Pose;
   roof: boolean;
   walls: boolean;
   references: boolean;
@@ -18,6 +20,7 @@ export default function Viewer(props: {
     group: THREE.Group;
   let fitted = false;
   let frame = 0;
+  let currentPose: Pose = {};
   const colors: Record<string, string> = {
     extrusion: "#a6bbc1",
     panel: "#d9bd90",
@@ -37,6 +40,7 @@ export default function Viewer(props: {
     const result = props.result;
     if (!result) return;
     const parts = new Map(result.model.parts.map((p) => [p.id, p]));
+    const doors = new Map(result.model.doors.map((door) => [door.id, door]));
     for (const data of result.meshes) {
       const part = parts.get(data.id);
       if (!part) continue;
@@ -70,11 +74,23 @@ export default function Viewer(props: {
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.userData.id = part.id;
+      mesh.userData.part = part;
+      mesh.userData.door = part.assembly ? doors.get(part.assembly) : undefined;
+      mesh.matrixAutoUpdate = false;
       group.add(mesh);
     }
+    applyPose();
     if (!fitted && group.children.length) {
       fit();
       fitted = true;
+    }
+  }
+  function applyPose() {
+    if (!group) return;
+    for (const child of group.children) {
+      const mesh = child as THREE.Mesh;
+      const part = mesh.userData.part;
+      applyPoseToMesh(mesh, part, mesh.userData.door, currentPose[part?.assembly] ?? 0);
     }
   }
   function fit() {
@@ -153,12 +169,26 @@ export default function Viewer(props: {
     };
     renderer.domElement.addEventListener("pointerdown", pointerDown);
     renderer.domElement.addEventListener("pointerup", pick);
-    const animate = () => {
+    let last = performance.now();
+    const animate = (timestamp: number) => {
       frame = requestAnimationFrame(animate);
+      const delta = Math.min(50, Math.max(1, timestamp - last));
+      last = timestamp;
+      const target = props.pose;
+      for (const id of Object.keys(target)) {
+        const value = target[id] ?? 0;
+        const current = currentPose[id] ?? 0;
+        currentPose[id] =
+          Math.abs(value - current) < 0.0005
+            ? value
+            : current + (value - current) * (1 - Math.exp(-delta / 90));
+      }
+      applyPose();
       controls.update();
       renderer.render(scene, camera);
     };
-    animate();
+    currentPose = { ...props.pose };
+    animate(performance.now());
     refresh();
     onCleanup(() => {
       cancelAnimationFrame(frame);
@@ -186,6 +216,12 @@ export default function Viewer(props: {
         () => props.selected,
       ],
       () => refresh(),
+    ),
+  );
+  createEffect(
+    on(
+      () => props.pose,
+      () => applyPose(),
     ),
   );
   return (
