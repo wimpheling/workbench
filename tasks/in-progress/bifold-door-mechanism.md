@@ -725,6 +725,37 @@ PETG guides and transparent panels were visually inspected. Acceptance is
 recorded in v3/TRACKING.md. Physical commissioning remains
 unfinished, so this task stays in progress.
 
+### V3 mechanical correction pass — 2026-09-13
+
+The default assembly now has no confirmed solid-collision witnesses. Supplier
+machining of a 15.5 × 15.5 mm open relief removes the 3060 header overlap.
+The two door-side bottom brackets use candidate CIB08T inner connectors with
+actual retained STEP geometry. [Reiman's CIB08T listing](https://reiman.pt/en/wlw-cib08t-cib08t-slot-8-type-t-inner-bracket/)
+is the sourcing reference; slot engagement, access and load acceptance still
+need supplier confirmation. No order or supplier message has been sent.
+
+Rigid dust backing is behind the free-stile swing, with narrow flexible brush
+envelopes in the wipe zone. Separate prepared steel tabs stop the primary leaf
+at closure. The carrier has two M6 plate holes, an M4 axle hole and an extra
+4 mm metal spacing ring, plus modeled candidate bushes, head, washer and nut.
+The upright clears the glazing bead. This supersedes the previous carrier
+stack; existing guide-module STL files are unchanged and no new carrier STL
+is released. Tab anti-rotation, slot fixings and PETG clamp stresses are pending.
+
+The head cover is relieved around fixed brackets and roof framing. Its corner
+reliefs and fixing holes still leave real sealing failures: the default report
+has 1,275 passes, 3 failures and 108 unknowns. The failures are the two head
+coverage checks and the containment requirement. Flexible brush behaviour,
+unresolved motion bounds and candidate connector installation remain unknown.
+The full board now sweeps to the centred work area, not to the rear wall;
+that declared loading path passes, conditional on external approach space.
+
+Verification: the full 90-test backend suite passes; the subsequently added
+PDF relief-coordinate regression passes with all 9 export tests. The 44 frontend
+and 11 engineering tests, lint/format, type checking and production build pass.
+The revision C browser acceptance test passes against the rebuilt/restarted
+port-8000 v3 app; its screenshot was inspected. Physical release remains blocked.
+
 ## Implementation plan
 
 - [x] Agree on the mechanism route before changing geometry
@@ -740,6 +771,7 @@ unfinished, so this task stays in progress.
   - [ ] Print and measure the two-module coupon; record actual joint steps, roller drag, retention and clamp dwell results
   - [ ] Detail and verify the printed carrier and independent metal end-stop arrangement before full-door use
   - [ ] Obtain supplier drawings and acceptance of the guide/carrier, hinge loads, fasteners and connections
+  - [x] Remove confirmed rigid header, corner-bracket and free-stile/stop clashes in v3; add drilled carrier geometry and primary closed-stop tabs
   - [ ] Resolve all cut dimensions and fastener lengths from the actual pivot/guide stack
   - [ ] Specify closed stops, latches, modest seals, and their clearances through the full movement
   - [ ] Confirm workshop access and usable opening with both leaves folded
@@ -761,7 +793,7 @@ unfinished, so this task stays in progress.
 - [x] Resolve GTH3030 mounting-gap issue: revision B proposes CFG.30/30 at both hinge lines with 5 mm gaps.
 - [ ] Confirm CFG.30/30 combined frame/interleaf loads, fixing engagement, supplier pivot installation and frame-joint rigidity.
 - [ ] Confirm guide reaction throughout travel, keeper/axle stack, and total header/connection deflection.
-- [ ] Resolve v3 assembly integration findings: 3060 rear-left header corner interference, corner bracket/door fit, the full-depth board-insertion prism, and remaining head/meeting barrier coverage. These are reported failures, not waived contacts.
+- [ ] Complete v3 assembly integration: known rigid clashes and the loading-path definition are corrected; head-cover corner/fastener sealing, connector installation and load acceptance remain unresolved. No collision waiver was added.
 - [x] Record supplied workshop clearances: user reports 800 mm left and 450 mm right.
 - [x] Confirm the clearance datum: user confirmed 450 mm outward from the rear wall at the back-right opening.
 - [x] May the rear opening be smaller/asymmetric? User authorised this; use a 750 mm opening as the next design-study target, with the right parking jamb retained.

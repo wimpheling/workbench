@@ -131,6 +131,20 @@ def build_model(parameters=None):
                 end_treatment="Square cut; deburr; tolerance to be confirmed",
                 machining="Mounting machining unresolved",
             )
+            if id == "rail-back-top":
+                # Supplier-machined open corner relief, not overlapping headers.
+                item["cutouts"] = [
+                    dict(
+                        kind="rectangle",
+                        normal_axis=2,
+                        width_mm=15.5,
+                        height_mm=15.5,
+                        center_local_mm=[-size[0] / 2 + 7.75, -22.25, 0],
+                    )
+                ]
+                item["machining"] = (
+                    "Supplier mill open 15.5 x 15.5 mm corner relief through 30 mm height at left/front edge; 0.5 mm clearance to left header. Confirm remaining section and joint strength."
+                )
         if category in ("panel", "glass"):
             thickness_axis = min(range(3), key=lambda i: size[i])
             axes = [i for i in range(3) if i != thickness_axis]
@@ -238,6 +252,32 @@ def build_model(parameters=None):
                     ("x", [15 if side == "left" else W - 15, y, zz], 0),
                     ("y", [x, 15 if end == "front" else D - 15, zz], 90),
                 ]:
+                    if (
+                        level == "bottom"
+                        and end == "back"
+                        and ((side == "left" and face == "y") or (side == "right" and face == "x"))
+                    ):
+                        # Candidate hidden L connector in the inward-facing slots;
+                        # the purchased part remains present, not deleted to pass.
+                        hidden = [-5, D + 15 - 31.3 / 2, -15 + 21.7792841 / 2]
+                        if side == "right":
+                            hidden = [W - 0.65, D + 5, hidden[2]]
+                        part(
+                            f"bracket-{side}-{end}-{level}-{face}",
+                            [13, 31.3, 21.7792841],
+                            hidden,
+                            "hardware",
+                            "frame",
+                            -90 if side == "right" else 0,
+                            product_code="CIB08T",
+                            supplier="Reiman Portugal",
+                            geometry_fidelity="supplier-step-unconfirmed-slot-envelope",
+                            cad_asset="CIB08T.step",
+                            mounting_orientation_confirmed=False,
+                            source="https://reiman.pt/en/wlw-cib08t-cib08t-slot-8-type-t-inner-bracket/",
+                            machining="Candidate slot-mounted joint replaces protruding CBR3030; confirm slot engagement, screw access and load capacity before release",
+                        )
+                        continue
                     part(
                         f"bracket-{side}-{end}-{level}-{face}",
                         [29.122, 26, 29.122],
@@ -616,6 +656,10 @@ def build_shapes(model, pose=None):
             from .profiles import extrusion
 
             shape = extrusion(p["cut_length_mm"], p["length_axis"], p["product_code"])
+        elif p.get("cad_asset") == "CIB08T.step":
+            from .profiles import inner_bracket
+
+            shape = inner_bracket()
         elif p.get("cad_asset"):
             from .profiles import bracket
 
@@ -661,9 +705,17 @@ def build_shapes(model, pose=None):
                 shape = shape.cut(cutter)
         for hole in p.get("holes", []):
             x, y = hole["center"]
-            cutter = cq.Solid.makeCylinder(
-                hole["diameter_mm"] / 2, sz + 2, cq.Vector(x, y, -sz / 2 - 1)
-            )
+            if hole.get("axis") == "y":
+                cutter = cq.Solid.makeCylinder(
+                    hole["diameter_mm"] / 2,
+                    sy + 2,
+                    cq.Vector(x, -sy / 2 - 1, y),
+                    cq.Vector(0, 1, 0),
+                )
+            else:
+                cutter = cq.Solid.makeCylinder(
+                    hole["diameter_mm"] / 2, sz + 2, cq.Vector(x, y, -sz / 2 - 1)
+                )
             shape = shape.cut(cutter)
         shape = shape.rotate((0, 0, 0), (0, 0, 1), p["rotation_deg"]).translate(
             tuple(p["position"])

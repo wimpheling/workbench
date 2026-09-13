@@ -207,7 +207,21 @@ class PartDrawing(Flowable):
         for cutout in p.get("cutouts", []):
             if cutout.get("kind") != "rectangle":
                 raise ValueError(f"Unsupported supplier cutout: {cutout.get('kind')}")
-            cx, cy, cw, ch = (cutout[key] for key in ("x_mm", "y_mm", "width_mm", "height_mm"))
+            if "center_local_mm" in cutout:
+                axes = sorted(range(3), key=lambda i: p["size"][i], reverse=True)[:2]
+                cut_axes = [i for i in range(3) if i != cutout["normal_axis"]]
+                if axes != cut_axes:
+                    c.drawString(
+                        x,
+                        y + h * scale + 13,
+                        "Relief on another face: see local 3D schedule and STEP.",
+                    )
+                    continue
+                cw, ch = cutout["width_mm"], cutout["height_mm"]
+                cx = cutout["center_local_mm"][axes[0]] + w / 2 - cw / 2
+                cy = cutout["center_local_mm"][axes[1]] + h / 2 - ch / 2
+            else:
+                cx, cy, cw, ch = (cutout[key] for key in ("x_mm", "y_mm", "width_mm", "height_mm"))
             c.rect(x + cx * scale, y + cy * scale, cw * scale, ch * scale)
             c.drawString(
                 x,
@@ -433,9 +447,12 @@ def supplier_pdf(model: dict, report: dict) -> bytes:
                 para(f"Hole schedule (local origin lower-left): {json.dumps(part['holes'])}")
             )
         if part.get("cutouts"):
-            story.append(
-                para(f"Cutout schedule (local origin lower-left): {json.dumps(part['cutouts'])}")
+            origin = (
+                "part-centred XYZ; normal_axis 0=X, 1=Y, 2=Z"
+                if any("center_local_mm" in cutout for cutout in part["cutouts"])
+                else "local origin lower-left"
             )
+            story.append(para(f"Cutout schedule ({origin}): {json.dumps(part['cutouts'])}"))
         if part["category"] == "glass" and not part.get("holes") and not part.get("cutouts"):
             story.append(
                 para(

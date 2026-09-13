@@ -9,6 +9,7 @@ ASSET_SHA256 = hashlib.sha256(
     ASSET.read_bytes()
     + (ASSET.parent / "CBR3030.step").read_bytes()
     + (ASSET.parent / "AST03006006.step").read_bytes()
+    + (ASSET.parent / "CIB08T.step").read_bytes()
 ).hexdigest()
 
 
@@ -55,3 +56,15 @@ def bracket():
         (-(bb.xmin + bb.xmax) / 2, -(bb.ymin + bb.ymax) / 2, -(bb.zmin + bb.zmax) / 2)
     )
     return shape.rotate((0, 0, 0), (0, 0, 1), 90)
+
+
+@lru_cache(maxsize=1)
+def inner_bracket():
+    import cadquery as cq
+
+    shape = cq.importers.importStep(str(ASSET.parent / "CIB08T.step")).val()
+    bb = shape.BoundingBox()
+    shape = shape.translate(
+        (-(bb.xmin + bb.xmax) / 2, -(bb.ymin + bb.ymax) / 2, -(bb.zmin + bb.zmax) / 2)
+    )
+    return shape.rotate((0, 0, 0), (1, 0, 0), 90).rotate((0, 0, 0), (0, 0, 1), -90)

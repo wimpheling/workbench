@@ -198,6 +198,26 @@ def add_bifolds(part, leaf, doors, parameters):
             geometry=dict(kind="cylinder", diameter_mm=4),
         )
         add(
+            "axle-head",
+            [7, 7, 3],
+            [0, 0, H - 8],
+            "slider",
+            product_code="M4 axle head",
+            material="steel",
+            geometry=dict(kind="cylinder", diameter_mm=7),
+        )
+        for name, drop in [("upper", 11), ("lower", 19)]:
+            add(
+                f"bearing-bush-{name}",
+                [5, 5, 3],
+                [0, 0, H - drop],
+                "slider",
+                product_code="GN 753.2-4-5-3-AE-NI candidate",
+                material="steel",
+                geometry_fidelity="unconfirmed-bearing-bush-envelope",
+                geometry=dict(kind="annulus", outer_diameter_mm=5, inner_diameter_mm=4),
+            )
+        add(
             "stem-spacer",
             [8, 8, 10],
             [0, 0, H - 27.1],
@@ -208,20 +228,52 @@ def add_bifolds(part, leaf, doors, parameters):
         )
         q = d["secondary_link_mm"]
         add(
+            "carrier-spacing-ring",
+            [8, 8, 4],
+            [0, 0, H - 34.1],
+            "slider",
+            product_code="4 mm metal spacing ring; supplier selection pending",
+            material="steel",
+            geometry=dict(kind="annulus", outer_diameter_mm=8, inner_diameter_mm=4.3),
+        )
+        add(
+            "axle-bottom-washer",
+            [9, 9, 1],
+            [0, 0, H - 42.6],
+            "slider",
+            product_code="M4 washer; thickness confirmation pending",
+            material="steel",
+            geometry=dict(kind="annulus", outer_diameter_mm=9, inner_diameter_mm=4.3),
+        )
+        add(
+            "axle-locknut",
+            [8, 8, 5],
+            [0, 0, H - 45.6],
+            "slider",
+            product_code="M4 prevailing-torque nut",
+            material="steel",
+            geometry_fidelity="unconfirmed-locknut-envelope",
+            geometry=dict(kind="annulus", outer_diameter_mm=8, inner_diameter_mm=4),
+        )
+        add(
             "carrier-shelf",
-            [10, 10, 6],
-            [q[0], q[1], H - 35.1],
+            [14, 28, 6],
+            [q[0], q[1] - 9, H - 39.1],
             "b",
             material="PETG",
-            geometry_fidelity="unconfirmed-carrier-envelope",
+            holes=[dict(center=[0, 9], diameter_mm=4.5)],
+            geometry_fidelity="parametric-carrier-prototype",
+            mounting="Integral shelf on exterior slot-mounted plate; 4 mm extra steel spacer lowers shelf below rail bolt heads",
         )
         add(
             "carrier-upright",
-            [8, 8, 36.9],
-            [q[0], q[1], H - 56.55],
+            [18, 8, 75],
+            [q[0], q[1] - 19, H - 79.6],
             "b",
             material="PETG",
-            geometry_fidelity="unconfirmed-carrier-envelope",
+            geometry_fidelity="parametric-carrier-prototype",
+            holes=[dict(axis="y", center=[0, zz], diameter_mm=6.5) for zz in (4.6, -25.4)],
+            mounting="Two M6 slot nuts on exterior free-stile face; supplier must confirm screws, engagement and PETG clamp stress",
         )
         # The two wings remain on their respective rigid bodies. Installation
         # envelopes are NOT represented as calibrated supplier hinge solids.
@@ -247,6 +299,20 @@ def add_bifolds(part, leaf, doors, parameters):
                         quantity=0.5,
                         purchase_unit="complete two-wing hinge",
                     )
+        # Small positive stops act on the primary stile near its pivot. The
+        # secondary free stile never reaches this x band. Continuous rigid
+        # dust backing is deliberately NOT used as the closure stop.
+        for i, z in enumerate([175, H - HEAD - 175]):
+            add(
+                f"closed-stop-{i}",
+                [60, 4, 20],
+                [-2.5, 40, z],
+                material="steel",
+                product_code="Supplier-prepared primary-leaf stop tab",
+                geometry_fidelity="nominal-solid",
+                holes=[dict(axis="y", center=[-15, 0], diameter_mm=6.5)],
+                machining="60 x 20 x 4 mm tab, 6.5 mm through hole at jamb slot centre. Confirm M6 screw/slot nut, anti-rotation restraint and impact load before use",
+            )
         # Sampled bare frame sweep, with a named (not proven) hardware allowance.
         sweep = 0.0
         for i, (elbow, _, phi) in enumerate(samples):

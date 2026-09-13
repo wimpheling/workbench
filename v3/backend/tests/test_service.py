@@ -39,7 +39,13 @@ def test_defaults_and_real_geometry(client, evaluation):
     # Keep known physical failures visible instead of silently waiving them.
     checks = {c["id"]: c for c in evaluation["report"]["checks"]}
     assert checks["containment.coverage.left-rear-perimeter-top.0"]["status"] == "fail"
-    assert checks["collision.rail-back-top.rail-left-top"]["status"] == "fail"
+    assert not any(
+        c["status"] == "fail" for c in checks.values() if c["id"].startswith("collision.")
+    )
+    access = checks["access.workpiece"]
+    assert access["status"] == "pass"
+    assert access["measured"]["final_center_y_mm"] == 1649 / 2
+    assert access["measured"]["leading_edge_y_mm"] == (1649 + 1219.2) / 2
     assert checks["kinematics.native.left-rear"]["status"] == "unknown"
     assert not any(
         c["status"] == "fail"

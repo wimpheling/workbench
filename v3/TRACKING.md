@@ -1,6 +1,23 @@
 # V3 delivery tracking
 
-## Current revision C integration — 2026-09-13
+## Mechanical correction pass — 2026-09-13
+
+- [x] Remove confirmed rigid clashes using supplier header relief, candidate
+  CIB08T inner connectors, displaced rigid backing and relieved head covers.
+- [x] Add drilled exterior carrier/axle shelf, lower axle stack and separate
+  primary-leaf closed-stop tabs. All mounting/load details remain provisional.
+- [x] Check board insertion to the centred work area, including the full board
+  sweep; retain regression tests for approach and final-position obstructions.
+- [x] Default report: 1,275 pass, 3 fail, 108 unknown. No confirmed collision
+  witnesses; two head-cover coverage failures plus containment requirement fail.
+- [x] Software checks: 90-test full backend suite plus the added PDF-coordinate
+  regression (all 9 export tests pass), 44 frontend tests, 11 engineering tests,
+  lint/format, type checking and production build. The focused revision C browser
+  acceptance test passes on the restarted port-8000 service; screenshot inspected.
+- [ ] Close head-cover relief/fastener leakage, validate brush deformation,
+  detail parked stops/catches, and obtain supplier/physical connection evidence.
+
+## Initial revision C integration — 2026-09-13 (history)
 
 - [x] Replace ideal equal-link bifolds and overhead doglegs with rear-corner,
   unequal-link 88° mechanisms, a 750 mm rear opening, 682 mm default leaf height

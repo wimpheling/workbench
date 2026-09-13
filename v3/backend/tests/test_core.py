@@ -228,7 +228,8 @@ def test_guide_shifted_into_header_is_rejected_by_actual_geometry():
     parts = {p["id"]: p for p in model["parts"]}
     track = dict(parts["left-rear-track"])
     track["position"] = list(track["position"])
-    track["position"][2] = parts["left-rear-perimeter-top-stop"]["position"][2]
-    header = parts["left-rear-perimeter-top-stop"]
+    header = parts["rail-left-top"]
+    track["position"][0] = header["position"][0]
+    track["position"][2] = header["position"][2]
     shapes = build_shapes({**model, "parts": [track, header]})
     assert check_solid_pair(shapes[track["id"]], shapes[header["id"]])["status"] == "fail"

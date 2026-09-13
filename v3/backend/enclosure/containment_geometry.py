@@ -89,9 +89,11 @@ def add_containment(model):
             base = d["base_deg"]
             span = d["opening_width_mm"]
             top = H - 55
-            stopnormal = 33
-            sealnormal = 31
-            depth = 2
+            # The rotating free-stile corner reaches behind the closed plane.
+            # Rigid backing stays clear; only flexible bristles occupy the wipe zone.
+            stopnormal = 40
+            sealnormal = 35
+            depth = 10
         ids = []
         specs = [
             ("left", [-5, (H) / 2], [30, H + 40]),
@@ -101,12 +103,10 @@ def add_containment(model):
         ]
         for side, (xx, zz), (ww, hh) in specs:
             if did != "front" and side in ("left", "right"):
-                zz, hh = (35 + top) / 2, top - 35
+                zz, hh = top / 2, top
             if did != "front" and side == "top":
-                # Do not invent a solid header through the roller/carrier path.
-                # The remaining head opening deliberately fails sealing coverage
-                # until a brush/cover attachment and clearance is established.
-                zz, hh = top, 20
+                # A prepared cover stays behind the roller/carrier path.
+                zz, hh = (top - 10 + H) / 2, H - top + 10
             for kind, nn, dd, rubber in [
                 ("stop", stopnormal, 2, False),
                 ("seal", sealnormal, depth, True),
@@ -115,7 +115,70 @@ def add_containment(model):
                 item = add(
                     id, [ww, dd, hh], _add(pivot, _rotate([xx, nn, zz], base)), base, rubber=rubber
                 )
+                if did != "front" and rubber:
+                    if side in ("left", "right"):
+                        item["size"][2] = H + 6
+                        item["position"] = _add(pivot, _rotate([xx, nn, H / 2], base))
+                    elif side == "bottom":
+                        item["size"][0] = span + 6
+                    elif side == "top":
+                        # A narrow wiping brush below a sheet cover, not a
+                        # headroom-sized gasket volume.
+                        item["size"] = [span + 6, 10, 2]
+                        item["position"] = _add(pivot, _rotate([span / 2, 35, top - 8], base))
+                    item.update(
+                        material="PBT brush bristles",
+                        geometry_fidelity="unconfirmed-flexible-brush-envelope",
+                        seal_spec=dict(
+                            kind="10 mm brush candidate",
+                            installed_height_mm=10,
+                            free_height_mm=10,
+                            compression_range="Flexing wipe; not compression gasket",
+                            attachment="Channel mechanically fixed to rigid backing; drag and corner closure pending",
+                        ),
+                    )
                 ids.append(id)
+                if did != "front" and side == "left" and not rubber:
+                    # Keep the rigid strip above the retained bottom corner bracket.
+                    item["size"][2] = top - 31
+                    item["position"] = _add(pivot, _rotate([xx, nn, (top + 31) / 2], base))
+                if did != "front" and side == "top" and not rubber:
+                    item["size"] = [span + 40, 2, 95]
+                    item["position"] = _add(pivot, _rotate([span / 2, 46, H - 17.5], base))
+                    item["holes"] = [
+                        dict(axis="y", center=[x - span / 2, 32.5], diameter_mm=6.5)
+                        for x in (50, span / 2, span - 50)
+                    ]
+                    item["machining"] = (
+                        "Supplier-prepared 2 mm head cover; M6 holes mount to inward vertical 3060 slot. Relieve upper parking end around perpendicular header. Brush return and corner caps require physical fit."
+                    )
+                    item["cutouts"] = [
+                        dict(
+                            kind="rectangle",
+                            normal_axis=1,
+                            width_mm=35.5,
+                            height_mm=61,
+                            center_local_mm=[-span / 2 - 2.25, 0, 18],
+                        )
+                    ]
+                    if did == "left-rear":
+                        item["cutouts"].append(
+                            dict(
+                                kind="rectangle",
+                                normal_axis=1,
+                                width_mm=31,
+                                height_mm=31,
+                                center_local_mm=[D / 3 - span / 2, 0, 33],
+                            )
+                        )
+                    return_id = f"{did}-head-brush-return"
+                    add(
+                        return_id,
+                        [span - 40, 5, 2],
+                        _add(pivot, _rotate([span / 2, 42.5, top - 8], base)),
+                        base,
+                    )
+                    ids.append(return_id)
         if did != "front":
             # The shared jamb stop mounts onto the overlapping fixed wood panel.
             # Other sides use cut backing strips to reach the same stop plane.
@@ -123,9 +186,9 @@ def add_containment(model):
                 if side in ("left", "top"):
                     continue
                 if side == "right":
-                    zz, hh = (35 + top) / 2, top - 35
+                    zz, hh = (top - 10) / 2, top - 10
                 id = f"{did}-perimeter-{side}-backing"
-                add(id, [ww, 8, hh], _add(pivot, _rotate([xx, 38, zz], base)), base)
+                add(id, [ww, 8, hh], _add(pivot, _rotate([xx, 45, zz], base)), base)
                 ids.append(id)
         for side, rect in [
             ("left", [0, c, 0, H]),
@@ -135,7 +198,13 @@ def add_containment(model):
         ]:
             entries.append(
                 region(
-                    f"{did}-perimeter-{side}", pivot, base, sealnormal, rect, ids, "door-perimeter"
+                    f"{did}-perimeter-{side}",
+                    pivot,
+                    base,
+                    46 if did != "front" and side == "top" else sealnormal,
+                    rect,
+                    ids,
+                    "door-perimeter",
                 )
             )
     # The right front leaf carries an exterior meeting astragal and closes last.
@@ -170,7 +239,7 @@ def add_containment(model):
         local = [L, 6, (3 + H - 55) / 2]
         item = add(
             f"{did}-meeting-cover",
-            [20, 2, H - 55 - 3],
+            [20, 2, H - 55 + 3],
             _add(d["pivot"], _rotate(local, d["base_deg"])),
             d["base_deg"],
             did,

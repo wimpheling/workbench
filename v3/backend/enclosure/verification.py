@@ -1116,10 +1116,15 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                 unit="mm",
             )
         else:
+            # Insert onto the centred machine/work area, not until the leading
+            # edge touches the rear wall. Both the swept approach and complete
+            # final board remain checked against every physical solid.
+            final_center_y = D / 2
+            leading_edge_y = final_center_y + d / 2
             prism = (
                 cq.Workplane("XY")
-                .box(w, d + D, h)
-                .translate((W / 2, (D - d) / 2, zlo + h / 2))
+                .box(w, d + leading_edge_y, h)
+                .translate((W / 2, (leading_edge_y - d) / 2, zlo + h / 2))
                 .val()
             )
             conflicts = []
@@ -1142,9 +1147,14 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                 "access.workpiece",
                 access_status,
                 "access",
-                "Straight horizontal board insertion with both front doors fully open; workshop approach space must be available",
+                "Straight horizontal board insertion to the centred work area with both front doors fully open; workshop approach space must be available",
                 conflicts,
-                measured={"board_mm": [w, d, h], "bottom_height_mm": zlo},
+                measured={
+                    "board_mm": [w, d, h],
+                    "bottom_height_mm": zlo,
+                    "final_center_y_mm": final_center_y,
+                    "leading_edge_y_mm": leading_edge_y,
+                },
                 method="continuous swept rectangular prism against all physical solids",
             )
     except Exception as exc:  # noqa: BLE001 - kernel failures must retain unknown evidence

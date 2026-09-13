@@ -98,3 +98,69 @@ def test_new_mechanism_is_not_given_old_native_solver_pass():
     assert checks["kinematics.native.left-rear"]["status"] == "unknown"
     assert checks["kinematics.native.back-right"]["status"] == "unknown"
     assert not report["order_ready"]
+
+
+def test_header_relief_removes_real_overlap_without_a_collision_waiver():
+    model = build_model()
+    parts = [p for p in model["parts"] if p["id"] in ("rail-left-top", "rail-back-top")]
+    shapes = build_shapes({**model, "parts": parts})
+    assert shapes["rail-left-top"].intersect(shapes["rail-back-top"]).Volume() < 1e-5
+    rear = next(p for p in parts if p["id"] == "rail-back-top")
+    rear.pop("cutouts")
+    uncut = build_shapes({**model, "parts": parts})
+    assert uncut["rail-left-top"].intersect(uncut["rail-back-top"]).Volume() > 1000
+
+
+@pytest.mark.parametrize(
+    "did,bracket",
+    [
+        ("left-rear", "bracket-left-back-bottom-y"),
+        ("back-right", "bracket-right-back-bottom-x"),
+    ],
+)
+def test_closed_jamb_connector_and_carrier_clear_real_leaf_solids(did, bracket):
+    model = build_model()
+    parts = {p["id"]: p for p in model["parts"]}
+    assert parts[bracket]["cad_asset"] == "CIB08T.step"
+    assert not parts[bracket]["mounting_orientation_confirmed"]
+    pairs = [
+        (bracket, did + "-a-stile-a"),
+        (did + "-carrier-upright", did + "-b-retainer-right-in"),
+    ]
+    # Use the actual inventory name rather than inventing an absent test solid.
+    bead = next(
+        p["id"]
+        for p in model["parts"]
+        if p["id"].startswith(did + "-b-")
+        and "right" in p["id"]
+        and "retainer" in p["id"]
+        and p["id"].endswith("-in")
+    )
+    pairs[1] = (did + "-carrier-upright", bead)
+    wanted = {pid for pair in pairs for pid in pair}
+    shapes = build_shapes({**model, "parts": [parts[pid] for pid in wanted]})
+    for a, b in pairs:
+        assert shapes[a].intersect(shapes[b]).Volume() < 1e-5
+    upright = parts[did + "-carrier-upright"]
+    assert len(upright["holes"]) == 2
+    assert all(h["axis"] == "y" and h["diameter_mm"] == 6.5 for h in upright["holes"])
+
+
+@pytest.mark.parametrize("did", ["left-rear", "back-right"])
+def test_free_stile_clears_rigid_perimeter_through_sampled_travel(did):
+    model = build_model()
+    fixed = [
+        p
+        for p in model["parts"]
+        if p["id"].startswith(did + "-")
+        and (
+            p["id"].endswith("-stop") or p["id"].endswith("-backing") or "-closed-stop-" in p["id"]
+        )
+    ]
+    fixed_shapes = build_shapes({**model, "parts": fixed})
+    for step in range(21):
+        posed = pose_model(model, {did: step / 20})
+        stile = next(p for p in posed["parts"] if p["id"] == did + "-b-stile-b")
+        shape = build_shapes({**posed, "parts": [stile]})[stile["id"]]
+        for pid, barrier in fixed_shapes.items():
+            assert shape.intersect(barrier).Volume() < 1e-5, (pid, step)

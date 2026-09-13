@@ -47,7 +47,7 @@ The right wall has a supplier-cut 240 × 80 mm makeup-air opening and a cleanabl
 
 Verification measures actual barrier coverage and inlet passages. Supplier seal grade, free height, installed compression, glass setting support, attachment details and membrane bend allowance remain unresolved. An assembled test must establish inward leakage, sufficient extraction and cooling with the actual vacuum, hose, shoe and filter. The model does not certify a completely sealed boundary or fine-dust capture.
 
-Bifolds now use the revision C A1 mini PETG guide prototype under continuous 3060 headers: unequal leaves, rear-corner parking, 88° travel and a default 750 mm rear opening. The default leaf height is 682 mm. Five modules per opening carry a bought GN753.1 roller and metal washer/axle; CFG hinges support the leaves. Carrier/hinge installation envelopes, metal stops/catches, fasteners, seals, roof/header overlap and physical load/wear tests remain unconfirmed. See [engineering model](docs/ENGINEERING_MODEL.md).
+Bifolds now use the revision C A1 mini PETG guide prototype under continuous 3060 headers: unequal leaves, rear-corner parking, 88° travel and a default 750 mm rear opening. The default leaf height is 682 mm. Five modules per opening carry a bought GN753.1 roller and metal washer/axle; CFG hinges support the leaves. The revised carrier has mounting/axle holes and closed-stop tabs are modeled. Header relief and candidate inner connectors remove the known rigid interferences. Connection capacity, hinge installation, parked stops/catches, final fasteners, head sealing and physical load/wear tests remain unconfirmed. See [engineering model](docs/ENGINEERING_MODEL.md).
 
 ## Supplier files
 
