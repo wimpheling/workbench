@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 960" role="img" aria-labelledby="title description">
+  <title id="title">Bifold assembly study, revision B</title>
+  <desc id="description">Plan views of left and rear doors at closed, 45 degree and 88 degree positions, with preliminary captive guide cross-section. Dimensions in millimetres. Not for manufacture.</desc>
+  <style>text { font-family: sans-serif; font-size: 17px; fill: #1e293b; } .title { font-size: 22px; font-weight: 600; } .small { font-size: 15px; }</style>
+  <rect width="1240" height="960" fill="#f8fafc"/>
+  <text x="50" y="48" font-size="30" font-weight="700">Bifold assembly · revision B</text>
+  <text x="50" y="78">Engineering study · all dimensions mm · supplier preparation and physical validation pending</text>
+  <g transform="translate(50,0)">
+    <text x="0" y="135" class="title">Left rear · 824.5 mm opening</text>
+    <text x="0" y="165">Leaves 384.8 / 424.8 × 702 mm</text>
+    <g transform="translate(25,440) scale(0.58)">
+      <rect x="-30" y="0" width="30" height="30" fill="#334155"/>
+      <rect x="824.5" y="0" width="30" height="30" fill="#334155"/>
+      <line x1="-30" y1="0" x2="854.5" y2="0" stroke="#94a3b8" stroke-dasharray="8 6"/>
+      <line x1="86.5" y1="15" x2="823.5" y2="15" stroke="#475569" stroke-width="4"/>
+      
+    <g fill="#64748b" fill-opacity="0.12" stroke="#64748b" stroke-width="2">
+      <polygon points="5.0,30.0 389.8,30.0 389.8,0.0 5.0,0.0"/>
+      <polygon points="394.8,30.0 819.5,30.0 819.5,0.0 394.8,0.0"/>
+      <circle cx="804.5" cy="15.0" r="11"/>
+    </g>
+    <g fill="#d97706" fill-opacity="0.12" stroke="#d97706" stroke-width="2">
+      <polygon points="31.1,17.1 303.2,-255.0 282.0,-276.2 9.9,-4.1"/>
+      <polygon points="317.9,-255.2 627.0,36.2 647.6,14.4 338.5,-277.0"/>
+      <circle cx="626.4" cy="15.0" r="11"/>
+    </g>
+    <g fill="#0f766e" fill-opacity="0.32" stroke="#0f766e" stroke-width="2">
+      <polygon points="40.6,-9.2 54.0,-393.7 24.0,-394.7 10.6,-10.2"/>
+      <polygon points="70.2,-393.7 88.1,30.6 118.1,29.4 100.1,-395.0"/>
+      <circle cx="102.5" cy="15.0" r="11"/>
+    </g>
+      <circle cx="2.5" cy="-8" r="5" fill="#111827"/>
+      <text x="-22" y="-25" font-size="24">A</text>
+    </g>
+    <text x="0" y="490">Sampled sweep + fittings allowance: 410.0 mm</text>
+    <text x="0" y="518">Remaining space: 390.0 mm</text>
+    <text x="0" y="546">Parked usable width: 691.4 mm</text>
+    <text x="0" y="574">Guide centre travel: 102.5–807.5 mm</text>
+  </g><g transform="translate(645,0)">
+    <text x="0" y="135" class="title">Back right · 750.0 mm opening</text>
+    <text x="0" y="165">Leaves 347.5 / 387.5 × 702 mm</text>
+    <g transform="translate(25,440) scale(0.58)">
+      <rect x="-30" y="0" width="30" height="30" fill="#334155"/>
+      <rect x="750" y="0" width="30" height="30" fill="#334155"/>
+      <line x1="-30" y1="0" x2="780" y2="0" stroke="#94a3b8" stroke-dasharray="8 6"/>
+      <line x1="83.7" y1="15" x2="749.3" y2="15" stroke="#475569" stroke-width="4"/>
+      
+    <g fill="#64748b" fill-opacity="0.12" stroke="#64748b" stroke-width="2">
+      <polygon points="5.0,30.0 352.5,30.0 352.5,0.0 5.0,0.0"/>
+      <polygon points="357.5,30.0 745.0,30.0 745.0,0.0 357.5,0.0"/>
+      <circle cx="730.0" cy="15.0" r="11"/>
+    </g>
+    <g fill="#d97706" fill-opacity="0.12" stroke="#d97706" stroke-width="2">
+      <polygon points="31.1,17.1 276.9,-228.6 255.6,-249.8 9.9,-4.1"/>
+      <polygon points="291.6,-228.9 574.2,36.2 594.8,14.3 312.1,-250.7"/>
+      <circle cx="573.6" cy="15.0" r="11"/>
+    </g>
+    <g fill="#0f766e" fill-opacity="0.32" stroke="#0f766e" stroke-width="2">
+      <polygon points="40.6,-9.2 52.7,-356.5 22.7,-357.5 10.6,-10.2"/>
+      <polygon points="68.9,-356.5 85.4,30.6 115.4,29.3 98.8,-357.8"/>
+      <circle cx="99.7" cy="15.0" r="11"/>
+    </g>
+      <circle cx="2.5" cy="-8" r="5" fill="#111827"/>
+      <text x="-22" y="-25" font-size="24">A</text>
+    </g>
+    <text x="0" y="490">Sampled sweep + fittings allowance: 372.8 mm</text>
+    <text x="0" y="518">Remaining space: 77.2 mm</text>
+    <text x="0" y="546">Parked usable width: 619.6 mm</text>
+    <text x="0" y="574">Guide centre travel: 99.7–733.3 mm</text>
+  </g>
+  <g transform="translate(50,625)">
+    <text x="0" y="0" fill="#64748b">Grey: closed</text>
+    <text x="170" y="0" fill="#d97706">Amber: 45°</text>
+    <text x="340" y="0" fill="#0f766e">Green: parked at 88°</text>
+    <text x="0" y="36" class="small">A = fixed pivot. Circles = vertical guide rollers. Outward is upward; views use the same scale.</text>
+    <text x="0" y="62" class="small">Minimum sampled leaf-to-leaf clearance: 5 mm. Hinge, bracket, handle and seal solids are not represented.</text>
+  </g>
+  <g transform="translate(65,765)">
+    <text x="0" y="-22" class="title">Guide section · preliminary, enlarged</text>
+    <g transform="translate(0,0) scale(3)">
+      <path d="M0 30 V0 H29 V30 H26 V3 H3 V30 Z" fill="#94a3b8"/>
+      <rect x="0" y="27" width="9.5" height="3" fill="#475569"/>
+      <rect x="19.5" y="27" width="9.5" height="3" fill="#475569"/>
+      <rect x="3.5" y="8" width="22" height="7" fill="#0f766e"/>
+      <rect x="12" y="6" width="5" height="32" fill="#334155"/>
+      <rect x="4.5" y="21" width="20" height="3" fill="#475569"/>
+    </g>
+    <text x="125" y="18">23 mm internal width · 22 mm POM roller</text>
+    <text x="125" y="46">10 mm bottom slot · separate 20 mm steel keeper</text>
+    <text x="125" y="74">Vertical steel axle · door mass stays on the hinges</text>
+    <text x="125" y="102" class="small">Axle stack, fastening, tolerances and keeper strength require supplier detailing.</text>
+  </g>
+  <text x="50" y="935" class="small">Generated by scripts/bifold-assembly-study.mjs from src/domain/bifoldAssemblyStudy.ts · NOT FOR MANUFACTURE</text>
+</svg>
