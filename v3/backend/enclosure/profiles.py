@@ -11,6 +11,8 @@ ASSET_SHA256 = hashlib.sha256(
     + (ASSET.parent / "AST03006006.step").read_bytes()
     + (ASSET.parent / "CIB08T.step").read_bytes()
     + (ASSET.parent / "CFG3030.stp").read_bytes()
+    + (ASSET.parent / "GN_753.1-22-B5-ZL-1.stp").read_bytes()
+    + (ASSET.parent / "GN_753.2-4-5-3-AE-NI.stp").read_bytes()
 ).hexdigest()
 
 
@@ -30,6 +32,25 @@ def section(product_code="AST03003004"):
     if len(ends) != 1:
         raise ValueError("Supplier STEP must have one unambiguous planar end face")
     return ends[0].translate((-(bb.xmin + bb.xmax) / 2, -bb.ymin, -(bb.zmin + bb.zmax) / 2))
+
+
+@lru_cache(maxsize=4)
+def roller_component(asset, reversed_axis=False):
+    """Place intact vendor X-axis solids on the model's vertical axle.
+
+    Bush source X=0 is the outer clamping face, X=3 the shoulder and X=5
+    the collar tip. The upper bush reverses the axis so both collars face in.
+    """
+    import cadquery as cq
+
+    if asset not in ("GN_753.1-22-B5-ZL-1.stp", "GN_753.2-4-5-3-AE-NI.stp"):
+        raise ValueError("Unsupported roller component asset")
+    shape = cq.importers.importStep(str(ASSET.parent / asset)).val()
+    bb = shape.BoundingBox()
+    shape = shape.translate(
+        (-(bb.xmin + bb.xmax) / 2, -(bb.ymin + bb.ymax) / 2, -(bb.zmin + bb.zmax) / 2)
+    )
+    return shape.rotate((0, 0, 0), (0, 1, 0), 90 if reversed_axis else -90)
 
 
 @lru_cache(maxsize=512)

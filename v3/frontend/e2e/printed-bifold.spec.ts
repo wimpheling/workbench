@@ -32,6 +32,15 @@ test("revision C prototype is served by v3 and animates without CAD requests", a
   expect(bifolds[1].opening_width_mm).toBe(750);
   expect(bifolds[1].guide.module_length_mm).toBeCloseTo(133.84);
   expect(data.report).toBeNull();
+  for (const [asset, count] of [["GN_753.1-22-B5-ZL-1.stp", 2], ["GN_753.2-4-5-3-AE-NI.stp", 4]] as const) {
+    const parts = data.model.parts.filter((p: { cad_asset?: string }) => p.cad_asset === asset);
+    expect(parts).toHaveLength(count);
+    for (const part of parts) {
+      expect(part.geometry_fidelity).toBe("supplier-step-solid");
+      expect(part.geometry).toBeUndefined();
+      expect(data.meshes.find((m: { id: string }) => m.id === part.id).positions.length).toBeGreaterThan(100);
+    }
+  }
   const hinges = data.model.parts.filter(
     (p: { cad_asset?: string }) => p.cad_asset === "CFG3030.stp",
   );

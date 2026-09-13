@@ -8,6 +8,63 @@ from enclosure.verification import swept_box
 
 
 @pytest.mark.parametrize("did", ["left-rear", "back-right"])
+def test_vendor_roller_bushes_preserve_solids_and_clamp_only_inner_race(did):
+    import cadquery as cq
+    from enclosure.profiles import ASSET
+
+    model = build_model()
+    suffixes = (
+        "carriage",
+        "bearing-bush-upper",
+        "bearing-bush-lower",
+        "axle",
+        "axle-head",
+        "keeper-washer",
+    )
+    for fraction in (0, 0.5, 1):
+        posed = pose_model(model, {did: fraction})
+        parts = {
+            p["id"].removeprefix(did + "-"): p
+            for p in posed["parts"]
+            if p["id"] in [did + "-" + suffix for suffix in suffixes]
+        }
+        built = build_shapes({**posed, "parts": list(parts.values())})
+        shapes = {suffix: built[p["id"]] for suffix, p in parts.items()}
+        for suffix in suffixes[:3]:
+            p, shape = parts[suffix], shapes[suffix]
+            raw = cq.importers.importStep(str(ASSET.parent / p["cad_asset"])).val()
+            assert "geometry" not in p  # A generic annulus must not overwrite imported CAD.
+            assert p["geometry_fidelity"] == "supplier-step-solid"
+            assert shape.Volume() == pytest.approx(raw.Volume())
+            assert shape.isValid()
+            bb = shape.BoundingBox()
+            assert [bb.xlen, bb.ylen, bb.zlen] == pytest.approx(p["size"], abs=1e-5)
+        for bush in ("bearing-bush-upper", "bearing-bush-lower"):
+            assert shapes[bush].distance(shapes["carriage"]) < 1e-5
+            assert shapes[bush].intersect(shapes["carriage"]).Volume() < 1e-5
+            assert shapes[bush].intersect(shapes["axle"]).Volume() < 1e-5
+        assert shapes["bearing-bush-upper"].distance(shapes["axle-head"]) < 1e-5
+        assert shapes["bearing-bush-lower"].distance(shapes["keeper-washer"]) < 1e-5
+        assert shapes["bearing-bush-upper"].distance(shapes["bearing-bush-lower"]) == pytest.approx(
+            1
+        )
+        assert shapes["carriage"].distance(shapes["keeper-washer"]) == pytest.approx(2)
+
+
+def test_wrong_bush_orientation_causes_real_interference():
+    model = build_model()
+    parts = [
+        p
+        for p in model["parts"]
+        if p["id"] in ("left-rear-carriage", "left-rear-bearing-bush-upper")
+    ]
+    upper = next(p for p in parts if "bush" in p["id"])
+    upper["cad_reversed_axis"] = False
+    shapes = build_shapes({**model, "parts": parts})
+    assert shapes["left-rear-carriage"].intersect(shapes[upper["id"]]).Volume() > 10
+
+
+@pytest.mark.parametrize("did", ["left-rear", "back-right"])
 @pytest.mark.parametrize("kind", ["frame", "interleaf"])
 def test_vendor_hinge_leaves_and_pin_stay_connected_through_travel(did, kind):
     import cadquery as cq

@@ -784,6 +784,25 @@ evidence, links and limitations. This does not establish purchase eligibility
 or reserve stock. STEP imports remain blocked on obtaining the genuine files;
 Reiman requires login and no substitute geometry has been relabelled as STEP.
 
+### Roller and bush STEP integration — 2026-09-13
+
+The user supplied `GN_753.1-22-B5-ZL-1.stp` and
+`GN_753.2-4-5-3-AE-NI.stp` in Downloads. Both original files are now retained
+unchanged in v3 assets and contribute to the design revision fingerprint.
+Native solids replace the two roller and four bush envelopes. The real bushes
+have 8 mm bodies and 2 mm centring collars, so their bounding-box centres
+change while the outer clamping faces remain at the existing stack datums.
+The collars face inward with a 1 mm tip gap. Focused kernel tests verify
+native volumes/contact/nonpenetration and reject a reversed upper bush.
+The 10 mm spacer STEP was not supplied and remains a clearly labelled
+parametric candidate, as do the remaining fasteners and extra spacing ring.
+
+Validation: 98 backend, 44 frontend and 11 engineering tests pass, with lint,
+formatting, type checking and production build. Browser acceptance confirms
+the six vendor roller/bush meshes and live motion on restarted port 8000.
+The unchanged three engineering failures concern head sealing; software test
+success does not release the remaining mechanical prototype for manufacture.
+
 ## Implementation plan
 
 - [x] Agree on the mechanism route before changing geometry
@@ -792,7 +811,8 @@ Reiman requires login and no substitute geometry has been relabelled as STEP.
   - [x] Resolve the wood/aluminium decision: retain aluminium frames and 4 mm panels
 - [ ] Specify the complete assembly
   - [x] Check exact roller/bush listings and the 10 mm spacer sourcing route; record current prices, dispatch, stock and B2B restrictions
-  - [ ] Obtain and import genuine roller, bush and spacer STEP files; Reiman downloads require sign-in
+  - [x] Obtain and import genuine roller and bush STEP files supplied by the user; check their mounting and preserve vendor geometry
+  - [ ] Obtain and import the genuine 10 mm spacer STEP file
   - [x] Produce revision A with exact catalogue candidates, supplier routes and preliminary component quantities
   - [x] Document the load path, guide cross-section proposal, mounting preparation and adjustment targets
   - [x] Calculate preliminary leaf masses, hinge moments and header beam deflection

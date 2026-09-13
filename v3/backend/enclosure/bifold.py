@@ -169,7 +169,7 @@ def add_bifolds(part, leaf, doors, parameters):
                         product_code="printed-alignment-key",
                     )
 
-        # Actual rolling axis is vertical. Shape metadata produces cylindrical solids.
+        # Intact supplier roller solid, with recessed bearing faces and real bore.
         add(
             "carriage",
             [22, 22, 7],
@@ -177,7 +177,10 @@ def add_bifolds(part, leaf, doors, parameters):
             "slider",
             product_code="GN 753.1-22-B5-ZL-1",
             material="polyacetal / steel bearing",
-            geometry=dict(kind="annulus", outer_diameter_mm=22, inner_diameter_mm=5),
+            cad_asset="GN_753.1-22-B5-ZL-1.stp",
+            geometry_fidelity="supplier-step-solid",
+            supplier="Reiman Portugal",
+            source="https://reiman.pt/en/gn-753-1-22-b5-zl-1-guide-rollers-cylindrical/",
         )
         add(
             "keeper-washer",
@@ -206,16 +209,21 @@ def add_bifolds(part, leaf, doors, parameters):
             material="steel",
             geometry=dict(kind="cylinder", diameter_mm=7),
         )
-        for name, drop in [("upper", 11), ("lower", 19)]:
+        # 3 mm bodies retain the original clamping faces. Each real collar
+        # extends 2 mm into the 5 mm bearing bore, leaving a 1 mm axial gap.
+        for name, drop in [("upper", 12), ("lower", 18)]:
             add(
                 f"bearing-bush-{name}",
-                [5, 5, 3],
+                [8, 8, 5],
                 [0, 0, H - drop],
                 "slider",
-                product_code="GN 753.2-4-5-3-AE-NI candidate",
-                material="steel",
-                geometry_fidelity="unconfirmed-bearing-bush-envelope",
-                geometry=dict(kind="annulus", outer_diameter_mm=5, inner_diameter_mm=4),
+                product_code="GN 753.2-4-5-3-AE-NI",
+                material="stainless steel AISI 303",
+                geometry_fidelity="supplier-step-solid",
+                cad_asset="GN_753.2-4-5-3-AE-NI.stp",
+                cad_reversed_axis=name == "upper",
+                supplier="Reiman Portugal",
+                source="https://reiman.pt/en/gn-753-2-4-5-3-ae-ni-mounting-accessories-bushing-one-sided-centering/",
             )
         add(
             "stem-spacer",

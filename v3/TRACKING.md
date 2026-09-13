@@ -1,5 +1,22 @@
 # V3 delivery tracking
 
+## Real roller and centring bushes — 2026-09-13
+
+- [x] Import user-supplied GN753.1 roller and GN753.2 bush STEP files unchanged,
+  with provenance and asset fingerprints. Two rollers and four bushes now use
+  native vendor solids, not simplified annuli.
+- [x] Orient both bush collars into the roller bore; keep existing clamping
+  faces/roller/carrier datums. Nominal tip gap is 1 mm. Focused kernel tests
+  preserve volumes and contact and detect a deliberately reversed bush.
+- [x] Restart/rebuild v3 on port 8000. Live API confirms six imported
+  roller/bush instances; browser acceptance passes and half-open screenshot
+  is inspected. Default report remains 1,311 pass, 3 fail, 84 unknown, with
+  the same two head coverage failures and containment requirement failure.
+- [x] Full validation: 98 backend tests, 44 frontend tests, 11 standalone
+  engineering tests, lint/format, type checking and production build pass.
+- [ ] Obtain spacer STEP and validate complete fastener/clamping/load/retention
+  details. Real roller CAD does not make the printed assembly manufacturing-ready.
+
 ## Real bifold hinges — 2026-09-13
 
 - [x] Replace both frame and interleaf placeholder wings with the supplied

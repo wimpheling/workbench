@@ -23,6 +23,13 @@ The closed pin-to-pin vector is `(primary_width + 5, 46)` and the elbow-to-guide
 
 ## What remains unproven
 
+The GN753.1 roller and GN753.2 bushes now also use intact vendor STEP solids,
+including the recessed bearing faces and the bushes' centring collars. Both
+collars face into the bore, leaving a nominal 1 mm tip gap. See
+[source files and mounting datums](../backend/enclosure/assets/GN753.md).
+This supersedes the previous roller/bush annulus envelopes, but not the
+provisional spacer, fasteners, printed track/carrier or load/retention evidence.
+
 - Actual Shapeoko 5 Pro 4×4 swept dimensions, spindle, dust shoe and flexible hose routing; default machine dimensions are placeholders.
 - Mounting of the proposed hinge axes with actual supplier components, track/carriage compatibility, strike/stop placement and retention, screw schedules and any supplier drilling.
 - CBR3030 orientations, roof-beam and midpost fastenings.
@@ -50,7 +57,7 @@ The passive right-wall makeup inlet uses supplier-cut panels forming two turns: 
 
 The roof collar is a real annulus, including the roof cutout, flange and nominal gasket. Hose attachment, independent hose support and dust-shoe routing remain supplier/installation checks. Local barrier coverage is checked against actual CAD solids; complete pressure containment, rubber performance, room airflow and extraction adequacy still require physical commissioning.
 
-Revision C replaces the floating overhead track and dogleg with five PETG modules per default opening, directly bolted into two underside slot rows of the continuous 3060 header. Native solids cut the 23 mm cavity, M4 holes and alignment recesses; separate 4 mm keeper strips leave a 10 mm throat. The vertical GN753.1 roller axis, steel M4 axle, M6 large washer and metal spacer are modeled. The carrier now has an 18 × 8 × 75 mm exterior mounting plate, two M6 clearance holes on 30 mm centres, and a 14 × 28 × 6 mm shelf with an M4 axle hole. A further 4 mm metal spacing ring lowers the shelf beneath the rail screw-head allowance; axle head, two candidate bushes, lower washer and locknut are included. Bush/nut envelopes and clamp/load capacity remain unconfirmed. These changes supersede the standalone study's carrier stack, not its rail-module dimensions. No updated carrier STL or manufacturing release is implied.
+Revision C replaces the floating overhead track and dogleg with five PETG modules per default opening, directly bolted into two underside slot rows of the continuous 3060 header. Native solids cut the 23 mm cavity, M4 holes and alignment recesses; separate 4 mm keeper strips leave a 10 mm throat. The vertical GN753.1 roller axis, steel M4 axle, M6 large washer and metal spacer are modeled. The carrier now has an 18 × 8 × 75 mm exterior mounting plate, two M6 clearance holes on 30 mm centres, and a 14 × 28 × 6 mm shelf with an M4 axle hole. A further 4 mm metal spacing ring lowers the shelf beneath the rail screw-head allowance; axle head, two vendor STEP bushes, lower washer and locknut are included. Fastener/spacer envelopes and clamp/load capacity remain unconfirmed. These changes supersede the standalone study's carrier stack, not its rail-module dimensions. No updated carrier STL or manufacturing release is implied.
 
 The rear header has a supplier-machined 15.5 × 15.5 mm open corner relief through its 30 mm height. Two protruding bottom CBR3030 brackets are replaced by candidate CIB08T slot connectors using retained supplier STEP geometry; slot engagement, installation access and joint strength remain unconfirmed. This is a quotation request, not permission to omit structural connections. Rigid perimeter backing is moved behind the free-stile swing; two prepared steel tabs per opening contact the primary jamb stile at closure. Their anti-rotation fixing and impact capacity still need approval. Parked stops and catches remain unresolved.
 

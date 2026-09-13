@@ -656,6 +656,10 @@ def build_shapes(model, pose=None):
             from .profiles import extrusion
 
             shape = extrusion(p["cut_length_mm"], p["length_axis"], p["product_code"])
+        elif p.get("cad_asset") in ("GN_753.1-22-B5-ZL-1.stp", "GN_753.2-4-5-3-AE-NI.stp"):
+            from .profiles import roller_component
+
+            shape = roller_component(p["cad_asset"], p.get("cad_reversed_axis", False))
         elif p.get("cad_asset") == "CFG3030.stp":
             from .profiles import hinge_component
 
