@@ -6,15 +6,19 @@ from pathlib import Path
 
 ASSET = Path(__file__).parent / "assets" / "AST03003004.step"
 ASSET_SHA256 = hashlib.sha256(
-    ASSET.read_bytes() + (ASSET.parent / "CBR3030.step").read_bytes()
+    ASSET.read_bytes()
+    + (ASSET.parent / "CBR3030.step").read_bytes()
+    + (ASSET.parent / "AST03006006.step").read_bytes()
 ).hexdigest()
 
 
-@lru_cache(maxsize=1)
-def section():
+@lru_cache(maxsize=2)
+def section(product_code="AST03003004"):
     import cadquery as cq
 
-    source = cq.importers.importStep(str(ASSET)).val()
+    if product_code not in ("AST03003004", "AST03006006"):
+        raise ValueError("Unsupported profile product code")
+    source = cq.importers.importStep(str(ASSET.parent / f"{product_code}.step")).val()
     bb = source.BoundingBox()
     ends = [
         f
@@ -27,10 +31,10 @@ def section():
 
 
 @lru_cache(maxsize=512)
-def extrusion(length, axis):
+def extrusion(length, axis, product_code="AST03003004"):
     import cadquery as cq
 
-    face = section()
+    face = section(product_code)
     result = cq.Solid.extrudeLinear(
         face.outerWire(), face.innerWires(), cq.Vector(0, length, 0)
     ).translate((0, -length / 2, 0))

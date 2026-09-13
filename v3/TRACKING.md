@@ -1,5 +1,37 @@
 # V3 delivery tracking
 
+## Current revision C integration — 2026-09-13
+
+- [x] Replace ideal equal-link bifolds and overhead doglegs with rear-corner,
+  unequal-link 88° mechanisms, a 750 mm rear opening, 682 mm default leaf height
+  and 4 mm polycarbonate infills.
+- [x] Model segmented A1 mini PETG guides, keeper strips/keys, bought roller,
+  metal washer/axle/spacer and provisional carrier/hinge installation envelopes.
+- [x] Use actual 3060 header sections; resize rear/left fixed panels and roof
+  beams for the revised frame. Supplier header-corner joinery remains unresolved.
+- [x] Publish mechanism datums to live browser animation; 30 pose parity cases
+  are checked in both directions against a backend-generated fixture.
+- [x] Use independent interval motion bounds, and retain unknown native-solver
+  evidence rather than reusing the old equal-link proof.
+- [x] Update quotation exports, including separate polycarbonate panel schedules.
+- [x] Verify 83 backend tests (82-test full suite plus the new fixture-freshness
+  regression), 44 frontend tests, 11 engineering tests, lint, formatting,
+  frontend type checking and production build.
+- [x] All four browser acceptance tests pass against the rebuilt v3 service
+  on port 8000, including actual CAD/export flows and revision C live poses.
+  Inspect `v3/artifacts/printed-bifold-v3.png` for the tested rendering.
+  The default engineering report retains 19 failed checks and 53 unknowns;
+  these are not software-test failures or manufacturing approval.
+- [ ] Resolve header-to-header corner interference, corner bracket/door fit,
+  board insertion conflicts, remaining motion contacts and head/meeting sealing.
+- [ ] Detail full hinge/carrier/fastener/stop/catch installation and physical
+  coupon, load, creep and dust-wear tests before any manufacturing release.
+
+The checklist below records prior delivery history. The current prototype
+intentionally reports `invalid` / **Design needs correction** where modeled
+interference or missing barrier coverage is established. Software tests verify
+that these failures are retained, not that the hardware is ready to build.
+
 Branch: `rebuild/v3-verified-enclosure`, based on the existing enclosure branch. Existing source and uncommitted work are preserved. This document tracks implementation separately from physical design release: a working application does not make unresolved supplier interfaces order-ready.
 
 ## Contract and scope

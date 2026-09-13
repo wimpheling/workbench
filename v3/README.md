@@ -1,6 +1,6 @@
 # Workbench V3
 
-An enclosure planning application for a Shapeoko 5 Pro 4×4 in a Lisbon workshop. The enclosure has two full-width front swinging doors, a bifold door in the rear half of the left wall, a bifold door in the right half of the back wall, wood wall/roof panels and a roof hose penetration. Reiman Portugal is the selected aluminium supplier.
+An enclosure planning application for a Shapeoko 5 Pro 4×4 in a Lisbon workshop. The enclosure has two full-width front swinging doors, a bifold door in the rear half of the left wall, an asymmetric bifold opening at the right of the back wall, wood wall/roof panels and a roof hose penetration. Reiman Portugal is the selected aluminium supplier.
 
 **This is an engineering verification workbench, not a released fabrication design.** It generates usable quotation documents and evaluates actual geometry, but supplier hinge/mounting details, machine/hose dimensions and physical tolerances still require evidence. Reports and every ordering pack preserve those unresolved requirements. Do not order tempered glass from a pack marked `NOT RELEASED FOR ORDER`.
 
@@ -29,7 +29,7 @@ For frontend development, start the Python service and run `npm run dev` in `v3/
 ## Use
 
 1. Set clear internal dimensions. Defaults start at 1674 × 1649 × 740 mm (width × depth × height).
-2. Choose front and bifold infill materials. Front glass and bifold wood are initial selections, not confirmed glass specifications.
+2. Choose front and bifold infill materials. Front glass remains provisional; bifolds default to 4 mm polycarbonate.
 3. Inspect the model, hide roof/walls, and open each door independently. Reference envelopes can be shown separately.
 4. Leave **Automatic verification** enabled to evaluate changes, or turn it off to update geometry previews only. Use **Verify now** when ready. Previews have no current engineering report and cannot enable exports; a prior report is hidden when its settings no longer match.
 5. Read failures and unresolved evidence. A successful constraint solve is only one piece of evidence; it does not imply clearance or order readiness.
@@ -41,20 +41,20 @@ Coordinate convention: X right, Y toward the rear, Z up; front wall at Y=0; all 
 
 ## Door seals and airflow
 
-Door infills have continuous retaining beads, rubber edge seals and soft packing between the pane and beads. Fixed wood panels overlap the frame borders and sit against continuous gaskets. Door perimeter stops and rubber seals cover assembly clearances, including the header above each bifold. The right front leaf carries the overlapping meeting strip: **open right fully, then left; close left fully, then right**. The model rejects incompatible poses and the UI locks the corresponding controls. Bifold meeting seams use proposed flexible membrane covers; their displayed poses do not simulate rubber folding.
+Door infills have continuous retaining beads, rubber edge seals and soft packing between the pane and beads. Fixed wood panels overlap the frame borders and sit against continuous gaskets. Door perimeter stops and rubber seals cover assembly clearances, with the revised bifold head sealing deliberately incomplete pending brush/carrier clearance design. The right front leaf carries the overlapping meeting strip: **open right fully, then left; close left fully, then right**. The model rejects incompatible poses and the UI locks the corresponding controls. Bifold meeting seams use proposed flexible membrane covers; their displayed poses do not simulate rubber folding.
 
 The right wall has a supplier-cut 240 × 80 mm makeup-air opening and a cleanable external hood with staggered baffles. At default dimensions its minimum nominal passage is 16,632 mm², slightly over twice the 100 mm hose cross-sectional area. The area ratio is a design allowance, not an airflow-performance claim. Increasing hose diameter can require a larger inlet. Air enters passively; extraction is through the dust shoe and roof hose, with the vacuum and its exhaust outside the enclosure. The roof has an annular collar/gasket; the base gasket requires a flat, continuous supporting table.
 
 Verification measures actual barrier coverage and inlet passages. Supplier seal grade, free height, installed compression, glass setting support, attachment details and membrane bend allowance remain unresolved. An assembled test must establish inward leakage, sufficient extraction and cooling with the actual vacuum, hose, shoe and filter. The model does not certify a completely sealed boundary or fine-dust capture.
 
-The bifold guide is above the header, connected by a proposed offset arm routed outside the sealing barrier. Its geometry preserves the existing folding mechanism; the finished adapter, bearings, mounting and stiffness still need supplier confirmation. It is an additional hardware quotation requirement.
+Bifolds now use the revision C A1 mini PETG guide prototype under continuous 3060 headers: unequal leaves, rear-corner parking, 88° travel and a default 750 mm rear opening. The default leaf height is 682 mm. Five modules per opening carry a bought GN753.1 roller and metal washer/axle; CFG hinges support the leaves. Carrier/hinge installation envelopes, metal stops/catches, fasteners, seals, roof/header overlap and physical load/wear tests remain unconfirmed. See [engineering model](docs/ENGINEERING_MODEL.md).
 
 ## Supplier files
 
 The ZIP pack includes:
 
 - `reiman-extrusions.csv`: individual part IDs, Wolweiss references, finished cut lengths, quantities, requested cutting tolerance and pending machining.
-- `glass-panels.csv`, `wood-panels.csv`, `hardware.csv`: supplier-specific schedules. Hardware without a selected product stays visibly pending.
+- `glass-panels.csv`, `wood-panels.csv`, `polycarbonate-panels.csv`, `hardware.csv`: supplier-specific schedules. Hardware without a selected product stays visibly pending.
 - CSV schedules distinguish finished cutting dimensions from nominal component envelopes and preserve any proposed seal section/compression specifications. Hardware envelope dimensions are not instructions to manufacture a supplier component.
 - `supplier-drawings.pdf`: dimensioned local part outlines, cutting/processing notes, revision, release status, unresolved checks and assembly guidance.
 - `panel-outlines.dxf`: closed panel outlines at 1:1 in millimetres, declared holes on a separate layer, annotations outside cut geometry. Outlines are arranged side by side, not a sheet nesting/toolpath plan.
@@ -78,7 +78,7 @@ The final command still writes a traceable pack but exits with code 2 when evide
 ## What verification means
 
 - **Integrity:** required inventory and obligations cannot disappear; missing identities, invalid transforms and unresolved references are diagnosed.
-- **Assembly:** transformed joint datums are independently measured. Native CadQuery constraints independently solve an ideal bifold axis configuration; solver output residuals are checked.
+- **Assembly:** transformed joint datums are independently measured. Offset-link closure is checked against explicit datums; the older native equal-link solver is not claimed as proof of the revision C mechanism.
 - **Solids:** supplier profile sections are extruded to length. Closed-pose pair checking uses conservative broad-phase separation and OpenCascade intersections. Zero clearance still prohibits penetration. Every physical pair is accounted for.
 - **Motion:** analytic trigonometric corner extrema bound the modeled mechanism through intervals, including independent door combinations. Ambiguous intervals are subdivided within a stated budget; remaining overlap of bounds is **unknown**, never a proof of collision freedom. These are floating-point engineering bounds with stated numeric margins, not formally verified arithmetic.
 - **Tolerance/access:** checks include a declared cutting-error margin and a swept workpiece loading prism. Mounting adjustment, sag, squareness and supplier thickness tolerance need additional confirmed allowances.

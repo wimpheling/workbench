@@ -4,8 +4,8 @@ Current phase: retained-frame assembly design and sourcing. The user selected
 this route on 2026-09-13. **Revision C's PETG guide prototype for the user's
 Bambu A1 mini now supersedes the custom fabricated guide proposal.** Revision
 B's hinge selection and planar linkage remain the basis; C reserves additional
-headroom. Manufacturing release and integration into the active enclosure
-remain pending. Earlier kits and revisions are retained as research history.
+headroom. The user authorised prototype integration into v3; hardware release
+remains pending. Earlier kits and revisions are retained as research history.
 
 ## Description
 
@@ -692,6 +692,39 @@ non-manifold edges or degenerate triangles in the mesh audit. The generator
 formats its manifest so regeneration also passes the project format check.
 No physical print, slicer preview, load test or door installation is claimed.
 
+## V3 prototype integration — 2026-09-13
+
+The user authorised integration before physical manufacturing release. V3 now
+owns the offset-link model in `v3/backend/enclosure/bifold.py`; the renderer
+consumes its published link vectors. Default leaf widths and rail module
+lengths match the standalone revision C study. Front doors keep their existing
+opening sequence; bifolds park at the two rear corners with no mutual sequence.
+The rear fixed panel and jamb follow the configurable 750 mm opening.
+
+Both guide headers use actual 3060 STEP sections with the wide face down.
+Printed bodies include channel, bolt holes and key recesses. Native solids
+also include retaining strips, keys and the roller/washer/axle/spacer stack.
+Carrier and hinge wings remain installation envelopes. The browser distinguishes
+PETG in orange and polycarbonate as transparent, and labels the assembly as a
+prototype. The supplier pack includes a separate polycarbonate sheet schedule.
+
+Full assembly checking reveals issues the planar study did not cover: the
+two wider headers interfere at the rear-left corner, corner bracket/door
+installation needs revision, and the full-depth board insertion and head/meeting
+sealing checks fail. Straightforward stop/panel/roof-beam conflicts were adjusted,
+but remaining failures are retained as **Design needs correction**. No clearance
+exemptions or old equal-link native solver pass have been used to hide them.
+
+Software evidence: the full 82-test backend suite passed, followed by a passing
+additional fixture-freshness test (83 backend tests total). All 44 frontend and
+11 standalone engineering tests pass; frontend type checking/build and backend
+lint/format pass. Thirty live-transform fixtures cover both leaves and both
+carriages over five poses, with backend checks preventing fixture drift.
+All four browser acceptance tests pass against port 8000; the rendered orange
+PETG guides and transparent panels were visually inspected. Acceptance is
+recorded in v3/TRACKING.md. Physical commissioning remains
+unfinished, so this task stays in progress.
+
 ## Implementation plan
 
 - [x] Agree on the mechanism route before changing geometry
@@ -713,10 +746,10 @@ No physical print, slicer preview, load test or door installation is claimed.
   - [ ] Obtain complete prepared-assembly prices, VAT, delivery and lead times for Lisbon
   - [ ] Build and measure the one-opening proof assembly; record dust-cycle and retention evidence
 - [ ] Implement and verify the agreed design in the active application under v3/
-  - [ ] Replace the floating track, external adapters, and unrealistic header seal in the domain model and rendering
+  - [x] Replace the floating track and dogleg in v3 with revision C: unequal-link poses, corner parking, 750 mm rear opening, 3060 headers, PETG modules and provisional carrier/hinge envelopes. Head sealing remains explicitly incomplete.
   - [ ] Verify clearances, full motion, tolerance allowances, support, and seal engagement against the chosen hardware
-  - [ ] Update supplier specifications, cuts, quantities, drawings, and assembly instructions
-  - [ ] Run relevant tests, checks, and builds; record remaining physical checks without claiming they are proven
+  - [x] Update evaluated supplier cuts, quantities and export notes; separate polycarbonate from wood schedules. All remain quotation-only, with missing hardware details listed as blockers.
+  - [x] Run relevant unit/kernel tests, lint, type checks and builds; record remaining physical failures and unknowns without claiming they are proven.
 
 ## Open questions / blockers
 
@@ -728,6 +761,7 @@ No physical print, slicer preview, load test or door installation is claimed.
 - [x] Resolve GTH3030 mounting-gap issue: revision B proposes CFG.30/30 at both hinge lines with 5 mm gaps.
 - [ ] Confirm CFG.30/30 combined frame/interleaf loads, fixing engagement, supplier pivot installation and frame-joint rigidity.
 - [ ] Confirm guide reaction throughout travel, keeper/axle stack, and total header/connection deflection.
+- [ ] Resolve v3 assembly integration findings: 3060 rear-left header corner interference, corner bracket/door fit, the full-depth board-insertion prism, and remaining head/meeting barrier coverage. These are reported failures, not waived contacts.
 - [x] Record supplied workshop clearances: user reports 800 mm left and 450 mm right.
 - [x] Confirm the clearance datum: user confirmed 450 mm outward from the rear wall at the back-right opening.
 - [x] May the rear opening be smaller/asymmetric? User authorised this; use a 750 mm opening as the next design-study target, with the right parking jamb retained.

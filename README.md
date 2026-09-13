@@ -23,7 +23,8 @@ make -C v3 check
 ## Engineering studies
 
 The [printed bifold guide](engineering/bifold-assembly/printed-guide/README.md)
-is an unreleased Bambu A1 mini prototype. App integration is still pending.
+is an unreleased Bambu A1 mini prototype, now represented in the v3 model and
+live door animation. Physical hardware validation remains pending.
 Standalone calculations and generators use Node 24:
 
 ```sh

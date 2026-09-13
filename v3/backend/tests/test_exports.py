@@ -165,6 +165,7 @@ def test_pack_separates_supplier_parts_and_includes_evidence(specification):
             "reiman-extrusions.csv",
             "glass-panels.csv",
             "wood-panels.csv",
+            "polycarbonate-panels.csv",
             "hardware.csv",
             "containment-and-airflow.txt",
             "supplier-drawings.pdf",

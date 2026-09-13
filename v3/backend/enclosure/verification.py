@@ -241,6 +241,43 @@ def swept_box(part, door, low=0.0, high=1.0):
     angle = math.radians(door["max_angle_deg"] * door["opening_sign"])
     base = math.radians(door["base_deg"])
     cb, sb = math.cos(base), math.sin(base)
+    if door.get("mechanism") == "printed-guide-revision-c":
+        # Independent interval bounds, not sampled extrema and not the old
+        # equal-link solver. Asin is monotone on the selected closure branch.
+        px, py, _ = door["primary_link_mm"]
+        qx, qy, _ = door["secondary_link_mm"]
+        lo, hi = sorted((low * angle, high * angle))
+        ey = _trig_range(py, px, lo, hi)
+        radius = math.hypot(qx, qy)
+        phi = [
+            math.asin(max(-1, min(1, (door["guide_normal_mm"] - y) / radius))) - math.atan2(qy, qx)
+            for y in reversed(ey)
+        ]
+        pworld = [(cb * px - sb * py, -cb * py - sb * px), (sb * px + cb * py, -sb * py + cb * px)]
+        minimum, maximum = [math.inf] * 3, [-math.inf] * 3
+        for delta in itertools.product(*[(-v / 2, v / 2) for v in part["size"]]):
+            x, y, z = [part["motion_local"][i] + delta[i] for i in range(3)]
+            leaf = part["motion_leaf"]
+            if leaf == "slider":
+                # Slider centre is B+R(phi)q; its body remains at base angle.
+                coeff = [
+                    (cb * qx - sb * qy, -cb * qy - sb * qx),
+                    (sb * qx + cb * qy, -sb * qy + cb * qx),
+                ]
+                extra = [cb * x - sb * y, sb * x + cb * y]
+            else:
+                coeff = [(cb * x - sb * y, -cb * y - sb * x), (sb * x + cb * y, -sb * y + cb * x)]
+                extra = [0, 0]
+            for axis in range(2):
+                a, b = _trig_range(*coeff[axis], *((lo, hi) if leaf == "a" else phi))
+                if leaf != "a":
+                    ea, eb = _trig_range(*pworld[axis], lo, hi)
+                    a, b = a + ea, b + eb
+                minimum[axis] = min(minimum[axis], door["pivot"][axis] + extra[axis] + a)
+                maximum[axis] = max(maximum[axis], door["pivot"][axis] + extra[axis] + b)
+            minimum[2] = min(minimum[2], door["pivot"][2] + z)
+            maximum[2] = max(maximum[2], door["pivot"][2] + z)
+        return tuple(minimum), tuple(maximum)
     length = door["link_length_mm"]
     minima, maxima = [math.inf] * 3, [-math.inf] * 3
     for delta in itertools.product(*[(-v / 2, v / 2) for v in part["size"]]):
@@ -926,6 +963,10 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                     "max_angle_deg",
                     "link_length_mm",
                     "guide_travel_mm",
+                    "mechanism",
+                    "primary_link_mm",
+                    "secondary_link_mm",
+                    "guide_normal_mm",
                 )
             )
         )
@@ -937,6 +978,25 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
             refs,
         )
         if door.get("type") == "bifold":
+            if door.get("mechanism") == "printed-guide-revision-c":
+                add(
+                    f"kinematics.native.{door['id']}",
+                    "unknown",
+                    "kinematics",
+                    "Offset unequal-link prototype uses analytic closure and independent interval motion bounds; native constraint cross-check and physical hinge mounting remain pending",
+                    refs,
+                )
+                add(
+                    f"kinematics.space.{door['id']}",
+                    "pass" if door["remaining_outward_space_mm"] >= 0 else "fail",
+                    "kinematics",
+                    "Sampled bare-frame sweep plus 15 mm provisional fittings allowance; not a full hardware collision proof",
+                    refs,
+                    measured=door["reserved_sweep_mm"],
+                    required=door["available_outward_space_mm"],
+                    unit="mm",
+                )
+                continue
             try:
                 from .constraints import solve_bifold_axes
 

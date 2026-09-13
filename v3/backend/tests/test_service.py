@@ -35,8 +35,18 @@ def test_defaults_and_real_geometry(client, evaluation):
         assert len(mesh["indices"]) % 3 == 0
         assert max(mesh["indices"]) < len(mesh["positions"]) / 3
     assert evaluation["report"]["order_ready"] is False
-    assert evaluation["report"]["summary"]["fail"] == 0
-    assert evaluation["report"]["status"] == "incomplete"
+    # Revision C is explicitly a prototype, not the prior ideal-axis design.
+    # Keep known physical failures visible instead of silently waiving them.
+    checks = {c["id"]: c for c in evaluation["report"]["checks"]}
+    assert checks["containment.coverage.left-rear-perimeter-top.0"]["status"] == "fail"
+    assert checks["collision.rail-back-top.rail-left-top"]["status"] == "fail"
+    assert checks["kinematics.native.left-rear"]["status"] == "unknown"
+    assert not any(
+        c["status"] == "fail"
+        for c in evaluation["report"]["checks"]
+        if c["category"] == "integrity"
+    )
+    assert evaluation["report"]["status"] == "invalid"
 
 
 @pytest.mark.parametrize(

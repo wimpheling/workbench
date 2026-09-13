@@ -1,0 +1,266 @@
+"""Revision C printed-guide prototype. Dimensions in mm, not a hardware release."""
+
+import math
+
+GAP = 5.0
+HEAD = 55.0
+BOTTOM = 3.0
+
+
+def linkage(width):
+    primary = (width - 15 - 40) / 2
+    secondary = primary + 40
+    return dict(
+        primary_width_mm=primary,
+        secondary_width_mm=secondary,
+        primary_link_mm=[primary + 5, 46, 0],
+        secondary_link_mm=[secondary - 12.5, -23, 0],
+        guide_normal_mm=23.0,
+    )
+
+
+def local_pose(door, theta_deg):
+    """Coordinates relative to exterior frame pin, local +Y points inward."""
+    p = door["primary_link_mm"]
+    q = door["secondary_link_mm"]
+    theta = math.radians(theta_deg)
+    elbow = [
+        p[0] * math.cos(theta) - p[1] * math.sin(theta),
+        p[0] * math.sin(theta) + p[1] * math.cos(theta),
+        0,
+    ]
+    ratio = (door["guide_normal_mm"] - elbow[1]) / math.hypot(*q[:2])
+    if abs(ratio) > 1 + 1e-10:
+        raise ValueError("Printed bifold guide is unreachable")
+    phi = math.asin(max(-1, min(1, ratio))) - math.atan2(q[1], q[0])
+    if abs(math.degrees(phi) - theta_deg) > 180 + 1e-8:
+        raise ValueError("CFG interleaf hinge exceeds 180 degrees")
+    slider = [elbow[0] + q[0] * math.cos(phi) - q[1] * math.sin(phi), door["guide_normal_mm"], 0]
+    return elbow, slider, math.degrees(phi)
+
+
+def add_bifolds(part, leaf, doors, parameters):
+    from .core import _add, _rotate
+
+    p = parameters
+    W, D, H = (p[k] for k in ("width_mm", "depth_mm", "height_mm"))
+    for did, origin, base, width, space in [
+        ("left-rear", [-30, D, 0], 270, D / 2, 800),
+        ("back-right", [W, D + 30, 0], 180, p["back_opening_width_mm"], 450),
+    ]:
+        pivot = _add(origin, _rotate([2.5, -8, 0], base))
+        d = dict(
+            id=did,
+            type="bifold",
+            mechanism="printed-guide-revision-c",
+            prototype_status="fit-and-wear-prototype-not-for-manufacture",
+            pivot=pivot,
+            base_deg=base,
+            opening_sign=-1,
+            max_angle_deg=88,
+            opening_width_mm=width,
+            leaf_height_mm=H - HEAD - BOTTOM,
+            available_outward_space_mm=space,
+            axis_offset_mm=23,
+            **linkage(width),
+        )
+        d["link_length_mm"] = math.hypot(*d["primary_link_mm"][:2])
+        d["secondary_link_length_mm"] = math.hypot(*d["secondary_link_mm"][:2])
+        closed_elbow, closed_slider, _ = local_pose(d, 0)
+        ids = []
+        # Frame corners are offset from both pin axes by half the 5 mm gaps.
+        for role, width_key, anchor, normal in [
+            ("a", "primary_width_mm", pivot, 23),
+            ("b", "secondary_width_mm", _add(pivot, _rotate(closed_elbow, base)), -23),
+        ]:
+            ids += leaf(
+                did,
+                role,
+                d[width_key],
+                anchor,
+                base,
+                normal,
+                BOTTOM,
+                H - HEAD,
+                edge_gap=0,
+                start=2.5,
+            )
+
+        samples = [local_pose(d, -i / 4) for i in range(353)]
+        travel = [s[1][0] + 2.5 for s in samples]
+        start = math.floor((min(travel) - 16) / 5) * 5
+        rail_length = width - start
+        count = math.ceil(rail_length / 150)
+        module_length = (rail_length - (count - 1) * 0.2) / count
+        d.update(
+            guide_travel_mm=[min(travel), max(travel)],
+            track_id=f"{did}-track",
+            guide_height_mm=H - 15,
+            carriage_height_mm=H - 15,
+            guide=dict(
+                material="PETG",
+                printer="Bambu A1 mini",
+                module_count=count,
+                module_length_mm=module_length,
+                rail_start_mm=start,
+                rail_end_mm=width,
+                mounting_screw_count=count * 6,
+                mounting_rows_mm=[-15, 15],
+                roller="GN 753.1-22-B5-ZL-1",
+                keeper_washer="M6 DIN 9021",
+                status="prototype; carrier and retention require physical tests",
+            ),
+        )
+
+        def add(suffix, size, local, motion=None, **kwargs):
+            anchor = pivot
+            if motion == "b":
+                anchor = _add(pivot, _rotate(closed_elbow, base))
+            elif motion == "slider":
+                anchor = _add(pivot, _rotate(closed_slider, base))
+            item = part(
+                f"{did}-{suffix}",
+                size,
+                _add(anchor, _rotate(local, base)),
+                "hardware",
+                did,
+                base,
+                **kwargs,
+            )
+            if motion:
+                item.update(motion_leaf=motion, motion_local=local)
+            ids.append(item["id"])
+            return item
+
+        for i in range(count):
+            x = start + i * (module_length + 0.2) + module_length / 2 - 2.5
+            stations = [12 - module_length / 2, 0, module_length / 2 - 12]
+            holes = [dict(center=[xx, yy], diameter_mm=4.5) for xx in stations for yy in (-15, 15)]
+            add(
+                "track" if i == 0 else f"track-{i + 1}",
+                [module_length, 46, 25],
+                [x, 23, H - 12.5],
+                material="PETG",
+                product_code="printed-guide-body",
+                geometry_fidelity="parametric-print-prototype",
+                holes=holes,
+                geometry=dict(kind="printed-guide-body"),
+                mounting="Six M4 bolts through keepers/body into two 3060 underside slot rows",
+                fastener_schedule=dict(quantity=6, screw="M4 x 35 provisional", nut="M4 slot-8"),
+            )
+            for side in (-1, 1):
+                add(
+                    f"keeper-strip-{i + 1}-{side}",
+                    [module_length, 18, 4],
+                    [x, 23 + side * 14, H - 27],
+                    material="PETG",
+                    product_code="printed-keeper-strip",
+                    geometry_fidelity="parametric-print-prototype",
+                    holes=[dict(center=[xx, side], diameter_mm=4.5) for xx in stations],
+                )
+            if i:
+                seam = start + i * (module_length + 0.2) - 0.1 - 2.5
+                for side in (-1, 1):
+                    add(
+                        f"alignment-key-{i}-{side}",
+                        [30, 3, 1.8],
+                        [seam, 23 + side * 20, H - 0.9],
+                        material="PETG",
+                        product_code="printed-alignment-key",
+                    )
+
+        # Actual rolling axis is vertical. Shape metadata produces cylindrical solids.
+        add(
+            "carriage",
+            [22, 22, 7],
+            [0, 0, H - 15],
+            "slider",
+            product_code="GN 753.1-22-B5-ZL-1",
+            material="polyacetal / steel bearing",
+            geometry=dict(kind="annulus", outer_diameter_mm=22, inner_diameter_mm=5),
+        )
+        add(
+            "keeper-washer",
+            [18, 18, 1.6],
+            [0, 0, H - 21.3],
+            "slider",
+            product_code="M6 DIN 9021",
+            material="steel",
+            geometry=dict(kind="annulus", outer_diameter_mm=18, inner_diameter_mm=6.4),
+        )
+        add(
+            "axle",
+            [4, 4, 40],
+            [0, 0, H - 29.5],
+            "slider",
+            product_code="M4 x 40",
+            material="steel",
+            geometry=dict(kind="cylinder", diameter_mm=4),
+        )
+        add(
+            "stem-spacer",
+            [8, 8, 10],
+            [0, 0, H - 27.1],
+            "slider",
+            product_code="311431040050 candidate",
+            material="nickel-plated brass",
+            geometry=dict(kind="annulus", outer_diameter_mm=8, inner_diameter_mm=4.3),
+        )
+        q = d["secondary_link_mm"]
+        add(
+            "carrier-shelf",
+            [10, 10, 6],
+            [q[0], q[1], H - 35.1],
+            "b",
+            material="PETG",
+            geometry_fidelity="unconfirmed-carrier-envelope",
+        )
+        add(
+            "carrier-upright",
+            [8, 8, 36.9],
+            [q[0], q[1], H - 56.55],
+            "b",
+            material="PETG",
+            geometry_fidelity="unconfirmed-carrier-envelope",
+        )
+        # The two wings remain on their respective rigid bodies. Installation
+        # envelopes are NOT represented as calibrated supplier hinge solids.
+        for i, z in enumerate([BOTTOM + 90, (BOTTOM + H - HEAD) / 2, H - HEAD - 90]):
+            for kind, anchor, normal in [("frame", [0, 0, 0], 8), ("interleaf", closed_elbow, -8)]:
+                for side in (-1, 1):
+                    motion = (
+                        None
+                        if kind == "frame" and side == -1
+                        else ("a" if kind == "frame" or side == -1 else "b")
+                    )
+                    local = [side * 17.5, normal, z]
+                    if kind == "interleaf" and side == -1:
+                        local = _add(local, anchor)
+                    add(
+                        f"{kind}-hinge-{i}-wing-{side}",
+                        [16, 6, 30],
+                        local,
+                        motion,
+                        product_code="CFG.30/30 SH-6-C33",
+                        material="PA / steel pin",
+                        geometry_fidelity="unconfirmed-hinge-wing-envelope",
+                        quantity=0.5,
+                        purchase_unit="complete two-wing hinge",
+                    )
+        # Sampled bare frame sweep, with a named (not proven) hardware allowance.
+        sweep = 0.0
+        for i, (elbow, _, phi) in enumerate(samples):
+            for role, angle, anchor, normal in [
+                ("a", -i / 4, [0, 0, 0], 23),
+                ("b", phi, elbow, -23),
+            ]:
+                width_leaf = d["primary_width_mm" if role == "a" else "secondary_width_mm"]
+                for x in (2.5, 2.5 + width_leaf):
+                    for y in (normal - 15, normal + 15):
+                        sweep = max(sweep, 8 - _add(anchor, _rotate([x, y, 0], angle))[1])
+        d.update(
+            reserved_sweep_mm=sweep + 15,
+            remaining_outward_space_mm=space - sweep - 15,
+            part_ids=ids,
+        )
+        doors.append(d)

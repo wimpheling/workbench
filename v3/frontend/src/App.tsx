@@ -1,4 +1,12 @@
-import { createSignal, createMemo, createEffect, onMount, For, Show, onCleanup } from "solid-js";
+import {
+  createSignal,
+  createMemo,
+  createEffect,
+  onMount,
+  For,
+  Show,
+  onCleanup,
+} from "solid-js";
 import Viewer from "./Viewer";
 import { playbackPhases } from "./playback";
 import {
@@ -28,7 +36,9 @@ const doors = [
 ];
 export default function App() {
   const [parameters, setParameters] = createSignal<Parameters>({});
-  const [pose, setPose] = createSignal<Pose>(Object.fromEntries(doors.map(([id]) => [id, 0])));
+  const [pose, setPose] = createSignal<Pose>(
+    Object.fromEntries(doors.map(([id]) => [id, 0])),
+  );
   const [result, setResult] = createSignal<Evaluation>();
   const [evaluated, setEvaluated] = createSignal("");
   const [busy, setBusy] = createSignal(false);
@@ -56,9 +66,13 @@ export default function App() {
   let playbackStart = 0;
   const current = createMemo(() => signature(parameters(), {}));
   const stale = createMemo(() => current() !== evaluated());
-  const report = createMemo(() => (!stale() && !invalidFields().length ? result()?.report : null));
+  const report = createMemo(() =>
+    !stale() && !invalidFields().length ? result()?.report : null,
+  );
   const exportAllowed = createMemo(
-    () => !invalidFields().length && canExport(result(), busy(), current(), evaluated()),
+    () =>
+      !invalidFields().length &&
+      canExport(result(), busy(), current(), evaluated()),
   );
   const status = createMemo(() =>
     invalidFields().length
@@ -90,7 +104,10 @@ export default function App() {
     try {
       const next = await evaluate(input, angles, verify, controller.signal);
       if (!disposed && key === current() && requestEpoch === epoch) {
-        if (verify && (!next.report || next.model.revision !== next.report.revision))
+        if (
+          verify &&
+          (!next.report || next.model.revision !== next.report.revision)
+        )
           throw new Error(
             "The geometry and verification revisions do not match. Please evaluate again.",
           );
@@ -142,7 +159,9 @@ export default function App() {
   async function load() {
     try {
       setError("");
-      const defaults = await readResponse<Parameters>(await fetch("/api/defaults"));
+      const defaults = await readResponse<Parameters>(
+        await fetch("/api/defaults"),
+      );
       setParameters(defaults);
       setLoaded(true);
     } catch (e) {
@@ -186,7 +205,8 @@ export default function App() {
       const progress = Math.min(1, (now - playbackStart) / current.duration);
       const next = { ...current.from };
       for (const id of current.ids) {
-        next[id] = current.from[id] + (current.to[id] - current.from[id]) * progress;
+        next[id] =
+          current.from[id] + (current.to[id] - current.from[id]) * progress;
       }
       setPose(next);
       if (progress >= 1) {
@@ -206,7 +226,9 @@ export default function App() {
     const n = Number(value);
     const valid = !!value.trim() && Number.isFinite(n);
     setInvalidFields((fields) =>
-      valid ? fields.filter((field) => field !== id) : [...new Set([...fields, id])],
+      valid
+        ? fields.filter((field) => field !== id)
+        : [...new Set([...fields, id])],
     );
     if (valid) setParameters((p) => ({ ...p, [id]: n }));
   }
@@ -214,7 +236,12 @@ export default function App() {
     if (!exportAllowed() || exporting()) return;
     setExporting(format);
     try {
-      await download(format, { ...parameters() }, { ...pose() }, result()!.model.revision);
+      await download(
+        format,
+        { ...parameters() },
+        { ...pose() },
+        result()!.model.revision,
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -231,8 +258,12 @@ export default function App() {
             { fail: 0, unknown: 1, pass: 2 }[b.status],
         ) ?? [],
   );
-  const groups = createMemo(() => [...new Set(result()?.model.parts.map((p) => p.category) ?? [])]);
-  const selectedPart = createMemo(() => result()?.model.parts.find((p) => p.id === selected()));
+  const groups = createMemo(() => [
+    ...new Set(result()?.model.parts.map((p) => p.category) ?? []),
+  ]);
+  const selectedPart = createMemo(() =>
+    result()?.model.parts.find((p) => p.id === selected()),
+  );
   return (
     <>
       <header>
@@ -249,13 +280,20 @@ export default function App() {
           <div>
             <div class="eyebrow">DESIGN & ASSEMBLY</div>
             <h1>A place for the work.</h1>
-            <p>Configure your enclosure. Inspect the fit. Know what remains to be confirmed.</p>
+            <p>
+              Configure your enclosure. Inspect the fit. Know what remains to be
+              confirmed.
+            </p>
           </div>
           <div
             class={`status-pill ${report()?.order_ready ? "pass" : report()?.status === "invalid" ? "fail" : "unknown"}`}
             role="status"
           >
-            {busy() ? (verifying() ? "◌ Verifying enclosure…" : "◌ Updating preview…") : status()}
+            {busy()
+              ? verifying()
+                ? "◌ Verifying enclosure…"
+                : "◌ Updating preview…"
+              : status()}
           </div>
         </div>
         <Show when={invalidFields().length}>
@@ -269,7 +307,10 @@ export default function App() {
         </Show>
         <Show when={error()}>
           <div class="error" role="alert">
-            {error()} <button onClick={() => (loaded() ? void run() : void load())}>Retry</button>
+            {error()}{" "}
+            <button onClick={() => (loaded() ? void run() : void load())}>
+              Retry
+            </button>
           </div>
         </Show>
         <div class="workspace">
@@ -284,7 +325,11 @@ export default function App() {
                 Automatic verification
               </label>
               <button
-                disabled={!loaded() || !!invalidFields().length || (busy() && verifying())}
+                disabled={
+                  !loaded() ||
+                  !!invalidFields().length ||
+                  (busy() && verifying())
+                }
                 onClick={verifyNow}
               >
                 Verify now
@@ -299,7 +344,9 @@ export default function App() {
               <h2>Your enclosure</h2>
               <span>mm</span>
             </div>
-            <p class="muted">Clear internal dimensions. All measurements in millimetres.</p>
+            <p class="muted">
+              Clear internal dimensions. All measurements in millimetres.
+            </p>
             <For each={fields}>
               {([id, label]) => (
                 <label class="field">
@@ -318,13 +365,14 @@ export default function App() {
             <details>
               <summary>Machine, loading & allowances</summary>
               <p class="muted">
-                Reference envelopes are assumptions until matched to your machine, dust shoe and
-                hose.
+                Reference envelopes are assumptions until matched to your
+                machine, dust shoe and hose.
               </p>
               <For
                 each={Object.entries(parameters()).filter(
                   ([id, value]) =>
-                    typeof value === "number" && !fields.some(([field]) => field === id),
+                    typeof value === "number" &&
+                    !fields.some(([field]) => field === id),
                 )}
               >
                 {([id, value]) => (
@@ -342,7 +390,9 @@ export default function App() {
               </For>
             </details>
             <For
-              each={Object.entries(parameters()).filter(([, value]) => typeof value === "string")}
+              each={Object.entries(parameters()).filter(
+                ([, value]) => typeof value === "string",
+              )}
             >
               {([id, value]) => (
                 <label class="field">
@@ -360,6 +410,11 @@ export default function App() {
                   >
                     <option value="wood">Wood</option>
                     <option value="glass">Glass</option>
+                    <Show when={id === "bifold_material"}>
+                      <option value="polycarbonate">
+                        Polycarbonate · 4 mm
+                      </option>
+                    </Show>
                   </select>
                 </label>
               )}
@@ -392,6 +447,11 @@ export default function App() {
                 </button>
               </div>
             </div>
+            <p data-testid="bifold-prototype-note">
+              Bifold prototype · A1 mini PETG guides, CFG hinges, 88° parking.
+              Rear opening 750 mm by default. Carrier, stops, seals and physical
+              load/wear validation remain pending; not released for manufacture.
+            </p>
             <For each={doors}>
               {([id, label]) => (
                 <label class="door-control">
@@ -408,36 +468,46 @@ export default function App() {
                     value={pose()[id]}
                     disabled={
                       id === "front-left"
-                        ? pose()["front-right"] < 1 && pose()["front-left"] === 0
+                        ? pose()["front-right"] < 1 &&
+                          pose()["front-left"] === 0
                         : id === "front-right"
                           ? pose()["front-left"] > 0
                           : false
                     }
-                    aria-describedby={id.startsWith("front-") ? "front-door-sequence" : undefined}
-                    onInput={(e) => changePose(id, Number(e.currentTarget.value))}
+                    aria-describedby={
+                      id.startsWith("front-")
+                        ? "front-door-sequence"
+                        : undefined
+                    }
+                    onInput={(e) =>
+                      changePose(id, Number(e.currentTarget.value))
+                    }
                   />
                 </label>
               )}
             </For>
             <p class="muted" id="front-door-sequence">
-              Open the right front leaf fully before opening the left. Close the left completely
-              before closing the right.
+              Open the right front leaf fully before opening the left. Close the
+              left completely before closing the right.
             </p>
             <p class="muted">
-              Preview poses update after adjustment. See the report for verified motion coverage.
+              Preview poses update after adjustment. See the report for verified
+              motion coverage.
             </p>
             <details class="containment-note">
               <summary>Dust containment & airflow intent</summary>
               <p class="muted">
-                Rubber seals bridge the assembly clearances when doors close. Close the left front
-                leaf first, then the right leaf with its overlapping meeting strip. Open the right
-                leaf fully first, then the left. Seal compression and hardware fit remain
-                installation checks.
+                Rubber seals bridge the assembly clearances when doors close.
+                Close the left front leaf first, then the right leaf with its
+                overlapping meeting strip. Open the right leaf fully first, then
+                the left. Seal compression and hardware fit remain installation
+                checks.
               </p>
               <p class="muted">
-                A baffled makeup-air inlet supplies the dust-shoe extraction path. Vacuum selection
-                and measured airflow must establish whether extraction is adequate. Seal fit and
-                dust containment require installation checks.
+                A baffled makeup-air inlet supplies the dust-shoe extraction
+                path. Vacuum selection and measured airflow must establish
+                whether extraction is adequate. Seal fit and dust containment
+                require installation checks.
               </p>
             </details>
           </aside>
@@ -519,7 +589,10 @@ export default function App() {
               ]}
             >
               {([id, label]) => (
-                <button class={tab() === id ? "active" : ""} onClick={() => setTab(id)}>
+                <button
+                  class={tab() === id ? "active" : ""}
+                  onClick={() => setTab(id)}
+                >
                   {label}
                 </button>
               )}
@@ -530,7 +603,8 @@ export default function App() {
               <div>
                 <h2>Evidence, before confidence.</h2>
                 <p class="muted">
-                  An unresolved requirement cannot earn a pass. Review assumptions before ordering.
+                  An unresolved requirement cannot earn a pass. Review
+                  assumptions before ordering.
                 </p>
               </div>
               <div class="counts">
@@ -576,7 +650,11 @@ export default function App() {
                     <details class={`check ${check.status}`}>
                       <summary>
                         <span class="check-symbol">
-                          {check.status === "pass" ? "✓" : check.status === "fail" ? "×" : "?"}
+                          {check.status === "pass"
+                            ? "✓"
+                            : check.status === "fail"
+                              ? "×"
+                              : "?"}
                         </span>
                         <span>
                           {check.message}
@@ -584,7 +662,11 @@ export default function App() {
                             {check.category} · {check.id}
                           </small>
                         </span>
-                        <b>{check.status === "unknown" ? "Unresolved" : check.status}</b>
+                        <b>
+                          {check.status === "unknown"
+                            ? "Unresolved"
+                            : check.status}
+                        </b>
                       </summary>
                       <div class="check-detail">
                         <Show when={check.method}>
@@ -592,20 +674,28 @@ export default function App() {
                         </Show>
                         <Show when={check.measured !== undefined}>
                           <p>
-                            Measured: {JSON.stringify(check.measured)} {check.unit}
+                            Measured: {JSON.stringify(check.measured)}{" "}
+                            {check.unit}
                           </p>
                         </Show>
                         <Show when={check.required !== undefined}>
                           <p>Required: {JSON.stringify(check.required)}</p>
                         </Show>
-                        <p>References: {check.references?.join(", ") || "Assembly"}</p>
+                        <p>
+                          References:{" "}
+                          {check.references?.join(", ") || "Assembly"}
+                        </p>
                       </div>
                     </details>
                   )}
                 </For>
                 <Show when={checks().length > checkLimit()}>
-                  <button class="more-checks" onClick={() => setCheckLimit((n) => n + 50)}>
-                    Show more checks ({checks().length - checkLimit()} remaining)
+                  <button
+                    class="more-checks"
+                    onClick={() => setCheckLimit((n) => n + 50)}
+                  >
+                    Show more checks ({checks().length - checkLimit()}{" "}
+                    remaining)
                   </button>
                 </Show>
               </div>
@@ -614,7 +704,10 @@ export default function App() {
                 <For each={result()?.model.assumptions ?? []}>
                   {(a) => (
                     <p>
-                      <strong>{a.confirmed ? "Confirmed" : "Unconfirmed"}:</strong> {a.description}
+                      <strong>
+                        {a.confirmed ? "Confirmed" : "Unconfirmed"}:
+                      </strong>{" "}
+                      {a.description}
                     </p>
                   )}
                 </For>
@@ -627,8 +720,8 @@ export default function App() {
               <div>
                 <h2>Every piece accounted for.</h2>
                 <p class="muted">
-                  Select a component to locate it in the preview. Reference envelopes are not
-                  purchased parts.
+                  Select a component to locate it in the preview. Reference
+                  envelopes are not purchased parts.
                 </p>
               </div>
             </div>
@@ -647,14 +740,21 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody>
-                        <For each={result()?.model.parts.filter((p) => p.category === category)}>
+                        <For
+                          each={result()?.model.parts.filter(
+                            (p) => p.category === category,
+                          )}
+                        >
                           {(part) => (
                             <tr
                               class={selected() === part.id ? "selected" : ""}
                               onClick={() => setSelected(part.id)}
                             >
                               <td>
-                                <button class="text-button" onClick={() => setSelected(part.id)}>
+                                <button
+                                  class="text-button"
+                                  onClick={() => setSelected(part.id)}
+                                >
                                   {part.name}
                                 </button>
                                 <small>{part.id}</small>
@@ -663,7 +763,9 @@ export default function App() {
                                 {part.material}
                                 <small>{part.product_code}</small>
                               </td>
-                              <td>{part.size.map((v) => v.toFixed(1)).join(" × ")}</td>
+                              <td>
+                                {part.size.map((v) => v.toFixed(1)).join(" × ")}
+                              </td>
                               <td>{part.supplier || "To confirm"}</td>
                             </tr>
                           )}
@@ -680,12 +782,14 @@ export default function App() {
               <div>
                 <h2>From design to supplier.</h2>
                 <p class="muted">
-                  Reiman Portugal for extrusions. Separate specifications for panels, glass and
-                  hardware.
+                  Reiman Portugal for extrusions. Separate specifications for
+                  panels, glass and hardware.
                 </p>
               </div>
               <span class="status-pill unknown">
-                {report()?.order_ready ? "Ready to order" : "REQUEST FOR QUOTATION"}
+                {report()?.order_ready
+                  ? "Ready to order"
+                  : "REQUEST FOR QUOTATION"}
               </span>
             </div>
             <p class="export-note">
@@ -702,11 +806,31 @@ export default function App() {
                     "Complete supplier pack",
                     "All drawings, lists and verification evidence.",
                   ],
-                  ["pdf", "Dimensioned drawings", "Printable supplier specifications and status."],
-                  ["csv", "Order list", "Component quantities and cutting dimensions."],
-                  ["dxf", "Panel outlines", "Flat geometry for supplier review."],
-                  ["step", "Assembly geometry", "Solid model for technical coordination."],
-                  ["json", "Design & evidence", "Parameters, component inventory and report."],
+                  [
+                    "pdf",
+                    "Dimensioned drawings",
+                    "Printable supplier specifications and status.",
+                  ],
+                  [
+                    "csv",
+                    "Order list",
+                    "Component quantities and cutting dimensions.",
+                  ],
+                  [
+                    "dxf",
+                    "Panel outlines",
+                    "Flat geometry for supplier review.",
+                  ],
+                  [
+                    "step",
+                    "Assembly geometry",
+                    "Solid model for technical coordination.",
+                  ],
+                  [
+                    "json",
+                    "Design & evidence",
+                    "Parameters, component inventory and report.",
+                  ],
                 ]}
               >
                 {([format, title, description]) => (
@@ -716,7 +840,9 @@ export default function App() {
                     onClick={() => void save(format)}
                   >
                     <span>{format.toUpperCase()} ↗</span>
-                    <strong>{exporting() === format ? "Preparing file…" : title}</strong>
+                    <strong>
+                      {exporting() === format ? "Preparing file…" : title}
+                    </strong>
                     <small>{description}</small>
                   </button>
                 )}
@@ -724,14 +850,18 @@ export default function App() {
             </div>
             <Show when={!exportAllowed()}>
               <p class="muted">
-                Evaluate the current design before downloading matching supplier files.
+                Evaluate the current design before downloading matching supplier
+                files.
               </p>
             </Show>
           </Show>
         </section>
         <footer>
           WORKBENCH / ENCLOSURE 03{" "}
-          <span>Fit and motion evidence · Physical installation checks remain necessary.</span>
+          <span>
+            Fit and motion evidence · Physical installation checks remain
+            necessary.
+          </span>
         </footer>
       </main>
     </>

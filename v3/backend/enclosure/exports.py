@@ -544,7 +544,7 @@ def containment_notes(model: dict) -> str:
         + ".",
         "Supplier must select rubber grade/profile, free section, installed compression, corner treatment, clamping/adhesive and fixing pitch. Continuous glass-compatible packing and setting support must be confirmed before tempering. Dimensions in hardware.csv are candidate installed envelopes, not approved catalogue sizes.",
         "Bifold meeting covers need a supplier-confirmed flexible fold, clamp layout and endurance allowance; their displayed rigid pose is not a simulation of rubber deformation.",
-        "The bifold guide sits above the header and connects through an offset support arm outside the seals. Request a finished supplier-provided adapter assembly, its bearings, fasteners and load/stiffness confirmation; the nominal stock envelopes do not specify customer metalworking.",
+        "Bifolds use revision C A1 mini PETG guide modules under 3060 headers, bought CFG hinges and GN753.1 rollers. The carrier remains an envelope, not a printable release. Confirm M4 fixings, bushes, axle stack, independent metal stops/catches, sealing and physical load/wear tests. Printed lips are not independent metal retention.",
         "Seal the base against a flat continuous supporting table. The tabletop, its load capacity and cable/service penetrations need confirmation.",
         "Retain the roof collar and clamp the independently supported hose. Confirm bend radius and clearance through full machine travel.",
         "Use passive makeup air and extraction at the dust shoe, with vacuum exhaust outside the enclosure. Keep the baffled inlet clear and accessible for cleaning. No inlet fan or extractor performance is assumed.",
@@ -594,7 +594,13 @@ def export_file(kind: str, model: dict, report: dict, shapes: dict) -> tuple[byt
         archive.writestr("verification.json", json.dumps(report, indent=2, allow_nan=False))
         archive.writestr("reiman-extrusions.csv", supplier_csv(model, report, {"extrusion"}))
         archive.writestr("glass-panels.csv", supplier_csv(model, report, {"glass"}))
-        archive.writestr("wood-panels.csv", supplier_csv(model, report, {"panel"}))
+        wood = {**model, "parts": [p for p in model["parts"] if p["material"] == "wood"]}
+        plastic = {
+            **model,
+            "parts": [p for p in model["parts"] if p["material"] == "polycarbonate"],
+        }
+        archive.writestr("wood-panels.csv", supplier_csv(wood, report, {"panel"}))
+        archive.writestr("polycarbonate-panels.csv", supplier_csv(plastic, report, {"panel"}))
         archive.writestr("hardware.csv", supplier_csv(model, report, {"hardware"}))
         archive.writestr("containment-and-airflow.txt", containment_notes(model))
         archive.writestr("supplier-drawings.pdf", supplier_pdf(model, report))

@@ -85,13 +85,13 @@ def add_containment(model):
             depth = c - 2
         else:
             d = doors[did]
-            pivot = d["pivot"]
+            pivot = _add(d["pivot"], _rotate([-2.5, 8, 0], d["base_deg"]))
             base = d["base_deg"]
-            span = 2 * d["link_length_mm"]
-            top = H - 50
-            stopnormal = -1
-            sealnormal = 2
-            depth = 4
+            span = d["opening_width_mm"]
+            top = H - 55
+            stopnormal = 33
+            sealnormal = 31
+            depth = 2
         ids = []
         specs = [
             ("left", [-5, (H) / 2], [30, H + 40]),
@@ -100,6 +100,13 @@ def add_containment(model):
             ("top", [span / 2, (top - 10 + H + 20) / 2], [span - 20, H + 30 - top]),
         ]
         for side, (xx, zz), (ww, hh) in specs:
+            if did != "front" and side in ("left", "right"):
+                zz, hh = (35 + top) / 2, top - 35
+            if did != "front" and side == "top":
+                # Do not invent a solid header through the roller/carrier path.
+                # The remaining head opening deliberately fails sealing coverage
+                # until a brush/cover attachment and clearance is established.
+                zz, hh = top, 20
             for kind, nn, dd, rubber in [
                 ("stop", stopnormal, 2, False),
                 ("seal", sealnormal, depth, True),
@@ -113,10 +120,12 @@ def add_containment(model):
             # The shared jamb stop mounts onto the overlapping fixed wood panel.
             # Other sides use cut backing strips to reach the same stop plane.
             for side, (xx, zz), (ww, hh) in specs:
-                if side == "left":
+                if side in ("left", "top"):
                     continue
+                if side == "right":
+                    zz, hh = (35 + top) / 2, top - 35
                 id = f"{did}-perimeter-{side}-backing"
-                add(id, [ww, 8, hh], _add(pivot, _rotate([xx, -6, zz], base)), base)
+                add(id, [ww, 8, hh], _add(pivot, _rotate([xx, 38, zz], base)), base)
                 ids.append(id)
         for side, rect in [
             ("left", [0, c, 0, H]),
@@ -157,11 +166,11 @@ def add_containment(model):
     # Flexible external seam cover follows leaf A; its deformation is not a rigid-motion claim.
     for did in ["left-rear", "back-right"]:
         d = doors[did]
-        L = d["link_length_mm"]
-        local = [L, 35, H / 2 - 25]
+        L = d["primary_link_mm"][0]
+        local = [L, 6, (3 + H - 55) / 2]
         item = add(
             f"{did}-meeting-cover",
-            [40, 2, H - 50 + 8],
+            [20, 2, H - 55 - 3],
             _add(d["pivot"], _rotate(local, d["base_deg"])),
             d["base_deg"],
             did,
@@ -183,8 +192,8 @@ def add_containment(model):
                 f"{did}-meeting",
                 d["pivot"],
                 d["base_deg"],
-                35,
-                [L - c, L + c, 0, H - 50],
+                6,
+                [L - 2.5, L + 2.5, 3, H - 55],
                 [item["id"]],
                 "flexible-fold-cover",
             )
@@ -202,7 +211,11 @@ def add_containment(model):
         center = pane["motion_local"]
         pw, pt, ph = pane["size"]
         ids = []
-        origin = d["pivot"] if leaf == "a" else _add(d["pivot"], _rotate([L, 0, 0], d["base_deg"]))
+        origin = (
+            d["pivot"]
+            if leaf == "a"
+            else _add(d["pivot"], _rotate(d.get("primary_link_mm", [L, 0, 0]), d["base_deg"]))
+        )
         for side, xx, zz, ww, hh in [
             ("left", center[0] - pw / 2 - c / 2, center[2], c + 10, ph + 2 * c + 20),
             ("right", center[0] + pw / 2 + c / 2, center[2], c + 10, ph + 2 * c + 20),
@@ -299,6 +312,11 @@ def add_containment(model):
         axes = panel["drawing_axes"]
         for axis in axes:
             panel["size"][axis] += 60
+        if wall_id in ("panel-left-front", "panel-back-left"):
+            # The 3060 header projects farther outward: end the fixed sheet at
+            # its underside instead of lapping through its actual extrusion.
+            panel["size"][2] -= 30
+            panel["position"][2] -= 15
         sign = 1 if wall_id in ("panel-right", "panel-back-left") else -1
         panel["position"][normal] += 2 * sign
         panel["cut_size_mm"] = [

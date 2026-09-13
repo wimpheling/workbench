@@ -1,6 +1,14 @@
 # V3 implementation contract
 
-All new implementation lives in `v3/`. Coordinates and lengths are millimetres: X right, Y toward the back, Z up; front is Y=0. No current application sources are modified.
+All active implementation lives in `v3/`. Coordinates and lengths are millimetres: X right, Y toward the back, Z up; front is Y=0.
+
+Revision C bifolds add `mechanism: printed-guide-revision-c`, primary/secondary
+link vectors, `guide_normal_mm`, unequal leaf widths, a guide-module plan and
+explicit prototype status to each door. `back_opening_width_mm` defaults to
+750 mm (supported range 650–800 mm); bifold material defaults to 4 mm
+polycarbonate. Published vectors drive both backend and frontend poses. The
+old native equal-link constraint solver is not evidence for this mechanism.
+Keep real header-corner, access and sealing failures visible in the report.
 
 Python package: `v3/backend/enclosure`. Core API: `build_model(parameters: dict | None = None) -> dict`, `build_shapes(model: dict, pose: dict | None = None) -> dict[str, cadquery.Shape]`, `default_parameters() -> dict`. Core owns `core.py` and geometry/kinematic helpers. Verification owns `verification.py`: `verify(model: dict, shapes: dict | None = None) -> dict`. Supervisor owns service and supplier exports. Frontend consumes HTTP JSON.
 

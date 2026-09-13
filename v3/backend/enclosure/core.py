@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .profiles import ASSET_SHA256
 
-SCHEMA_VERSION = "3.0.2"
+SCHEMA_VERSION = "3.1.0"
 
 
 def default_parameters():
@@ -30,7 +30,8 @@ def default_parameters():
         machine_height_mm=600.0,
         hose_diameter_mm=100.0,
         door_material="glass",
-        bifold_material="wood",
+        bifold_material="polycarbonate",
+        back_opening_width_mm=750.0,
     )
 
 
@@ -45,6 +46,7 @@ def _parameters(inputs):
         p.update(inputs)
     bounds = {
         "width_mm": (1300, 2500),
+        "back_opening_width_mm": (650, 800),
         "depth_mm": (1300, 2500),
         "height_mm": (650, 1500),
         "panel_thickness_mm": (3, 18),
@@ -70,8 +72,10 @@ def _parameters(inputs):
             raise ValueError(f"{key} must be finite and between {lo} and {hi} mm")
         p[key] = float(value)
     for key in ("door_material", "bifold_material"):
-        if p[key] not in ("wood", "glass"):
-            raise ValueError(f"{key} must be wood or glass")
+        if p[key] not in (
+            ("wood", "glass", "polycarbonate") if key == "bifold_material" else ("wood", "glass")
+        ):
+            raise ValueError(f"Unsupported {key} material")
     return p
 
 
@@ -89,12 +93,18 @@ def build_model(parameters=None):
     p = _parameters(parameters)
     W, D, H = (p[k] for k in ("width_mm", "depth_mm", "height_mm"))
     c = p["clearance_mm"]
+    rear_jamb = W - p["back_opening_width_mm"] - 15
+    left_jamb = D / 2 - 15
     t = p["panel_thickness_mm"]
     parts = []
     joints = []
     doors = []
 
     def part(id, size, pos, category="extrusion", assembly="frame", rotation=0, **extra):
+        if id in ("rail-left-top", "rail-back-top"):
+            size = list(size)
+            size[0 if id == "rail-left-top" else 1] = 60
+            extra["product_code"] = "AST03006006"
         item = dict(
             id=id,
             name=id.replace("-", " "),
@@ -144,21 +154,21 @@ def build_model(parameters=None):
         for side, x in [("left", -15), ("right", W + 15)]:
             part(f"rail-{side}-{level}", [30, D, 30], [x, D / 2, z])
     for index, y in enumerate([D / 3, 2 * D / 3]):
-        part(f"beam-roof-{index + 1}", [W, 30, 30], [W / 2, y, H + 15], assembly="roof")
-    part("post-left-middle", [30, 30, H], [-15, D / 2, H / 2])
-    part("post-back-middle", [30, 30, H], [W / 2, D + 15, H / 2])
+        part(f"beam-roof-{index + 1}", [W - 15, 30, 30], [(W + 15) / 2, y, H + 15], assembly="roof")
+    part("post-left-middle", [30, 30, H], [-15, left_jamb, H / 2])
+    part("post-back-middle", [30, 30, H], [rear_jamb, D + 15, H / 2])
     part("panel-right", [t, D, H], [W + 30 + t / 2, D / 2, H / 2], "panel", "walls")
     part(
         "panel-left-front",
-        [t, D / 2 - 15, H],
-        [-30 - t / 2, (D / 2 - 15) / 2, H / 2],
+        [t, left_jamb - 15, H],
+        [-30 - t / 2, (left_jamb - 15) / 2, H / 2],
         "panel",
         "walls",
     )
     part(
         "panel-back-left",
-        [W / 2 - 15, t, H],
-        [(W / 2 - 15) / 2, D + 30 + t / 2, H / 2],
+        [rear_jamb - 15, t, H],
+        [(rear_jamb - 15) / 2, D + 30 + t / 2, H / 2],
         "panel",
         "walls",
     )
@@ -242,27 +252,30 @@ def build_model(parameters=None):
                         mounting_orientation_confirmed=False,
                     )
     for mid, rail, x, y in [
-        ("post-left-middle", "left", -15, D / 2),
-        ("post-back-middle", "back", W / 2, D + 15),
+        ("post-left-middle", "left", -15, left_jamb),
+        ("post-back-middle", "back", rear_jamb, D + 15),
     ]:
         for level, z in [("bottom", 0), ("top", H)]:
             joint(mid, f"rail-{rail}-{level}", [x, y, z])
     for index, y in enumerate([D / 3, 2 * D / 3]):
-        for side, x in [("left", 0), ("right", W)]:
+        for side, x in [("left", 15), ("right", W)]:
             joint(f"beam-roof-{index + 1}", f"rail-{side}-top", [x, y, H + 15])
 
-    def leaf(door, leaf_id, length, pivot, base_deg, normal_offset, zlo, zhi):
+    def leaf(
+        door, leaf_id, length, pivot, base_deg, normal_offset, zlo, zhi, edge_gap=None, start=0
+    ):
         # Local X along hinge-axis link. Local Y is left normal; sign handled in base rotation.
         bh = zhi - zlo
-        width = length - 2 * c
+        gap = c if edge_gap is None else edge_gap
+        width = length - 2 * gap
         created = []
-        outward = -1 if door == "front-left" else 1
+        outward = 1 if door == "front-right" else -1
         for suffix, size, local in [
-            ("stile-a", [30, 30, bh], [c + 15, normal_offset, (zlo + zhi) / 2]),
+            ("stile-a", [30, 30, bh], [gap + 15, normal_offset, (zlo + zhi) / 2]),
             (
                 "stile-b",
                 [30, 30, bh],
-                [length - c - 15, normal_offset, (zlo + zhi) / 2],
+                [length - gap - 15, normal_offset, (zlo + zhi) / 2],
             ),
             ("rail-low", [width - 60, 30, 30], [length / 2, normal_offset, zlo + 15]),
             ("rail-high", [width - 60, 30, 30], [length / 2, normal_offset, zhi - 15]),
@@ -278,7 +291,13 @@ def build_model(parameters=None):
             )
             created.append(item)
         material = p["door_material"] if door.startswith("front-") else p["bifold_material"]
-        th = p["glass_thickness_mm"] if material == "glass" else t
+        th = (
+            4
+            if material == "polycarbonate"
+            else p["glass_thickness_mm"]
+            if material == "glass"
+            else t
+        )
         local = [length / 2, normal_offset, (zlo + zhi) / 2]
         item = part(
             f"{door}-{leaf_id}-infill",
@@ -323,6 +342,9 @@ def build_model(parameters=None):
                 motion_local=local,
             )
         )
+        for item in created:
+            item["motion_local"][0] += start
+            item["position"] = _add(pivot, _rotate(item["motion_local"], base_deg))
         return [v["id"] for v in created]
 
     # Front left local Y points outward; right mirrored through basis and angle.
@@ -345,148 +367,13 @@ def build_model(parameters=None):
                 axis_offset_mm=0,
             )
         )
-    for id, pivot, base, span in [
-        ("left-rear", [-40, D / 2 + 15, 0], 90, D / 2 - 15),
-        ("back-right", [W / 2 + 15, D + 40, 0], 0, W / 2 - 15),
-    ]:
-        # Local left normal is outward for these bases. Hinge axes at Y=0,
-        # frame centre planes offset +19 mm. Slider lies along local X.
-        length = span / 2
-        ids = leaf(id, "a", length, pivot, base, 19, c, H - 50)
-        ids += leaf(
-            id,
-            "b",
-            length,
-            _add(pivot, _rotate([length, 0, 0], base)),
-            base,
-            19,
-            c,
-            H - 50,
-        )
-        track = part(
-            f"{id}-track",
-            [span + 20, 16, 20],
-            _add(pivot, _rotate([span / 2, 0, H + 80], base)),
-            "hardware",
-            id,
-            base,
-            product_code="GSD082.3000KIT",
-            geometry_fidelity="unconfirmed-track-envelope",
-        )
-        slider = part(
-            f"{id}-carriage",
-            [12, 12, 12],
-            _add(pivot, _rotate([span, 0, H + 63], base)),
-            "hardware",
-            id,
-            base,
-            motion_leaf="slider",
-            motion_local=[0, 0, H + 63],
-            geometry_fidelity="unconfirmed-carriage-envelope",
-        )
-        ids += [track["id"], slider["id"]]
-        # Prefabricated overhead dogleg reaches the ideal slider axis without
-        # driving any rigid link through the closed header barrier. Four cut
-        # stock elements butt at their interfaces; a supplier must detail fixings.
-        for suffix, size, local in [
-            ("foot", [20, 4, 10], [length - 19, 36, H - 75]),
-            ("lower-return", [28, 122, 6], [length - 8, 99, H - 73]),
-            ("outer-leg", [6, 30, 121], [length, 145, H - 9.5]),
-            ("upper-return", [6, 163, 6], [length, 78.5, H + 54]),
-        ]:
-            item = part(
-                f"{id}-guide-adapter-{suffix}",
-                size,
-                _add(pivot, _rotate(_add([length, 0, 0], local), base)),
-                "hardware",
-                id,
-                base,
-                motion_leaf="b",
-                motion_local=local,
-                geometry_fidelity="nominal-solid",
-                material="aluminium",
-                supplier="Supplier-fabricated adapter quotation required",
-                cut_length_mm=max(size),
-                machining="Supplier must detail bolted/welded joints, pivot bearing, track supports and load capacity; no customer fabrication assumed",
-            )
-            ids.append(item["id"])
+    from .bifold import add_bifolds
 
-        adapter_parts = {q["id"]: q for q in parts}
-        for first, second, feature, normal in [
-            (f"{id}-b-stile-b", f"{id}-guide-adapter-foot", [length - 19, 34, H - 75], [0, 1, 0]),
-            (
-                f"{id}-guide-adapter-foot",
-                f"{id}-guide-adapter-lower-return",
-                [length - 19, 38, H - 73],
-                [0, 1, 0],
-            ),
-            (
-                f"{id}-guide-adapter-lower-return",
-                f"{id}-guide-adapter-outer-leg",
-                [length, 145, H - 70],
-                [0, 0, 1],
-            ),
-            (
-                f"{id}-guide-adapter-outer-leg",
-                f"{id}-guide-adapter-upper-return",
-                [length, 145, H + 51],
-                [0, 0, 1],
-            ),
-        ]:
-            pa = adapter_parts[first]
-            pb = adapter_parts[second]
-            joints.append(
-                dict(
-                    id=f"{first}--{second}",
-                    part_a=first,
-                    part_b=second,
-                    local_a=[feature[i] - pa["motion_local"][i] for i in range(3)],
-                    local_b=[feature[i] - pb["motion_local"][i] for i in range(3)],
-                    normal_a=normal,
-                    normal_b=[-v for v in normal],
-                    feature_type="mating-plane",
-                    angular_tolerance_deg=0.01,
-                    tolerance_mm=0.01,
-                    contact=dict(type="mating", max_overlap_mm3=0.01, minimum_contact_area_mm2=1.0),
-                    mounting_verified=False,
-                )
-            )
-        joints.append(
-            dict(
-                id=f"{id}-adapter-carriage",
-                part_a=f"{id}-guide-adapter-upper-return",
-                part_b=f"{id}-carriage",
-                local_a=[0, -78.5, 3],
-                local_b=[0, 0, -6],
-                normal_a=[0, 0, 1],
-                normal_b=[0, 0, -1],
-                feature_type="mating-plane",
-                angular_tolerance_deg=0.01,
-                tolerance_mm=0.01,
-                contact=dict(type="mating", max_overlap_mm3=0.01, minimum_contact_area_mm2=1.0),
-                mounting_verified=False,
-            )
-        )
-        doors.append(
-            dict(
-                id=id,
-                type="bifold",
-                part_ids=ids,
-                pivot=pivot,
-                base_deg=base,
-                opening_sign=1,
-                max_angle_deg=85,
-                link_length_mm=length,
-                axis_offset_mm=19,
-                guide_travel_mm=[0, span],
-                track_id=track["id"],
-                guide_height_mm=H + 80,
-                carriage_height_mm=H + 63,
-                adapter_outer_normal_mm=145,
-            )
-        )
+    add_bifolds(part, leaf, doors, p)
     # Hardware bodies are explicitly listed but mating and fixings require catalog selection.
     for door in doors:
+        if door["type"] == "bifold":
+            continue
         for kind, xx in [
             ("frame-hinge", 0),
             (
@@ -510,22 +397,6 @@ def build_model(parameters=None):
                         motion_leaf="b" if door["type"] == "bifold" else "a",
                         motion_local=[door["link_length_mm"] - 20, 0, zz],
                     )
-                door["part_ids"].append(item["id"])
-        if door["type"] == "bifold":
-            for index, zz in enumerate([80, H - 100]):
-                local = [door["link_length_mm"], 0, zz]
-                item = part(
-                    f"{door['id']}-interleaf-hinge-{index}",
-                    [10, 10, 35],
-                    _add(door["pivot"], _rotate(local, door["base_deg"])),
-                    "hardware",
-                    door["id"],
-                    door["base_deg"],
-                    product_code="CFG.30/30",
-                    motion_leaf="a",
-                    motion_local=local,
-                    geometry_fidelity="unconfirmed-hardware-envelope",
-                )
                 door["part_ids"].append(item["id"])
     part(
         "machine-envelope",
@@ -653,19 +524,25 @@ def build_model(parameters=None):
     add_containment(model)
     model["assumptions"].append(
         dict(
-            id="overhead-guide-adapter",
-            description="Supplier-fabricated overhead dogleg adapter, bearings, connections, fixed track supports, stiffness and load capacity require engineering confirmation; nominal clearance is checked but no fabrication by customer is assumed.",
+            id="printed-guide-prototype",
+            description="PETG A1 mini guide prototype: carrier envelope, M4 fasteners, metal stops/catches, CFG mounting, polycarbonate retention, seal clearance, creep and wear require physical validation. Printed lips are not independent metal retention. Doors remain hinge-supported.",
             confirmed=False,
             references=["left-rear-track", "back-right-track"],
         )
     )
     model["ordering"]["unresolved"].append(
-        "Supplier-prefabricated overhead dogleg guide adapters and fixed track supports, pivot bearings and stiffness/load confirmation"
+        "Printed-guide carrier, axle/bushings, 3060 header mounting, metal end stops/catches, seals and physical load/wear tests"
     )
     model["engineering_source_sha256"] = hashlib.sha256(
         b"".join(
             (Path(__file__).parent / name).read_bytes()
-            for name in ("core.py", "profiles.py", "constraints.py", "containment_geometry.py")
+            for name in (
+                "core.py",
+                "profiles.py",
+                "constraints.py",
+                "containment_geometry.py",
+                "bifold.py",
+            )
         )
     ).hexdigest()
     model["revision"] = hashlib.sha256(
@@ -700,6 +577,13 @@ def pose_model(model, pose=None):
         pivot = d["pivot"]
         elbow = _add(pivot, _rotate([L, 0, 0], base + theta))
         slider = _add(pivot, _rotate([2 * L * math.cos(math.radians(theta)), 0, 0], base))
+        second_angle = -theta
+        if d.get("mechanism") == "printed-guide-revision-c":
+            from .bifold import local_pose
+
+            elbow_local, slider_local, second_angle = local_pose(d, theta)
+            elbow = _add(pivot, _rotate(elbow_local, base))
+            slider = _add(pivot, _rotate(slider_local, base))
         for id in d["part_ids"]:
             item = lookup[id]
             leaf = item.get("motion_leaf")
@@ -709,7 +593,7 @@ def pose_model(model, pose=None):
             angle = base + theta
             if leaf == "b":
                 origin = elbow
-                angle = base - theta
+                angle = base + second_angle
             if leaf == "slider":
                 origin = slider
                 angle = base
@@ -731,13 +615,29 @@ def build_shapes(model, pose=None):
         if p["category"] == "extrusion":
             from .profiles import extrusion
 
-            shape = extrusion(p["cut_length_mm"], p["length_axis"])
+            shape = extrusion(p["cut_length_mm"], p["length_axis"], p["product_code"])
         elif p.get("cad_asset"):
             from .profiles import bracket
 
             shape = bracket()
         else:
             shape = cq.Workplane("XY").box(sx, sy, sz).val()
+        if p.get("geometry", {}).get("kind") == "printed-guide-body":
+            channel = cq.Workplane("XY").box(sx + 2, 23, 21).val().translate((0, 0, -2))
+            shape = shape.cut(channel)
+            for end in (-1, 1):
+                for row in (-20, 20):
+                    pocket = (
+                        cq.Workplane("XY")
+                        .box(15.2, 3.4, 2)
+                        .val()
+                        .translate((end * (sx / 2 - 7.6), row, 11.5))
+                    )
+                    shape = shape.cut(pocket)
+        if p.get("geometry", {}).get("kind") == "cylinder":
+            shape = cq.Solid.makeCylinder(
+                p["geometry"]["diameter_mm"] / 2, sz, cq.Vector(0, 0, -sz / 2)
+            )
         if p.get("geometry", {}).get("kind") == "annulus":
             g = p["geometry"]
             shape = cq.Solid.makeCylinder(

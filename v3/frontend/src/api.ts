@@ -41,6 +41,10 @@ export interface Evaluation {
       opening_sign: number;
       max_angle_deg: number;
       link_length_mm: number;
+      mechanism?: string;
+      primary_link_mm?: number[];
+      secondary_link_mm?: number[];
+      guide_normal_mm?: number;
       [key: string]: unknown;
     }[];
     [key: string]: unknown;
@@ -61,7 +65,10 @@ export async function readResponse<T>(response: Response): Promise<T> {
     let detail = "";
     try {
       const data = await response.json();
-      detail = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail ?? data);
+      detail =
+        typeof data.detail === "string"
+          ? data.detail
+          : JSON.stringify(data.detail ?? data);
     } catch {
       detail = response.statusText;
     }
@@ -73,7 +80,9 @@ export function signature(parameters: Parameters, pose: Pose): string {
   // Pose is a reversible viewer state. Design revisions and verification
   // remain bound to dimensional/material parameters only.
   void pose;
-  return JSON.stringify(Object.entries(parameters).sort(([a], [b]) => a.localeCompare(b)));
+  return JSON.stringify(
+    Object.entries(parameters).sort(([a], [b]) => a.localeCompare(b)),
+  );
 }
 export function canExport(
   result: Evaluation | undefined,
@@ -118,7 +127,9 @@ export async function download(
   const blob = await response.blob();
   if (!blob.size) throw new Error("The supplier file was empty. Please retry.");
   const filename =
-    response.headers.get("Content-Disposition")?.match(/filename="?([^";]+)"?/)?.[1] ??
+    response.headers
+      .get("Content-Disposition")
+      ?.match(/filename="?([^";]+)"?/)?.[1] ??
     `enclosure-${revision.slice(0, 8)}.${format === "pack" ? "zip" : format}`;
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
