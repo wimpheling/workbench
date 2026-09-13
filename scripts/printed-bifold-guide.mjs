@@ -1,14 +1,13 @@
 // Generate prototype parts, not manufacturing-release door hardware. Node 24.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { execFileSync } from "node:child_process";
 import opencascade from "replicad-opencascadejs/src/replicad_single.js";
 import { makeBox, makeCylinder, measureVolume, setOC } from "replicad";
-import { printedBifoldGuide as p, evaluatePrintedGuide } from "../src/domain/printedBifoldGuide.ts";
+import { printedBifoldGuide as p, evaluatePrintedGuide } from "../engineering/bifold-assembly/printedBifoldGuide.ts";
 import {
   bifoldAssemblyStudyDefaults,
   evaluateBifoldAssemblyStudy,
-} from "../src/domain/bifoldAssemblyStudy.ts";
+} from "../engineering/bifold-assembly/bifoldAssemblyStudy.ts";
 
 // The installed Emscripten bundle expects CommonJS globals even when imported
 // as ESM. Supply them only inside this standalone generator process.
@@ -146,10 +145,6 @@ await writeFile(
   JSON.stringify({ revision: "C", status: p.status, dimensions: p, plans, artifacts }, null, 2) +
     "\n",
 );
-execFileSync(new URL("../node_modules/.bin/vp", import.meta.url).pathname, [
-  "fmt",
-  new URL("prototype-manifest.json", output).pathname,
-]);
 console.log(
   `Generated ${artifacts.length} positive-volume prototype STLs; each fits a 180 mm bed with a 5 mm brim.`,
 );

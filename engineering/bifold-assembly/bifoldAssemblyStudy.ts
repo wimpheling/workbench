@@ -2,7 +2,7 @@
  * Revision B engineering study, not released manufacturing geometry.
  * Local x runs from the parking jamb across the opening; y points outward
  * from the closed exterior face. All coordinates and lengths are in mm.
- * The active enclosure/rendered hardware is not changed by this evaluator.
+ * Standalone engineering study; v3 integration is tracked separately.
  */
 export type StudyPoint = Readonly<{ x: number; y: number }>;
 

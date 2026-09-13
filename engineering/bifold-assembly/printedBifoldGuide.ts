@@ -1,4 +1,4 @@
-/** Revision C prototype dimensions; no printed load rating or manufacturing release. */
+/** Standalone revision C prototype; no load rating or manufacturing release. */
 export const printedBifoldGuide = Object.freeze({
   status: "petg-fit-and-wear-prototype" as const,
   printer: "Bambu A1 mini",

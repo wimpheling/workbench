@@ -200,7 +200,7 @@ has yet been recorded.
 ## Reproduction and verification
 
 Run `node scripts/printed-bifold-guide.mjs` from the project root with Node 24.
-Dimensions and stack arithmetic are in `src/domain/printedBifoldGuide.ts`;
+Dimensions and stack arithmetic are in `engineering/bifold-assembly/printedBifoldGuide.ts`;
 the generator uses Replicad/OpenCascade to create the seven STL files and
 [prototype-manifest.json](prototype-manifest.json). Parts have positive CAD
 volume and fit the bed. Mesh checks and automated tests verify geometry,

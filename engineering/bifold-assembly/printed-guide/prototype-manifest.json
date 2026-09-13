@@ -54,8 +54,18 @@
       "moduleLengthMm": 133.84,
       "bodyHeightMm": 25,
       "stackHeightMm": 29,
-      "bodyMountingStationsMm": [12, 66.92, 121.84],
-      "moduleStartsMm": [80, 214.04, 348.08, 482.12, 616.16],
+      "bodyMountingStationsMm": [
+        12,
+        66.92,
+        121.84
+      ],
+      "moduleStartsMm": [
+        80,
+        214.04,
+        348.08,
+        482.12,
+        616.16
+      ],
       "mountingScrewCount": 30,
       "keeperStripCount": 10,
       "alignmentKeyCount": 8,
@@ -89,8 +99,18 @@
       "moduleLengthMm": 147.74,
       "bodyHeightMm": 25,
       "stackHeightMm": 29,
-      "bodyMountingStationsMm": [12, 73.87, 135.74],
-      "moduleStartsMm": [85, 232.94, 380.88, 528.8199999999999, 676.76],
+      "bodyMountingStationsMm": [
+        12,
+        73.87,
+        135.74
+      ],
+      "moduleStartsMm": [
+        85,
+        232.94,
+        380.88,
+        528.8199999999999,
+        676.76
+      ],
       "mountingScrewCount": 30,
       "keeperStripCount": 10,
       "alignmentKeyCount": 8,
@@ -120,7 +140,11 @@
       "name": "coupon-body-60",
       "quantity": 2,
       "use": "Print first: two modules for a supported joint/roller test",
-      "sizeMm": [60, 46, 25],
+      "sizeMm": [
+        60,
+        46,
+        25
+      ],
       "solidVolumeCm3": 37.220913078680276,
       "stlBytes": 157084
     },
@@ -128,7 +152,11 @@
       "name": "coupon-keeper-strip-60",
       "quantity": 4,
       "use": "Print first: two strips per coupon body; invert one for the other side",
-      "sizeMm": [60, 18, 4],
+      "sizeMm": [
+        60,
+        18,
+        4
+      ],
       "solidVolumeCm3": 4.12914824629442,
       "stlBytes": 76884
     },
@@ -136,7 +164,11 @@
       "name": "alignment-key",
       "quantity": 2,
       "use": "Two keys for the coupon seam; full rails need eight keys each",
-      "sizeMm": [30, 3, 1.8],
+      "sizeMm": [
+        30,
+        3,
+        1.8
+      ],
       "solidVolumeCm3": 0.162,
       "stlBytes": 684
     },
@@ -144,7 +176,11 @@
       "name": "rear-body",
       "quantity": 5,
       "use": "Deferred full-length prototype: only after coupon acceptance",
-      "sizeMm": [133.84, 46, 25],
+      "sizeMm": [
+        133.84,
+        46,
+        25
+      ],
       "solidVolumeCm3": 86.47219307868023,
       "stlBytes": 157084
     },
@@ -152,7 +188,11 @@
       "name": "rear-keeper-strip",
       "quantity": 10,
       "use": "Deferred full-length prototype: only after coupon acceptance",
-      "sizeMm": [133.84, 18, 4],
+      "sizeMm": [
+        133.84,
+        18,
+        4
+      ],
       "solidVolumeCm3": 9.44562824629442,
       "stlBytes": 76884
     },
@@ -160,7 +200,11 @@
       "name": "left-body",
       "quantity": 5,
       "use": "Deferred full-length prototype: only after coupon acceptance",
-      "sizeMm": [147.74, 46, 25],
+      "sizeMm": [
+        147.74,
+        46,
+        25
+      ],
       "solidVolumeCm3": 95.74349307868025,
       "stlBytes": 157084
     },
@@ -168,7 +212,11 @@
       "name": "left-keeper-strip",
       "quantity": 10,
       "use": "Deferred full-length prototype: only after coupon acceptance",
-      "sizeMm": [147.74, 18, 4],
+      "sizeMm": [
+        147.74,
+        18,
+        4
+      ],
       "solidVolumeCm3": 10.446428246294419,
       "stlBytes": 76884
     }

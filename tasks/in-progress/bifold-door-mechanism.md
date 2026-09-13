@@ -551,7 +551,7 @@ hinges; the GTH pair rating is no longer a release dependency.
 
 ### Reproducible results
 
-The [domain study](../../src/domain/bifoldAssemblyStudy.ts) evaluates planar
+The [engineering study](../../engineering/bifold-assembly/bifoldAssemblyStudy.ts) evaluates planar
 30 mm leaf rectangles from the two hinge pivots and the guide line. The
 [drawing](../../engineering/bifold-assembly/revision-b.svg) and
 [numeric report](../../engineering/bifold-assembly/revision-b.json) are generated
@@ -577,7 +577,7 @@ outward from the closed exterior face. Frame pivot A = (2.5, 8), closed
 interleaf pivot B = (primary width + 7.5, -38), and guide line y = -15.
 The guide axle is centred over the secondary free stile, 15 mm from its free
 edge. The 8 mm hinge mounting-plane offset comes from the existing CFG STEP
-calibration in `src/rendering/manufacturerCad.ts`.
+calibration in the historical `src/rendering/manufacturerCad.ts` (Git revision `8bd0897`).
 
 The 40 mm secondary-leaf width increase is an explicit linkage design choice,
 not a catalogue dimension. It accommodates the opposing external frame and
@@ -653,7 +653,7 @@ complete rail has five modules per opening: 133.84 mm long at the rear and
 Generated seven prototype STL files, including **two 60 mm coupon bodies,
 four matching retaining strips and two alignment keys as the first print**.
 The remaining full-rail variants are for later prototype use after the coupon
-passes. The [domain plan](../../src/domain/printedBifoldGuide.ts) derives module
+passes. The [engineering plan](../../engineering/bifold-assembly/printedBifoldGuide.ts) derives module
 lengths, mounting positions, keeper overlap and vertical stack; reproduce
 the files with `node scripts/printed-bifold-guide.mjs`.
 
@@ -712,7 +712,7 @@ No physical print, slicer preview, load test or door installation is claimed.
   - [ ] Confirm workshop access and usable opening with both leaves folded
   - [ ] Obtain complete prepared-assembly prices, VAT, delivery and lead times for Lisbon
   - [ ] Build and measure the one-opening proof assembly; record dust-cycle and retention evidence
-- [ ] Implement and verify the agreed design in the active application under src/
+- [ ] Implement and verify the agreed design in the active application under v3/
   - [ ] Replace the floating track, external adapters, and unrealistic header seal in the domain model and rendering
   - [ ] Verify clearances, full motion, tolerance allowances, support, and seal engagement against the chosen hardware
   - [ ] Update supplier specifications, cuts, quantities, drawings, and assembly instructions

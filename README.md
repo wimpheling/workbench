@@ -1,38 +1,42 @@
 # Workbench
 
-Workbench is a browser-based, parametric EnclosureV2 workbench built with Vite Plus, SolidJS, Three.js, and Replicad/OpenCascade.
+The active enclosure application is **[v3](v3/README.md)**: a native
+Python/CadQuery backend with a SolidJS/Three.js frontend. The old EnclosureV2
+app and archived renderer have been removed; their history remains in Git.
 
-## Architecture
+## Run
 
-- `src/domain/`: typed IDs, units, frames/anchors, EnclosureV2 model, catalogs, configurations, connections, panels, and manufacturing report/cut-plan generation.
-- `src/validation/`: deterministic constraints, kinematics, motion-envelope sampling, fit policies, Replicad solid checks, and structured reports.
-- `src/rendering/`: declarative-model to Three.js scene adapter and viewer.
-- `src/exports.ts`: JSON, CSV BOM/cut-list, and simple SVG drawing exports.
-- `src/ui/`: SolidJS authoring controls, validation display, viewer, and downloads.
-- `legacy/`: the historical renderer-facing application; it is not the active product path.
+```sh
+make -C v3 setup
+make -C v3 serve
+```
 
-The active model uses millimetres internally. Its canonical inputs are named `innerClearWidthMm`, `innerClearHeightMm`, and `innerClearDepthMm`; compatibility adapters convert older dimension records at the boundary. EnclosureV2 dimensions are parameters, not golden test values.
+Open http://127.0.0.1:8000. Requires uv, Python 3.12 and Node.js/npm.
+See [v3 setup and usage](v3/README.md) for development, verification and exports.
 
-## Commands
+## Checks
+
+```sh
+make -C v3 check
+```
+
+## Engineering studies
+
+The [printed bifold guide](engineering/bifold-assembly/printed-guide/README.md)
+is an unreleased Bambu A1 mini prototype. App integration is still pending.
+Standalone calculations and generators use Node 24:
 
 ```sh
 npm ci
-npm run dev
-npm test
-npm run check
-npm run build
+npm run test:engineering
+node scripts/bifold-assembly-study.mjs
+node scripts/printed-bifold-guide.mjs
 ```
 
-The quality suite currently covers 31 test files / 154 tests. Build output is `dist/`.
+Root npm dependencies support these studies only; v3 has its own locked
+dependencies. Root `dev`, `build`, `test`, and `check` commands delegate to v3
+(install its dependencies with `make -C v3 setup` first).
 
-## Current limits
-
-The manufacturing report currently covers the aluminium frame and extrusion cut planning, with profile-catalog stock lengths and estimate rates. Hardware, panel cut records, full vendor catalogs, complete project-wide collision evaluation, continuous-motion proof, PDF production, and browser smoke tests are not yet implemented. The viewer applies EnclosureV2 door motion through generic assembly and motion records.
-
-Frame3DD is an optional external structural sidecar. The code can serialize inputs, parse saved results, and return an explicit `unavailable` diagnostic; Frame3DD is not installed or configured locally and is never required for rendering, ordinary validation, or exports. It is simplified screening, not engineering certification.
-
-Known non-blocking build warnings include Replicad `fs`/`path`/`crypto` browser externalization and a large WASM/JavaScript bundle.
-
-See `CAD_ROADMAP.md` for the audited implemented scope, remaining plan, and explicit blockers.
-See `DOOR_CLEARANCES.md` for the hardware-first checklist used to replace the
-provisional door gaps.
+`CAD_ROADMAP.md` and `DOOR_CLEARANCES.md` retain historical v2 planning notes,
+not current implementation guidance. Active development is tracked in
+[v3/TRACKING.md](v3/TRACKING.md) and [tasks](tasks/AGENTS.md).

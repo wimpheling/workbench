@@ -1,11 +1,17 @@
 # Workbench contributor notes
 
-The active product is the Vite Plus/SolidJS application under `src/`. Its
-EnclosureV2 domain model is the source of truth; keep rendering as an adapter
-over the evaluated model and use millimetres internally.
+The active product is `v3/`: Python/CadQuery in `v3/backend/` is the geometry
+and engineering authority; SolidJS/Three.js in `v3/frontend/` renders the
+evaluated model. Use millimetres internally. Read `v3/README.md` for setup
+and `v3/docs/CONTRACT.md` for the model contract.
 
-`legacy/` is archived renderer history. Do not add product features there.
-Only its retained EnclosureV2 snapshot remains for historical reference.
+Before handoff, run the relevant backend and frontend checks. `make -C v3 check`
+runs backend lint, formatting and tests plus frontend tests, type checking
+and production build. Run browser acceptance tests for UI/motion changes.
 
-Before handoff, run `npm test`, `npm run check`, and `npm run build` for active
-model, rendering, or UI changes.
+`engineering/` contains standalone, unreleased design studies and prototype
+parts. They are not integrated into v3 unless explicitly wired into its model.
+Run `npm run test:engineering` when changing these calculations.
+
+Track task progress according to `tasks/AGENTS.md`. Preserve explicit unknowns
+and prototype status; geometric checks are not manufacturing certification.
