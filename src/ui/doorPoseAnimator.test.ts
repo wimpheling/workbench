@@ -35,4 +35,38 @@ describe("door pose animator", () => {
     frames.get(3)!(now);
     expect(applyOpenFraction).toHaveBeenLastCalledWith(scene, 0);
   });
+
+  it("pauses at the current pose and resumes toward the same target", () => {
+    let now = 0;
+    let nextId = 0;
+    const frames = new Map<number, FrameRequestCallback>();
+    const states: string[] = [];
+    const scheduler: AnimationScheduler = {
+      now: () => now,
+      request: (callback) => {
+        nextId += 1;
+        frames.set(nextId, callback);
+        return nextId;
+      },
+      cancel: (id) => frames.delete(id),
+    };
+    const applyOpenFraction = vi.fn();
+    const animator = createDoorPoseAnimator({
+      applyOpenFraction,
+      durationMs: 400,
+      scheduler,
+      onStateChange: (state) => states.push(state),
+    });
+    animator.setScene({ id: "scene" }, vi.fn());
+    animator.animateTo(true);
+    now = 200;
+    frames.get(1)!(now);
+    animator.pause();
+    animator.resume();
+    now = 600;
+    frames.get(3)!(now);
+
+    expect(applyOpenFraction).toHaveBeenLastCalledWith({ id: "scene" }, 1);
+    expect(states).toEqual(["running", "paused", "running", "idle"]);
+  });
 });

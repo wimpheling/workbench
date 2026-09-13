@@ -1,5 +1,8 @@
 import type { EnclosureModel } from "./enclosureV2";
+import { connectionHardware } from "./connections";
 import { getProfile } from "./profiles";
+import { buildSupplierMachiningInstructions, type SupplierMachiningInstruction } from "./machining";
+import { renderVendorMachiningConfirmationRequest } from "./vendorMachiningDocument";
 export type ManufacturingPart = {
   partId: string;
   quantity: number;
@@ -17,7 +20,12 @@ export type StockItem = {
   quantity: number;
   price?: number;
 };
-export type Cut = { stockId: string; partId: string; offset: number; length: number };
+export type Cut = {
+  stockId: string;
+  partId: string;
+  offset: number;
+  length: number;
+};
 export type CutPlan = {
   stock: StockItem[];
   cuts: Cut[];
@@ -30,12 +38,15 @@ export type ManufacturingReport = {
   cutPlan: CutPlan;
   estimatedCost: number;
   notes: string[];
+  /** Structured, end-specific supplier work instructions—not inferred drill dimensions. */
+  machiningInstructions: readonly SupplierMachiningInstruction[];
+  vendorMachiningConfirmationRequest: string;
 };
 export type VendorCatalog = Readonly<
   Record<string, { pricePerLength?: number; currency?: string; label?: string }>
 >;
 const key = (part: ManufacturingPart) =>
-  `${part.material}|${part.profile ?? ""}|${part.cutLength ?? ""}`;
+  `${part.material}|${part.profile ?? ""}|${part.cutLength ?? ""}|${part.cutLength ? "" : part.partId}`;
 export const buildCutPlan = (
   parts: readonly ManufacturingPart[],
   stockLengths: readonly number[] = [6000],
@@ -94,9 +105,18 @@ export const buildManufacturingReport = (
       notes: [profile.label],
     });
   }
+  for (const hardware of connectionHardware(model.connections))
+    parts.push({
+      partId: hardware.id,
+      quantity: hardware.quantity,
+      material: "material:hardware",
+      notes: [hardware.specification, ...(hardware.notes ?? [])],
+    });
   const grouped = [...new Map(parts.map((part) => [key(part), part])).values()].map((part) => ({
     ...part,
-    quantity: parts.filter((item) => key(item) === key(part)).length,
+    quantity: parts
+      .filter((item) => key(item) === key(part))
+      .reduce((total, item) => total + item.quantity, 0),
     notes: [
       ...new Set(
         parts.filter((item) => key(item) === key(part)).flatMap((item) => item.notes ?? []),
@@ -109,6 +129,7 @@ export const buildManufacturingReport = (
     ),
   ].sort((a, b) => a - b);
   const cutPlan = buildCutPlan(parts, stockLengths);
+  const machiningInstructions = buildSupplierMachiningInstructions(model.machiningPlan);
   const estimatedCost = parts.reduce((total, part) => {
     const profile = part.profile
       ? getProfile(part.profile as Parameters<typeof getProfile>[0])
@@ -121,7 +142,14 @@ export const buildManufacturingReport = (
     parts: grouped,
     cutPlan,
     estimatedCost,
-    notes: ["Estimate only; vendor pricing and hardware are optional catalog inputs."],
+    notes: [
+      "Estimate only; vendor pricing and hardware are optional catalog inputs.",
+      "Selected CAC30UN concealed connectors require supplier-performed cut-end machining.",
+      "CAC30UN dimensions and fastening schedule are pending the supplier's current installation drawing and written confirmation.",
+    ],
+    machiningInstructions,
+    vendorMachiningConfirmationRequest:
+      renderVendorMachiningConfirmationRequest(machiningInstructions),
   };
 };
 export const manufacturingReportJson = (report: ManufacturingReport) =>

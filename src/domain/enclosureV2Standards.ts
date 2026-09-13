@@ -19,7 +19,11 @@ export type EnclosureV2Standards = Readonly<{
     symmetricDoorLeafCount: number;
     structuralJointToleranceMm: number;
   }>;
-  geometry: Readonly<{ halfSpanDivisor: number }>;
+  geometry: Readonly<{
+    halfSpanDivisor: number;
+    machiningClockingBasisIndex: number;
+    axisAlignmentComponentThreshold: number;
+  }>;
   doorInfill: Readonly<{
     thicknessMm: number;
     slotWidthMm: number;
@@ -47,7 +51,11 @@ export const defaultEnclosureV2Standards: EnclosureV2Standards = Object.freeze({
     symmetricDoorLeafCount: 2,
     structuralJointToleranceMm: 0.1,
   }),
-  geometry: Object.freeze({ halfSpanDivisor: 2 }),
+  geometry: Object.freeze({
+    halfSpanDivisor: 2,
+    machiningClockingBasisIndex: 7,
+    axisAlignmentComponentThreshold: 0.5,
+  }),
   doorInfill: Object.freeze({
     thicknessMm: 4,
     slotWidthMm: 8.2,

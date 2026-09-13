@@ -1,5 +1,9 @@
 import { createEffect, createResource, createSignal, For, onCleanup } from "solid-js";
-import { applyAssemblyPose, buildEnclosureScene } from "../rendering/enclosureScene";
+import {
+  applyAssemblyPose,
+  applyBiFoldDoorOpenFraction,
+  buildEnclosureScene,
+} from "../rendering/enclosureScene";
 import { mountThreeViewer } from "../rendering/viewer";
 import { buildManufacturingReport, manufacturingReportJson } from "../domain/manufacturing";
 import {
@@ -19,10 +23,10 @@ import {
 } from "./modelAuthoring";
 import { resolveRuntimeValidationState } from "./runtimeValidation";
 import { ValidationAssertionTree } from "./ValidationAssertionTree";
-import { createDoorPoseAnimator } from "./doorPoseAnimator";
+import { createDoorPoseAnimator, type DoorAnimationState } from "./doorPoseAnimator";
 
 const DOOR_OPEN_ANGLE_RAD = Math.PI / 2;
-const DOOR_ANIMATION_DURATION_MS = 400;
+const DOOR_ANIMATION_DURATION_MS = 4000;
 
 export function App() {
   const [canvas, setCanvas] = createSignal<HTMLCanvasElement>();
@@ -34,17 +38,23 @@ export function App() {
   const [showReport, setShowReport] = createSignal(true);
   const [configuration, setConfiguration] = createSignal("default");
   const [doorsOpen, setDoorsOpen] = createSignal(false);
+  const [doorAnimationState, setDoorAnimationState] = createSignal<DoorAnimationState>("idle");
   const [selectedAssembly, setSelectedAssembly] = createSignal("assembly:enclosure");
   const [hiddenAssemblies, setHiddenAssemblies] = createSignal<ReadonlySet<string>>(new Set());
   const regenerated = () => regenerateModel(variables());
   const configurations = () => defaultConfigurations(variables());
   const doorAnimator = createDoorPoseAnimator({
     durationMs: DOOR_ANIMATION_DURATION_MS,
-    applyOpenFraction: (value: Awaited<ReturnType<typeof buildEnclosureScene>>, openFraction) =>
+    applyOpenFraction: (value: Awaited<ReturnType<typeof buildEnclosureScene>>, openFraction) => {
       applyAssemblyPose(value, {
         "left-door.angle": -DOOR_OPEN_ANGLE_RAD * openFraction,
         "right-door.angle": DOOR_OPEN_ANGLE_RAD * openFraction,
-      }),
+      });
+      value.biFoldDoors.forEach((door, index) =>
+        applyBiFoldDoorOpenFraction(door, value.model.biFoldDoors.openings[index]!, openFraction),
+      );
+    },
+    onStateChange: setDoorAnimationState,
   });
 
   createEffect(() => {
@@ -150,6 +160,16 @@ export function App() {
           }}
         >
           {doorsOpen() ? "Close doors" : "Open doors"}
+        </button>
+        <button
+          type="button"
+          disabled={doorAnimationState() === "idle"}
+          onClick={() => {
+            if (doorAnimationState() === "paused") doorAnimator.resume();
+            else doorAnimator.pause();
+          }}
+        >
+          {doorAnimationState() === "paused" ? "Resume doors" : "Pause doors"}
         </button>
         <button type="button" onClick={() => setShowReport(!showReport())}>
           {showReport() ? "Hide report" : "Show validation report"}

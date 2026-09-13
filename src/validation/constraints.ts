@@ -1,6 +1,7 @@
 import type { Anchor } from "../domain/anchors";
 import type { Point3, Vector3 } from "../domain/frames";
 import type { EnclosureModel } from "../domain/enclosureV2";
+import { biFoldGuideInstallationVariablesMm, guidedBiFoldPose } from "../domain/bifoldDoors";
 import {
   centeredNominalBounds,
   transformedNominalBounds,
@@ -11,6 +12,16 @@ import { connectionIssues } from "../domain/connections";
 import { evaluateEnclosureV2DesignConstraints } from "../domain/enclosureV2DesignConstraints";
 import { enclosureV2StartingStructuralProfileAssignments } from "../domain/enclosureV2Design";
 import { evaluateFit, requiredFitPolicy } from "./fitPolicies";
+import {
+  validateTSlotAllocationPlan,
+  type DoorFrameSlotAllocation,
+  type TSlotFaceAllocation,
+} from "../domain/slotAllocation";
+import {
+  validateMachiningPlan,
+  type ConnectorMachiningOperation,
+  type MachiningPlan,
+} from "../domain/machining";
 
 export type ConstraintSeverity = "error" | "warning";
 export type ConstraintResult = {
@@ -358,7 +369,10 @@ const closedDoorLeafBounds = (
   const hinge = hingeName ? anchorPoint(model, `anchor:${hingeName}`) : undefined;
   if (!hinge) return undefined;
   return transformedNominalBounds(
-    { min: { x: 0, y: 0, z: -30 }, max: { x: door.nominalWidth, y: door.nominalHeight, z: 0 } },
+    {
+      min: { x: 0, y: 0, z: -30 },
+      max: { x: door.nominalWidth, y: door.nominalHeight, z: 0 },
+    },
     {
       position: hinge.position,
       rotation: { x: 0, y: 0, z: 0 },
@@ -366,6 +380,167 @@ const closedDoorLeafBounds = (
     },
   );
 };
+
+const biFoldDoorConstraintResults = (model: EnclosureModel): ConstraintResult[] => {
+  const openings = model.biFoldDoors.openings;
+  const expected = [
+    {
+      id: "left-rear-access",
+      face: "left",
+      parkingDirection: "toward-back",
+      openingWidthMm: model.innerClearDimensionsMm.depthMm / 2,
+    },
+    {
+      id: "back-right-access",
+      face: "back",
+      parkingDirection: "toward-right",
+      openingWidthMm: model.innerClearDimensionsMm.widthMm / 2,
+    },
+  ] as const;
+  const out: ConstraintResult[] = [
+    scalar(
+      "BIFOLD-001.opening-count",
+      openings.length === expected.length,
+      openings.length,
+      expected.length,
+      "the agreed access topology requires two evaluated bi-fold openings",
+      openings.map((opening) => opening.id),
+    ),
+  ];
+  for (const expectedOpening of expected) {
+    const opening = openings.find((candidate) => candidate.id === expectedOpening.id);
+    out.push(
+      result(
+        `BIFOLD-001.${expectedOpening.id}.topology`,
+        opening?.face === expectedOpening.face &&
+          opening.parkingDirection === expectedOpening.parkingDirection &&
+          Math.abs((opening?.openingWidthMm ?? NaN) - expectedOpening.openingWidthMm) <= EPS,
+        `${expectedOpening.id} must occupy the agreed half-face and park in its agreed direction`,
+        [expectedOpening.id],
+      ),
+      result(
+        `BIFOLD-002.${expectedOpening.id}.leaf-frames`,
+        opening?.leaves.length === 2 &&
+          Math.abs(
+            opening.leaves[1].nominalWidthMm -
+              opening.leaves[0].nominalWidthMm -
+              opening.frameHinge.pivotOffsetFromLeafMidplaneMm,
+          ) <= EPS,
+        `${expectedOpening.id} secondary leaf must absorb the external GLR pivot eccentricity`,
+        opening?.leaves.map((leaf) => leaf.id) ?? [expectedOpening.id],
+      ),
+      result(
+        `BIFOLD-003.${expectedOpening.id}.inset-panels`,
+        opening?.leaves.every(
+          (leaf) => leaf.insetPanel.installation === "inset-in-door-frame-slots",
+        ) ?? false,
+        `${expectedOpening.id} leaves must reserve inset door-frame panel installation`,
+        opening?.leaves.map((leaf) => leaf.id) ?? [expectedOpening.id],
+      ),
+      result(
+        `BIFOLD-004.${expectedOpening.id}.frame-hinge-selection`,
+        opening?.frameHinge.hardwareSelection === "wolweiss-glr3030" &&
+          opening.frameHinge.geometryStatus === "supplier-step" &&
+          opening.frameHinge.mountingSide === "external-visible" &&
+          opening.frameHinge.pivotOffsetFromLeafMidplaneMm > 0,
+        `${expectedOpening.id} frame-to-primary hinge must use externally mounted GLR3030 supplier CAD`,
+        [expectedOpening.id],
+      ),
+      result(
+        `BIFOLD-005.${expectedOpening.id}.interleaf-hinge-selection`,
+        opening?.interLeafHinge.hardwareSelection === "elesa-cfg-30-30-sh-6-c33" &&
+          opening.interLeafHinge.openingAngleDeg === 180 &&
+          opening.interLeafHinge.geometryStatus === "supplier-step" &&
+          opening.interLeafHinge.mountingSide === "inside-door-faces" &&
+          opening.interLeafHinge.pivotOffsetFromLeafMidplaneMm < 0 &&
+          Math.abs(
+            opening.interLeafHinge.pivotOffsetFromLeafMidplaneMm +
+              opening.leaves[0].frameFaceDepthMm / 2 +
+              opening.interLeafHinge.pivotToMountingPlaneMm,
+          ) <= EPS,
+        `${expectedOpening.id} primary-to-secondary hinge must use the selected 180° CFG supplier CAD on the inside door faces`,
+        [expectedOpening.id],
+      ),
+      result(
+        `BIFOLD-006.${expectedOpening.id}.top-guide-selection`,
+        opening?.guide.trackSelection === "wolweiss-gsd082-3000kit" &&
+          opening.guide.trackInstallation === "underside-slot-of-top-frame-rail" &&
+          opening.guide.trackGeometryStatus === "supplier-step" &&
+          opening.guide.shoeSelection === "printed-replaceable-guide-shoe" &&
+          opening.guide.carriageRetention === "opposed-keeper-captive-in-gsd-channel" &&
+          opening.guide.loadRole === "lateral-guidance-only" &&
+          opening.guide.doorTopRunningClearanceMm >=
+            biFoldGuideInstallationVariablesMm.doorTopRunningClearanceMm &&
+          opening.guide.headroomMm >=
+            biFoldGuideInstallationVariablesMm.gsd082SectionHeightMm +
+              biFoldGuideInstallationVariablesMm.doorTopRunningClearanceMm,
+        `${expectedOpening.id} requires a captive printed carriage in a GSD track snapped below the top rail, with a 3 mm running gap below its 24.75 mm section`,
+        [expectedOpening.id],
+      ),
+      result(
+        `BIFOLD-007.${expectedOpening.id}.guided-fold-kinematics`,
+        (() => {
+          if (!opening) return false;
+          try {
+            for (let angleDeg = 0; angleDeg <= 90; angleDeg += 1) {
+              const pose = guidedBiFoldPose(
+                opening.leaves[0].nominalWidthMm,
+                opening.leaves[1].nominalWidthMm,
+                opening.guide.guideLineOffsetMm,
+                opening.frameHinge.pivotOffsetFromLeafMidplaneMm,
+                opening.interLeafHinge.pivotOffsetFromLeafMidplaneMm,
+                opening.guide.rollerOffsetFromLeafMidplaneMm,
+                angleDeg,
+              );
+              if (!Number.isFinite(pose.secondaryLeafRelativeAngleDeg)) return false;
+            }
+            return true;
+          } catch {
+            return false;
+          }
+        })(),
+        `${expectedOpening.id} must remain guide-reachable through the full 0–90° sweep from its hinge and guide datums`,
+        [expectedOpening.id],
+      ),
+      result(
+        `BIFOLD-008.${expectedOpening.id}.interleaf-slot-allocation`,
+        (() => {
+          if (!opening) return false;
+          const allocation = opening.interLeafHinge.slotAllocation;
+          return (
+            allocation.status === "inside-hinge-separated-from-inset-panel-channel" &&
+            allocation.hingeFace !== allocation.panelFace &&
+            validateTSlotAllocationPlan(allocation.plan).length === 0 &&
+            allocation.plan.allocations.filter((entry) => entry.use === "hinge").length === 2
+          );
+        })(),
+        `${expectedOpening.id} inside CFG mounting slots must remain distinct from both inset-panel channels`,
+        [expectedOpening.id],
+      ),
+      result(
+        `BIFOLD-009.${expectedOpening.id}.guide-datum-chain`,
+        (() => {
+          if (!opening) return false;
+          const doorTopMm = opening.framePivotMm.y + opening.openingHeightMm;
+          const guideUndersideMm = doorTopMm + opening.guide.doorTopRunningClearanceMm;
+          const guideTopMountingDatumMm =
+            guideUndersideMm + biFoldGuideInstallationVariablesMm.gsd082SectionHeightMm;
+          return (
+            Math.abs(
+              opening.guide.doorTopRunningClearanceMm -
+                biFoldGuideInstallationVariablesMm.doorTopRunningClearanceMm,
+            ) <= EPS &&
+            Math.abs(guideTopMountingDatumMm - model.innerClearDimensionsMm.heightMm) <= EPS
+          );
+        })(),
+        `${expectedOpening.id} must form a continuous datum chain: top-frame underside → engaged GSD section → door running clearance → door top`,
+        [expectedOpening.id],
+      ),
+    );
+  }
+  return out;
+};
+
 export function validateModel(model: EnclosureModel): ConstraintResult[] {
   const out: ConstraintResult[] = [];
   if (!model.dimensions) {
@@ -384,6 +559,7 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
       ),
     ),
   );
+  out.push(...biFoldDoorConstraintResults(model));
   const referencedAnchors = new Set(model.members.flatMap((member) => [member.from, member.to]));
   for (const [id, anchor] of Object.entries(model.anchors)) {
     if (id !== anchor.id && id.startsWith("anchor:") && !referencedAnchors.has(anchor.id))
@@ -440,6 +616,17 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
   }
   const memberIds = new Set(model.members.map((member) => String(member.id)));
   const connectionIds = new Set<string>();
+  const concealedMachiningLinksAreComplete = model.connections
+    .filter((connection) => connection.connector?.placement === "concealed-machined")
+    .every((connection) => {
+      if (connection.joint?.kind !== "butt") return false;
+      return model.machiningPlan.operations.some(
+        (operation) =>
+          operation.jointIds.includes(connection.id) &&
+          operation.connectorProductCode === "CAC30UN" &&
+          operation.target.partId === connection.joint.terminatingMember,
+      );
+    });
   out.push(
     scalar(
       "JOINT-001.complete-structural-topology",
@@ -455,7 +642,23 @@ export function validateModel(model: EnclosureModel): ConstraintResult[] {
       "every EnclosureV2 structural connection must declare a butt joint",
       model.connections.map((connection) => connection.id),
     ),
+    result(
+      "JOINT-003.selected-connectors",
+      model.connections.every((connection) => Boolean(connection.connector?.id)),
+      "every EnclosureV2 structural connection must select a physical connector",
+      model.connections.map((connection) => connection.id),
+    ),
+    result(
+      "JOINT-004.concealed-connector-machining-links",
+      concealedMachiningLinksAreComplete,
+      "every concealed CAC structural joint must link a clocked supplier machining operation on its terminating member",
+      model.connections
+        .filter((connection) => connection.connector?.placement === "concealed-machined")
+        .map((connection) => connection.id),
+    ),
   );
+  for (const issue of validateMachiningPlan(model.machiningPlan))
+    out.push(result(issue.id, false, issue.message, [...issue.references]));
   for (const connection of model.connections) {
     const duplicateId = connectionIds.has(connection.id);
     connectionIds.add(connection.id);
@@ -669,6 +872,173 @@ export const validateOrThrow = (model: EnclosureModel) => {
   const failures = validateModel(model).filter((r) => !r.passed && r.severity === "error");
   if (failures.length) throw new Error(failures.map((r) => r.message).join("; "));
   return model;
+};
+
+/**
+ * Validates the declarative allocation of the four door-frame slots.  This is
+ * deliberately a manufacturing-intent check: it proves that the declared
+ * slot purposes do not compete, not that an unselected retainer, gasket, or
+ * connector has been collision-checked in CAD.
+ */
+export const validateInsetDoorSlotAllocation = (
+  allocation: DoorFrameSlotAllocation,
+): ConstraintResult[] => {
+  const out: ConstraintResult[] = [];
+  const issues = validateTSlotAllocationPlan(allocation.plan);
+  out.push(
+    result(
+      `SLOT-001.${allocation.plan.id}.occupancy`,
+      issues.length === 0,
+      issues.length === 0
+        ? "door-frame slot allocation has no declared conflicting uses"
+        : issues.map((issue) => issue.message).join("; "),
+      issues.flatMap((issue) => issue.allocationIds),
+    ),
+  );
+
+  const panelAllocations = allocation.plan.allocations.filter(
+    (entry) => entry.use === "inset-panel-retainer" || entry.use === "gasket",
+  );
+  const byMember = new Map<string, TSlotFaceAllocation[]>();
+  for (const entry of panelAllocations) {
+    const entries = byMember.get(entry.memberId) ?? [];
+    entries.push(entry);
+    byMember.set(entry.memberId, entries);
+  }
+  const panelChannelIsContinuous =
+    byMember.size === 4 &&
+    [...byMember.values()].every((entries) => {
+      const retainers = entries.filter((entry) => entry.use === "inset-panel-retainer");
+      const gaskets = entries.filter((entry) => entry.use === "gasket");
+      return (
+        retainers.length === 1 &&
+        gaskets.length === 1 &&
+        retainers[0]?.face === gaskets[0]?.face &&
+        retainers[0]?.continuousChannel?.id === allocation.panelGasketChannel &&
+        gaskets[0]?.continuousChannel?.id === allocation.panelGasketChannel &&
+        retainers[0]?.continuousChannel?.coverage === "full-member-length" &&
+        gaskets[0]?.continuousChannel?.coverage === "full-member-length"
+      );
+    });
+  out.push(
+    result(
+      `SLOT-002.${allocation.plan.id}.continuous-panel-gasket-channel`,
+      panelChannelIsContinuous,
+      panelChannelIsContinuous
+        ? "each of the four door-frame members reserves one continuous shared panel-retainer and gasket channel"
+        : "each door-frame member must reserve one shared full-length panel-retainer and gasket channel",
+      panelAllocations.map((entry) => entry.id),
+    ),
+    result(
+      `SLOT-003.${allocation.plan.id}.physical-fit-status`,
+      false,
+      "slot allocation proves declared channel ownership only; selected retainer, gasket, connector, and moving-door CAD still require physical-fit and motion checks",
+      panelAllocations.map((entry) => entry.id),
+      undefined,
+      undefined,
+      "warning",
+    ),
+  );
+  return out;
+};
+
+const expectedDrawingViewForMachiningEnd = {
+  start: "looking-at-start-end",
+  end: "looking-at-end-end",
+} as const;
+
+const nonEmptyUnique = (values: readonly string[]) =>
+  values.length > 0 &&
+  values.every((value) => value.trim().length > 0) &&
+  new Set(values).size === values.length;
+
+const machiningIdentityResults = (operation: ConnectorMachiningOperation): ConstraintResult[] => {
+  const references = [operation.id, operation.target.partId, ...operation.jointIds];
+  const targetComplete =
+    operation.target.partId.trim().length > 0 &&
+    operation.target.orientation.topReferenceFace.trim().length > 0 &&
+    operation.target.orientation.drawingView ===
+      expectedDrawingViewForMachiningEnd[operation.target.end];
+  const partLinksComplete =
+    operation.partIds.filter((partId) => partId === operation.target.partId).length === 1 &&
+    new Set(operation.partIds).size === operation.partIds.length;
+  const referenceIdentityComplete =
+    operation.references.length > 0 &&
+    new Set(operation.references.map((reference) => reference.id)).size ===
+      operation.references.length &&
+    operation.references.every(
+      (reference) => reference.id.trim().length > 0 && reference.locator.trim().length > 0,
+    );
+  return [
+    result(
+      `MACH-001.${operation.id}.named-target`,
+      targetComplete && partLinksComplete,
+      targetComplete && partLinksComplete
+        ? "supplier machining identifies exactly one clocked profile end and linked target part"
+        : "supplier machining requires one clocked profile end and exactly one linked target part",
+      references,
+    ),
+    result(
+      `MACH-002.${operation.id}.named-joints`,
+      nonEmptyUnique(operation.jointIds),
+      nonEmptyUnique(operation.jointIds)
+        ? "supplier machining links unique named structural joints"
+        : "supplier machining requires one or more unique named structural joints",
+      references,
+    ),
+    result(
+      `MACH-003.${operation.id}.named-references`,
+      referenceIdentityComplete,
+      referenceIdentityComplete
+        ? "supplier machining identifies revision-trackable source references"
+        : "supplier machining requires uniquely identified source references with locators",
+      references,
+    ),
+  ];
+};
+
+/**
+ * Validates supplier-defined machining without pretending that project-side
+ * placeholder dimensions are released instructions.  A complete identity is
+ * an error-level requirement; exact process geometry remains an explicit
+ * warning until the supplier returns a revision-controlled schedule.
+ */
+export const validateSupplierDefinedMachiningPlan = (plan: MachiningPlan): ConstraintResult[] => {
+  const out: ConstraintResult[] = [];
+  out.push(
+    result(
+      `MACH-000.${plan.id}.plan-identity`,
+      plan.id.trim().length > 0 && plan.operations.length > 0,
+      "supplier machining plan requires a non-empty identifier and at least one operation",
+      [plan.id],
+    ),
+    result(
+      `MACH-000.${plan.id}.operation-identifiers`,
+      new Set(plan.operations.map((operation) => operation.id)).size === plan.operations.length,
+      "supplier machining operation identifiers must be unique",
+      plan.operations.map((operation) => operation.id),
+    ),
+  );
+  for (const operation of plan.operations) {
+    out.push(...machiningIdentityResults(operation));
+    if (operation.process === "supplier-defined")
+      out.push(
+        result(
+          `MACH-004.${operation.id}.vendor-detail-pending`,
+          false,
+          "supplier-defined machining is pending a revision-controlled vendor installation/machining schedule; project dimensions are not a released machining instruction",
+          [
+            operation.id,
+            operation.connectorProductCode,
+            ...operation.references.map((ref) => ref.id),
+          ],
+          undefined,
+          undefined,
+          "warning",
+        ),
+      );
+  }
+  return out;
 };
 export type { Anchor };
 export { result as constraintResult };

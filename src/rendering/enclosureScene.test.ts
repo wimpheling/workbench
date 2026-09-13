@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import { makeEnclosureV2 } from "../domain/enclosureV2";
 import type { MotionSolidCheckResult } from "../validation/motionSolidChecks";
 import {
+  applyBiFoldDoorOpenFraction,
+  applyBiFoldDoorPose,
   applyAssemblyPose,
   buildEnclosureScene,
   initializeOpenCascade,
@@ -125,6 +127,8 @@ describe("production EnclosureV2 scene boundary", () => {
       "hinge:left-door:stationary",
       "hinge:right-door:stationary",
     ]);
+    expect(scene.structuralConnectors).toHaveLength(0);
+    expect(scene.closedDoorConnectorEnvelopeConflicts).toEqual([]);
     expect(scene.doors[0].position.toArray()).toEqual([33, 3, 30]);
     expect(scene.doors[1].position.toArray()).toEqual([1167, 3, 30]);
     for (const door of scene.doors) {
@@ -153,6 +157,181 @@ describe("production EnclosureV2 scene boundary", () => {
     scene.root.updateMatrixWorld(true);
     expect(descendant.getWorldPosition(new Vector3()).distanceTo(before)).toBeGreaterThan(1);
     expect(descendant.getWorldPosition(new Vector3()).z).not.toBeCloseTo(before.z);
+  });
+
+  it("renders evaluated side/back bi-fold leaves with inset panels and transformable poses", async () => {
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
+
+    expect(scene.biFoldDoors.map((opening) => opening.name)).toEqual([
+      "bi-fold-door:left-rear-access",
+      "bi-fold-door:back-right-access",
+    ]);
+    expect(scene.biFoldDoors.map((opening) => opening.userData)).toEqual([
+      expect.objectContaining({
+        partType: "bi-fold-access-door",
+        renderStatus: "evaluated-guided-leaf-frame-and-inset-panel",
+        accessFace: "left",
+        parkingDirection: "toward-back",
+        openingWidthMm: 300,
+        openingHeightMm: 769.25,
+        frameHingeSelection: "wolweiss-glr3030",
+        interLeafHingeSelection: "elesa-cfg-30-30-sh-6-c33",
+        guideTrackSelection: "wolweiss-gsd082-3000kit",
+      }),
+      expect.objectContaining({
+        partType: "bi-fold-access-door",
+        renderStatus: "evaluated-guided-leaf-frame-and-inset-panel",
+        accessFace: "back",
+        parkingDirection: "toward-right",
+        openingWidthMm: 600,
+        openingHeightMm: 769.25,
+        frameHingeSelection: "wolweiss-glr3030",
+        interLeafHingeSelection: "elesa-cfg-30-30-sh-6-c33",
+        guideTrackSelection: "wolweiss-gsd082-3000kit",
+      }),
+    ]);
+
+    const leaves = scene.biFoldDoors.flatMap((opening) => {
+      const leafFrames: any[] = [];
+      opening.traverse((child) => {
+        if (child.userData.partType === "bi-fold-leaf") leafFrames.push(child);
+      });
+      return leafFrames;
+    });
+    expect(leaves).toHaveLength(4);
+    expect(leaves.map((leaf) => leaf.userData.leafId)).toEqual([
+      "left-rear-access-primary",
+      "left-rear-access-secondary",
+      "back-right-access-primary",
+      "back-right-access-secondary",
+    ]);
+    expect(
+      leaves.every((leaf) => leaf.userData.insetPanelInstallation === "inset-in-door-frame-slots"),
+    ).toBe(true);
+    expect(
+      leaves.every((leaf) => {
+        let hasInsetPanel = false;
+        leaf.traverse((child) => {
+          hasInsetPanel ||= child.userData.partType === "bi-fold-inset-panel";
+        });
+        return hasInsetPanel;
+      }),
+    ).toBe(true);
+
+    const [leftDoor, backDoor] = scene.biFoldDoors;
+    const [leftOpening, backOpening] = scene.model.biFoldDoors.openings;
+    expect(leftDoor.position.toArray()).toEqual([-30, 3, -630]);
+    const leftPrimary = leftDoor.getObjectByName("bi-fold-pivot:left-rear-access-primary")!;
+    const leftSecondary = leftDoor.getObjectByName("bi-fold-pivot:left-rear-access-secondary")!;
+    applyBiFoldDoorPose(leftDoor, leftOpening, "open");
+    expect(leftPrimary.rotation.y).toBeCloseTo(-Math.PI / 2);
+    expect(leftSecondary.rotation.y).toBeCloseTo(Math.PI);
+    applyBiFoldDoorPose(backDoor, backOpening, "parked");
+    const backPrimary = backDoor.getObjectByName("bi-fold-pivot:back-right-access-primary")!;
+    const backSecondary = backDoor.getObjectByName("bi-fold-pivot:back-right-access-secondary")!;
+    expect(backPrimary.rotation.y).toBeCloseTo(-Math.PI / 2);
+    expect(backSecondary.rotation.y).toBeCloseTo(Math.PI);
+    expect(backDoor.userData.poseState).toBe("parked");
+    expect(backDoor.userData.interLeafHingeCollisionProof).toBe(
+      "component-cad-pending-installation-clearance-proof",
+    );
+    const hardwareAssets: string[] = [];
+    backDoor.traverse((child) => {
+      if (typeof child.userData.manufacturerCadAsset === "string")
+        hardwareAssets.push(child.userData.manufacturerCadAsset);
+    });
+    expect(hardwareAssets).toEqual(
+      expect.arrayContaining(["GSD082.3000KIT.step", "Hinges CFG.30_30 SH-6-C33 (0).stp"]),
+    );
+  });
+
+  it("keeps all intact CFG bodies coaxial, mounted inside, and guide-constrained", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const door = scene.biFoldDoors[0]!;
+    const opening = scene.model.biFoldDoors.openings[0]!;
+    const axis = door.getObjectByName(`bi-fold-interleaf-axis:${opening.id}`)!;
+    const primaryWing = door.getObjectByName(`bi-fold-interleaf-hinge:${opening.id}:primary-wing`)!;
+    const pin = door.getObjectByName(`bi-fold-interleaf-hinge:${opening.id}:pin`)!;
+    const secondaryWing = door.getObjectByName(
+      `bi-fold-interleaf-hinge:${opening.id}:secondary-wing`,
+    )!;
+    const secondaryMount = door.getObjectByName(`bi-fold-leaf-mount:${opening.leaves[1].id}`)!;
+    const primaryMesh = door.getObjectByName(`${opening.id}-cfg-primary-1`)!;
+    const pinMesh = door.getObjectByName(`${opening.id}-cfg-pin-1`)!;
+    const secondaryMesh = door.getObjectByName(`${opening.id}-cfg-secondary-1`)!;
+    const roller = door.getObjectByName(`${opening.id}-printed-guide-roller`)!;
+    const track = door.getObjectByName(`bi-fold-guide-track:${opening.id}`)!;
+    const carriage = door.getObjectByName(`bi-fold-guide-shoe:${opening.id}`)!;
+    const keepers: Object3D[] = [];
+    carriage.traverse((child) => {
+      if (child.userData.partType === "bi-fold-guide-carriage-keeper") keepers.push(child);
+    });
+
+    expect(carriage.userData.retention).toBe("opposed-keeper-captive-in-gsd-channel");
+    expect(keepers).toHaveLength(2);
+    expect(track.userData.mountingDatum).toBe("supplier-step-upper-face-to-top-rail-underside");
+    door.updateMatrixWorld(true);
+    const trackBounds = new Box3().setFromObject(track);
+    const doorTopRail = door.getObjectByName(`${opening.leaves[1].id}-top-rail`)!;
+    const doorTopBounds = new Box3().setFromObject(doorTopRail);
+    // This is an adapter-level proof using the actual supplier mesh, rather
+    // than merely the domain's nominal section height.
+    expect(trackBounds.max.y).toBeCloseTo(scene.model.innerClearDimensionsMm.heightMm);
+    expect(trackBounds.min.y - doorTopBounds.max.y).toBeCloseTo(
+      opening.guide.doorTopRunningClearanceMm,
+    );
+
+    expect(primaryMesh.position.x).toBe(0);
+    expect(primaryMesh.position.z).toBe(0);
+    expect(pinMesh.position.x).toBe(0);
+    expect(pinMesh.position.z).toBe(0);
+    expect(secondaryMesh.position.x).toBe(0);
+    expect(secondaryMesh.position.z).toBe(0);
+    expect(axis.position.z + opening.interLeafHinge.pivotToMountingPlaneMm).toBeCloseTo(
+      -opening.leaves[0].frameFaceDepthMm / 2,
+    );
+    expect(-opening.leaves[1].frameFaceDepthMm / 2 + secondaryMount.position.z).toBeCloseTo(
+      opening.interLeafHinge.pivotToMountingPlaneMm,
+    );
+
+    for (const fraction of [0, 0.25, 0.5, 0.75, 1]) {
+      applyBiFoldDoorOpenFraction(door, opening, fraction);
+      door.updateMatrixWorld(true);
+      const primaryAxisWorld = primaryWing.getWorldPosition(new Vector3());
+      expect(pin.getWorldPosition(new Vector3()).distanceTo(primaryAxisWorld)).toBeLessThan(1e-8);
+      expect(
+        secondaryWing.getWorldPosition(new Vector3()).distanceTo(primaryAxisWorld),
+      ).toBeLessThan(1e-8);
+      const rollerLocal = door.worldToLocal(roller.getWorldPosition(new Vector3()));
+      expect(rollerLocal.z).toBeCloseTo(track.position.z, 7);
+    }
+  });
+
+  it("keeps intact GLR shells coaxial on the external frame/primary-leaf boundary", async () => {
+    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const door = scene.biFoldDoors[0]!;
+    const opening = scene.model.biFoldDoors.openings[0]!;
+    const axis = door.getObjectByName(`bi-fold-frame-hinge-axis:${opening.id}`)!;
+    const stationary = door.getObjectByName(`bi-fold-hinge:${opening.leaves[0].id}:stationary`)!;
+    const moving = door.getObjectByName(`bi-fold-hinge:${opening.leaves[0].id}:leaf`)!;
+    const primaryMount = door.getObjectByName(`bi-fold-leaf-mount:${opening.leaves[0].id}`)!;
+
+    expect(axis.position.x).toBe(opening.frameHinge.boundaryOffsetFromOpeningOriginMm);
+    expect(axis.position.z - opening.frameHinge.pivotToMountingPlaneMm).toBeCloseTo(0);
+    expect(primaryMount.position.z + opening.leaves[0].frameFaceDepthMm / 2).toBeCloseTo(
+      -opening.frameHinge.pivotToMountingPlaneMm,
+    );
+    for (const fraction of [0, 0.25, 0.5, 0.75, 1]) {
+      applyBiFoldDoorOpenFraction(door, opening, fraction);
+      door.updateMatrixWorld(true);
+      const axisWorld = axis.getWorldPosition(new Vector3());
+      expect(stationary.getWorldPosition(new Vector3()).distanceTo(axisWorld)).toBeLessThan(1e-8);
+      expect(moving.getWorldPosition(new Vector3()).distanceTo(axisWorld)).toBeLessThan(1e-8);
+    }
   });
 
   it("exposes world-space solid checks and a display-ready report", async () => {
@@ -287,7 +466,11 @@ describe("production EnclosureV2 scene boundary", () => {
   });
 
   it("keeps rendered structure and closed doors inside the evaluated main envelope", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
     const envelope = scene.model.mainStructuralEnvelopeMm;
     const toleranceMm = 1e-6;
 
@@ -375,10 +558,14 @@ describe("production EnclosureV2 scene boundary", () => {
   });
 
   it("moves only the leaf-side GLR3030 CAD geometry with its door", async () => {
-    const scene = await buildEnclosureScene({ width: 1200, height: 800, depth: 600 });
-    const leaf = scene.doors[0].getObjectByName("left-door-hinge-glr3030-leaf")!;
+    const scene = await buildEnclosureScene({
+      width: 1200,
+      height: 800,
+      depth: 600,
+    });
+    const leaf = scene.doors[0].getObjectByName("left-door-hinge-glr3030-leaf-1")!;
     const stationary = scene.stationaryHinges[0].getObjectByName(
-      "left-door-hinge-glr3030-stationary",
+      "left-door-hinge-glr3030-stationary-1",
     )!;
     scene.root.updateMatrixWorld(true);
     const leafBefore = leaf.localToWorld(new Vector3(20, 0, 0)).clone();

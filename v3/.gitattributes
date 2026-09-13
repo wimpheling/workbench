@@ -1,0 +1,2 @@
+# Preserve the original supplier CAD bytes; their hashes are part of the evidence.
+backend/enclosure/assets/*.step binary

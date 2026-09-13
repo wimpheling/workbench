@@ -13,6 +13,8 @@ import type { Point3, Transform } from "./frames";
 import type { Dimensions } from "./units";
 import type { NominalBounds } from "./nominalBounds";
 import { buttJoint, type Connection } from "./connections";
+import { wolweissCac30un } from "./structuralHardware";
+import { machiningOperationId, type MachiningPlan, type ProfileReferenceFace } from "./machining";
 import {
   designInputFromExistingEnclosureDimensions,
   evaluateMainStructuralEnvelopeMm,
@@ -26,6 +28,12 @@ import { defaultEnclosureV2Standards } from "./enclosureV2Standards";
 import { makeProvisionalDoorInterfaceSpec, type DoorInterfaceSpec } from "./doorInterfaces";
 import { makeProvisionalDoorInfillPanels, type DoorInfillPanel } from "./doorInfillPanels";
 import { makeCentredGlr3030Installations, type DoorHingeInstallation } from "./doorHardware";
+import { agreedAccessOpenings, type AccessOpening } from "./accessOpenings";
+import {
+  biFoldGuideInstallationVariablesMm,
+  evaluateBiFoldDoorPlan,
+  type EvaluatedBiFoldDoorPlan,
+} from "./bifoldDoors";
 
 export type EnclosureDimensions =
   | Dimensions
@@ -46,6 +54,12 @@ export type EnclosureModel = {
   members: readonly FrameMember[];
   /** Explicit nominal structural connections; this is design topology, not rendering data. */
   connections: readonly Connection[];
+  /** Supplier-executed cut-end operations for concealed main-frame connectors. */
+  machiningPlan: MachiningPlan;
+  /** Agreed multi-face access intent; frame/hinge dimensions remain unevaluated. */
+  accessOpenings: readonly AccessOpening[];
+  /** Evaluated side/back bi-fold leaves, panels, frame hinge, and poses. */
+  biFoldDoors: EvaluatedBiFoldDoorPlan;
   designInput: EnclosureV2DesignInput;
   innerClearDimensionsMm: {
     widthMm: number;
@@ -95,6 +109,10 @@ const STRUCTURAL_JOINT_TOLERANCE_MM =
   defaultEnclosureV2Standards.construction.structuralJointToleranceMm;
 const PROFILE_3030_END_ENVELOPE_AREA_MM2 = PROFILE_3030_SIDE_MM * PROFILE_3030_SIDE_MM;
 const PROFILE_3060_END_ENVELOPE_AREA_MM2 = PROFILE_3030_SIDE_MM * PROFILE_3060_WIDE_SIDE_MM;
+const MACHINING_CLOCKING_BASIS_INDEX =
+  defaultEnclosureV2Standards.geometry.machiningClockingBasisIndex;
+const AXIS_ALIGNMENT_COMPONENT_THRESHOLD =
+  defaultEnclosureV2Standards.geometry.axisAlignmentComponentThreshold;
 
 export function makeRail({
   from,
@@ -472,6 +490,15 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
         expectedContactAreaMm2,
         STRUCTURAL_JOINT_TOLERANCE_MM,
       ),
+      // The current approved strategy is concealed CAC30UN joinery. The
+      // nominal topology above is intentionally independent from a connector;
+      // it lets the mating-face contract remain stable if hardware changes.
+      connector: {
+        id: wolweissCac30un.id,
+        placement: "concealed-machined",
+        machining: wolweissCac30un.machining,
+      },
+      hardware: wolweissCac30un.hardwarePerInstallation,
     };
   };
   // Every frame member is connected through an explicit nominal butt joint.
@@ -671,6 +698,57 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
       PROFILE_3030_END_ENVELOPE_AREA_MM2,
     ),
   ];
+  const machiningClockingFace = (member: FrameMember): ProfileReferenceFace =>
+    Math.abs(member.transform.basis?.[MACHINING_CLOCKING_BASIS_INDEX] ?? 0) >
+    AXIS_ALIGNMENT_COMPONENT_THRESHOLD
+      ? "front"
+      : "top";
+  const machiningPlan: MachiningPlan = {
+    id: "machining-plan:enclosure-v2-main-frame-cac30un",
+    operations: connections.map((connection) => {
+      if (connection.joint?.kind !== "butt")
+        throw new Error(`Cannot create CAC machining for non-butt joint: ${connection.id}`);
+      const target = members.find((member) => member.id === connection.joint?.terminatingMember);
+      if (!target) throw new Error(`Missing CAC machining target: ${connection.id}`);
+      return {
+        id: machiningOperationId(`${connection.id.slice("joint:".length)}-cac30un`),
+        name: `CAC30UN concealed connector machining for ${connection.id}`,
+        process: "supplier-defined" as const,
+        connectorProductCode: wolweissCac30un.productCode,
+        connectorOperationCode: "CAC30UN-30-SERIES-END-MACHINING",
+        target: {
+          partId: target.id,
+          end: connection.joint.terminatingFace,
+          orientation: {
+            drawingView:
+              connection.joint.terminatingFace === "start"
+                ? "looking-at-start-end"
+                : "looking-at-end-end",
+            topReferenceFace: machiningClockingFace(target),
+          },
+        },
+        definition: {
+          status: "supplier-defined-pending" as const,
+          dimensions: [] as const,
+          pendingDetail: "dimensions-pending-vendor-drawing" as const,
+        },
+        references: [
+          {
+            id: "reference:wolweiss-cac30un-product",
+            kind: "supplier-installation-instruction" as const,
+            locator: wolweissCac30un.productUrl,
+          },
+          {
+            id: "reference:project-enclosure-v2-joint-map",
+            kind: "project-assembly-map" as const,
+            locator: "EnclosureV2 structural connection topology",
+          },
+        ],
+        partIds: [target.id],
+        jointIds: [connection.id],
+      };
+    }),
+  };
   const doors = [
     {
       id: "left-door" as const,
@@ -696,6 +774,19 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
     },
   );
   const doorHinges = makeCentredGlr3030Installations(doors);
+  const biFoldDoors = evaluateBiFoldDoorPlan({
+    innerClearWidthMm,
+    innerClearHeightMm,
+    innerClearDepthMm,
+    perimeterClearanceMm: designInput.frontDoorSideClearanceMm,
+    meetingClearanceMm: designInput.frontDoorCentreGapMm,
+    frameFaceDepthMm: PROFILE_3030_SIDE_MM,
+    insetPanelThicknessMm: defaultEnclosureV2Standards.doorInfill.thicknessMm,
+    exteriorFrameOffsetMm: PROFILE_3030_SIDE_MM,
+    topGuideHeadroomMm:
+      biFoldGuideInstallationVariablesMm.gsd082SectionHeightMm +
+      biFoldGuideInstallationVariablesMm.doorTopRunningClearanceMm,
+  });
   return {
     frame: {
       id: frameId("enclosure-root"),
@@ -704,6 +795,9 @@ export function makeEnclosureV2(input: EnclosureDimensions): EnclosureModel {
     anchors,
     members,
     connections,
+    machiningPlan,
+    accessOpenings: agreedAccessOpenings,
+    biFoldDoors,
     designInput,
     innerClearDimensionsMm: {
       widthMm: innerClearWidthMm,
