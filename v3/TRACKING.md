@@ -14,6 +14,9 @@
   independent door animation. Half-open screenshot inspected. The initial cold
   native evaluation exceeded the old 120-second event timeout; the test now
   permits 300 seconds within its existing 600-second overall allowance.
+- [x] Full validation: 95 backend tests, 44 frontend tests, 11 engineering
+  tests, lint/format, type checking and production build pass. The native
+  backend suite takes about eight minutes with the detailed hinge solids.
 - [ ] Confirm fixing screw lengths, slot inserts, combined loads and tolerance
   allowances physically; STEP geometry alone does not approve the installation.
 
