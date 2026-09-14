@@ -769,6 +769,10 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
         except Exception as exc:  # noqa: BLE001 - kernel failures must retain unknown evidence
             add("geometry.build", "unknown", "geometry", f"Geometry unavailable: {exc}")
     shapes = shapes or {}
+    if model.get("bifold_completion"):
+        from .closed_catches import engagement_checks
+
+        checks.extend(engagement_checks(model, shapes))
     physical = [
         p
         for p in parts
@@ -1328,6 +1332,18 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                     f"Collar coverage unavailable: {exc}",
                     entry.get("part_ids", []),
                 )
+        elif entry.get("kind") in ("intentional-bottom-gap", "intentional-latch-gap"):
+            add(
+                f"containment.intentional-gap.{id}",
+                "unknown",
+                "containment",
+                "Intentional unsealed opening accepted for a simple enclosure; chip escape in use is unvalidated, not a missing-seal failure",
+                measured={
+                    "nominal_height_mm": entry["nominal_height_mm"],
+                    "opening_width_mm": entry["opening_width_mm"],
+                },
+                method="Declared design intent; no hermetic-seal requirement",
+            )
         elif not entry.get("coverage_regions"):
             add(
                 f"containment.coverage.{id}",

@@ -1,15 +1,23 @@
 # Engineering model and evidence boundary
 
+Latest intent — 2026-09-14: a **simple enclosure, not a hermetic seal**. Bottom gaps on both bifolds are intentional, not missing-seal failures. One original PETG swing lever and keeper across each folding joint now provides light manual retention; lift before opening. No magnets or bottom hardware return. See [swing-latch design](SWING_LATCHES.md) for mounting, prints, sourcing and remaining physical fit checks. This supersedes earlier absent-retention and mandatory-bottom-continuity statements below.
+
+
+Current change — 2026-09-14: user requested removal from **both bifolds** of the bottom perimeter seals/backing and complete closed catches. The unsupported bottom rigid strips are removed with their backing. No GN4470 magnets, strikes, PETG holders or dedicated M5/M6 fixings remain in the active inventory, schedules or print exports. Vendor assets and prior sourcing studies are retained as history only. Both lower openings are now unsealed and closed-door retention is absent. Bottom containment obligations remain active; uncovered area must report failure. Four 88° travel stops and stock metalwork remain. No parked catches are reinstated.
+
+
 The model uses millimetres, with X right, Y toward the back, Z up. `width_mm`, `depth_mm`, and `height_mm` are the clear structural envelope, not outside dimensions. Four continuous corner posts extend 30 mm below and above that envelope; top and bottom rails butt into their side faces. Roof cross beams support the light roof at one-third and two-thirds depth. Midposts divide the rear-left and rear-right access regions.
 
 Extrusions use actual retained AST03003004 and AST03006006 supplier STEP end faces, including slots/voids, swept without section scaling. Left and rear top headers use 3060 with the 60 mm face down; header fixing and roof-overlap details remain unconfirmed. Asset contents contribute to the revision fingerprint. CBR3030 bracket orientations and fastening remain provisional.
 
 ## Doors
 
-Current completion details are in [BIFOLD_COMPLETION.md](BIFOLD_COMPLETION.md).
-Corner plates and metal carriers replace the earlier unconnected-frame and
-printed-carrier proposals. Operating parked stops are modeled; catches remain
-installation requirements. Handle geometry comes from drawings, not STEP.
+Current completion details are in [STANDARD_METALWORK.md](STANDARD_METALWORK.md)
+and [STANDARD_BIFOLD_HARDWARE.md](STANDARD_BIFOLD_HARDWARE.md). Standard corner
+plates and stock steel carriers replace the earlier unconnected-frame and
+printed-carrier proposals. Four operating travel stops and two closed GN4470
+kits are modeled; parked catches remain removed. Handle geometry comes from
+drawings, not STEP.
 Partial calculated masses deliberately exclude unselected hardware and cannot
 establish hinge capacity. Earlier prototype descriptions below are historical
 where superseded by these completion details.
@@ -57,7 +65,7 @@ These are explicit ordering blockers, not optional warnings. The supplier pack i
 
 ## Containment design and verification
 
-`containment_geometry.py` adds proposed stops, seals, infill retention, fixed-wall lap joints, roof/table gaskets and the hose collar. Bifold heads use exterior hoods and angled brush studies: nominal sections and their contact chain are checked, while carrier/bristle deflection remains unresolved. One-sided meeting lips are clamped only to primary leaves and disengage from secondary leaves on opening; rigid animation is not a deformation simulation.
+`containment_geometry.py` adds proposed stops, seals, infill retention, fixed-wall lap joints, roof/table gaskets and the hose collar. Bifold heads use exterior hoods and angled brush studies: nominal sections and their contact chain are checked, while carrier/bristle deflection remains unresolved. Retail Tesa 05422 meeting-wipe candidates adhere only to secondary meeting stiles and disengage from primary leaves on opening. Custom meeting clamps are removed and handles mount directly to frames. Width/stock length are sourced; section, adhesive band and suitability for this use remain unconfirmed. Rigid animation is not a deformation simulation.
 
 The passive inlet uses a rectangular right-wall cutout and supplier-cut wood baffles with two changes in direction. Its minimum passage is compared with a declared two-times-hose-area design allowance. Geometric obstruction and straight opening-to-exit paths are checked independently of airflow performance. There is no assumed extractor capacity, pressure loss, cooling rate or filter efficiency. See the exported seal/airflow notes and source references for the installation evidence required.
 
@@ -75,8 +83,8 @@ The passive right-wall makeup inlet uses supplier-cut panels forming two turns: 
 
 The roof collar is a real annulus, including the roof cutout, flange and nominal gasket. Hose attachment, independent hose support and dust-shoe routing remain supplier/installation checks. Local barrier coverage is checked against actual CAD solids; complete pressure containment, rubber performance, room airflow and extraction adequacy still require physical commissioning.
 
-Revision C replaces the floating overhead track and dogleg with five PETG modules per default opening, directly bolted into two underside slot rows of the continuous 3060 header. Native solids cut the 23 mm cavity, M4 holes and alignment recesses; separate 4 mm keeper strips leave a 10 mm throat. The vertical GN753.1 roller axis, steel M4 axle, M6 large washer and metal spacer are modeled. The carrier now has an 18 × 8 × 75 mm exterior mounting plate, two M6 clearance holes on 30 mm centres, and a 14 × 28 × 6 mm shelf with an M4 axle hole. A further 4 mm metal spacing ring lowers the shelf beneath the rail screw-head allowance; axle head, two vendor STEP bushes, lower washer and locknut are included. Fastener/spacer envelopes and clamp/load capacity remain unconfirmed. These changes supersede the standalone study's carrier stack, not its rail-module dimensions. No updated carrier STL or manufacturing release is implied.
+Revision C replaces the floating overhead track and dogleg with five PETG modules per default opening, directly bolted into two underside slot rows of the continuous 3060 header. Native solids cut the 23 mm cavity, M4 holes and alignment recesses; separate 4 mm keeper strips leave a 10 mm throat. The vertical GN753.1 roller axis, steel M4 axle, M6 large washer and metal spacer are modeled. The carrier is an 18 mm cut of 80 × 40 × 6 stock steel angle with an R7 root, two M6 clearance holes on 30 mm centres and an M4 axle hole. Its mounting face and axle datums are checked independently. Keeper strips now use 20 × 4 stock with end bevels; notched R4 stock-angle ends bolt through flush M4 countersunk screws. A further 4 mm metal spacing ring lowers the shelf beneath the rail screw-head allowance; axle head, two vendor STEP bushes, lower washer and locknut are included. Fastener/spacer envelopes and clamp/load capacity remain unconfirmed. These changes supersede the standalone study's carrier stack, not its rail-module dimensions. No updated carrier STL or manufacturing release is implied.
 
-The rear header has a supplier-machined 15.5 × 15.5 mm open corner relief through its 30 mm height. Two protruding bottom CBR3030 brackets are replaced by candidate CIB08T slot connectors using retained supplier STEP geometry; slot engagement, installation access and joint strength remain unconfirmed. This is a quotation request, not permission to omit structural connections. Rigid perimeter backing stays clear of the free-stile/gusset swing. Two prepared steel closing tabs per opening now have two fixing stations each. Parked operating stops are modeled; stop impact capacity and catch installation remain unresolved.
+The rear header has a supplier-machined 15.5 × 15.5 mm open corner relief through its 30 mm height. Two protruding bottom CBR3030 brackets are replaced by candidate CIB08T slot connectors using retained supplier STEP geometry; slot engagement, installation access and joint strength remain unconfirmed. This is a quotation request, not permission to omit structural connections. Rigid perimeter backing stays clear of the free-stile/gusset swing. Two closing tabs per opening are 60 mm cuts of 50 × 4 steel flat stock with two fixing stations each. Parked operating stops are modeled; stop impact capacity and catch installation remain unresolved.
 
 Prepared exterior head hoods clear the framing without reliefs. The angled brush has an explicit unselected root/reach/drop study, not approved vendor geometry. Separate hood/wipe coverage sections and a contact chain replace the former inner-cover plane check; flexible carrier interference remains unknown. Board access checks the entire swept board up to a final position centred in the enclosure. This proves only the declared straight loading path, conditional on workshop approach space. Print coupons before full-door use; no printed load rating is asserted.

@@ -547,6 +547,142 @@ def assembly_notes(model: dict) -> str:
     )
 
 
+def parked_stop_print_files(model: dict) -> dict[str, bytes]:
+    """Native prototype body, on its print bed; never export washers/pads as PETG."""
+    stops = [p for p in model["parts"] if p.get("product_code") == "BF-PARK-88"]
+    if not stops:
+        return {}
+    from .bifold_completion import park_bracket
+
+    shape = park_bracket()[0]
+    bb = shape.BoundingBox()
+    shape = shape.translate((-bb.xmin, -bb.ymin, -bb.zmin))
+    with tempfile.TemporaryDirectory(prefix="bifold-park-print-") as directory:
+        path = Path(directory) / "BF-PARK-88.stl"
+        cq.exporters.export(shape, str(path), tolerance=0.05, angularTolerance=0.1)
+        stl = path.read_bytes()
+    manifest = dict(
+        revision=model["revision"],
+        status="PROTOTYPE ONLY - NOT IMPACT RATED",
+        units="mm",
+        quantity=len(stops),
+        part_ids=[p["id"] for p in stops],
+        dimensions_mm=[bb.xlen, bb.ylen, bb.zlen],
+        print_spec=stops[0]["print_spec"],
+        hardware="Per bracket: two metal M6 screws, two metal flat washers and two slot-8 nuts; one replaceable rubber pad. Screws/nuts/bumper specification remains pending. STL contains only PETG body.",
+        limitations="Gentle travel stop, not a slam restraint or latch. Verify support removal, holes, layer strength, clamp creep and bumper adhesion before use; no torque/load rating is supplied.",
+    )
+    return {
+        "printed-prototypes/BF-PARK-88.stl": stl,
+        "printed-prototypes/BF-PARK-88.json": json.dumps(manifest, indent=2).encode(),
+    }
+
+
+def parked_catch_print_files(model: dict) -> dict[str, bytes]:
+    from .magnetic_catches import holder_component
+
+    files = {}
+    for role in ("magnet", "strike"):
+        holders = [
+            p
+            for p in model["parts"]
+            if p.get("geometry") == dict(kind="parked-catch-holder", role=role)
+        ]
+        if not holders:
+            continue
+        shape = holder_component(role)[0]
+        bb = shape.BoundingBox()
+        bed_shape = shape.translate((-bb.xmin, -bb.ymin, -bb.zmin))
+        stem = f"BF-CATCH-{role.upper()}-HOLDER"
+        with tempfile.TemporaryDirectory(prefix="bifold-catch-print-") as directory:
+            path = Path(directory) / (stem + ".stl")
+            cq.exporters.export(bed_shape, str(path), tolerance=0.05, angularTolerance=0.1)
+            files[f"printed-prototypes/{stem}.stl"] = path.read_bytes()
+        files[f"printed-prototypes/{stem}.json"] = json.dumps(
+            dict(
+                revision=model["revision"],
+                units="mm",
+                quantity=len(holders),
+                part_ids=[p["id"] for p in holders],
+                dimensions_mm=[bb.xlen, bb.ylen, bb.zlen],
+                print_spec=holders[0]["print_spec"],
+                status="PROTOTYPE ONLY - NO RETENTION OR IMPACT RATING",
+                hardware="Per holder: two M6 slot fixings with metal washers and two M5 screw/washer/locknut assemblies. Magnet M5x25, strike M5x16 candidates; confirm head/nut sizes, grade, engagement and locking. No printed threads.",
+                limitations="Only PETG body in STL. Support projecting features; inspect holes. Validate 2 mm installed magnet gap and actual holding/release force, printed strength, clamp creep, tolerances and cycling. Separate operating stops required.",
+            ),
+            indent=2,
+        ).encode()
+    return files
+
+
+def swing_latch_print_files(model: dict) -> dict[str, bytes]:
+    from .swing_latch import component
+
+    files = {}
+    for role in ("lever", "keeper"):
+        rows = [p for p in model["parts"] if p.get("product_code") == "BF-SWING-" + role.upper()]
+        if not rows:
+            continue
+        shape = component(role)[0]
+        shape = shape.rotate((0, 0, 0), (1, 0, 0) if role == "lever" else (0, 1, 0), 90)
+        bb = shape.BoundingBox()
+        shape = shape.translate((-bb.xmin, -bb.ymin, -bb.zmin))
+        stem = "printed-prototypes/BF-SWING-" + role.upper()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "print.stl"
+            cq.exporters.export(shape, str(path), tolerance=0.05, angularTolerance=0.1)
+            files[stem + ".stl"] = path.read_bytes()
+        files[stem + ".json"] = json.dumps(
+            dict(
+                revision=model["revision"],
+                quantity=len(rows),
+                part_ids=[p["id"] for p in rows],
+                print_spec=rows[0]["print_spec"],
+                dimensions_mm=[bb.xlen, bb.ylen, bb.zlen],
+                status="Light hand-operated retention prototype; fit, pivot friction and cycling pending",
+            ),
+            indent=2,
+        ).encode()
+    return files
+
+
+def closed_catch_print_files(model: dict) -> dict[str, bytes]:
+    from .closed_catches import holder
+
+    files = {}
+    for role in ("magnet", "strike"):
+        rows = [
+            p
+            for p in model["parts"]
+            if p.get("geometry") == dict(kind="closed-catch-holder", role=role)
+        ]
+        if not rows:
+            continue
+        shape = holder(role)[0]
+        bb = shape.BoundingBox()
+        shape = shape.translate((-bb.xmin, -bb.ymin, -bb.zmin))
+        stem = f"printed-prototypes/BF-CLOSED-{role.upper()}-HOLDER"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "holder.stl"
+            cq.exporters.export(shape, str(path), tolerance=0.05, angularTolerance=0.1)
+            files[stem + ".stl"] = path.read_bytes()
+        files[stem + ".json"] = json.dumps(
+            dict(
+                revision=model["revision"],
+                units="mm",
+                quantity=len(rows),
+                part_ids=[p["id"] for p in rows],
+                dimensions_mm=[bb.xlen, bb.ylen, bb.zlen],
+                print_spec=rows[0]["print_spec"],
+                status="CLOSED RETENTION PROTOTYPE; STRENGTH AND FORCE UNVALIDATED",
+                hardware="Per holder: two M6x14 candidate root screws (fixed DIN7991 countersunk, moving socket head + 1.6 mm washer) and BPN08M6 nuts; two M5 screw/washer/locknut assemblies (magnet M5x20; strike M5x16). No printed threads.",
+                limitations="Full face contact requires L2 adjustment. No parked retention. Validate clamp creep, load, thread engagement, tolerances and cycling.",
+            ),
+            indent=2,
+        ).encode()
+    return files
+
+
 def containment_notes(model: dict) -> str:
     if not model.get("containment"):
         return "No containment specification is declared in this model."
@@ -560,8 +696,8 @@ def containment_notes(model: dict) -> str:
         + " then ".join(sequence.get("opening", []))
         + ".",
         "Supplier must select rubber grade/profile, free section, installed compression, corner treatment, clamping/adhesive and fixing pitch. Continuous glass-compatible packing and setting support must be confirmed before tempering. Dimensions in hardware.csv are candidate installed envelopes, not approved catalogue sizes.",
-        "Bifold meeting seals are one-sided EPDM wipe lips, clamped to the primary leaf and released from the secondary leaf during opening. Three clamp segments clear the primary handle feet, which sit over the 3 mm lip root. Confirm compound, preload, fixing engagement and endurance; rigid animation is not rubber simulation.",
-        "Bifolds use A1 mini PETG guide modules under 3060 headers, vendor STEP CFG hinges and GN753.1 rollers/bushes. A one-piece metal carrier, inward-face corner plates and steel keepers/operating stops are custom design proposals, not supplier-approved parts. Four GHD9008B handles are drawing studies, not vendor STEP. Four closed and two parked GBL3030.KIT catches remain installation requirements, NOT fitted hardware. See bifold-completion.json for fixing schedules, partial load screening and catch requirements. Confirm engagement, locking, seal compatibility and physical load/wear behaviour.",
+        "Bifold meeting seals use retail Tesa 05422 self-adhesive wipe candidates on secondary meeting stiles, releasing from primary leaves on opening. Cut one 1 m x 38 mm pack per default door to 688 mm; no custom clamps or seal screws. Handles mount directly to frames. The 3 mm section and root footprint are provisional, not vendor CAD: confirm adhesive band, slotted-face support, non-sticky free edge, preload, end joints and wear. This door-bottom product is not approved for bifold service; rigid animation is not foam deformation simulation. Retail source: https://www.leroymerlin.pt/produtos/veda-porta-adesivo-1m-branco-tesa-universal-310485.html . See model.json for dimension-dependent cuts and pack quantities.",
+        "Bifolds use A1 mini PETG guides and ribbed PETG parked-stop prototypes, vendor STEP CFG hinges and GN753.1 rollers/bushes. Parked stops are gentle travel limits, not impact-rated restraints. Parked magnets, holders and their dedicated fixings are omitted by design. Stops do not hold doors open; consider a simple retaining strap only if actual drift warrants it. See printed-prototypes for stop STL and prototype notes. Carriers and 4 mm closing tabs use cut/drilled stock steel; 20 x 4 keepers and notched stock-angle rail ends are bolted with flush countersunk screws. Stock preparation and load/fastener validation remain pending; see standard-metalwork.md. Sixteen CJP3030L bought plates and four GHD9008B handles are drawing studies. Both bifold bottom seals, backing and rigid strips, plus complete closed catches and dedicated fixings, are removed by user choice. Lower openings are intentionally unsealed for a simple enclosure. One manual PETG swing lever and keeper across each folding joint provides light retention. Lift before folding; fit, friction and cycling remain to be tried. See swing-latches.md. See bifold-completion.json for schedules, partial load screening and limitations.",
         "Seal the base against a flat continuous supporting table. The tabletop, its load capacity and cable/service penetrations need confirmation.",
         "Retain the roof collar and clamp the independently supported hose. Confirm bend radius and clearance through full machine travel.",
         "Use passive makeup air and extraction at the dust shoe, with vacuum exhaust outside the enclosure. Keep the baffled inlet clear and accessible for cleaning. No inlet fan or extractor performance is assumed.",
@@ -598,6 +734,47 @@ def export_file(kind: str, model: dict, report: dict, shapes: dict) -> tuple[byt
         raise ValueError(f"Unsupported export format: {kind}")
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(
+            "standard-bifold-hardware.md",
+            (
+                Path(__file__).resolve().parents[2] / "docs" / "STANDARD_BIFOLD_HARDWARE.md"
+            ).read_bytes(),
+        )
+        if any(p.get("product_code") == "BF-SWING-LEVER" for p in model["parts"]):
+            archive.writestr(
+                "swing-latches.md",
+                (Path(__file__).resolve().parents[2] / "docs" / "SWING_LATCHES.md").read_bytes(),
+            )
+        archive.writestr(
+            "standard-metalwork.md",
+            (Path(__file__).resolve().parents[2] / "docs" / "STANDARD_METALWORK.md").read_bytes(),
+        )
+        archive.writestr(
+            "stock-metalwork.json",
+            json.dumps(
+                dict(
+                    revision=model["revision"],
+                    units="mm",
+                    status="prototype-not-for-manufacture",
+                    notes="Part size is its assembly envelope; cut_length_mm is length along bought stock. Holes are centred part-local coordinates. Read standard-metalwork.md for stock orientation, bevels, notch and countersinks; nominal fasteners are not vendor STEP.",
+                    parts=[
+                        p
+                        for p in model["parts"]
+                        if (p.get("product_code") or "").startswith("STOCK-")
+                        or p.get("geometry", {}).get("kind", "").startswith("stock-")
+                    ],
+                ),
+                indent=2,
+            ),
+        )
+        for name, content in swing_latch_print_files(model).items():
+            archive.writestr(name, content)
+        for name, content in closed_catch_print_files(model).items():
+            archive.writestr(name, content)
+        for name, content in parked_stop_print_files(model).items():
+            archive.writestr(name, content)
+        for name, content in parked_catch_print_files(model).items():
+            archive.writestr(name, content)
         archive.writestr(
             "bifold-completion.json",
             json.dumps(

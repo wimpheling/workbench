@@ -1,4 +1,9 @@
-# Bifold rail retention — 2026-09-14 prototype
+# Bifold rail retention — superseded welded study
+
+The active design now uses bolted stock-angle ends and 20×4 keepers. See
+[STANDARD_METALWORK.md](STANDARD_METALWORK.md) for current cuts, countersinks,
+bevels and assembly. The text below records the earlier welded design only.
+
 
 Two continuous 304 stainless strips, 18 mm wide x 4 mm thick, replace the
 segmented PETG keepers. Weld a 4 x 46 x 25 mm end bar to both strips at each

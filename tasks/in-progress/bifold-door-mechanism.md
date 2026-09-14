@@ -16,6 +16,91 @@ preventing the enclosure's planned ventilation.
 
 ## Discussion
 
+Acceptance completed 2026-09-15: live `02edfb1d248ce451`, 466 parts, 1,625 pass / 0 fail / 112 unknown. Two original PETG swing latches; 20.2 mm raised-handle clearance. Intentional bottom gaps and 121 mm local wipe breaks, no magnetic or parked catches. Final quotation pack matches model/print revisions and notes; STEP re-imports valid with 470 solids. Browser acceptance passed on the final geometry (5.7 minutes); the later source-only wipe-procurement correction was checked at three heights and leaves default model data identical except the fingerprint. Full `npm run check`: 165 backend tests passed (19m01s) before the final 20 mm mounting adjustment; the 33 affected backend cases passed afterward via scoped `npm run check` (6m47s). An additional final 4 mm driver-envelope test passed. Both check runs passed Ruff, 45 frontend tests, TypeScript and build. `npm test` passed 11 engineering + 45 frontend tests; explicit build passed. Evidence: `v3/artifacts/swing-latch/acceptance.json`, `final-quotation.zip` and logs. Physical print fit, friction/loosening, slot-nut engagement and gentle hand-pull/cycling remain outside digital acceptance.
+
+
+User correction 2026-09-14: simple enclosure, no hermetic seal. Intentional bottom gaps are accepted; replace absent closed retention with a simple printed lever/keeper across each folding joint. No magnets or bottom strip stacks. See v3/docs/SWING_LATCHES.md.
+
+Current change — 2026-09-14: user requested removal from **both bifolds** of the bottom perimeter seals/backing and complete closed catches. The unsupported bottom rigid strips are removed with their backing. No GN4470 magnets, strikes, PETG holders or dedicated M5/M6 fixings remain in the active inventory, schedules or print exports. Vendor assets and prior sourcing studies are retained as history only. Both lower openings are now unsealed and closed-door retention is absent. Bottom containment obligations remain active; uncovered area must report failure. Four 88° travel stops and stock metalwork remain. No parked catches are reinstated.
+
+
+2026-09-14 stock-metal integration authorized: implement the investigated
+carrier, tabs and bolted rail ends in active v3. Correct the 2 mm carrier
+mounting gap, model R7/R4 roots, bevel keeper ends and use flush M4x40 end
+screws. Preserve steel load paths and all unresolved engagement/load/brush
+evidence. Full regression and live export/browser acceptance underway.
+
+2026-09-14 remaining metalwork investigation: user requests standard brackets
+and bolted stock replacements for the machined carrier, welded rail retainers
+and closing tabs. Preserve metal load paths; PETG is not an assumed structural
+substitute. Investigate against the current assembly before promoting any
+candidate into active geometry. Record sourced CAD, stock preparation and
+connection limitations in the standard-metalwork study.
+
+2026-09-14 standard hardware completion pass: replace all sixteen BF-CORNER-65
+custom leaf plates with bought CJP3030L drawing studies, moving only interleaf
+end hinges 25 mm inward. Preserve exact extrusion, CFG, roller/bush and glazing
+geometry. Select two GN4470 A1/L2 closed-only kits with genuine retained STEP,
+on primary lower rails at 60% of link span and fixed-bottom-rail PETG adapters.
+The guided-free-stile location was rejected for poor mechanical advantage.
+Model M5 fixing stacks and M6 root screws; nuts remain sourced schedule items
+with unresolved stepped-section/engagement evidence. No parked catches return.
+Detailed sourcing, installation stages, limitations and remaining retailer
+questions are in `v3/docs/STANDARD_BIFOLD_HARDWARE.md`. No commit or push.
+
+
+2026-09-14 parked-catch simplification: user approved removing the parked
+magnets, offset holders and dedicated fixings as unnecessary complexity.
+Keep the four 88° travel stops and four closed-door catch requirements.
+Stops are not hold-open devices; only consider a simple strap later if drift
+warrants it. Preserve downloaded CAD and historical study, but omit parked
+catches from active geometry, purchasing/fixing schedules and print exports.
+
+2026-09-14 UI organization: move detailed bifold prototype, hardware/fixings,
+rail, sealing, glazing and containment notes from Open & close into a new
+Design notes tab beneath the 3D viewer. Retain only playback/sliders and short
+operating instructions in the sidebar; no engineering-model changes.
+
+2026-09-14 offset parked catches: replace the rejected direct mount with
+two genuine GN4470 C2/L3 kits on four ribbed PETG holders sized for the A1 mini.
+Correct the magnet rotation so its counterbores remain accessible. Eight
+nominal M5 metal fixing assemblies are modeled; M6 root hardware remains a
+candidate schedule. Five-pose native checks clear all sixteen added parts
+against the physical assembly, with 2 mm parked face gap. Focused tests:
+21 passed. Both holder STL designs and quantity-two manifests are in the ZIP.
+Full regression passes (136 backend, 44 frontend, 11 engineering tests,
+lint/format/typecheck/build), as does live browser acceptance on port 8000.
+Live revision 5f3fc315dd0d1664 has 468 parts, 1,631 pass / 0 fail / 127 unknown;
+both exported holder meshes are watertight and match that revision. Additional
+closed/half/park screens at heights 650/1500 mm clear the added parts. Force
+at the gap, print creep, fastening and cycles remain unvalidated. See
+v3/docs/PARKED_CATCHES.md.
+
+2026-09-14 parked-catch CAD: user supplied the corrected GN 4470-50-C2-L3-SR
+STEP (the earlier A1/L2 was not the requested geometry). Imported both native
+solids unchanged and added a tested component loader; see
+v3/backend/enclosure/assets/GN4470.md. Actual magnet envelope is 50 × 10 ×
+30.5 mm, correcting the earlier 50 × 7 × 10 mm research summary. CAD receipt
+does not establish mounting: retain unfitted status until printed holders,
+fixings, approach clearance and parked engagement have been evaluated.
+
+2026-09-14 printed parked stops: user requested replacing the 88° custom metal
+brackets with A1 mini prints. Model four identical ribbed PETG bodies with
+metal through-fixings and eight nominal metal washers; retain the contact
+datum and separate catch requirement. Include prototype STL/manifest in the
+quotation ZIP. Bought self-adhesive EPDM sheet can supply scissor-cut pads.
+No impact, creep or strength approval is inferred from geometry. See
+v3/docs/PRINTED_PARK_STOPS.md; fabrication/commissioning remain excluded.
+
+2026-09-14 meeting-seal simplification: user cannot easily source custom parts.
+Replace the six custom clamp segments and sixteen M6 fixing sets with two
+cut-to-length retail Tesa 05422 self-adhesive wipe candidates. Mount on secondary
+meeting stiles, leaving handles directly frame-mounted and free lips unbonded.
+Default cuts are 688 mm from 1 m × 38 mm packs. Manufacturer section/adhesive
+layout and bifold suitability remain unconfirmed; see v3/docs/BIFOLD_COMPLETION.md
+for sourcing and dimensional assumptions. No change to Lexan retention gaskets
+or approval of the still-provisional head brush and other custom hardware.
+
 2026-09-14: User requested captive roller retention/end stops. Proposed two
 continuous 18 x 4 mm stainless underside strips per opening, joined by welded
 4 x 46 x 25 mm end bars in relieved print ends. Slot remains 10 mm; 18 mm
@@ -827,6 +912,39 @@ success does not release the remaining mechanical prototype for manufacture.
 
 ## Implementation plan
 
+- [x] Model one original printed swing latch per bifold with standard M6 mounting and print exports; accept intentional bottom openings.
+- [x] Complete swing-latch motion, access, frontend/browser and live-export validation; final revision and test stages recorded above.
+
+- [x] Remove bottom strip stacks and complete closed catches from both bifolds as requested on 2026-09-14; retain bottom containment gaps as failures and note absent closed retention.
+- [x] Validate and serve the removal plus subsequent swing-latch revision with updated exports; intentional gaps accepted by user.
+
+- [x] Investigate standard metalwork replacements
+  - [x] Source stock/bracket candidates and genuine public Motedis CAD
+  - [x] Screen carrier, tab and retainer geometry against the current model: eight poses, zero rigid clashes; retain 12–14 flexible intersections and 0.1 mm end-head vertical margin
+  - [x] Record stock-cut/drilled carrier and tabs plus bolted notched-angle end barriers in `engineering/bifold-assembly/standard-metalwork/README.md`; geometric capture witnesses and 11 engineering tests pass
+- [ ] Validate and integrate standard-metalwork prototypes
+  - [ ] Confirm stock root sections, steel grades, small-quantity supply and final screw heads/engagement
+  - [ ] Resolve end-head tolerance/access and actual brush-holder overlaps; verify continuous motion and metal connection loads
+  - [x] Replace machined/welded proposals in active model/BOM/exports with stock-metal prototypes; native eight-pose, six dimension-extreme and nominal tool-route checks pass
+  - [x] Complete backend/frontend/browser and final quotation-pack acceptance: 159-case full run had 158 passes and an obsolete export assertion; corrected export suite and failed-case `npm run check` retry pass, plus six extra dimension cases. 44 frontend / 11 engineering tests, lint/typecheck/build and browser (2.3 minutes) pass. Live `7bd4c51b472f27b7`: 486 parts, 0 failed checks, 137 unknowns; valid STEP with 502 solids.
+
+- [ ] Standard leaf joints and closed-only retention (2026-09-14)
+  - [x] Source CJP3030L, GN4470 A1/L2 and BPN08M6; retain genuine/drawing provenance and dated prices/availability
+  - [x] Replace sixteen custom leaf plates; retain cuts/gasket capture and move interleaf end hinges 25 mm inward
+  - [x] Model two closed-only catch kits, four PETG adapters, M5 fixings and M6 root screws; supersede unfitted GBL3030.KIT rows
+  - [x] Add actual magnetic-face coverage check and missing/misaligned-strike mutations; preserve force/print/fastener unknowns
+  - [x] Finish backend/frontend/browser/export verification: 149 backend / 44 frontend / 11 engineering tests; final browser acceptance 5.0 minutes. Live `629b576e77187fd6`: 476 parts, 1,657 pass / 0 fail / 135 unknown. Final corner schedule passes separate native 80-stack motion/access audits; quotation ZIP includes sourced installation notes.
+  - [ ] Obtain requested CJP3030L/BPN08M6 CAD or supplier section confirmation; validate nut seating/thread engagement, actual head dimensions and tolerance stack
+  - [ ] Confirm retention/racking demand, adapter strength/creep and physical release; fabrication/commissioning excluded from current digital scope
+
+
+- [x] Verify simplified parked inventory and quotation exports, retaining travel stops and closed-door requirements: live revision 3097236c51b4424f has 452 parts, four stops, four closed catch requirements and no parked hardware or holder prints; 0 failed checks, 126 unknown
+- [x] Move sidebar design issues into the lower Design notes tab and verify controls, note access and tab switching in the browser; final-server acceptance passes (2.2 minutes)
+- [x] Import corrected GN4470 C2/L3 vendor STEP, preserve both solids and provenance, test component identity/dimensions/contact
+- [x] Fit GN4470 parked catches using actual STEP and printable attachments
+  - [x] Model offset holders, nominal M5 fixings and M6 root schedule; clear five sampled poses on both doors and export A1 mini STLs
+  - [x] Complete regression and live UI/export verification; preserve continuous-motion unknowns and unvalidated force/creep/cycle performance (136 backend tests, browser acceptance and watertight live STL checks pass)
+- [x] Integrate printable parked stops; verify native geometry, washer clearance and print export. Full checks pass: 128 backend, 44 frontend, 11 engineering tests; browser motion passes. Live ZIP contains a watertight 1,360-facet STL and four-body manifest matching revision 532cbc094157e432. Strength, impact, clamp creep and pad adhesion remain unvalidated; see v3/docs/PRINTED_PARK_STOPS.md
 - [ ] Digital completion pass (fabrication and commissioning excluded by user)
   - [x] Preserve the existing v3 worktree and genuine hinge/roller/bush STEP assets
   - [x] Add sixteen inward-face corner plates and named frame mating interfaces
@@ -837,7 +955,8 @@ success does not release the remaining mechanical prototype for manufacture.
   - [x] Open fragile printed bore webs into intentional recesses and check guide-body connectivity
   - [x] Correct the lower gusset/bottom-stop collision found at half travel
   - [x] Replace relieved inner head covers by exterior hoods and angled-brush studies; verify nominal sections/contact chain without approving flexible performance
-  - [x] Replace stretching meeting membranes by one-sided wipe lips and segmented clamps; check closed contact and open disengagement
+  - [x] Replace stretching meeting membranes by one-sided wipe lips; supersede segmented clamps with retail self-adhesive candidates on secondary leaves
+  - [x] Verify retail meeting-wipe simplification: 127 backend, 44 frontend and 11 engineering tests pass; lint/format/TypeScript/build pass; live-browser motion passes on port 8000. Revision e50ffddd2505df02 has 444 parts, 1,559 pass / 0 fail / 125 unknown; preserve section/adhesion unknowns
   - [ ] Finish catch installation and obtain actual brush/root/adhesive and lip specifications; physical sealing remains unvalidated
   - [x] Complete regression/browser evidence: 127 backend / 44 frontend / 11 engineering tests, lint/typecheck/build and browser acceptance pass. Live revision 12ad55cb055b475f has 450 parts, 0 failures and 125 unknowns; quotation STEP re-imports valid (446 solids).
   - [ ] Obtain deferred retailer evidence listed in v3/docs/BIFOLD_COMPLETION.md; no retailer contacted

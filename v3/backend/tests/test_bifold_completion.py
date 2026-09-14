@@ -6,9 +6,9 @@ from enclosure.verification import check_solid_pair
 def test_completion_inventory_and_honest_procurement():
     m = build_model()
     parts = {p["id"]: p for p in m["parts"]}
-    plates = [p for p in parts.values() if p.get("product_code") == "BF-CORNER-65"]
+    plates = [p for p in parts.values() if p.get("product_code") == "CJP3030L"]
     assert len(plates) == 16
-    assert all(len(p["holes"]) == 3 for p in plates)
+    assert all(len(p["holes"]) == 5 for p in plates)
     assert (
         len(
             [j for j in m["joints"] if j.get("connector_ids", [""])[0] in {p["id"] for p in plates}]
@@ -18,15 +18,15 @@ def test_completion_inventory_and_honest_procurement():
     handles = [p for p in parts.values() if p.get("product_code") == "GHD9008B"]
     assert len(handles) == 4
     assert all("cad_asset" not in p and "drawing-based" in p["geometry_fidelity"] for p in handles)
-    assert sum(r["quantity"] for r in m["bifold_completion"]["catch_requirements"]) == 6
+    assert sum(r["quantity"] for r in m["bifold_completion"]["catch_requirements"]) == 0
     assert all(
-        r["status"].startswith("installation-unresolved")
+        r["status"].startswith("modeled-prototype")
         for r in m["bifold_completion"]["catch_requirements"]
     )
     for did in ("left-rear", "back-right"):
-        carrier = [parts[did + s] for s in ("-carrier-upright", "-carrier-shelf")]
+        carrier = [parts[did + "-carrier-upright"]]
         assert sum(p["quantity"] for p in carrier) == 1
-        assert all(p["material"] == "6061-T6 aluminium" for p in carrier)
+        assert all(p["material"] == "S275JR steel" for p in carrier)
         for i in range(2):
             assert len(parts[f"{did}-closed-stop-{i}"]["holes"]) == 2
         screening = next(d for d in m["doors"] if d["id"] == did)["load_screening"]
@@ -45,7 +45,7 @@ def test_added_hardware_clears_rigid_assembly(fraction):
     additions = [
         p
         for p in parts
-        if p.get("product_code") in ("BF-PARK-88", "BF-CORNER-65", "GHD9008B", "BF-MEETING-CLAMP")
+        if p.get("product_code") in ("BF-PARK-88", "M6-WASHER-12", "CJP3030L", "GHD9008B")
         or p["id"]
         in (
             "left-rear-perimeter-top-stop",
@@ -61,6 +61,43 @@ def test_added_hardware_clears_rigid_assembly(fraction):
             if q["id"] != p["id"]:
                 result = check_solid_pair(a, shapes[q["id"]])
                 assert result["status"] != "fail", (fraction, p["id"], q["id"], result)
+
+
+def test_printed_park_stop_inventory_print_export_and_mounting():
+    import json
+
+    import cadquery as cq
+    from enclosure.bifold_completion import park_bracket
+    from enclosure.exports import parked_stop_print_files
+
+    m = build_model()
+    stops = [p for p in m["parts"] if p.get("product_code") == "BF-PARK-88"]
+    washers = [p for p in m["parts"] if p.get("product_code") == "M6-WASHER-12"]
+    assert len(stops) == 4 and len(washers) == 8
+    for p in stops:
+        assert p["material"] == "PETG" and "cad_asset" not in p
+        assert "prototype" in p["geometry_fidelity"]
+        assert "M6 x 16" in p["fastener_schedule"]["screw"]
+        assert "slam" in p["machining"]
+        assert max(p["size"]) <= 180
+    shape, center, size = park_bracket()
+    assert shape.isValid() and len(shape.Solids()) == 1
+    assert size[2] == pytest.approx(60)
+    original = shape.translate(tuple(center))
+    for z in (-15, 15):
+        hole = cq.Solid.makeCylinder(3.2, 10, cq.Vector(-17.5, -1, z), cq.Vector(0, 1, 0))
+        assert original.intersect(hole).Volume() < 1e-5
+    s = build_shapes({**m, "parts": stops + washers})
+    for washer in washers:
+        parent = washer["id"].rsplit("-washer-", 1)[0]
+        assert s[washer["id"]].distance(s[parent]) < 1e-5
+        assert s[washer["id"]].intersect(s[parent]).Volume() < 1e-5
+    files = parked_stop_print_files(m)
+    assert len(files["printed-prototypes/BF-PARK-88.stl"]) > 1000
+    manifest = json.loads(files["printed-prototypes/BF-PARK-88.json"])
+    assert manifest["quantity"] == 4 and manifest["revision"] == m["revision"]
+    assert "NOT IMPACT RATED" in manifest["status"]
+    assert manifest["dimensions_mm"] == pytest.approx(size)
 
 
 def test_park_pad_contacts_leaf_and_blocks_further_travel():
@@ -136,24 +173,54 @@ def test_exterior_head_barrier_sections_and_connection_mutations(did):
     )
 
 
-def test_meeting_lip_is_clamped_to_one_leaf_and_disengages():
-    for f in (0, 1):
+def test_retail_meeting_wipe_has_no_clamps_and_disengages():
+    from enclosure.verification import check_barrier_region
+
+    for f in (0, 0.25, 0.5, 0.75, 1):
         m = pose_model(build_model(), {"left-rear": f, "back-right": f})
+        assert not any("meeting-clamp" in p["id"] for p in m["parts"])
+        assert not any(
+            "meeting-clamp" in row["part_id"] or "lip root" in row["screw"]
+            for row in m["bifold_completion"]["fastener_schedule"]
+        )
         for did in ("left-rear", "back-right"):
             ps = [
                 p
                 for p in m["parts"]
-                if p["id"] in (did + "-meeting-cover", did + "-b-stile-a", did + "-a-handle")
-                or p["id"].startswith(did + "-meeting-clamp-")
+                if p["id"]
+                in (
+                    did + "-meeting-cover",
+                    did + "-b-stile-a",
+                    did + "-a-stile-b",
+                    did + "-a-handle",
+                    did + "-b-handle",
+                )
             ]
             s = build_shapes({**m, "parts": ps})
             lip = next(p for p in ps if p["id"] == did + "-meeting-cover")
-            assert lip["motion_leaf"] == "a"
+            assert lip["motion_leaf"] == "b"
             assert "disengages" in lip["seal_spec"]["attachment"]
-            bars = [p for p in ps if p.get("product_code") == "BF-MEETING-CLAMP"]
-            assert len(bars) == 3 and all(p["motion_leaf"] == "a" for p in bars)
-            for p in bars:
-                assert s[p["id"]].distance(s[lip["id"]]) < 1e-5
-                assert s[p["id"]].intersect(s[did + "-a-handle"]).Volume() < 1e-5
-            distance = s[lip["id"]].distance(s[did + "-b-stile-a"])
-            assert distance < 1e-5 if f == 0 else distance > 1
+            assert lip["product_code"] == "TESA-05422" and "cad_asset" not in lip
+            assert lip["size"] == [38, 3, 688]
+            assert lip["procurement"]["packs_required"] == 1
+            assert "provisional" in lip["seal_spec"]["section_status"]
+            assert s[lip["id"]].distance(s[did + "-b-stile-a"]) < 1e-5
+            for leaf in ("a", "b"):
+                assert s[lip["id"]].intersect(s[f"{did}-{leaf}-handle"]).Volume() < 1e-5
+            handle = next(p for p in ps if p["id"] == did + "-a-handle")
+            assert handle["motion_local"][1] == -10
+            distance = s[lip["id"]].distance(s[did + "-a-stile-b"])
+            if f == 0:
+                assert distance < 1e-5
+                region = next(e for e in m["containment"] if e["id"] == did + "-meeting")[
+                    "coverage_regions"
+                ][0]
+                assert check_barrier_region(s, region, 2, 0.5)["status"] == "pass"
+                assert (
+                    check_barrier_region(
+                        {k: v for k, v in s.items() if k != lip["id"]}, region, 2, 0.5
+                    )["status"]
+                    == "fail"
+                )
+            else:
+                assert distance > 1

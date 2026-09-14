@@ -447,82 +447,6 @@ export default function App() {
                 </button>
               </div>
             </div>
-            <p data-testid="bifold-prototype-note">
-              Bifold prototype · A1 mini PETG guides, CFG hinges, 88° parking.
-              Rear opening 750 mm by default. Metal carrier, corner plates and
-              two-fixing closed/parked stops modeled; vendor STEP hinges, rollers
-              and bushes fitted. Head sealing, catch installation and physical
-              load/wear validation remain pending. Not released for manufacture.
-            </p>
-            <details class="bifold-completion" data-testid="bifold-completion">
-              <summary>Bifold hardware · design status and fixings</summary>
-              <p>Four GHD9008B handles use catalogue dimensions, not vendor STEP.
-                Grip contours and recessed screw seats remain unconfirmed.
-                Six GBL3030.KIT catches are required but not yet fitted in the
-                model: adapter and strike installation remain unresolved.</p>
-              <ul>
-                <For each={result()?.model.bifold_completion?.catch_requirements}>
-                  {(r) => <li><a href={r.source} target="_blank" rel="noreferrer">{r.product_code}</a>
-                    {" · "}{r.quantity} × {r.id}: {r.unresolved}</li>}
-                </For>
-              </ul>
-              <p>Partial dead-load screening only; omitted hardware, impact,
-                hinge capacity and guide reactions are not validated.</p>
-              <ul>
-                <For each={result()?.model.doors.filter((d) => d.load_screening)}>
-                  {(d) => <li>{d.id}: included mass {d.load_screening!.included_mass_kg.toFixed(2)} kg;
-                    closed frame moment {d.load_screening!.closed_frame_moment_Nm.toFixed(2)} N·m;
-                    interleaf moment {d.load_screening!.closed_interleaf_moment_Nm.toFixed(2)} N·m.</li>}
-                </For>
-              </ul>
-              <details><summary>Proposed fixing schedule — engagement pending</summary>
-                <ul><For each={result()?.model.bifold_completion?.fastener_schedule}>
-                  {(r) => <li>{r.part_id}: {r.quantity} × {r.screw}; {r.nut}</li>}
-                </For></ul>
-              </details>
-            </details>
-            <p data-testid="rail-retention-note">
-              Rail retention: continuous 4 mm steel underside strips, 10 mm
-              axle slot and welded end bars. Metal sleeves and bridge washers
-              carry the bolt clamp load. Backup overtravel stops only;
-              welds, fasteners, impact and tilt retention remain unvalidated.
-            </p>
-            <p data-testid="bifold-head-note">
-              Exterior head hoods clear the moving leaves. Angled brush sections
-              bridge to the leaf tops; nominal coverage is not seal approval.
-              Brush deflection around the carrier, profile selection, bonded
-              holder attachment and corner returns remain unvalidated.
-              Meeting lips are clamped to one leaf and disengage during opening;
-              they do not stretch between both folds.
-            </p>
-            <Show when={result()?.model.parts.some((p) => p.glazing)}>
-              <details data-testid="bifold-glazing" open>
-                <summary>4 mm Lexan · slot glazing study</summary>
-                <p>
-                  FSP08 candidate: drawing-based section, not vendor STEP.
-                  PVC compatibility with Lexan is unconfirmed. Corner seals,
-                  minimum edge engagement and frame connectors need approval.
-                  Provisional cuts below — do not order yet.
-                </p>
-                <ul>
-                  <For each={result()?.model.parts.filter((p) => p.glazing)}>
-                    {(p) => (
-                      <li>
-                        <button onClick={() => setSelected(p.id)}>
-                          {p.id.replace("-infill", "")}: {p.size[0].toFixed(2)} ×{" "}
-                          {p.size[2].toFixed(2)} × 4 mm
-                        </button>
-                      </li>
-                    )}
-                  </For>
-                </ul>
-                <p>
-                  40 K thermal excursion allowance; at default dimensions,
-                  3 mm nominal slot engagement and 2 mm reserve per edge.
-                  Frame assembled around the panel; no Lexan drilling.
-                </p>
-              </details>
-            </Show>
             <For each={doors}>
               {([id, label]) => (
                 <label class="door-control">
@@ -565,22 +489,6 @@ export default function App() {
               Preview poses update after adjustment. See the report for verified
               motion coverage.
             </p>
-            <details class="containment-note">
-              <summary>Dust containment & airflow intent</summary>
-              <p class="muted">
-                Rubber seals bridge the assembly clearances when doors close.
-                Close the left front leaf first, then the right leaf with its
-                overlapping meeting strip. Open the right leaf fully first, then
-                the left. Seal compression and hardware fit remain installation
-                checks.
-              </p>
-              <p class="muted">
-                A baffled makeup-air inlet supplies the dust-shoe extraction
-                path. Vacuum selection and measured airflow must establish
-                whether extraction is adequate. Seal fit and dust containment
-                require installation checks.
-              </p>
-            </details>
           </aside>
           <section class="preview">
             <div class="preview-heading">
@@ -657,6 +565,7 @@ export default function App() {
                 ["checks", "Fit & confidence"],
                 ["parts", "Parts & materials"],
                 ["exports", "Supplier files"],
+                ["notes", "Design notes"],
               ]}
             >
               {([id, label]) => (
@@ -669,6 +578,120 @@ export default function App() {
               )}
             </For>
           </nav>
+          <Show when={tab() === "notes"}>
+            <section class="design-notes" aria-label="Design notes">
+              <h2>Design notes & outstanding issues</h2>
+              <p class="muted">Prototype details, proposed fixings and remaining validation work.</p>
+            <p data-testid="bifold-prototype-note">
+              Bifold prototype · A1 mini PETG guides, CFG hinges, 88° parking.
+              Rear opening 750 mm by default. Metal carrier, standard CJP3030L corner plates and
+              two-fixing closing tabs modeled; vendor STEP hinges, rollers
+              and bushes fitted. Head sealing, bottom gaps and physical
+              load/wear validation remain pending. Not released for manufacture.
+            </p>
+            <p data-testid="printed-park-stop-note">
+              Four ribbed PETG parked stops · A1 mini prototype. Metal M6
+              screws, washers and slot nuts; replaceable rubber contact pads.
+              Gentle 88° travel limit only, not a slam stop or parked latch.
+              Print strength, clamp creep and pad adhesion remain unvalidated.
+              The quotation ZIP includes the body STL and print notes under
+              printed-prototypes/BF-PARK-88.
+            </p>
+            <details class="bifold-completion" data-testid="bifold-completion">
+              <summary>Bifold hardware · design status and fixings</summary>
+              <p>Four GHD9008B handles use catalogue dimensions, not vendor STEP.
+                Grip contours and recessed screw seats remain unconfirmed.
+                Both bifolds omit bottom seals, backing and rigid strips, plus the complete
+                closed catches, strikes, adapters and dedicated fixings. Lower openings
+                are intentionally unsealed. One printed swing latch across each folding joint keeps the pair shut: lift the lever, hold it clear and fold. The viewer shows levers released whenever doors are open. A short break in the adhesive meeting wipe clears each latch. No hermetic seal is required.
+                Sixteen CJP3030L corner plates use the supplier drawing; end interleaf
+                hinges move 25 mm inward. Slot glazing cuts remain unchanged.</p>
+              <p data-testid="parked-catch-note">Parked magnets and their holders have been removed to simplify the doors. The 88° stops limit travel but do not hold doors open. Consider a simple retaining strap only if the doors drift in use.</p>
+              <ul>
+                <For each={result()?.model.bifold_completion?.catch_requirements}>
+                  {(r) => <li><a href={r.source} target="_blank" rel="noreferrer">{r.product_code}</a>
+                    {" · "}{r.quantity} × {r.id}: {r.unresolved}</li>}
+                </For>
+              </ul>
+              <p>Partial dead-load screening only; omitted hardware, impact,
+                hinge capacity and guide reactions are not validated.</p>
+              <ul>
+                <For each={result()?.model.doors.filter((d) => d.load_screening)}>
+                  {(d) => <li>{d.id}: included mass {d.load_screening!.included_mass_kg.toFixed(2)} kg;
+                    closed frame moment {d.load_screening!.closed_frame_moment_Nm.toFixed(2)} N·m;
+                    interleaf moment {d.load_screening!.closed_interleaf_moment_Nm.toFixed(2)} N·m.</li>}
+                </For>
+              </ul>
+              <details><summary>Proposed fixing schedule — engagement pending</summary>
+                <ul><For each={result()?.model.bifold_completion?.fastener_schedule}>
+                  {(r) => <li>{r.part_id}: {r.quantity} × {r.screw}; {r.nut}</li>}
+                </For></ul>
+              </details>
+            </details>
+            <p data-testid="rail-retention-note">
+              Rail retention: continuous 4 mm steel underside strips, 10 mm
+              axle slot and bolted stock-angle end barriers with flush screws. Metal sleeves and bridge washers
+              carry the bolt clamp load. Backup overtravel stops only;
+              Stock-cut steel carriers and 4 mm closing tabs need drilling and finishing.
+              Stock sections, fasteners, impact and tilt retention remain unvalidated.
+            </p>
+            <p data-testid="bifold-head-note">
+              Exterior head hoods clear the moving leaves. Angled brush sections
+              bridge to the leaf tops; nominal coverage is not seal approval.
+              Brush deflection around the carrier, profile selection, bonded
+              holder attachment and corner returns remain unvalidated.
+              Meeting wipes use cut-to-length self-adhesive Tesa 05422 candidates
+              on the secondary leaves: no custom clamps or seal screws. Handles
+              mount directly to the frames. The free lips disengage on opening;
+              actual section, adhesive fit and wear remain unconfirmed.
+              {" "}<a href="https://www.leroymerlin.pt/produtos/veda-porta-adesivo-1m-branco-tesa-universal-310485.html" target="_blank" rel="noreferrer">Retail seal candidate</a>
+            </p>
+            <Show when={result()?.model.parts.some((p) => p.glazing)}>
+              <details data-testid="bifold-glazing" open>
+                <summary>4 mm Lexan · slot glazing study</summary>
+                <p>
+                  FSP08 candidate: drawing-based section, not vendor STEP.
+                  PVC compatibility with Lexan is unconfirmed. Corner seals,
+                  minimum edge engagement and frame connectors need approval.
+                  Provisional cuts below — do not order yet.
+                </p>
+                <ul>
+                  <For each={result()?.model.parts.filter((p) => p.glazing)}>
+                    {(p) => (
+                      <li>
+                        <button onClick={() => setSelected(p.id)}>
+                          {p.id.replace("-infill", "")}: {p.size[0].toFixed(2)} ×{" "}
+                          {p.size[2].toFixed(2)} × 4 mm
+                        </button>
+                      </li>
+                    )}
+                  </For>
+                </ul>
+                <p>
+                  40 K thermal excursion allowance; at default dimensions,
+                  3 mm nominal slot engagement and 2 mm reserve per edge.
+                  Frame assembled around the panel; no Lexan drilling.
+                </p>
+              </details>
+            </Show>
+            <details class="containment-note">
+              <summary>Dust containment & airflow intent</summary>
+              <p class="muted">
+                Rubber seals bridge the assembly clearances when doors close.
+                Close the left front leaf first, then the right leaf with its
+                overlapping meeting strip. Open the right leaf fully first, then
+                the left. Seal compression and hardware fit remain installation
+                checks.
+              </p>
+              <p class="muted">
+                A baffled makeup-air inlet supplies the dust-shoe extraction
+                path. Vacuum selection and measured airflow must establish
+                whether extraction is adequate. Seal fit and dust containment
+                require installation checks.
+              </p>
+            </details>
+            </section>
+          </Show>
           <Show when={tab() === "checks"}>
             <div class="evidence-top">
               <div>

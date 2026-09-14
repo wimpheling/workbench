@@ -231,8 +231,9 @@ def test_closed_jamb_connector_and_carrier_clear_real_leaf_solids(did, bracket, 
     for a, b in pairs:
         assert shapes[a].intersect(shapes[b]).Volume() < 1e-5
     upright = parts[did + "-carrier-upright"]
-    assert len(upright["holes"]) == 2
-    assert all(h["axis"] == "y" and h["diameter_mm"] == 6.5 for h in upright["holes"])
+    assert len(upright["holes"]) == 3
+    roots = [h for h in upright["holes"] if h["axis"] == "y"]
+    assert len(roots) == 2 and all(h["diameter_mm"] == 6.5 for h in roots)
 
 
 @pytest.mark.parametrize("did", ["left-rear", "back-right"])

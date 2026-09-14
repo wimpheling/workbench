@@ -185,6 +185,9 @@ def test_pack_separates_supplier_parts_and_includes_evidence(specification):
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         assert set(archive.namelist()) == {
             "README.txt",
+            "standard-bifold-hardware.md",
+            "standard-metalwork.md",
+            "stock-metalwork.json",
             "model.json",
             "verification.json",
             "reiman-extrusions.csv",
@@ -198,6 +201,9 @@ def test_pack_separates_supplier_parts_and_includes_evidence(specification):
             "panel-outlines.dxf",
             "assembly.step",
         }
+        stock = json.loads(archive.read("stock-metalwork.json"))
+        assert stock["revision"] == specification[0]["revision"]
+        assert stock["parts"] == []  # This fixture has no stock metalwork.
         assert json.loads(archive.read("verification.json"))["order_ready"] is False
         completion = json.loads(archive.read("bifold-completion.json"))
         assert completion["revision"] == specification[0]["revision"]

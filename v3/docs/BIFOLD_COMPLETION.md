@@ -1,3 +1,18 @@
+> Current hardware revision (2026-09-14): [standard CJP3030L plates and two
+
+Latest intent — 2026-09-14: a **simple enclosure, not a hermetic seal**. Bottom gaps on both bifolds are intentional, not missing-seal failures. One original PETG swing lever and keeper across each folding joint now provides light manual retention; lift before opening. No magnets or bottom hardware return. See [swing-latch design](SWING_LATCHES.md) for mounting, prints, sourcing and remaining physical fit checks. This supersedes earlier absent-retention and mandatory-bottom-continuity statements below.
+
+
+Current change — 2026-09-14: user requested removal from **both bifolds** of the bottom perimeter seals/backing and complete closed catches. The unsupported bottom rigid strips are removed with their backing. No GN4470 magnets, strikes, PETG holders or dedicated M5/M6 fixings remain in the active inventory, schedules or print exports. Vendor assets and prior sourcing studies are retained as history only. Both lower openings are now unsealed and closed-door retention is absent. Bottom containment obligations remain active; uncovered area must report failure. Four 88° travel stops and stock metalwork remain. No parked catches are reinstated.
+
+
+Carrier/retainer/tab update: [stock-metal integration](STANDARD_METALWORK.md)
+replaces the machined carrier and welded retainer described in historical
+sections below. Current tabs use cut/drilled 50×4 stock.
+> closed GN4470 A1/L2 kits](STANDARD_BIFOLD_HARDWARE.md) supersede the custom
+> leaf plates and unfitted GBL3030.KIT discussion below. Four travel stops
+> remain; parked catches stay removed. Installation validation is incomplete.
+
 # Bifold completion — digital design, not fabrication release
 
 Work continues in `feat/printed-bifold-assembly`; v3 is the active application.
@@ -19,9 +34,12 @@ capacity need approval. Do not manufacture two separate pieces and bond them.
 The axle and two M6 mounting datums are unchanged.
 
 Each closing tab now has two vertically separated fixing holes, 30 mm pitch.
-Two fixed parked-stop brackets per opening contact the primary stile at 88°
+Two fixed ribbed PETG parked-stop prototypes per opening contact the primary stile at 88°
 through replaceable 2 mm pads. These are operating stops, distinct from the
-rail end bars that block roller overtravel. Impact capacity is unverified.
+rail end bars that block roller overtravel. They replace the custom metal
+brackets; metal M6 washers/fixings remain. Gentle travel only, not impact-rated
+or a substitute for a catch. [Print geometry and sourcing](PRINTED_PARK_STOPS.md)
+describe the four identical bodies, prototype STL and remaining validation.
 Bottom rigid brush backing ends at Z=2 mm, below the leaf bottom at Z=3 mm,
 so the moving lower gusset does not clip it; bristle deflection remains unknown.
 
@@ -32,13 +50,31 @@ still require the excluded coupon/physical work.
 
 ## Bought handle and catch candidates
 
-The meeting seal is now a 40 × 3 mm one-sided EPDM wipe-lip study, not a
-membrane stretched between leaves. Three 20 × 2 mm clamp-bar segments attach
-its root to each primary leaf. Segments avoid the two handle feet, which sit
-over the 3 mm lip root; the primary handles move outward accordingly. The lip
-contacts the secondary stile at closure and disengages when folded. Nominal
-contact, clamp/handle clearance and full-open separation are tested. Lip
-compound, preload, screw engagement, clamping flatness and wear remain pending.
+The meeting seal now uses a **retail Tesa 05422 self-adhesive wipe candidate**,
+cut with scissors: no custom clamp bars, drilling or seal screws. This removes
+six bars and sixteen M6 fixing sets across both doors. Each secondary leaf's
+meeting stile carries its strip; the free edge wipes the primary stile and
+disengages on opening. Both handles mount directly to their frames.
+
+Buy two 1 m × 38 mm packs and cut each to 688 mm at default height. The
+[manufacturer datasheet](https://www.tesa.com/pt-pt/files/download/10756818,2,tesamoll-universal-doortofloor-foam-copiw-pt-pt.pdf)
+specifies PP film / PU foam and synthetic-rubber adhesive, not EPDM. The
+[manufacturer catalogue](https://www.tesa.com/it-it/files/download/11112368,4,pdf-web-consumercatalogue-lowres.pdf)
+lists 1 m × 38 mm stock. [Leroy Merlin Portugal](https://www.leroymerlin.pt/produtos/veda-porta-adesivo-1m-branco-tesa-universal-310485.html)
+listed white packs at €3.49 on 2026-09-14 (€6.98 for two, excluding delivery;
+local stock still needs checking). Its material field conflicts with Tesa's
+datasheet; use manufacturer data and check the actual pack.
+
+This door-bottom product is a candidate for repurposing, **not approved for
+bifold service**. The model's 3 mm thickness and 25.5 mm root footprint are
+explicit study assumptions, not a vendor STEP/dimensioned section. The 38 mm
+strip projects 12.5 mm past the secondary edge: across the 5 mm seam with
+7.5 mm nominal wipe overlap. The adhesive must bond only to the secondary
+stile, bridge its slot on sound face lands, and leave a non-sticky free lip.
+Actual adhesive-band dimensions, peel durability, preload and end joints
+remain unconfirmed; do not order a custom replacement if the sample fails.
+Stock longer than 1 m or an unapproved splice is flagged for taller doors.
+This is separate from the slot-captured Lexan glazing gaskets.
 
 [Wolweiss catalogue](https://reiman.pt/pub/media/catalogue_pdfs/Wolweiss/Wolweiss.pdf),
 pages 130 and 147, is the dimensional source; no STEP was available to the user.
@@ -48,13 +84,19 @@ Four GHD9008B handles are drawing-based U-shaped solids: 90 mm fixing pitch,
 screw seating are not dimensioned sufficiently and remain assumed. The model
 must not be used to manufacture a copy or select final screw lengths.
 
-Six GBL3030.KIT catches remain explicit procurement/installation requirements:
-two closed catches and one parked catch per opening. The drawing establishes
+Four closed GBL3030.KIT catches remain explicit procurement/installation requirements:
+two per opening. The drawing establishes
 the body envelope (17 × 18.5 × 60 mm), Ø4.5 holes and 48 mm pitch, but does not
 prove adapter/strike placement on this folded assembly. They are intentionally
 not inserted as falsely fitted boxes in the physical BOM. The UI lists them;
 the quotation pack includes `bifold-completion.json` with quantities and gaps.
 This is unfinished installation work, not a validated latch solution.
+
+Parked catch requirements, magnets, holders and dedicated fixings are removed
+by user decision to simplify the doors. Keep the 88° operating stops, which
+do not hold the doors open. A simple retaining strap is a future option only
+if drift proves a problem. The [GN4470 study](PARKED_CATCHES.md) is historical,
+not active inventory or a current print/export requirement.
 
 ## Fasteners, spacers and load screening
 
@@ -93,7 +135,7 @@ weight nor an upper bound for hinge selection.
 - Review carrier root radii/alloy, gusset rigidity, header connections, guide
   reactions, keeper welds, sleeves and bridge-washer bending/preload.
 - Confirm the angled brush/root profile, bonded holder and corner returns;
-  approve the one-sided meeting lip, clamping and free-edge preload. Rigid
+  approve the retail meeting wipe's section, adhesion and free-edge preload. Rigid
   animation is not deformation evidence.
 
 ## Exterior head hood and angled brush study
@@ -123,6 +165,14 @@ Fabrication, coupon printing, assembly measurements, cycling, dust testing and
 commissioning are excluded from this software pass, not completed by it.
 
 ## Digital evidence at revision 12ad55cb055b475f
+
+Historical pre-simplification results below. The retail-wipe revision
+`e50ffddd2505df02` has 444 parts, 1,559 pass / 0 fail / 125 unknown, still
+incomplete and not released for order. Its focused 12-test bifold suite and
+live-browser motion acceptance pass; the updated CSV contains two retail
+wipe rows and the fixing schedule drops from 48 to 42 rows. The former clamp
+geometry and primary-handle offsets no longer apply. See `v3/TRACKING.md` for
+full regression status.
 
 The live evaluation contains 450 parts: 1,577 passing checks, zero failures,
 125 unknowns; status **incomplete**, not released for manufacture. The old

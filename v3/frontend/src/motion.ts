@@ -120,7 +120,7 @@ export function poseTransform(
 
 export function applyPoseToMesh(
   mesh: THREE.Mesh,
-  part: Pick<Part, "motion_leaf">,
+  part: Pick<Part, "motion_leaf" | "latch_pivot_world" | "latch_axis_world">,
   door: MotionDoor | undefined,
   fraction: number,
 ): void {
@@ -129,6 +129,13 @@ export function applyPoseToMesh(
       ? poseTransform(part, door, fraction)
       : new THREE.Matrix4(),
   );
+  if (fraction > 0 && part.latch_pivot_world && part.latch_axis_world) {
+    const p = new THREE.Vector3(...part.latch_pivot_world as [number, number, number]);
+    const axis = new THREE.Vector3(...part.latch_axis_world as [number, number, number]);
+    mesh.matrix.multiply(new THREE.Matrix4().makeTranslation(p.x, p.y, p.z)
+      .multiply(new THREE.Matrix4().makeRotationAxis(axis, -Math.PI / 2))
+      .multiply(new THREE.Matrix4().makeTranslation(-p.x, -p.y, -p.z)));
+  }
   mesh.matrixAutoUpdate = false;
   mesh.matrixWorldNeedsUpdate = true;
 }

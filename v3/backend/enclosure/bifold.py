@@ -108,7 +108,7 @@ def add_bifolds(part, leaf, doors, parameters):
                 mounting_rows_mm=[-15, 15],
                 roller="GN 753.1-22-B5-ZL-1",
                 keeper_washer="M6 DIN 9021",
-                retention="removable welded steel cassette; connection and impact validation pending",
+                retention="bolted stock-steel keepers and notched angle ends; connection and impact validation pending",
                 exit_slot_mm=10,
                 washer_overlap_per_side_mm=4,
                 end_bar_thickness_mm=4,
@@ -174,7 +174,11 @@ def add_bifolds(part, leaf, doors, parameters):
                     for xx in reliefs
                 ],
                 mounting="Six M4 bolts through continuous steel keepers, 23 mm sleeves and 2 mm steel bridge washers into two 3060 underside slot rows",
-                fastener_schedule=dict(quantity=6, screw="M4 x 35 provisional", nut="M4 slot-8"),
+                fastener_schedule=dict(
+                    quantity=4 if i in (0, count - 1) else 6,
+                    screw="M4 x 35 provisional; end positions scheduled on steel end angles",
+                    nut="M4 slot-8; exact section and engagement pending",
+                ),
             )
             for j, xx in enumerate(stations):
                 for side in (-1, 1):
@@ -209,38 +213,66 @@ def add_bifolds(part, leaf, doors, parameters):
                         product_code="printed-alignment-key",
                     )
 
-        # Custom welded retainer assembly; no supplier STEP or rated load claimed.
-        # Continuous strips bridge module seams. End bars sit in relieved print
-        # ends and are welded to BOTH strips; bolts clamp through steel sleeves.
+        from .stock_metalwork import ANGLE_SOURCE, SCREW_SOURCE, SECTION_SOURCE
+
+        # Stock steel strips and bolted notched angles: saw/drill/countersink only.
         for side in (-1, 1):
             holes = []
             for i in range(count):
                 station = i * (module_length + 0.2) + module_length / 2 - rail_length / 2
                 holes += [
-                    dict(center=[station + xx, side], diameter_mm=4.5)
+                    dict(center=[station + xx, 0], diameter_mm=4.5)
                     for xx in (12 - module_length / 2, 0, module_length / 2 - 12)
                 ]
             add(
                 f"keeper-strip-continuous-{side}",
-                [rail_length, 18, 4],
-                [(start + width) / 2 - 2.5, 23 + side * 14, H - 27],
+                [rail_length - 9, 20, 4],
+                [(start + width) / 2 - 2.5, 23 + side * 15, H - 27],
                 material="304 stainless steel",
-                product_code="Custom continuous rail retainer 18 x 4",
+                product_code="STOCK-FLAT-20x4-304",
+                supplier="Specified-grade stock supplier; cutting/grade confirmation pending",
+                source="https://moris.eu/en/product/2010295/stainless-flat-bar-hot-rolled-20x4-1.4301-1.4307-l-6-m",
+                geometry=dict(kind="stock-keeper"),
                 geometry_fidelity="nominal-solid",
                 holes=holes,
-                cut_length_mm=rail_length,
-                machining="Supplier cut/drill 18 x 4 strip; weld end bars to both strips; maintain 10 mm straight slot. Weld distortion, sleeve lengths, M4 bolt grade/engagement and clamp torque require approval.",
+                cut_length_mm=rail_length - 9,
+                machining="Cut 20 x 4 certified 304 stock to length; drill fifteen 4.5 mm holes on existing stations. Saw/file each bottom end to a 5 mm run x 4 mm rise bevel for angle-root clearance. Keep 10 mm axle slot. End face is 4.5 mm inside rail datum. Grade, tolerances, fastening and load approval pending.",
             )
-        for end, x in (("park", start + 2 - 2.5), ("closed", width - 2 - 2.5)):
-            add(
+        for end, x in (("park", start + 10 - 2.5), ("closed", width - 10 - 2.5)):
+            angle = add(
                 f"rail-end-stop-{end}",
-                [4, 46, 25],
-                [x, 23, H - 12.5],
-                material="304 stainless steel",
-                product_code="Custom welded rail end bar 46 x 25 x 4",
-                geometry_fidelity="nominal-solid",
-                machining="Weld lower edge to both continuous keeper strips; fits relieved PETG end. Backup overtravel barrier only, not an operating slam stop; weld/load and assembly approval pending.",
+                [20, 50, 30],
+                [x, 23, H - 18],
+                material="S275JR steel",
+                product_code="STOCK-ANGLE-30x20x4-END",
+                supplier="Masterferro stock candidate; cut/drill locally",
+                source=ANGLE_SOURCE,
+                geometry_fidelity="drawing-based-stock-section",
+                geometry=dict(kind="stock-end-angle"),
+                cut_length_mm=50,
+                section_source=SECTION_SOURCE,
+                machining="Cut 50 mm length of 30x20x4 S275JR angle. Saw 10 mm axle notch to heel; drill two 4.5 mm holes at 12 mm from outside end, on 30 mm pitch. Countersink underside 90 degrees to 8 mm diameter for flush DIN7991 heads. Model includes R4 root, conservative square toes. Verify supplied section, bevel seating, bolt preload and backup impact loads.",
+                fastener_schedule=dict(
+                    quantity=2,
+                    screw="M4 x 40 DIN7991, 8 mm head, flush countersink; modeled nominal",
+                    nut="M4 slot-8; exact nut/engagement pending",
+                ),
             )
+            if end == "closed":
+                angle["rotation_deg"] += 180
+            for side in (-1, 1):
+                add(
+                    f"retainer-end-screw-{end}-{side}",
+                    [8, 8, 40],
+                    [x + (2 if end == "park" else -2), 23 + side * 15, H - 13],
+                    material="A2 stainless steel",
+                    product_code="DIN7991-M4x40",
+                    supplier="TME / Kraftberg candidate",
+                    source=SCREW_SOURCE,
+                    geometry_fidelity="nominal-standard-fastener-no-vendor-step",
+                    geometry=dict(kind="stock-end-screw"),
+                    machining="Nominal 8 mm flush head and unthreaded M4 shaft. DIN7991 candidate dimensions; do not substitute a larger ISO head without updating countersink. Thread engagement/grade/locking pending.",
+                )
 
         # Intact supplier roller solid, with recessed bearing faces and real bore.
         add(
@@ -337,25 +369,41 @@ def add_bifolds(part, leaf, doors, parameters):
             geometry=dict(kind="annulus", outer_diameter_mm=8, inner_diameter_mm=4),
         )
         add(
-            "carrier-shelf",
-            [14, 28, 6],
-            [q[0], q[1] - 9, H - 39.1],
-            "b",
-            material="PETG",
-            holes=[dict(center=[0, 9], diameter_mm=4.5)],
-            geometry_fidelity="parametric-carrier-prototype",
-            mounting="Integral shelf on exterior slot-mounted plate; 4 mm extra steel spacer lowers shelf below rail bolt heads",
-        )
-        add(
             "carrier-upright",
-            [18, 8, 75],
-            [q[0], q[1] - 19, H - 79.6],
+            [18, 40, 80],
+            [q[0], q[1] - 1, H - 76.1],
             "b",
-            material="PETG",
-            geometry_fidelity="parametric-carrier-prototype",
-            holes=[dict(axis="y", center=[0, zz], diameter_mm=6.5) for zz in (4.6, -25.4)],
-            mounting="Two M6 slot nuts on exterior free-stile face; supplier must confirm screws, engagement and PETG clamp stress",
+            material="S275JR steel",
+            product_code="STOCK-ANGLE-80x40x6-CARRIER",
+            supplier="Masterferro stock candidate; cut/drill locally",
+            source=ANGLE_SOURCE,
+            section_source=SECTION_SOURCE,
+            geometry_fidelity="drawing-based-stock-section",
+            geometry=dict(kind="stock-carrier"),
+            cut_length_mm=18,
+            holes=[dict(axis="y", center=[0, zz], diameter_mm=6.5) for zz in (1.1, -28.9)]
+            + [dict(axis="z", center=[0, 1], diameter_mm=4.5)],
+            mounting="Inside vertical leg seats directly on exterior free-stile face; two M6 holes at H-75 and H-105. M4 axle shelf top H-36.1 retained.",
+            machining="Saw 18 mm slice from 80x40x6 S275JR angle; drill two 6.5 mm root holes and one 4.5 mm axle hole, deburr and protect finish. R7 root modeled, square toes conservative. No milling or welding. Confirm section, washer seats and connection capacity.",
+            mass_kg=5.410 * 0.018,
+            fastener_schedule=dict(
+                quantity=2,
+                screw="M6 x 14 socket head + 1.6 mm metal washer; nominal stack modeled",
+                nut="BPN08M6 candidate; exact seating/engagement pending",
+            ),
         )
+        for i, zz in enumerate((H - 75, H - 105)):
+            add(
+                f"carrier-root-screw-{i}",
+                [12, 20, 12],
+                [q[0], q[1] - 18.6, zz],
+                "b",
+                material="steel",
+                product_code="M6x14-CARRIER-ROOT-WASHER",
+                geometry_fidelity="nominal-fastener-assembly-no-vendor-step",
+                geometry=dict(kind="stock-carrier-screw"),
+                machining="M6x14 cap screw with 1.6 mm washer; nominal unthreaded geometry. Slot nut is schedule-only; tightening torque, thread engagement and actual tool access pending.",
+            )
         # Vendor leaves and pin articulate about the source STEP's real Z axis.
         from .profiles import hinge_component
 
@@ -368,7 +416,10 @@ def add_bifolds(part, leaf, doors, parameters):
                         else ("a" if kind == "frame" or side != 1 else "b")
                     )
                     _, centre, size = hinge_component(component, kind == "frame")
-                    local = _add(centre, [0, 0, z])
+                    station_z = (
+                        z + (25 if i == 0 else -25 if i == 2 else 0) if kind == "interleaf" else z
+                    )
+                    local = _add(centre, [0, 0, station_z])
                     if kind == "interleaf" and side != 1:
                         local = _add(local, anchor)
                     add(

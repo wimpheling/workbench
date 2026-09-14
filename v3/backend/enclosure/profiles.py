@@ -7,6 +7,8 @@ from pathlib import Path
 ASSET = Path(__file__).parent / "assets" / "AST03003004.step"
 ASSET_SHA256 = hashlib.sha256(
     ASSET.read_bytes()
+    + (ASSET.parent / "CJP.pdf").read_bytes()
+    + (ASSET.parent / "GN_4470-50-A1-L2-SR.step").read_bytes()
     + (ASSET.parent / "CBR3030.step").read_bytes()
     + (ASSET.parent / "AST03006006.step").read_bytes()
     + (ASSET.parent / "CIB08T.step").read_bytes()
@@ -14,6 +16,7 @@ ASSET_SHA256 = hashlib.sha256(
     + (ASSET.parent / "GN_753.1-22-B5-ZL-1.stp").read_bytes()
     + (ASSET.parent / "GN_753.2-4-5-3-AE-NI.stp").read_bytes()
     + (ASSET.parent / "FSP.pdf").read_bytes()
+    + (ASSET.parent / "GN_4470-50-C2-L3-SR.step").read_bytes()
 ).hexdigest()
 
 

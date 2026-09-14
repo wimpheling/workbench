@@ -63,6 +63,8 @@ def test_defaults_and_real_geometry(client, evaluation):
     )
     assert evaluation["report"]["status"] == "incomplete"
     assert evaluation["report"]["summary"]["fail"] == 0
+    for did in ("left-rear", "back-right"):
+        assert checks[f"containment.intentional-gap.{did}-perimeter-bottom"]["status"] == "unknown"
 
 
 @pytest.mark.parametrize(

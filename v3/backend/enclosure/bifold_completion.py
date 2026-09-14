@@ -52,41 +52,19 @@ def add_handle_studies(model, door, by_id):
 
 def add_design_schedules(model):
     """Machine-readable unresolved procurement, without invented installed CAD."""
+    # Both bottom catch installations were removed by user instruction.
+    from .swing_latch import add_latches
+
+    add_latches(model)
     schedules = []
-    for d in model["doors"]:
-        if d["type"] != "bifold":
-            continue
-        schedules.extend(
-            dict(
-                id=f"{d['id']}-{state}-catch-requirement",
-                assembly=d["id"],
-                product_code="GBL3030.KIT",
-                quantity=count,
-                location=location,
-                source=CATALOGUE + "#page=147",
-                status="installation-unresolved-no-vendor-step",
-                known_dimensions_mm=dict(
-                    body_width=17,
-                    body_depth=18.5,
-                    body_height=60,
-                    body_hole_pitch=48,
-                    body_bore=4.5,
-                ),
-                unresolved="Kit adapter/strike installation, adjustment, tool access and release force. Catalogue dimensions alone do not prove engagement in this assembly.",
-            )
-            for state, count, location in (
-                (
-                    "closed",
-                    2,
-                    "Secondary free stile; upper and lower stations clear of carrier, handle and gussets",
-                ),
-                (
-                    "parked",
-                    1,
-                    "Stationary prepared bracket engaging the folded door; independent of operating stop",
-                ),
-            )
+    model["assumptions"].append(
+        dict(
+            id="bifold-bottom-removal",
+            confirmed=False,
+            description="Both bifolds omit bottom perimeter strips and complete closed catches by user choice. Lower openings are unsealed; light retention uses a manual printed swing latch at each folding joint. Intentional lower gaps are accepted for a simple enclosure; fitted barriers remain checked.",
+            references=[d["id"] for d in model["doors"] if d["type"] == "bifold"],
         )
+    )
     model["bifold_completion"] = dict(
         catch_requirements=schedules,
         fastener_schedule=[
@@ -97,7 +75,7 @@ def add_design_schedules(model):
         status="digital-design-incomplete-not-for-manufacture",
     )
     model["ordering"]["unresolved"].append(
-        "GBL3030.KIT: four closed and two parked catches required but installation unresolved; not included as fitted hardware in parts CSV. See model.bifold_completion.catch_requirements. No STEP available from retailer."
+        "Both bifold bottom seals/backing/stops and complete closed catches omitted by user choice. No magnetic catch procurement or magnet holder prints required. Lower openings are unsealed and manual printed swing latches provide light retention; parked retention remains omitted."
     )
 
 
@@ -116,11 +94,10 @@ def add_load_screening(model):
                 mass = section(p["product_code"]).Area() * p["cut_length_mm"] * 2700e-9
             elif p["material"] == "polycarbonate":
                 mass = math.prod(p["size"]) * 1200e-9
-            elif p.get("product_code") == "BF-CORNER-65":
-                mass = ((65**2 - 35**2) * 4 - 3 * math.pi * 3.25**2 * 4) * 8000e-9
-            elif p.get("product_code") == "BF-CARRIER-METAL":
-                # Gross envelope, no credit for holes; radii remain unspecified.
-                mass = math.prod(p["size"]) * 2700e-9
+            elif p.get("product_code") == "CJP3030L":
+                mass = ((88**2 - 62**2) * 2 - 5 * math.pi * 3.25**2 * 2) * 7850e-9
+            elif p.get("product_code") == "STOCK-ANGLE-80x40x6-CARRIER":
+                mass = p["mass_kg"]
             elif p.get("product_code") == "GHD9008B":
                 mass = p["mass_kg"]
             if mass is not None:
@@ -143,7 +120,7 @@ def add_load_screening(model):
             closed_frame_moment_Nm=sum(r["frame_moment_Nm"] for r in rows),
             closed_interleaf_moment_Nm=sum(r["interleaf_moment_Nm"] for r in rows),
             status="partial-dead-load-screening-not-a-rating",
-            assumptions="3030 vendor section area, aluminium 2700 kg/m3, PC 1200, stainless 8000; 9.81 m/s2. Carrier gross envelope. Excludes hinges, fasteners, catches, seals, impact, sag and guide reactions. Not a complete door mass or design load.",
+            assumptions="3030 vendor section area, aluminium 2700 kg/m3, PC 1200, plated steel 7850; 9.81 m/s2. Carrier catalogue unperforated stock mass. Excludes hinges, fasteners, catches, seals, impact, sag and guide reactions. Not a complete door mass or design load.",
         )
 
 
@@ -154,16 +131,32 @@ def park_bracket():
     def box(size, pos):
         return cq.Workplane("XY").box(*size).val().translate(pos)
 
-    # Rigid three-dimensional bracket mounted on the jamb's external slot.
-    shape = box((30, 4, 60), (-17.5, 6, 0))
-    shape = shape.fuse(box((4, 27, 20), (-4.5, -5.5, 0)))
-    shape = shape.fuse(box((12, 4, 20), (-0.5, -17, 0)))
-    stop = box((18, 4, 20), (17.5, 4, 0)).rotate((0, 0, 0), (0, 0, 1), -88)
+    # One-piece PETG prototype. Keep jamb/contact datums; thicken away from
+    # the moving leaf. Two transverse ribs carry the arm back to the root.
+    shape = box((30, 8, 60), (-17.5, 4, 0))
+    shape = shape.fuse(box((8, 27, 20), (-6.5, -5.5, 0)))
+    shape = shape.fuse(box((12, 8, 20), (-0.5, -17, 0)))
+    stop = box((18, 8, 20), (17.5, 2, 0)).rotate((0, 0, 0), (0, 0, 1), -88)
     shape = shape.fuse(stop)
-    for z in (-15, 15):
-        shape = shape.cut(
-            cq.Solid.makeCylinder(3.25, 6, cq.Vector(-17.5, 3, z), cq.Vector(0, 1, 0))
+    for z in (-10, 4):
+        rib = (
+            cq.Workplane("XY")
+            .polyline([(-26, 1), (-2.5, 1), (0, -24), (-8, -24)])
+            .close()
+            .extrude(6)
+            .val()
+            .translate((0, 0, z))
         )
+        shape = shape.fuse(rib)
+    for z in (-15, 15):
+        # Open washer/socket access from outside, without thinning the root.
+        shape = shape.cut(
+            cq.Solid.makeCylinder(7, 40, cq.Vector(-17.5, -40, z), cq.Vector(0, 1, 0))
+        )
+        shape = shape.cut(
+            cq.Solid.makeCylinder(3.25, 10, cq.Vector(-17.5, -1, z), cq.Vector(0, 1, 0))
+        )
+    shape = shape.clean()
     bb = shape.BoundingBox()
     center = [(bb.xmin + bb.xmax) / 2, (bb.ymin + bb.ymax) / 2, 0]
     return shape.translate(tuple(-v for v in center)), center, [bb.xlen, bb.ylen, bb.zlen]
@@ -188,30 +181,31 @@ def complete_bifolds(model):
             for sx, stile in ((1, a), (-1, b)):
                 for sz, rail in ((1, low), (-1, high)):
                     local = list(stile["motion_local"])
-                    local[0] += sx * 17.5
-                    local[1] += 17
-                    local[2] = rail["motion_local"][2] + sz * 17.5
+                    local[0] += sx * 31
+                    local[1] += 16
+                    local[2] = rail["motion_local"][2] + sz * 31
                     offset = [local[i] - stile["motion_local"][i] for i in range(3)]
                     pid = prefix + f"-corner-plate-{sx}-{sz}"
                     holes = [
                         dict(axis="y", center=[sx * x, sz * z], diameter_mm=6.5)
-                        for x, z in ((-17.5, -17.5), (-17.5, 12.5), (12.5, -17.5))
+                        for x, z in ((-31, -31), (-31, -1), (-31, 29), (-1, -31), (29, -31))
                     ]
                     parts.append(
                         dict(
                             id=pid,
-                            name="Leaf corner gusset 65 x 65 x 4",
+                            name="CJP3030L standard leaf joining plate · drawing study",
                             category="hardware",
-                            material="304 stainless steel",
-                            supplier="Prepared part; supplier pending",
-                            product_code="BF-CORNER-65",
-                            size=[65, 4, 65],
+                            material="zinc-plated steel",
+                            supplier="Reiman Portugal / Wolweiss",
+                            product_code="CJP3030L",
+                            source="https://www.reiman.pt/pub/media/technical_data/wolweiss/datasheets/cjp.pdf",
+                            size=[88, 2, 88],
                             position=_add(stile["position"], _rotate(offset, d["base_deg"])),
                             rotation_deg=d["base_deg"],
                             assembly=did,
                             quantity=1,
                             physical=True,
-                            geometry_fidelity="nominal-solid",
+                            geometry_fidelity="drawing-based-unconfirmed-solid",
                             motion_leaf=role,
                             motion_local=local,
                             holes=holes,
@@ -219,17 +213,17 @@ def complete_bifolds(model):
                                 dict(
                                     kind="rectangle",
                                     normal_axis=1,
-                                    width_mm=35,
-                                    height_mm=35,
-                                    center_local_mm=[sx * 15, 0, sz * 15],
+                                    width_mm=62,
+                                    height_mm=62,
+                                    center_local_mm=[sx * 13, 0, sz * 13],
                                 )
                             ],
                             fastener_schedule=dict(
-                                quantity=3,
-                                screw="M6 x 12 socket head candidate",
-                                nut="slot-8 M6; thread position/engagement pending",
+                                quantity=5,
+                                screw="M6 x 10 ISO 7380 button head (10.5 dia x 3.3 high) + 1.6 mm metal washer candidate; 2 mm plate, nut engagement pending",
+                                nut="BPN08M6 pre-assembly; exact stepped section/engagement pending",
                             ),
-                            machining="L plate 65 square, 30 mm legs, 4 thick, three 6.5 bores; inward face, glazing slot unobstructed. Capacity and fastener engagement pending.",
+                            machining="Bought CJP3030L: 88 mm arms, 26 mm wide, 2 mm thick, five 6.5 mm holes on 30 mm pitch. Drawing study uses sharp corners; actual radii and STEP pending. Inward face leaves glazing slots free. M6 slot nuts, thread engagement, torque and joint capacity remain unvalidated.",
                         )
                     )
                     d["part_ids"].append(pid)
@@ -260,32 +254,19 @@ def complete_bifolds(model):
                             connector_ids=[pid],
                         )
                     )
-        for suffix in ("carrier-upright", "carrier-shelf"):
-            carrier = by_id[did + "-" + suffix]
-            carrier.update(
-                material="6061-T6 aluminium",
-                product_code="BF-CARRIER-METAL",
-                geometry_fidelity="nominal-solid",
-                purchase_unit="One-piece machined upright and shelf; not separate bonded pieces",
-                quantity=1 if suffix == "carrier-upright" else 0,
-                machining="Machine upright and shelf as one metal component with internal radii; final radii, alloy certificate and capacity pending. Existing M6 mounting and M4 axle datums retained.",
-            )
-            carrier["mounting"] = (
-                "Metal carrier; two M6 slot fixings on 30 mm centres. Confirm clamp torque, screw lengths and tool clearance."
-            )
-            if suffix == "carrier-upright":
-                carrier["fastener_schedule"] = dict(
-                    quantity=2,
-                    screw="M6 x 16 candidate; 8 mm carrier plus nut setback/engagement",
-                    nut="M6 slot-8; exact thread depth pending",
-                )
         # Two vertically separated fixings resist rotation of each closing tab.
         for i in range(2):
             stop = by_id[f"{did}-closed-stop-{i}"]
+            stop.update(
+                product_code="STOCK-FLAT-50x4-CLOSING-TAB",
+                supplier="COMMENT FER stock candidate; cut/drill locally",
+                source="https://www.leroymerlin.pt/produtos/barra-chata-aco-50mm-esp-4-mm-comprimento-0-5-metro-89948500.html",
+                cut_length_mm=60,
+            )
             stop["size"][2] = 50
             stop["holes"] = [dict(axis="y", center=[-15, zz], diameter_mm=6.5) for zz in (-15, 15)]
             stop["machining"] = (
-                "60 x 50 x 4 closing tab; two 6.5 holes on vertical 30 mm pitch, M6 slot fixings. Contact pad and impact rating pending."
+                "Saw 60 mm length from 50 x 4 steel flat stock; two 6.5 holes on vertical 30 mm pitch, M6 slot fixings. Contact pad and impact rating pending."
             )
             stop["fastener_schedule"] = dict(
                 quantity=2, screw="M6 x 12 candidate", nut="M6 slot-8; engagement pending"
@@ -297,10 +278,10 @@ def complete_bifolds(model):
             parts.append(
                 dict(
                     id=pid,
-                    name="88 degree parked operating stop bracket",
+                    name="88 degree parked stop · ribbed PETG prototype",
                     category="hardware",
-                    material="steel",
-                    supplier="Prepared part; supplier pending",
+                    material="PETG",
+                    supplier="In-house print · Bambu A1 mini",
                     product_code="BF-PARK-88",
                     size=size,
                     position=_add(d["pivot"], _rotate(local, d["base_deg"])),
@@ -308,22 +289,61 @@ def complete_bifolds(model):
                     assembly=did,
                     physical=True,
                     quantity=1,
-                    geometry_fidelity="nominal-solid",
+                    geometry_fidelity="custom-print-prototype-solid",
                     geometry=dict(kind="park-stop-bracket"),
-                    fastener_schedule=dict(quantity=2, screw="M6 x 12 candidate", nut="M6 slot-8"),
-                    machining="Joined metal bracket with two jamb fixings on 30 mm centres. Stop face at 88 degrees; impact, radii and pad specification require approval.",
+                    fastener_schedule=dict(
+                        quantity=2,
+                        screw="M6 x 16 candidate; 8 mm PETG + metal washer, engagement pending",
+                        nut="M6 slot-8; no printed threads",
+                    ),
+                    machining="One-piece PETG print with 8 mm root/arm and two 6 mm ribs; two 6.5 mm through-holes at 30 mm pitch. Use metal M6 washers and slot nuts. Gentle travel stop only: PETG clamp creep, layer strength, impact and bumper adhesion unvalidated; not a slam stop or parked latch.",
+                    print_spec=dict(
+                        printer="Bambu A1 mini",
+                        build_volume_mm=[180, 180, 180],
+                        material="PETG",
+                        orientation="Assembly Z vertical; lower end of 60 mm mounting plate on bed. XY layers follow arm/rib load path; support arm undersides, keep supports out of holes.",
+                        layer_height_mm=0.2,
+                        wall_loops=6,
+                        infill_percent=50,
+                        settings_status="Starting coupon settings, not strength validation; inspect slicer/supports and hole fit",
+                        quantity_total=4,
+                        use="Gentle end-of-travel only; no parked retention fitted, so closing drift is possible",
+                    ),
                 )
             )
             d["part_ids"].append(pid)
+            for j, dz in enumerate((-15, 15)):
+                washer_id = pid + f"-washer-{j}"
+                washer_local = [-17.5, -0.8, z + dz]
+                parts.append(
+                    dict(
+                        id=washer_id,
+                        name="M6 metal washer · nominal 12 x 6.4 x 1.6 mm",
+                        category="hardware",
+                        material="steel",
+                        supplier="Standard fastener retailer; exact item pending",
+                        product_code="M6-WASHER-12",
+                        quantity=1,
+                        physical=True,
+                        size=[12, 1.6, 12],
+                        position=_add(d["pivot"], _rotate(washer_local, d["base_deg"])),
+                        rotation_deg=d["base_deg"],
+                        assembly=did,
+                        geometry_fidelity="nominal-standard-fastener-no-vendor-step",
+                        geometry=dict(kind="park-stop-washer"),
+                        machining="Buy metal M6 flat washer; do not print. Nominal dimensions, exact item/grade and bearing/creep validation pending.",
+                    )
+                )
+                d["part_ids"].append(washer_id)
             pad_local = _rotate([17.5, 7, z], -88)
             pad_id = pid + "-pad"
             parts.append(
                 dict(
                     id=pad_id,
-                    name="Parked stop contact pad",
+                    name="Parked stop pad · cut from retail 2 mm EPDM sponge candidate",
                     category="hardware",
-                    material="EPDM rubber",
-                    supplier="To be selected",
+                    material="EPDM rubber sponge",
+                    supplier="RS PRO 205-418 stock-sheet candidate",
                     product_code="BF-PARK-PAD",
                     size=[18, 2, 20],
                     position=_add(d["pivot"], _rotate(pad_local, d["base_deg"])),
@@ -333,13 +353,15 @@ def complete_bifolds(model):
                     quantity=1,
                     deformable=True,
                     geometry_fidelity="unconfirmed-flexible-seal",
-                    machining="2 mm replaceable contact pad; adhesive/mechanical retention, hardness and compression pending",
+                    source="https://docs.rs-online.com/88bf/A700000012600528.pdf",
+                    purchase_url="https://pt.rs-online.com/web/p/laminas-de-caucho/0205418",
+                    machining="Scissor-cut 18 x 20 mm pad from bought 2 mm self-adhesive EPDM sponge (RS PRO 205-418 candidate); four pads share one sheet/offcut, not four sheets. No custom machining. Actual adhesive stack, compression, PETG adhesion and wear unvalidated; poor oil resistance; not impact-rated.",
                 )
             )
             d["part_ids"].append(pad_id)
         d["design_completion"] = dict(
             frame_joint="Four inward-face L plates per leaf; glazing slots stay clear",
-            carrier="One-piece metal carrier; unchanged axle/mounting datums",
+            carrier="Cut/drilled 80x40x6 stock steel angle; unchanged axle/mounting datums",
             closing_tabs="Two M6 fixing stations per tab, 30 mm apart",
             retailer_questions_pending=True,
         )
@@ -347,12 +369,27 @@ def complete_bifolds(model):
         dict(
             id="bifold-corner-and-carrier-design",
             confirmed=False,
-            description="Leaf corner plates and metal carriers are dimensioned design proposals, not capacity approval. Confirm M6 slot hardware, engagement, carrier root radii, hinge loading, racking and adjustment. Handle/catch CAD and gasket compound evidence pending.",
+            description="Standard CJP3030L plates are drawing studies; metal carriers are dimensioned design proposals, not capacity approval. Confirm M6 slot hardware, engagement, carrier root radii, hinge loading, racking and adjustment. Handle CAD, slot-nut seating and gasket compound evidence pending.",
             references=["left-rear-a-corner-plate-1-1", "back-right-carrier-upright"],
         )
     )
     model["ordering"]["unresolved"].append(
         "Bifold L-plate connections, metal carrier details and full M6 fixing schedule require supplier review; fabrication/commissioning excluded from current design pass"
+    )
+    model["assumptions"].append(
+        dict(
+            id="printed-park-stop-prototype",
+            confirmed=False,
+            description="Four ribbed PETG parked stops are unvalidated gentle-travel prototypes, not rated impact restraints. Verify printed strength, M6 washer bearing/clamp creep, fixing engagement, pad adhesion and cycle life. No parked retention is fitted; the stops do not prevent closing drift.",
+            references=[
+                f"{did}-park-operating-stop-{i}"
+                for did in ("left-rear", "back-right")
+                for i in range(2)
+            ],
+        )
+    )
+    model["ordering"]["unresolved"].append(
+        "PETG parked stops: print/support and hole-fit trial, washer bearing/clamp creep, rubber pad attachment and gentle-contact load/cycle validation pending; no slam rating"
     )
     add_design_schedules(model)
     add_load_screening(model)

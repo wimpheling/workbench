@@ -570,23 +570,23 @@ def build_model(parameters=None):
         dict(
             id="metal-rail-retention",
             confirmed=False,
-            description="Continuous 18 x 4 steel keepers, welded 4 mm end bars and metal sleeve/bridge-washer clamp path are geometric proposals, not rated retention. Confirm welds, fastener grade/engagement/locking, slot nut and washer strength, tolerances, impact loads and tilt/side escape tests. Rail end bars are backup overtravel stops; operating catches remain pending.",
+            description="Continuous 20 x 4 stock steel keepers and bolted notched-angle end barriers and metal sleeve/bridge-washer clamp path are geometric proposals, not rated retention. Confirm stock roots/bevels/countersinks, fastener grade/engagement/locking, slot nut and washer strength, tolerances, impact loads and tilt/side escape tests. Rail end bars are backup overtravel stops; light closed retention uses manual printed swing latches and operating-stop capacity remains unvalidated.",
             references=["left-rear-rail-end-stop-park", "back-right-rail-end-stop-park"],
         )
     )
     model["ordering"]["unresolved"].append(
-        "Custom welded steel rail retainers, bridge washers and compression sleeves: supplier fabrication and clamp/impact/retention validation pending"
+        "Cut/drilled bolted stock-steel retainers, bridge washers and compression sleeves: stock preparation and clamp/impact/retention validation pending"
     )
     model["assumptions"].append(
         dict(
             id="printed-guide-prototype",
-            description="PETG A1 mini guide prototype with custom metal carrier and keepers: fasteners, operating-stop capacity, catch installation, CFG mounting, polycarbonate retention, seal clearance, creep and wear remain unvalidated. Doors remain hinge-supported; geometric retention does not establish a rated assembly.",
+            description="PETG A1 mini guide prototype with stock-metal carrier and keepers: fasteners, operating-stop capacity, catch installation, CFG mounting, polycarbonate retention, seal clearance, creep and wear remain unvalidated. Doors remain hinge-supported; geometric retention does not establish a rated assembly.",
             confirmed=False,
             references=["left-rear-track", "back-right-track"],
         )
     )
     model["ordering"]["unresolved"].append(
-        "Custom metal carrier, provisional axle/spacers/fasteners, 3060 header mounting, stop capacity, catch installation, seals and physical load/wear tests"
+        "Cut/drilled stock-steel carrier, provisional axle/spacers/fasteners, 3060 header mounting, stop capacity, catch installation, seals and physical load/wear tests"
     )
     model["engineering_source_sha256"] = hashlib.sha256(
         b"".join(
@@ -599,6 +599,10 @@ def build_model(parameters=None):
                 "bifold.py",
                 "glazing.py",
                 "bifold_completion.py",
+                "magnetic_catches.py",
+                "closed_catches.py",
+                "stock_metalwork.py",
+                "swing_latch.py",
                 "verification.py",
             )
         )
@@ -657,6 +661,8 @@ def pose_model(model, pose=None):
                 angle = base
             item["position"] = _add(origin, _rotate(item["motion_local"], angle))
             item["rotation_deg"] = angle
+            if item.get("latch_pivot_offset"):
+                item["latch_release_deg"] = 90 if pose.get(d["id"], 0) > 0 else 0
         d["pose_fraction"] = pose.get(d["id"], 0)
         d["kinematics"] = dict(elbow=elbow, slider=slider, theta_deg=theta)
     result["pose"] = dict(pose)
@@ -686,20 +692,81 @@ def build_shapes(model, pose=None):
             from .profiles import inner_bracket
 
             shape = inner_bracket()
+        elif p.get("cad_asset") == "GN_4470-50-A1-L2-SR.step":
+            from .closed_catches import vendor
+
+            shape = vendor(p["geometry"]["role"])[0]
+        elif p.get("cad_asset") == "GN_4470-50-C2-L3-SR.step":
+            from .magnetic_catches import installed_component
+
+            shape = installed_component(p["geometry"]["role"])[0]
         elif p.get("cad_asset"):
             from .profiles import bracket
 
             shape = bracket()
         else:
             shape = cq.Workplane("XY").box(sx, sy, sz).val()
+        if p.get("geometry", {}).get("kind") == "swing-latch":
+            from .swing_latch import component, fixing
+
+            role = p["geometry"]["role"]
+            shape = (
+                component(role)
+                if role in ("lever", "keeper")
+                else fixing("pivot" if role == "pivot" else "root")
+            )[0]
+            if role == "lever" and p.get("latch_release_deg"):
+                pivot = p["latch_pivot_offset"]
+                shape = shape.rotate(
+                    tuple(pivot), tuple(_add(pivot, [0, 1, 0])), -p["latch_release_deg"]
+                )
+        if p.get("geometry", {}).get("kind", "").startswith("stock-"):
+            from . import stock_metalwork
+
+            kind = p["geometry"]["kind"]
+            if kind == "stock-carrier":
+                shape = stock_metalwork.carrier()
+            elif kind == "stock-end-angle":
+                shape = stock_metalwork.end_angle()
+            elif kind == "stock-keeper":
+                shape = stock_metalwork.keeper(p["size"])
+            elif kind == "stock-end-screw":
+                shape = stock_metalwork.end_screw()
+            elif kind == "stock-carrier-screw":
+                shape = stock_metalwork.carrier_screw()
         if p.get("geometry", {}).get("kind") == "fsp08-study":
             from .glazing import gasket_shape
 
             shape = gasket_shape(p["size"], p["geometry"]["side"])
+        if p.get("geometry", {}).get("kind") == "closed-catch-root-fixing":
+            from .closed_catches import root_fixing
+
+            shape = root_fixing(p["geometry"]["role"], p["geometry"]["index"])[0]
+        if p.get("geometry", {}).get("kind") == "closed-catch-fixing":
+            from .closed_catches import fixing
+
+            shape = fixing(p["geometry"]["role"], p["geometry"]["index"])[0]
+        if p.get("geometry", {}).get("kind") == "closed-catch-holder":
+            from .closed_catches import holder
+
+            shape = holder(p["geometry"]["role"])[0]
         if p.get("geometry", {}).get("kind") == "park-stop-bracket":
             from .bifold_completion import park_bracket
 
             shape = park_bracket()[0]
+        if p.get("geometry", {}).get("kind") == "parked-catch-holder":
+            from .magnetic_catches import holder_component
+
+            shape = holder_component(p["geometry"]["role"])[0]
+        if p.get("geometry", {}).get("kind") == "parked-catch-fixing":
+            from .magnetic_catches import fixing_component
+
+            shape = fixing_component(p["geometry"]["role"], p["geometry"]["index"])[0]
+        if p.get("geometry", {}).get("kind") == "park-stop-washer":
+            shape = cq.Solid.makeCylinder(6, 1.6, cq.Vector(0, -0.8, 0), cq.Vector(0, 1, 0))
+            shape = shape.cut(
+                cq.Solid.makeCylinder(3.2, 3.6, cq.Vector(0, -1.8, 0), cq.Vector(0, 1, 0))
+            )
         if p.get("geometry", {}).get("kind") == "ghd9008b-study":
             from .bifold_completion import handle_shape
 

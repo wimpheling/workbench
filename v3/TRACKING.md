@@ -1,5 +1,174 @@
 # V3 delivery tracking
 
+## Simple swing latches — 2026-09-14 / acceptance 2026-09-15
+
+- [x] User accepts intentional bottom gaps; remove mandatory bottom-continuity requirement without hiding collisions or fitted-barrier checks.
+- [x] Model two manual PETG swing levers and keepers with six nominal M6 screw/washer stacks, scheduled slot nuts and oriented print exports. Viewer assumes manual release before folding.
+- [x] Finish native, frontend, browser and live-pack acceptance.
+
+Acceptance completed 2026-09-15: live `02edfb1d248ce451`, 466 parts, 1,625 pass / 0 fail / 112 unknown. Two original PETG swing latches; 20.2 mm raised-handle clearance. Intentional bottom gaps and 121 mm local wipe breaks, no magnetic or parked catches. Final quotation pack matches model/print revisions and notes; STEP re-imports valid with 470 solids. Browser acceptance passed on the final geometry (5.7 minutes); the later source-only wipe-procurement correction was checked at three heights and leaves default model data identical except the fingerprint. Full `npm run check`: 165 backend tests passed (19m01s) before the final 20 mm mounting adjustment; the 33 affected backend cases passed afterward via scoped `npm run check` (6m47s). An additional final 4 mm driver-envelope test passed. Both check runs passed Ruff, 45 frontend tests, TypeScript and build. `npm test` passed 11 engineering + 45 frontend tests; explicit build passed. Evidence: `v3/artifacts/swing-latch/acceptance.json`, `final-quotation.zip` and logs. Physical print fit, friction/loosening, slot-nut engagement and gentle hand-pull/cycling remain outside digital acceptance.
+
+
+- [ ] Physical fit, pivot friction/loosening, slot engagement and gentle hand-pull/cycling. See [design](docs/SWING_LATCHES.md).
+
+## Bottom assembly removal — 2026-09-14
+
+Current change — 2026-09-14: user requested removal from **both bifolds** of the bottom perimeter seals/backing and complete closed catches. The unsupported bottom rigid strips are removed with their backing. No GN4470 magnets, strikes, PETG holders or dedicated M5/M6 fixings remain in the active inventory, schedules or print exports. Vendor assets and prior sourcing studies are retained as history only. Both lower openings are now unsealed and closed-door retention is absent. Bottom containment obligations remain active; uncovered area must report failure. Four 88° travel stops and stock metalwork remain. No parked catches are reinstated.
+
+- [x] Remove both complete bottom strip and closed-catch assemblies; preserve coverage obligations and document absent retention.
+- [x] Removal validation superseded by the accepted swing-latch revision above; bottom gaps are now intentional by user choice.
+
+## Stock-metal integration — 2026-09-14
+
+- [x] Replace machined carriers with two single-solid 18 mm cuts of 80×40×6 S275JR angle; correct mounting-face seating, retain axle datums, model R7 roots and four nominal M6 root stacks.
+- [x] Replace welded retention with 20×4 stock keepers, beveled ends and four bolted/notched 30×20×4 angles with R4 roots. Eight flush M4×40 end screws restore 3.1 mm nominal vertical clearance. Keep 52 ordinary M4×35 rail fixings separately scheduled.
+- [x] Specify four closing tabs as 60 mm cuts from 50×4 steel flat stock with the existing two-hole mounting pattern. No structural PETG substitution.
+- [x] Eight native pose checks, six dimension-extreme cases, nominal tool routes, mounting contact and retainer capture pass. Additional R4.5 root check preserves all eight keeper/angle contacts.
+- [x] Production browser acceptance passes (2.3 minutes); half-open screenshot inspected. Live `7bd4c51b472f27b7`: 486 parts, 1,687 pass / 0 fail / 137 unknown. Two new unknowns are closed-end screw/brush overlaps; no earlier unknown suppressed.
+- [x] Live quotation ZIP includes sourced installation notes and 26 revision-matched stock-metalwork rows; actual STEP re-imports valid with 502 solids.
+- [x] Required checks complete: full backend run 158 pass / one obsolete ZIP-inventory assertion (17m18s); corrected export suite 9 pass and failed-case retry through `PYTEST_ADDOPTS=--lf npm run check` pass. Six additional dimension-extreme cases pass, covering all 165 current backend cases across these runs. Ruff, 44 frontend tests, TypeScript and production build pass; `npm test` also passes 11 engineering tests. Browser acceptance passes.
+- [ ] Actual stock/slot-nut sections, small-quantity supply, grade/fastener/tolerance/brush and structural/impact acceptance remain open. See [current metalwork evidence](docs/STANDARD_METALWORK.md).
+
+## Remaining metalwork investigation — 2026-09-14 (superseded by integration above)
+
+- [x] Source standard steel angle and flat-bar routes for carrier, closing tabs and bolted rail ends; retain genuine Motedis plate/bracket CAD in the standalone study.
+- [x] Native screen against `629b576e77187fd6`: eight poses, zero rigid clashes; flexible interactions remain. Straight-drop washer and end-barrier geometric witnesses pass; 11 engineering tests pass.
+- [ ] Resolve the nominal 0.1 mm end-head/carrier vertical margin, stock radii, fastener/tool/tolerance stack, brush holder and load checks before integrating. Active geometry/BOM remains the previous revision. See [study and sourcing](../engineering/bifold-assembly/standard-metalwork/README.md).
+
+## Standard bifold hardware — 2026-09-14
+
+- [x] Replace custom leaf plates with sixteen bought CJP3030L drawing studies; preserve glazing and frame hinge stations, move interleaf end hinges 25 mm inward.
+- [x] Integrate two genuine GN4470 A1/L2 closed kits on lower primary rails with four separate PETG adapters, nominal metal M5 fixings and M6 root screws. No parked retention.
+- [x] Add native full magnetic-face coverage checks and broken-strike regressions; source dated hardware evidence and export separate print bodies.
+- [x] Browser acceptance passes (5.0 minutes); half-open screenshot inspected. Live revision `629b576e77187fd6`: 476 parts, 1,657 pass / 0 fail / 135 unknown, incomplete.
+- [x] Live quotation ZIP has two catch kits, sixteen CJP plates, four retained travel stops, no parked catch hardware; assembly STEP re-imports valid with 492 solids.
+- [x] Both catch-holder STLs are watertight with quantity-two manifests matching the live revision: fixed 80 × 43 × 94 mm / 3,364 facets; moving 60 × 24 × 28.5 mm / 2,060 facets.
+- [x] Seventeen focused hardware cases plus the tool-access test pass, including six dimension-extreme cases. `npm test`, `npm run check` and `npm run build` pass: 149 backend, 44 frontend and 11 root engineering tests. Final schedule/document-pack changes additionally pass native 80-stack motion/access audits, export inspection and browser acceptance.
+- [ ] Nut STEP/engagement, final tolerances, actual force, racking, printed strength/creep and physical commissioning remain unvalidated. See [hardware evidence](docs/STANDARD_BIFOLD_HARDWARE.md).
+
+## Simpler parking and reorganized notes — 2026-09-14
+
+- [x] Remove parked magnets, four holders and eight dedicated M5 fixing
+  assemblies from active inventory; remove parked-catch procurement and
+  root fixing schedules. Retain four stops and four closed catch requirements.
+- [x] Preserve downloaded CAD and study for reference, clearly superseded;
+  active quotation packs omit holder STLs.
+- [x] Move detailed sidebar hardware, sealing, glazing and containment notes
+  into a new Design notes tab below the viewer. Keep operating controls and
+  short sequence instructions in Open & close.
+- [x] Root tests pass (11 engineering + 44 frontend), TypeScript/build and
+  Ruff pass; three focused CAD-retention/removal tests pass after final wording.
+- [x] Browser acceptance passes, including notes-tab access/switching, absent
+  sidebar notes, retained sliders, removed catch meshes and articulated motion.
+- [x] Live pack `simple-parking-export.gBZVVd/current-quotation-pack.zip`,
+  revision `3097236c51b4424f`: 452 parts, four stops, four closed catch
+  requirements, no parked catch geometry/fixing rows or holder prints.
+  Report: 1,583 pass / 0 fail / 126 unknown; incomplete. Saved older packs
+  remain historical artifacts and are not updated in place.
+- [x] Full `npm run check` passes: 131 backend tests (14m01s), 44 frontend
+  tests, Ruff lint/format, TypeScript and production build; only existing
+  dependency deprecation warnings. Final-server browser recheck passes
+  (2.2 minutes). Root `npm test` also passes 11 engineering tests.
+
+## Offset parked-catch integration — 2026-09-14
+
+- [x] Fit two complete GN4470 C2/L3 kits using intact vendor STEP, with
+  four native ribbed PETG offset holders and eight nominal metal M5 fixing
+  assemblies. Keep holder-to-profile M6 fixings explicitly schedule-only.
+- [x] Orient the magnet's recessed screw heads outward; native geometry
+  establishes the flat mounting back at source Y=-5.
+- [x] Check all sixteen added parts against physical assembly solids at
+  five opening fractions on both doors: no sampled penetration, 2 mm parked
+  magnet/strike gap. Focused catch/completion suite: 21 passed.
+- [x] Include two same-solid holder STL designs and revision-tagged manifests
+  in the quotation ZIP, quantity two each, sized for the A1 mini.
+- [x] Additional native screen at heights 650 and 1500 mm, closed/half/parked:
+  no added catch-part penetration. This is sampled geometry, not release proof.
+- [x] Rebuild/restart port 8000; browser acceptance passes (5.0 minutes),
+  including supplier/holder inventory and articulated motion without CAD
+  requests. Inspect updated half-open screenshot.
+- [x] Live quotation export revision `5f3fc315dd0d1664`: 468 parts,
+  1,631 pass / 0 fail / 127 unknown, incomplete and not released for order.
+  Both STL meshes have every edge shared twice, bed minima (0,0,0), and
+  quantity-two manifests matching the model/report revision: magnet holder
+  2,460 facets, 61.5 × 33 × 64 mm; strike holder 2,352 facets,
+  30.7591 × 33.1371 × 64 mm. Files are under
+  `v3/artifacts/park-catch-export.X4rThO/printed-prototypes/`.
+- [x] Root `npm test` (11 engineering + 44 frontend) and `npm run build` pass.
+- [x] Full `npm run check` passes: 136 backend tests (14m49s), 44 frontend
+  tests, Ruff lint/format, TypeScript and production build. Only existing
+  dependency deprecation warnings. `git diff --check` clean. Additional live
+  parked-position view: `v3/artifacts/parked-catches-overview.png`.
+- [ ] Retention at the air gap, mounting tolerances, fastener engagement,
+  PETG creep/strength and physical cycling remain unvalidated. Five sampled
+  poses are not continuous-motion or manufacturing certification.
+
+## Parked-catch CAD import — 2026-09-14
+
+- [x] Receive correct GN 4470-50-C2-L3-SR STEP; import magnet and L3 strike
+  unchanged, document source SHA and actual native dimensions in assets/GN4470.md.
+- [x] Add isolated component loader and two passing native tests: variant,
+  component dimensions, solid validity, source contact and invalid-key rejection.
+  Focused Ruff lint/format pass. No active assembly or frontend change in this stage.
+- [x] Terra real-solid mounting screen rejects the direct jamb/leaf layout:
+  2.002 mm parked gap but magnet/strike collisions at four earlier poses,
+  plus fixed-post collisions and misaligned strike mounting holes. Preserve
+  the offset-holder design task; do not insert falsely fitted CAD.
+- [x] Superseded by the offset-holder prototype integration above; the rejected
+  direct mount remains excluded. Performance approval remains open.
+
+## Printed parked-stop integration — 2026-09-14
+
+- [x] Replace four prepared metal parked-stop brackets by native ribbed PETG
+  prototypes; retain 88° pad contact and Ø6.5 / 30 mm mounting datums.
+- [x] Model eight nominal metal washers and open washer/driver reliefs;
+  preserve metal screws/slot nuts in the fixing schedule, not printed threads.
+- [x] Add a bought 2 mm self-adhesive EPDM sheet candidate for four scissor-cut
+  pads; no custom bumper machining. Adhesion/compression/wear remain unknown.
+- [x] Add same-solid, bed-positioned STL and revision-tagged print manifest
+  to the quotation ZIP; four identical bodies, no metal/pads in the STL.
+- [x] Focused bifold suite passes (13 tests); after final face cleanup,
+  print/export/washer and 88° contact tests pass again. Root tests pass
+  (11 engineering + 44 frontend), production build and lint/format pass.
+- [x] Live browser acceptance passes (4.9 minutes); inspect half-open screenshot
+  with orange PETG stops. Export live ZIP and check matching revision
+  `532cbc094157e432`: 452 parts, 1,583 pass / 0 fail / 126 unknown; incomplete.
+- [x] Parse exported binary STL independently: 1,360 facets, every edge shared
+  twice, lower bounds (0,0,0), upper bounds (39.4212,34.5537,60) mm. Manifest
+  identifies four bodies and matches model/report revision. Files extracted
+  under `v3/artifacts/park-stop-export.4zKhzT/printed-prototypes/`.
+- [x] Full `npm run check` passes: 128 backend tests (12m58s), 44 frontend
+  tests, Ruff lint/format, TypeScript and production build. Root `npm test`
+  also passes the 11 standalone engineering tests. Only existing dependency
+  deprecation warnings; `git diff --check` clean.
+- [ ] Print/support trial, layer/impact strength, clamp creep, pad attachment
+  and cycle life remain unvalidated. Gentle travel only, not a rated stop/latch.
+
+## Retail meeting-seal simplification — 2026-09-14
+
+- [x] Respect user sourcing constraint: remove six custom meeting clamp bars
+  and sixteen M6 fixing sets; use two cut-to-length Tesa 05422 retail candidates.
+- [x] Move wipes to secondary meeting stiles; restore direct frame mounting
+  for primary handles. Preserve independent one-leaf motion and nominal seam
+  coverage without modifying the existing coverage obligation.
+- [x] Source 1 m × 38 mm stock and manufacturer PP/PU material specification.
+  Record 688 mm default cuts, retail link and dated price. Explicitly retain
+  unknown thickness, adhesive-band fit, slot bridging, preload and wear.
+- [x] All 12 focused bifold tests pass, including five-pose seal/handle checks
+  and a missing-seal mutation. Root `npm test` passes (11 engineering and
+  44 frontend tests); `npm run build` passes.
+- [x] CSV inspection at revision `e50ffddd2505df02`: 444 modeled parts,
+  42 fixing rows, two retail wipe rows; no meeting clamps or handle lip stack.
+- [x] Live-browser acceptance on port 8000 passes (4.7 minutes), including
+  replacement mesh inventory, honest candidate note and articulated motion
+  without CAD requests. Inspect updated half-open screenshot.
+- [x] Full `npm run check` passes: 127 backend tests (12m23s), 44 frontend
+  tests, Ruff lint/format, TypeScript and production build. Only existing
+  dependency deprecation warnings. Live report: 1,559 pass / 0 fail /
+  125 unknown, incomplete and not released for order.
+- [ ] Confirm actual retail section, adhesive layout and repeated folding use;
+  physical testing and commissioning remain excluded, not completed.
+
 ## Bifold digital completion — 2026-09-14
 
 - [x] Preserve the bifold branch/worktree; no port back to the obsolete root app.

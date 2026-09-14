@@ -1,5 +1,11 @@
 # Workbench V3
 
+Latest intent — 2026-09-14: a **simple enclosure, not a hermetic seal**. Bottom gaps on both bifolds are intentional, not missing-seal failures. One original PETG swing lever and keeper across each folding joint now provides light manual retention; lift before opening. No magnets or bottom hardware return. See [swing-latch design](docs/SWING_LATCHES.md) for mounting, prints, sourcing and remaining physical fit checks. This supersedes earlier absent-retention and mandatory-bottom-continuity statements below.
+
+
+Current change — 2026-09-14: user requested removal from **both bifolds** of the bottom perimeter seals/backing and complete closed catches. The unsupported bottom rigid strips are removed with their backing. No GN4470 magnets, strikes, PETG holders or dedicated M5/M6 fixings remain in the active inventory, schedules or print exports. Vendor assets and prior sourcing studies are retained as history only. Both lower openings are now unsealed and closed-door retention is absent. Bottom containment obligations remain active; uncovered area must report failure. Four 88° travel stops and stock metalwork remain. No parked catches are reinstated.
+
+
 An enclosure planning application for a Shapeoko 5 Pro 4×4 in a Lisbon workshop. The enclosure has two full-width front swinging doors, a bifold door in the rear half of the left wall, an asymmetric bifold opening at the right of the back wall, wood wall/roof panels and a roof hose penetration. Reiman Portugal is the selected aluminium supplier.
 
 **This is an engineering verification workbench, not a released fabrication design.** It generates usable quotation documents and evaluates actual geometry, but supplier hinge/mounting details, machine/hose dimensions and physical tolerances still require evidence. Reports and every ordering pack preserve those unresolved requirements. Do not order tempered glass from a pack marked `NOT RELEASED FOR ORDER`.
@@ -35,6 +41,10 @@ For frontend development, start the Python service and run `npm run dev` in `v3/
 5. Read failures and unresolved evidence. A successful constraint solve is only one piece of evidence; it does not imply clearance or order readiness.
 6. Export a supplier quotation pack for review. All dimensions, geometry and evidence share one design revision. Changing parameters invalidates the previous export selection until evaluation finishes.
 
+The **Design notes** tab below the 3D viewer contains prototype issues,
+hardware/fixing schedules, glazing and sealing details. **Open & close**
+keeps the playback controls, door sliders and short operating instructions.
+
 Door sliders and the **Play opening / Play closing** controls animate the canonical CAD meshes in the browser. Motion uses the `model.doors` kinematics and each part's `motion_leaf` metadata, so pose frames do not call the native CAD service or verification endpoint. The right front leaf opens before the left; closing reverses that order. Changing dimensions/materials, switching verification mode or starting a manual verification cancels playback cleanly. A parameter edit with Automatic verification off still requests a geometry-only `/api/preview`; pose-only changes do not.
 
 Coordinate convention: X right, Y toward the rear, Z up; front wall at Y=0; all lengths are millimetres. Clear dimensions exclude the surrounding frame. The machine and hose envelopes are configurable **unconfirmed assumptions**, not specifications silently substituted from the newer Shapeoko 5.1.
@@ -42,22 +52,33 @@ Coordinate convention: X right, Y toward the rear, Z up; front wall at Y=0; all 
 ## Door seals and airflow
 
 The current [bifold completion notes](docs/BIFOLD_COMPLETION.md) describe
-inward-face corner plates, the one-piece metal carrier, two-fixing closing
-tabs and 88° parked stops. GHD9008B handles are drawing studies; six
-GBL3030.KIT catches remain explicit installation requirements, not fitted CAD.
+standard CJP3030L inward-face corner-plate studies, the stock-angle steel carrier, two-fixing stock-flat closing
+tabs and [ribbed PETG 88° parked-stop prototypes](docs/PRINTED_PARK_STOPS.md).
+The four printed bodies use metal fixings/washers and bought rubber pads;
+they are gentle travel limits, not impact-rated stops. GHD9008B handles are drawing studies;
+two closed GN4470 A1/L2 catches now use vendor STEP and PETG adapter studies;
+see [standard hardware evidence and limitations](docs/STANDARD_BIFOLD_HARDWARE.md). Parked magnets,
+holders and their dedicated fixings have been omitted to simplify the doors.
+Stops limit travel but do not hold doors open; a simple strap can be considered
+later if actual drift warrants it. The [catch study](docs/PARKED_CATCHES.md)
+is retained for reference only.
 The UI and quotation pack expose fixing schedules and partial load screening.
 
 Exterior head hoods replace the relieved inner covers. Their angled brush
 studies close the nominal head sections, but carrier deflection and actual
 brush/holder selection remain unvalidated. Meeting seals are now one-sided
-clamped wipe lips that disengage during opening, not stretching membranes.
+self-adhesive retail wipe candidates on secondary leaves, cut to length without
+custom clamps. They disengage during opening; section and adhesion remain pending.
 
-The bifold guide now has a proposed removable steel underside retainer: two
-continuous 18 x 4 mm strips, a 10 mm axle slot and welded end bars. Metal
-compression sleeves and bridge washers bypass PETG in the mounting clamp path.
-These are custom prepared parts, not sourced vendor STEP or rated safety
-hardware. See [rail retention details](docs/RAIL_RETENTION.md) for cut sizes,
-clearances, assembly procedure and the remaining physical validation.
+The bifold guide has bolted stock-steel underside retention: two 20×4 strips
+with a 10 mm axle slot and notched 30×20×4 angle end barriers. Flush end
+screws clear the moving carrier. The carrier is a drilled 18 mm slice of
+80×40×6 steel angle; closing tabs are cut from 50×4 flat stock. These replace
+machined/welded proposals with saw, drill, countersink and bevel preparation.
+Metal sleeves and bridge washers carry the clamp load. See [stock metalwork](docs/STANDARD_METALWORK.md)
+for current geometry, procurement, assembly and unresolved strength/tolerance
+questions. The [initial investigation](../engineering/bifold-assembly/standard-metalwork/README.md)
+is historical and its mounting-gap/head-clearance issues are corrected here.
 
 The 4 mm polycarbonate bifolds now use a slot-captured **FSP08 study** instead
 of the surface beads described below for front/alternative-material doors.
@@ -67,7 +88,7 @@ FSP08 is PVC: Lexan compound compatibility is **not confirmed**; corners,
 minimum engagement and frame-connector interference require approval before
 cutting. See [provenance and calculations](backend/enclosure/assets/FSP.md).
 
-Front/alternative-material infills have retaining beads, edge seals and face packing; the 4 mm Lexan bifolds use the slot study above. Fixed wood panels overlap the frame borders and sit against continuous gaskets. Bifold head coverage is nominally closed by exterior hoods and angled-brush studies; physical brush/carrier deflection remains unvalidated. The right front leaf carries the overlapping meeting strip: **open right fully, then left; close left fully, then right**. The model rejects incompatible poses and the UI locks the corresponding controls. Bifold meeting lips clamp to one leaf and disengage from the other; animation does not simulate rubber deformation.
+Front/alternative-material infills have retaining beads, edge seals and face packing; the 4 mm Lexan bifolds use the slot study above. Fixed wood panels overlap the frame borders and sit against continuous gaskets. Bifold head coverage is nominally closed by exterior hoods and angled-brush studies; physical brush/carrier deflection remains unvalidated. The right front leaf carries the overlapping meeting strip: **open right fully, then left; close left fully, then right**. The model rejects incompatible poses and the UI locks the corresponding controls. Bifold meeting wipes adhere only to secondary leaves and disengage from primary leaves; animation does not simulate flexible deformation.
 
 The right wall has a supplier-cut 240 × 80 mm makeup-air opening and a cleanable external hood with staggered baffles. At default dimensions its minimum nominal passage is 16,632 mm², slightly over twice the 100 mm hose cross-sectional area. The area ratio is a design allowance, not an airflow-performance claim. Increasing hose diameter can require a larger inlet. Air enters passively; extraction is through the dust shoe and roof hose, with the vacuum and its exhaust outside the enclosure. The roof has an annular collar/gasket; the base gasket requires a flat, continuous supporting table.
 
@@ -86,7 +107,10 @@ The ZIP pack includes:
 - `panel-outlines.dxf`: closed panel outlines at 1:1 in millimetres, declared holes on a separate layer, annotations outside cut geometry. Outlines are arranged side by side, not a sheet nesting/toolpath plan.
 - `assembly.step`: closed physical assembly built from the same authoritative solids used for meshes and verification. Provisional hardware envelopes are identified in the model; they are not hardware manufacturing drawings.
 - `model.json`, `verification.json`, `README.txt`: complete evaluated parameters, parts, provenance, evidence and installation checks.
-- `bifold-completion.json`: required-but-unfitted catches, proposed fixing schedules and partial load calculations with exclusions.
+- `standard-metalwork.md`: stock sections, cuts, bevels, countersinks, fixing stacks and remaining validation.
+- `bifold-completion.json`: modeled closed-catch obligations, proposed fixing schedules and partial load calculations with exclusions.
+- `printed-prototypes/BF-PARK-88.stl` and `.json`: one parked-stop print body
+  (four required), with revision, orientation and explicit prototype limitations.
 - `containment-and-airflow.txt`: door sequence, seal-selection requests, inlet dimensions and installation/commissioning requirements, also included in the PDF.
 
 The supplier should confirm cutting tolerance, finishing, connector installation requirements and all glass processing before release. Tempered-glass holes/cutouts and edge treatment must be specified before tempering. No field glass cutting/drilling is included. Downloads are local; the application never sends orders or messages to suppliers.

@@ -14,6 +14,8 @@ export interface Part {
   quantity?: number;
   motion_leaf?: "a" | "b" | "slider";
   motion_local?: number[];
+  latch_pivot_world?: number[];
+  latch_axis_world?: number[];
   [key: string]: unknown;
 }
 export interface Check {
