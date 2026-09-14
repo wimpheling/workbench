@@ -107,6 +107,24 @@ def check_barrier_region(shapes, region, required_overlap_mm=0.0, cut_tolerance_
     }
 
 
+def check_barrier_connection(shapes, pair):
+    """Nominal connected barrier chain; not adhesive or bristle performance."""
+    if any(pid not in shapes for pid in pair):
+        return dict(
+            status="fail", message="Required barrier connection is missing", references=pair
+        )
+    distance = shapes[pair[0]].distance(shapes[pair[1]])
+    return dict(
+        status="pass" if distance <= KERNEL_LENGTH_TOLERANCE_MM else "fail",
+        message="Nominal hood/holder/brush/leaf contact; attachment and flexible performance unvalidated",
+        references=pair,
+        measured=distance,
+        required=KERNEL_LENGTH_TOLERANCE_MM,
+        unit="mm",
+        method="OpenCascade minimum distance of adjacent barrier solids",
+    )
+
+
 def check_solid_pair(a, b, clearance_mm=0.0, permitted_overlap_mm3=0.0):
     """Zero required clearance still prohibits positive-volume penetration."""
     if not math.isfinite(clearance_mm) or clearance_mm < 0:
@@ -911,6 +929,52 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                     unit="mm",
                 )
 
+    # Independent nominal glazing allowance check from panel/frame dimensions.
+    # Assumed 5 mm usable depth is not a vendor-certified installed dimension.
+    glazing_parts = {p["id"]: p for p in model["parts"]}
+    for pane in model["parts"]:
+        if not pane.get("glazing"):
+            continue
+        prefix = pane["id"].removesuffix("-infill")
+        for axis, low, high in ((0, "stile-a", "stile-b"), (2, "rail-low", "rail-high")):
+            a = glazing_parts.get(f"{prefix}-{low}")
+            b = glazing_parts.get(f"{prefix}-{high}")
+            if not a or not b:
+                add(
+                    f"glazing.allowance.{prefix}.{axis}",
+                    "unknown",
+                    "tolerance",
+                    "Missing glazing frame member",
+                    [pane["id"]],
+                )
+                continue
+            opening = b["motion_local"][axis] - a["motion_local"][axis] - 30
+            length = pane["size"][axis]
+            growth = 0.000070 * length * 40
+            allowance = opening + 10 - length
+            required = growth + 2 * parameters["cut_tolerance_mm"] + 1
+            bite = (length - opening) / 2
+            add(
+                f"glazing.lip_engagement.{prefix}.{axis}",
+                "pass" if bite >= 2.8 else "fail",
+                "tolerance",
+                "Nominal pane edge reaches assumed installed lip end; impact retention remains unapproved",
+                [pane["id"]],
+                measured=bite,
+                required=2.8,
+                unit="mm",
+            )
+            add(
+                f"glazing.allowance.{prefix}.{axis}",
+                "pass" if allowance >= required and bite > 0 else "fail",
+                "tolerance",
+                "Nominal slot capture and expansion allowance under assumed 5 mm depth/40 K excursion; not retention approval",
+                [pane["id"], a["id"], b["id"]],
+                measured=allowance,
+                required=required,
+                unit="mm",
+            )
+
     # Confirmation alone does not manufacture evidence: these are physical declarations,
     # with the source assumption copied into the result for traceability.
     assumptions = {a["id"]: a for a in model.get("assumptions", [])}
@@ -1193,6 +1257,21 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                     "containment",
                     f"Barrier coverage could not be established: {exc}",
                     region.get("part_ids", []),
+                )
+        for index, pair in enumerate(entry.get("nominal_contact_chain", [])):
+            try:
+                add(
+                    f"containment.connection.{id}.{index}",
+                    category="containment",
+                    **check_barrier_connection(shapes, pair),
+                )
+            except Exception as exc:  # noqa: BLE001 - missing kernel evidence is never a pass
+                add(
+                    f"containment.connection.{id}.{index}",
+                    "unknown",
+                    "containment",
+                    f"Barrier connection could not be established: {exc}",
+                    pair,
                 )
         if entry.get("kind") == "annular-collar":
             try:

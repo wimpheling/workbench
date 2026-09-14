@@ -13,6 +13,7 @@ ASSET_SHA256 = hashlib.sha256(
     + (ASSET.parent / "CFG3030.stp").read_bytes()
     + (ASSET.parent / "GN_753.1-22-B5-ZL-1.stp").read_bytes()
     + (ASSET.parent / "GN_753.2-4-5-3-AE-NI.stp").read_bytes()
+    + (ASSET.parent / "FSP.pdf").read_bytes()
 ).hexdigest()
 
 

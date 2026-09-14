@@ -182,6 +182,10 @@ h2 {
   background: #fbfcf9;
   font-variant-numeric: tabular-nums;
 }
+.settings .bifold-completion[open] {
+  max-height: 360px;
+  overflow: auto;
+}
 .settings details {
   border-top: 1px solid #e6eae2;
   padding-top: 16px;

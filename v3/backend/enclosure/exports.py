@@ -560,8 +560,8 @@ def containment_notes(model: dict) -> str:
         + " then ".join(sequence.get("opening", []))
         + ".",
         "Supplier must select rubber grade/profile, free section, installed compression, corner treatment, clamping/adhesive and fixing pitch. Continuous glass-compatible packing and setting support must be confirmed before tempering. Dimensions in hardware.csv are candidate installed envelopes, not approved catalogue sizes.",
-        "Bifold meeting covers need a supplier-confirmed flexible fold, clamp layout and endurance allowance; their displayed rigid pose is not a simulation of rubber deformation.",
-        "Bifolds use revision C A1 mini PETG guide modules under 3060 headers, bought CFG hinges and GN753.1 rollers. The carrier remains an envelope, not a printable release. Confirm M4 fixings, bushes, axle stack, independent metal stops/catches, sealing and physical load/wear tests. Printed lips are not independent metal retention.",
+        "Bifold meeting seals are one-sided EPDM wipe lips, clamped to the primary leaf and released from the secondary leaf during opening. Three clamp segments clear the primary handle feet, which sit over the 3 mm lip root. Confirm compound, preload, fixing engagement and endurance; rigid animation is not rubber simulation.",
+        "Bifolds use A1 mini PETG guide modules under 3060 headers, vendor STEP CFG hinges and GN753.1 rollers/bushes. A one-piece metal carrier, inward-face corner plates and steel keepers/operating stops are custom design proposals, not supplier-approved parts. Four GHD9008B handles are drawing studies, not vendor STEP. Four closed and two parked GBL3030.KIT catches remain installation requirements, NOT fitted hardware. See bifold-completion.json for fixing schedules, partial load screening and catch requirements. Confirm engagement, locking, seal compatibility and physical load/wear behaviour.",
         "Seal the base against a flat continuous supporting table. The tabletop, its load capacity and cable/service penetrations need confirmation.",
         "Retain the roof collar and clamp the independently supported hose. Confirm bend radius and clearance through full machine travel.",
         "Use passive makeup air and extraction at the dust shoe, with vacuum exhaust outside the enclosure. Keep the baffled inlet clear and accessible for cleaning. No inlet fan or extractor performance is assumed.",
@@ -598,6 +598,22 @@ def export_file(kind: str, model: dict, report: dict, shapes: dict) -> tuple[byt
         raise ValueError(f"Unsupported export format: {kind}")
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(
+            "bifold-completion.json",
+            json.dumps(
+                {
+                    "revision": model["revision"],
+                    "release_status": release_label(report),
+                    **model.get("bifold_completion", {}),
+                    "load_screening": {
+                        d["id"]: d["load_screening"]
+                        for d in model.get("doors", [])
+                        if d.get("load_screening")
+                    },
+                },
+                indent=2,
+            ),
+        )
         archive.writestr(
             "README.txt",
             f"{release_label(report)}\nRevision: {model['revision']}\nUnits: mm\n\n"

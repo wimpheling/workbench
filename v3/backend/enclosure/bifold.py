@@ -108,6 +108,10 @@ def add_bifolds(part, leaf, doors, parameters):
                 mounting_rows_mm=[-15, 15],
                 roller="GN 753.1-22-B5-ZL-1",
                 keeper_washer="M6 DIN 9021",
+                retention="removable welded steel cassette; connection and impact validation pending",
+                exit_slot_mm=10,
+                washer_overlap_per_side_mm=4,
+                end_bar_thickness_mm=4,
                 status="prototype; carrier and retention require physical tests",
             ),
         )
@@ -135,7 +139,21 @@ def add_bifolds(part, leaf, doors, parameters):
         for i in range(count):
             x = start + i * (module_length + 0.2) + module_length / 2 - 2.5
             stations = [12 - module_length / 2, 0, module_length / 2 - 12]
-            holes = [dict(center=[xx, yy], diameter_mm=4.5) for xx in stations for yy in (-15, 15)]
+            holes = [
+                dict(
+                    center=[xx, yy],
+                    diameter_mm=6.2,
+                    counterbore_top_diameter_mm=12.4,
+                    counterbore_top_depth_mm=2.2,
+                )
+                for xx in stations
+                for yy in (-15, 15)
+            ]
+            reliefs = []
+            if i == 0:
+                reliefs.append(-module_length / 2 + 2)
+            if i == count - 1:
+                reliefs.append(module_length / 2 - 2)
             add(
                 "track" if i == 0 else f"track-{i + 1}",
                 [module_length, 46, 25],
@@ -145,29 +163,84 @@ def add_bifolds(part, leaf, doors, parameters):
                 geometry_fidelity="parametric-print-prototype",
                 holes=holes,
                 geometry=dict(kind="printed-guide-body"),
-                mounting="Six M4 bolts through keepers/body into two 3060 underside slot rows",
+                cutouts=[
+                    dict(
+                        kind="rectangle",
+                        normal_axis=2,
+                        width_mm=4.4,
+                        height_mm=48,
+                        center_local_mm=[xx, 0, 0],
+                    )
+                    for xx in reliefs
+                ],
+                mounting="Six M4 bolts through continuous steel keepers, 23 mm sleeves and 2 mm steel bridge washers into two 3060 underside slot rows",
                 fastener_schedule=dict(quantity=6, screw="M4 x 35 provisional", nut="M4 slot-8"),
             )
-            for side in (-1, 1):
-                add(
-                    f"keeper-strip-{i + 1}-{side}",
-                    [module_length, 18, 4],
-                    [x, 23 + side * 14, H - 27],
-                    material="PETG",
-                    product_code="printed-keeper-strip",
-                    geometry_fidelity="parametric-print-prototype",
-                    holes=[dict(center=[xx, side], diameter_mm=4.5) for xx in stations],
-                )
+            for j, xx in enumerate(stations):
+                for side in (-1, 1):
+                    add(
+                        f"retention-sleeve-{i + 1}-{j}-{side}",
+                        [6, 6, 23],
+                        [x + xx, 23 + side * 15, H - 13.5],
+                        material="steel",
+                        product_code="Prepared compression sleeve 6 OD x 4.3 ID x 23",
+                        geometry_fidelity="nominal-solid",
+                        geometry=dict(kind="annulus", outer_diameter_mm=6, inner_diameter_mm=4.3),
+                        machining="Supplier-cut metal tube; deburr, confirm 23 mm sleeve + 2 mm bridge washer stack tolerance. Not a sourced vendor STEP.",
+                    )
+                    add(
+                        f"retention-bridge-washer-{i + 1}-{j}-{side}",
+                        [12, 12, 2],
+                        [x + xx, 23 + side * 15, H - 1],
+                        material="steel",
+                        product_code="Prepared bridge washer 12 OD x 4.5 ID x 2",
+                        geometry_fidelity="nominal-solid",
+                        geometry=dict(kind="annulus", outer_diameter_mm=12, inner_diameter_mm=4.5),
+                        machining="Bridge header slot mouth so sleeve does not bear into empty slot; confirm contact, washer bending and bolt preload. Supplier selection pending.",
+                    )
             if i:
                 seam = start + i * (module_length + 0.2) - 0.1 - 2.5
                 for side in (-1, 1):
                     add(
                         f"alignment-key-{i}-{side}",
-                        [30, 3, 1.8],
+                        [10, 3, 1.8],
                         [seam, 23 + side * 20, H - 0.9],
                         material="PETG",
                         product_code="printed-alignment-key",
                     )
+
+        # Custom welded retainer assembly; no supplier STEP or rated load claimed.
+        # Continuous strips bridge module seams. End bars sit in relieved print
+        # ends and are welded to BOTH strips; bolts clamp through steel sleeves.
+        for side in (-1, 1):
+            holes = []
+            for i in range(count):
+                station = i * (module_length + 0.2) + module_length / 2 - rail_length / 2
+                holes += [
+                    dict(center=[station + xx, side], diameter_mm=4.5)
+                    for xx in (12 - module_length / 2, 0, module_length / 2 - 12)
+                ]
+            add(
+                f"keeper-strip-continuous-{side}",
+                [rail_length, 18, 4],
+                [(start + width) / 2 - 2.5, 23 + side * 14, H - 27],
+                material="304 stainless steel",
+                product_code="Custom continuous rail retainer 18 x 4",
+                geometry_fidelity="nominal-solid",
+                holes=holes,
+                cut_length_mm=rail_length,
+                machining="Supplier cut/drill 18 x 4 strip; weld end bars to both strips; maintain 10 mm straight slot. Weld distortion, sleeve lengths, M4 bolt grade/engagement and clamp torque require approval.",
+            )
+        for end, x in (("park", start + 2 - 2.5), ("closed", width - 2 - 2.5)):
+            add(
+                f"rail-end-stop-{end}",
+                [4, 46, 25],
+                [x, 23, H - 12.5],
+                material="304 stainless steel",
+                product_code="Custom welded rail end bar 46 x 25 x 4",
+                geometry_fidelity="nominal-solid",
+                machining="Weld lower edge to both continuous keeper strips; fits relieved PETG end. Backup overtravel barrier only, not an operating slam stop; weld/load and assembly approval pending.",
+            )
 
         # Intact supplier roller solid, with recessed bearing faces and real bore.
         add(

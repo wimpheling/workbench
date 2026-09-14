@@ -33,6 +33,10 @@ export interface Evaluation {
     parameters: Parameters;
     parts: Part[];
     assumptions: { id: string; description: string; confirmed: boolean }[];
+    bifold_completion?: {
+      catch_requirements: { id: string; assembly: string; product_code: string; quantity: number; status: string; unresolved: string; source: string }[];
+      fastener_schedule: { part_id: string; quantity: number; screw: string; nut: string }[];
+    };
     doors: {
       id: string;
       type: "swing" | "bifold";
@@ -45,6 +49,7 @@ export interface Evaluation {
       primary_link_mm?: number[];
       secondary_link_mm?: number[];
       guide_normal_mm?: number;
+      load_screening?: { included_mass_kg: number; closed_frame_moment_Nm: number; closed_interleaf_moment_Nm: number; assumptions: string };
       [key: string]: unknown;
     }[];
     [key: string]: unknown;

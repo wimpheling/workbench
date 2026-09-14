@@ -14,6 +14,12 @@ Python package: `v3/backend/enclosure`. Core API: `build_model(parameters: dict 
 
 Model JSON contract (extend compatibly, communicate additions):
 
+- `bifold_completion`: additive catch requirements (not fitted inventory) and
+  proposed per-part fastener schedules. Bifold doors include `load_screening`
+  with included part masses, closed moments and explicit exclusions. These do
+  not change release semantics; the quotation ZIP includes the same data in
+  `bifold-completion.json`. Missing CAD must remain distinguishable from STEP.
+
 - `revision`: content hash of full inputs/catalog/verification-relevant definitions; `units`: `mm`.
 - `parameters`: validated explicit inputs. Required defaults: `width_mm=1674`, `depth_mm=1649`, `height_mm=740`, `panel_thickness_mm=6`, `glass_thickness_mm=6`, `clearance_mm=4`, `cut_tolerance_mm=0.5`, `workpiece_width_mm=1219.2`, `workpiece_depth_mm=1219.2`, `workpiece_thickness_mm=100`. Machine/hose dimensions are assumptions with confirmation status, never silently verified manufacturer facts.
 - `parts`: list of `{id, name, category, material, supplier, product_code, size:[x,y,z], position:[x,y,z], rotation_deg:0, assembly, geometry_fidelity, quantity:1, ...}`. Size is a local box envelope; position is its centre; rotation about world Z. Categories: extrusion, panel, glass, hardware, machine-envelope, hose-envelope. Physical modeled hardware may be conservative bounding solids explicitly labeled. Nonphysical clearance reference envelopes must be identified separately. Include all required physical items or record unresolved items as requirements.

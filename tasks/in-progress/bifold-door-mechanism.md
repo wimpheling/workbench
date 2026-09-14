@@ -16,6 +16,28 @@ preventing the enclosure's planned ventilation.
 
 ## Discussion
 
+2026-09-14: User requested captive roller retention/end stops. Proposed two
+continuous 18 x 4 mm stainless underside strips per opening, joined by welded
+4 x 46 x 25 mm end bars in relieved print ends. Slot remains 10 mm; 18 mm
+keeper washer gives 4 mm nominal overlap per side. Thirty 23 mm metal sleeves
+and 2 mm bridge washers per opening transfer clamping across the printed body
+to the 3060 slot lips. PETG top pockets and shorter alignment keys clear these
+washers. Custom prepared parts are not vendor STEP or approved fabrication.
+End bars are backup overtravel barriers, not operating slam stops/catches.
+Brush-end overlap remains an explicit unknown. See `v3/docs/RAIL_RETENTION.md`.
+
+2026-09-13: User confirmed 4 mm Lexan and requested slot-compatible glazing,
+calculations, supplier CAD and UI integration. Reiman FSP08 datasheet downloaded
+unchanged; no public STEP located. Added drawing-based installed section study,
+not a vendor STEP. Removed generic bifold surface beads for polycarbonate only;
+front/material alternatives retain their existing mounting. Provisional cuts
+are 330.75/370.75/293.5/333.5 × 628 × 4 mm, calculated from slot engagement,
+40 K thermal excursion and cutting/positioning allowances. See
+`v3/backend/enclosure/assets/FSP.md` for sources and calculation assumptions.
+Important discovery: FSP08 is PVC; Lexan guidance warns against plasticised PVC.
+Compound compatibility, shallow edge retention, corner seals and frame connector
+clearance remain blockers. UI/export explicitly retain not-for-order status.
+
 The current design has an unrealistic tall header seal, external guide
 adapters, and a rear track that appears unsupported. These are unresolved
 mechanical problems; passing the current model checks does not validate the
@@ -804,6 +826,34 @@ The unchanged three engineering failures concern head sealing; software test
 success does not release the remaining mechanical prototype for manufacture.
 
 ## Implementation plan
+
+- [ ] Digital completion pass (fabrication and commissioning excluded by user)
+  - [x] Preserve the existing v3 worktree and genuine hinge/roller/bush STEP assets
+  - [x] Add sixteen inward-face corner plates and named frame mating interfaces
+  - [x] Replace the printed carrier proposal with a one-piece metal candidate and two-fixing closed tabs
+  - [x] Model four parked operating stops and pads; check five rigid-motion poses and deliberately overshot primary leaves
+  - [x] Replace four handle boxes with drawing-based GHD9008B studies; user confirmed STEP unavailable
+  - [x] Expose six GBL3030.KIT requirements, fixing schedules and partial mass/moment calculations in UI and quotation supplement
+  - [x] Open fragile printed bore webs into intentional recesses and check guide-body connectivity
+  - [x] Correct the lower gusset/bottom-stop collision found at half travel
+  - [x] Replace relieved inner head covers by exterior hoods and angled-brush studies; verify nominal sections/contact chain without approving flexible performance
+  - [x] Replace stretching meeting membranes by one-sided wipe lips and segmented clamps; check closed contact and open disengagement
+  - [ ] Finish catch installation and obtain actual brush/root/adhesive and lip specifications; physical sealing remains unvalidated
+  - [x] Complete regression/browser evidence: 127 backend / 44 frontend / 11 engineering tests, lint/typecheck/build and browser acceptance pass. Live revision 12ad55cb055b475f has 450 parts, 0 failures and 125 unknowns; quotation STEP re-imports valid (446 solids).
+  - [ ] Obtain deferred retailer evidence listed in v3/docs/BIFOLD_COMPLETION.md; no retailer contacted
+
+- [ ] Metal rail retention and end stops
+  - [x] Model continuous steel keepers, end bars, print reliefs and metal clamp stack
+  - [x] Test clearance at five poses, straight-drop washer capture and roller overtravel blocking
+  - [x] Complete full regression and browser verification: 115 backend / 44 frontend tests, lint/format, typecheck/build and live browser acceptance pass; same three head-sealing/containment failures remain
+  - [ ] Confirm sleeve/washer sourcing, welds, bolt grade/engagement/locking, impact and tilt retention; finish operating catches and brush corners
+
+- [ ] Slot-captured 4 mm Lexan glazing
+  - [x] Download vendor FSP datasheet and distinguish drawing-based geometry from unavailable STEP
+  - [x] Calculate provisional panel sizes, model 16 inserts and expose cuts/warnings in UI
+  - [x] Complete regression and browser verification of slot glazing changes: 107 backend / 44 frontend tests, lint/format, typecheck/build and live browser acceptance pass; the three existing head/containment failures remain visible
+  - [ ] Obtain compatible compound approval or select a non-PVC alternative; obtain real CAD
+  - [ ] Validate minimum engagement, connector layout, expansion sliding and corner sealing before cutting
 
 - [x] Agree on the mechanism route before changing geometry
   - [x] Screen ready-made systems; retained 3030 frames exclude the researched kits

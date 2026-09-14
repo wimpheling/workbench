@@ -70,7 +70,7 @@ export default function Viewer(props: {
         color:
           props.selected === part.id
             ? "#f6c85f"
-            : /rubber|epdm/i.test(part.material)
+            : /rubber|epdm|black PVC/i.test(part.material)
               ? "#28312d"
               : part.material === "PETG"
                 ? "#df8a42"

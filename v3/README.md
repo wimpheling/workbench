@@ -41,13 +41,39 @@ Coordinate convention: X right, Y toward the rear, Z up; front wall at Y=0; all 
 
 ## Door seals and airflow
 
-Door infills have continuous retaining beads, rubber edge seals and soft packing between the pane and beads. Fixed wood panels overlap the frame borders and sit against continuous gaskets. Door perimeter stops and rubber seals cover assembly clearances, with the revised bifold head sealing deliberately incomplete pending brush/carrier clearance design. The right front leaf carries the overlapping meeting strip: **open right fully, then left; close left fully, then right**. The model rejects incompatible poses and the UI locks the corresponding controls. Bifold meeting seams use proposed flexible membrane covers; their displayed poses do not simulate rubber folding.
+The current [bifold completion notes](docs/BIFOLD_COMPLETION.md) describe
+inward-face corner plates, the one-piece metal carrier, two-fixing closing
+tabs and 88° parked stops. GHD9008B handles are drawing studies; six
+GBL3030.KIT catches remain explicit installation requirements, not fitted CAD.
+The UI and quotation pack expose fixing schedules and partial load screening.
+
+Exterior head hoods replace the relieved inner covers. Their angled brush
+studies close the nominal head sections, but carrier deflection and actual
+brush/holder selection remain unvalidated. Meeting seals are now one-sided
+clamped wipe lips that disengage during opening, not stretching membranes.
+
+The bifold guide now has a proposed removable steel underside retainer: two
+continuous 18 x 4 mm strips, a 10 mm axle slot and welded end bars. Metal
+compression sleeves and bridge washers bypass PETG in the mounting clamp path.
+These are custom prepared parts, not sourced vendor STEP or rated safety
+hardware. See [rail retention details](docs/RAIL_RETENTION.md) for cut sizes,
+clearances, assembly procedure and the remaining physical validation.
+
+The 4 mm polycarbonate bifolds now use a slot-captured **FSP08 study** instead
+of the surface beads described below for front/alternative-material doors.
+The 16 inserts use a downloaded vendor PDF, not vendor STEP. Revised panel cuts
+and a 40 K expansion allowance are shown in the UI and quotation schedules.
+FSP08 is PVC: Lexan compound compatibility is **not confirmed**; corners,
+minimum engagement and frame-connector interference require approval before
+cutting. See [provenance and calculations](backend/enclosure/assets/FSP.md).
+
+Front/alternative-material infills have retaining beads, edge seals and face packing; the 4 mm Lexan bifolds use the slot study above. Fixed wood panels overlap the frame borders and sit against continuous gaskets. Bifold head coverage is nominally closed by exterior hoods and angled-brush studies; physical brush/carrier deflection remains unvalidated. The right front leaf carries the overlapping meeting strip: **open right fully, then left; close left fully, then right**. The model rejects incompatible poses and the UI locks the corresponding controls. Bifold meeting lips clamp to one leaf and disengage from the other; animation does not simulate rubber deformation.
 
 The right wall has a supplier-cut 240 × 80 mm makeup-air opening and a cleanable external hood with staggered baffles. At default dimensions its minimum nominal passage is 16,632 mm², slightly over twice the 100 mm hose cross-sectional area. The area ratio is a design allowance, not an airflow-performance claim. Increasing hose diameter can require a larger inlet. Air enters passively; extraction is through the dust shoe and roof hose, with the vacuum and its exhaust outside the enclosure. The roof has an annular collar/gasket; the base gasket requires a flat, continuous supporting table.
 
-Verification measures actual barrier coverage and inlet passages. Supplier seal grade, free height, installed compression, glass setting support, attachment details and membrane bend allowance remain unresolved. An assembled test must establish inward leakage, sufficient extraction and cooling with the actual vacuum, hose, shoe and filter. The model does not certify a completely sealed boundary or fine-dust capture.
+Verification measures nominal barrier sections, their specified connections and inlet passages. Supplier seal grade, free section, installed compression, glass setting support, attachment details and wipe-lip preload remain unresolved. An assembled test must establish inward leakage, sufficient extraction and cooling with the actual vacuum, hose, shoe and filter. The model does not certify a completely sealed boundary or fine-dust capture.
 
-Bifolds now use the revision C A1 mini PETG guide prototype under continuous 3060 headers: unequal leaves, rear-corner parking, 88° travel and a default 750 mm rear opening. The default leaf height is 682 mm. Five modules per opening carry a bought GN753.1 roller and metal washer/axle; CFG hinges support the leaves. The revised carrier has mounting/axle holes and closed-stop tabs are modeled. Header relief and candidate inner connectors remove the known rigid interferences. Connection capacity, hinge installation, parked stops/catches, final fasteners, head sealing and physical load/wear tests remain unconfirmed. See [engineering model](docs/ENGINEERING_MODEL.md).
+Bifolds use the revision C A1 mini PETG guide prototype under continuous 3060 headers: unequal leaves, rear-corner parking, 88° travel and a default 750 mm rear opening. The default leaf height is 682 mm. Five modules per opening carry a bought GN753.1 roller and metal washer/axle; CFG hinges support the leaves. The metal carrier, corner plates, closed tabs and parked operating stops are modeled. Their capacity, catch installation, final fasteners, head sealing and physical load/wear performance remain unconfirmed. See [engineering model](docs/ENGINEERING_MODEL.md).
 
 ## Supplier files
 
@@ -60,6 +86,7 @@ The ZIP pack includes:
 - `panel-outlines.dxf`: closed panel outlines at 1:1 in millimetres, declared holes on a separate layer, annotations outside cut geometry. Outlines are arranged side by side, not a sheet nesting/toolpath plan.
 - `assembly.step`: closed physical assembly built from the same authoritative solids used for meshes and verification. Provisional hardware envelopes are identified in the model; they are not hardware manufacturing drawings.
 - `model.json`, `verification.json`, `README.txt`: complete evaluated parameters, parts, provenance, evidence and installation checks.
+- `bifold-completion.json`: required-but-unfitted catches, proposed fixing schedules and partial load calculations with exclusions.
 - `containment-and-airflow.txt`: door sequence, seal-selection requests, inlet dimensions and installation/commissioning requirements, also included in the PDF.
 
 The supplier should confirm cutting tolerance, finishing, connector installation requirements and all glass processing before release. Tempered-glass holes/cutouts and edge treatment must be specified before tempering. No field glass cutting/drilling is included. Downloads are local; the application never sends orders or messages to suppliers.

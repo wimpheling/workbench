@@ -1,5 +1,80 @@
 # V3 delivery tracking
 
+## Bifold digital completion — 2026-09-14
+
+- [x] Preserve the bifold branch/worktree; no port back to the obsolete root app.
+- [x] Model sixteen corner plates, one-piece metal carrier candidates,
+  two-fixing closing tabs and four padded parked operating stops.
+- [x] Replace four handles with explicitly drawing-based GHD9008B studies.
+  GBL3030.KIT remains six installation requirements, not falsely fitted CAD.
+- [x] Check new rigid hardware at five poses; lower the bottom rigid backing
+  to remove the observed half-travel gusset interference. Park-pad contact and
+  deliberately overshot primary leaf tests pass. Printed guide bodies remain
+  connected after opening their thin mounting-bore webs.
+- [x] Add UI fixing schedules, partial masses/moments and quotation supplement.
+  Preserve missing hardware/load terms and retailer questions explicitly.
+- [x] Replace inner head covers by exterior hoods without beam reliefs; add
+  angled-brush study, connected-section checks and broken-connection mutations.
+  Carrier/bristle deflection remains unknown, not cleared by a collision waiver.
+- [x] Add one-sided meeting lips and six clamp segments around handle feet;
+  check closed contact and full-open disengagement. Actual compound/preload pending.
+- [x] Final browser acceptance passes in 4.7 minutes against port 8000;
+  half-open screenshot inspected. Revision `12ad55cb055b475f`: 450 parts,
+  1,577 pass / 0 fail / 125 unknown; status incomplete, not released for order.
+- [x] Export the live quotation ZIP and inspect its supplement: six required
+  catches, 48 fixing rows, matching revision/release status. Exported STEP
+  re-imports as a valid shape with 446 solids; no fabrication release implied.
+- [x] Final `make -C v3 check` passes: 127 backend tests, 44 frontend tests,
+  Ruff lint/format, TypeScript and production build. Standalone engineering
+  tests: 11 pass. Backend run 12m27s; only existing dependency deprecation warnings.
+- [ ] Catch installation and actual seal/attachment selection remain unfinished.
+  Supplier/physical acceptance is not implied by nominal geometry.
+  See [completion details and retailer questions](docs/BIFOLD_COMPLETION.md).
+
+## Metal underside retainer and rail end bars — 2026-09-14
+
+- [x] Replace segmented printed keepers by four continuous 18 x 4 mm steel
+  strips, with four welded end bars and relieved PETG ends. Add 60 metal
+  sleeves and 60 header-slot bridge washers; recess washer seats in printed
+  bodies and shorten alignment keys to clear them. These are custom nominal
+  parts, not vendor STEP or released fabrication drawings.
+- [x] Eight focused tests cover inventory, metal-stack contact, five normal
+  door poses, straight-down washer capture and roller overtravel blocking.
+- [x] Rebuild/restart port 8000; browser acceptance passes (3.9 min), half-open
+  screenshot inspected. Live revision `b60346afb78193f2`: 420 parts, 1,427 pass,
+  3 fail, 92 unknown. The same two head-coverage failures and containment
+  requirement fail; no confirmed rigid collision witness. Brush overlaps
+  remain unknown, not waived. UI describes retention and its evidence limits.
+- [x] Full `make -C v3 check`: 115 backend tests, 44 frontend tests,
+  lint/format, TypeScript checks and production build pass. Browser acceptance
+  passes against the rebuilt app on port 8000.
+- [ ] Validate custom parts, welds, thin printed webs, sleeve/washer fit,
+  fasteners/slot nuts, impact, tilt/side escape and operating stops/catches.
+  See [retention calculation and assembly notes](docs/RAIL_RETENTION.md).
+
+## Slot-captured Lexan study — 2026-09-13
+
+- [x] Download unchanged FSP vendor PDF; no public FSP08 STEP found. Keep
+  drawing-based installed section explicitly distinct from vendor CAD.
+- [x] Replace polycarbonate bifold surface beads with 16 mitred inserts, resize
+  four 4 mm Lexan panels and expose provisional cuts/warnings in UI and CSV.
+  Front doors and alternative bifold materials retain their prior mounting.
+- [x] Calculate 40 K expansion reserve and cutting/positioning allowances;
+  nominal default engagement 3 mm, reserve 2 mm per edge. Independent model
+  checks for nominal expansion and assumed lip engagement pass by default.
+- [x] Check actual profile/panel/insert intersections and mitred corners at
+  closed, half and full opening. Browser acceptance passes on port 8000;
+  inspected half-open screenshot. Live revision `eee51478e9462bb5`: 1,103 pass,
+  3 fail, 85 unknown. Only the pre-existing two head-coverage failures and
+  containment requirement fail; no confirmed collision witness remains.
+- [x] Full `make -C v3 check`: 107 backend tests and 44 frontend tests pass,
+  plus lint/format, TypeScript checking and production build. Focused browser
+  acceptance passes against the live application in 3.1 minutes.
+- [ ] Obtain actual gasket CAD and written Lexan compatibility (FSP08 is PVC),
+  or choose a compatible alternative. Approve minimum engagement, corner seal,
+  frame connectors and physical expansion/retention before ordering/cutting.
+  See [source and calculations](backend/enclosure/assets/FSP.md).
+
 ## Real roller and centring bushes — 2026-09-13
 
 - [x] Import user-supplied GN753.1 roller and GN753.2 bush STEP files unchanged,

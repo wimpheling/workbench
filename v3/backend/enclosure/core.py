@@ -559,19 +559,34 @@ def build_model(parameters=None):
         schema_version=SCHEMA_VERSION,
         profile_asset_sha256=ASSET_SHA256,
     )
+    from .bifold_completion import complete_bifolds
     from .containment_geometry import add_containment
+    from .glazing import add_glazing
 
+    add_glazing(model)
+    complete_bifolds(model)
     add_containment(model)
     model["assumptions"].append(
         dict(
+            id="metal-rail-retention",
+            confirmed=False,
+            description="Continuous 18 x 4 steel keepers, welded 4 mm end bars and metal sleeve/bridge-washer clamp path are geometric proposals, not rated retention. Confirm welds, fastener grade/engagement/locking, slot nut and washer strength, tolerances, impact loads and tilt/side escape tests. Rail end bars are backup overtravel stops; operating catches remain pending.",
+            references=["left-rear-rail-end-stop-park", "back-right-rail-end-stop-park"],
+        )
+    )
+    model["ordering"]["unresolved"].append(
+        "Custom welded steel rail retainers, bridge washers and compression sleeves: supplier fabrication and clamp/impact/retention validation pending"
+    )
+    model["assumptions"].append(
+        dict(
             id="printed-guide-prototype",
-            description="PETG A1 mini guide prototype: carrier envelope, M4 fasteners, metal stops/catches, CFG mounting, polycarbonate retention, seal clearance, creep and wear require physical validation. Printed lips are not independent metal retention. Doors remain hinge-supported.",
+            description="PETG A1 mini guide prototype with custom metal carrier and keepers: fasteners, operating-stop capacity, catch installation, CFG mounting, polycarbonate retention, seal clearance, creep and wear remain unvalidated. Doors remain hinge-supported; geometric retention does not establish a rated assembly.",
             confirmed=False,
             references=["left-rear-track", "back-right-track"],
         )
     )
     model["ordering"]["unresolved"].append(
-        "Printed-guide carrier, axle/bushings, 3060 header mounting, metal end stops/catches, seals and physical load/wear tests"
+        "Custom metal carrier, provisional axle/spacers/fasteners, 3060 header mounting, stop capacity, catch installation, seals and physical load/wear tests"
     )
     model["engineering_source_sha256"] = hashlib.sha256(
         b"".join(
@@ -582,6 +597,9 @@ def build_model(parameters=None):
                 "constraints.py",
                 "containment_geometry.py",
                 "bifold.py",
+                "glazing.py",
+                "bifold_completion.py",
+                "verification.py",
             )
         )
     ).hexdigest()
@@ -674,9 +692,43 @@ def build_shapes(model, pose=None):
             shape = bracket()
         else:
             shape = cq.Workplane("XY").box(sx, sy, sz).val()
+        if p.get("geometry", {}).get("kind") == "fsp08-study":
+            from .glazing import gasket_shape
+
+            shape = gasket_shape(p["size"], p["geometry"]["side"])
+        if p.get("geometry", {}).get("kind") == "park-stop-bracket":
+            from .bifold_completion import park_bracket
+
+            shape = park_bracket()[0]
+        if p.get("geometry", {}).get("kind") == "ghd9008b-study":
+            from .bifold_completion import handle_shape
+
+            shape = handle_shape()
+        if p.get("geometry", {}).get("kind") == "angled-head-brush-study":
+            # Installed bristle envelope, not solid rubber or vendor CAD.
+            shape = (
+                cq.Workplane("YZ")
+                .polyline([(-10, 0), (-10, 12), (10, 0), (10, -12)])
+                .close()
+                .extrude(sx)
+                .val()
+                .translate((-sx / 2, 0, 0))
+            )
         if p.get("geometry", {}).get("kind") == "printed-guide-body":
             channel = cq.Workplane("XY").box(sx + 2, 23, 21).val().translate((0, 0, -2))
             shape = shape.cut(channel)
+            # Open the unprintable 0.4 mm webs at the mounting sleeves instead
+            # of leaving fragile skins between each bore and the roller channel.
+            # Roller bridging across these local recesses needs coupon testing.
+            for hole in p.get("holes", []):
+                xx, yy = hole["center"]
+                web = (
+                    cq.Workplane("XY")
+                    .box(6.4, 1.4, 21)
+                    .val()
+                    .translate((xx, math.copysign(11.9, yy), -2))
+                )
+                shape = shape.cut(web)
             for end in (-1, 1):
                 for row in (-20, 20):
                     pocket = (
@@ -713,6 +765,15 @@ def build_shapes(model, pose=None):
                 shape = shape.cut(cutter)
         for hole in p.get("holes", []):
             x, y = hole["center"]
+            if hole.get("counterbore_top_diameter_mm"):
+                depth = hole["counterbore_top_depth_mm"]
+                shape = shape.cut(
+                    cq.Solid.makeCylinder(
+                        hole["counterbore_top_diameter_mm"] / 2,
+                        depth + 1,
+                        cq.Vector(x, y, sz / 2 - depth),
+                    )
+                )
             if hole.get("axis") == "y":
                 cutter = cq.Solid.makeCylinder(
                     hole["diameter_mm"] / 2,

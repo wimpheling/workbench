@@ -36,9 +36,18 @@ def test_defaults_and_real_geometry(client, evaluation):
         assert max(mesh["indices"]) < len(mesh["positions"]) / 3
     assert evaluation["report"]["order_ready"] is False
     # Revision C is explicitly a prototype, not the prior ideal-axis design.
-    # Keep known physical failures visible instead of silently waiving them.
+    # Exterior hood clears the framing; nominal coverage is not seal approval.
     checks = {c["id"]: c for c in evaluation["report"]["checks"]}
-    assert checks["containment.coverage.left-rear-perimeter-top.0"]["status"] == "fail"
+    assert checks["containment.coverage.left-rear-perimeter-top.0"]["status"] == "pass"
+    assert checks["containment.coverage.left-rear-perimeter-top.1"]["status"] == "pass"
+    assert checks["assumption.bifold-exterior-head-brush"]["status"] == "unknown"
+    assert any(
+        c["status"] == "unknown"
+        and {"left-rear-perimeter-top-seal", "left-rear-carrier-upright"}.issubset(
+            c.get("references", [])
+        )
+        for c in checks.values()
+    )
     assert not any(
         c["status"] == "fail" for c in checks.values() if c["id"].startswith("collision.")
     )
@@ -52,7 +61,8 @@ def test_defaults_and_real_geometry(client, evaluation):
         for c in evaluation["report"]["checks"]
         if c["category"] == "integrity"
     )
-    assert evaluation["report"]["status"] == "invalid"
+    assert evaluation["report"]["status"] == "incomplete"
+    assert evaluation["report"]["summary"]["fail"] == 0
 
 
 @pytest.mark.parametrize(

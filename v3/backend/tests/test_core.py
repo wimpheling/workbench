@@ -193,7 +193,7 @@ def test_baffle_actual_solids_block_diagonal_opening_to_exit_rays():
     assert vent["minimum_path_area_mm2"] >= 2 * vent["hose_area_mm2"]
 
 
-def test_printed_guides_clear_provisional_head_stops_in_checked_poses():
+def test_printed_guides_clear_rigid_head_stops_and_keep_brush_contact_unvalidated():
     model = build_model()
     assert not any(p["id"].endswith("-closure-stop") for p in model["parts"])
     for fraction in (0, 0.5, 1):
@@ -214,6 +214,11 @@ def test_printed_guides_clear_provisional_head_stops_in_checked_poses():
             hardware = [p for p in selected if p not in headers]
             for a in headers:
                 for b in hardware:
+                    if a.get("deformable"):
+                        # The exterior brush must deflect around the carrier;
+                        # retain that interference as unresolved, not clearance.
+                        assert a["geometry_fidelity"] == "unconfirmed-flexible-brush-envelope"
+                        continue
                     assert shapes[a["id"]].intersect(shapes[b["id"]]).Volume() < 1e-5, (
                         a["id"],
                         b["id"],

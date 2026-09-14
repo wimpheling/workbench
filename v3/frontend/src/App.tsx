@@ -449,11 +449,80 @@ export default function App() {
             </div>
             <p data-testid="bifold-prototype-note">
               Bifold prototype · A1 mini PETG guides, CFG hinges, 88° parking.
-              Rear opening 750 mm by default. Drilled carrier and closed-stop
-              tabs modeled; vendor STEP hinges, rollers and bushes fitted. Head
-              sealing, parked stops/catches and physical
+              Rear opening 750 mm by default. Metal carrier, corner plates and
+              two-fixing closed/parked stops modeled; vendor STEP hinges, rollers
+              and bushes fitted. Head sealing, catch installation and physical
               load/wear validation remain pending. Not released for manufacture.
             </p>
+            <details class="bifold-completion" data-testid="bifold-completion">
+              <summary>Bifold hardware · design status and fixings</summary>
+              <p>Four GHD9008B handles use catalogue dimensions, not vendor STEP.
+                Grip contours and recessed screw seats remain unconfirmed.
+                Six GBL3030.KIT catches are required but not yet fitted in the
+                model: adapter and strike installation remain unresolved.</p>
+              <ul>
+                <For each={result()?.model.bifold_completion?.catch_requirements}>
+                  {(r) => <li><a href={r.source} target="_blank" rel="noreferrer">{r.product_code}</a>
+                    {" · "}{r.quantity} × {r.id}: {r.unresolved}</li>}
+                </For>
+              </ul>
+              <p>Partial dead-load screening only; omitted hardware, impact,
+                hinge capacity and guide reactions are not validated.</p>
+              <ul>
+                <For each={result()?.model.doors.filter((d) => d.load_screening)}>
+                  {(d) => <li>{d.id}: included mass {d.load_screening!.included_mass_kg.toFixed(2)} kg;
+                    closed frame moment {d.load_screening!.closed_frame_moment_Nm.toFixed(2)} N·m;
+                    interleaf moment {d.load_screening!.closed_interleaf_moment_Nm.toFixed(2)} N·m.</li>}
+                </For>
+              </ul>
+              <details><summary>Proposed fixing schedule — engagement pending</summary>
+                <ul><For each={result()?.model.bifold_completion?.fastener_schedule}>
+                  {(r) => <li>{r.part_id}: {r.quantity} × {r.screw}; {r.nut}</li>}
+                </For></ul>
+              </details>
+            </details>
+            <p data-testid="rail-retention-note">
+              Rail retention: continuous 4 mm steel underside strips, 10 mm
+              axle slot and welded end bars. Metal sleeves and bridge washers
+              carry the bolt clamp load. Backup overtravel stops only;
+              welds, fasteners, impact and tilt retention remain unvalidated.
+            </p>
+            <p data-testid="bifold-head-note">
+              Exterior head hoods clear the moving leaves. Angled brush sections
+              bridge to the leaf tops; nominal coverage is not seal approval.
+              Brush deflection around the carrier, profile selection, bonded
+              holder attachment and corner returns remain unvalidated.
+              Meeting lips are clamped to one leaf and disengage during opening;
+              they do not stretch between both folds.
+            </p>
+            <Show when={result()?.model.parts.some((p) => p.glazing)}>
+              <details data-testid="bifold-glazing" open>
+                <summary>4 mm Lexan · slot glazing study</summary>
+                <p>
+                  FSP08 candidate: drawing-based section, not vendor STEP.
+                  PVC compatibility with Lexan is unconfirmed. Corner seals,
+                  minimum edge engagement and frame connectors need approval.
+                  Provisional cuts below — do not order yet.
+                </p>
+                <ul>
+                  <For each={result()?.model.parts.filter((p) => p.glazing)}>
+                    {(p) => (
+                      <li>
+                        <button onClick={() => setSelected(p.id)}>
+                          {p.id.replace("-infill", "")}: {p.size[0].toFixed(2)} ×{" "}
+                          {p.size[2].toFixed(2)} × 4 mm
+                        </button>
+                      </li>
+                    )}
+                  </For>
+                </ul>
+                <p>
+                  40 K thermal excursion allowance; at default dimensions,
+                  3 mm nominal slot engagement and 2 mm reserve per edge.
+                  Frame assembled around the panel; no Lexan drilling.
+                </p>
+              </details>
+            </Show>
             <For each={doors}>
               {([id, label]) => (
                 <label class="door-control">

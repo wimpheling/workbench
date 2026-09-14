@@ -203,8 +203,9 @@ def test_header_relief_removes_real_overlap_without_a_collision_waiver():
         ("back-right", "bracket-right-back-bottom-x"),
     ],
 )
-def test_closed_jamb_connector_and_carrier_clear_real_leaf_solids(did, bracket):
-    model = build_model()
+@pytest.mark.parametrize("material", ["polycarbonate", "glass"])
+def test_closed_jamb_connector_and_carrier_clear_real_leaf_solids(did, bracket, material):
+    model = build_model({"bifold_material": material})
     parts = {p["id"]: p for p in model["parts"]}
     assert parts[bracket]["cad_asset"] == "CIB08T.step"
     assert not parts[bracket]["mounting_orientation_confirmed"]
@@ -218,8 +219,11 @@ def test_closed_jamb_connector_and_carrier_clear_real_leaf_solids(did, bracket):
         for p in model["parts"]
         if p["id"].startswith(did + "-b-")
         and "right" in p["id"]
-        and "retainer" in p["id"]
-        and p["id"].endswith("-in")
+        and (
+            p["id"].endswith("-slot-gasket")
+            if material == "polycarbonate"
+            else "retainer" in p["id"] and p["id"].endswith("-in")
+        )
     )
     pairs[1] = (did + "-carrier-upright", bead)
     wanted = {pid for pair in pairs for pid in pair}

@@ -6,6 +6,24 @@ Extrusions use actual retained AST03003004 and AST03006006 supplier STEP end fac
 
 ## Doors
 
+Current completion details are in [BIFOLD_COMPLETION.md](BIFOLD_COMPLETION.md).
+Corner plates and metal carriers replace the earlier unconnected-frame and
+printed-carrier proposals. Operating parked stops are modeled; catches remain
+installation requirements. Handle geometry comes from drawings, not STEP.
+Partial calculated masses deliberately exclude unselected hardware and cannot
+establish hinge capacity. Earlier prototype descriptions below are historical
+where superseded by these completion details.
+
+For 4 mm Lexan bifolds, surface retaining beads are replaced by a **provisional
+slot-captured FSP08 study**. The vendor PDF is retained in assets; no public
+vendor STEP was found. The installed section and 45-degree mitres are
+drawing-based approximations. Nominal daylight + 6 mm gives the default cuts;
+thermal/cutting allowances are recomputed for other dimensions. The UI exposes
+cut sizes and ordering warnings, while verification independently checks nominal
+expansion reserve and assumed lip engagement. FSP08 PVC compatibility, minimum
+retention, corner sealing, setting support and frame connector layout are
+unconfirmed. See [calculation/provenance](../backend/enclosure/assets/FSP.md).
+
 Both bifold hinge lines now use the retained Elesa+Ganter CFG.30/30 SH-6-C33
 STEP assembly: two independently moving molded leaves and the real pin, including
 knuckles and countersunk holes. Three complete hinges per joint give twelve
@@ -28,7 +46,7 @@ including the recessed bearing faces and the bushes' centring collars. Both
 collars face into the bore, leaving a nominal 1 mm tip gap. See
 [source files and mounting datums](../backend/enclosure/assets/GN753.md).
 This supersedes the previous roller/bush annulus envelopes, but not the
-provisional spacer, fasteners, printed track/carrier or load/retention evidence.
+provisional spacer, fasteners, printed track, custom metal carrier or load/retention evidence.
 
 - Actual Shapeoko 5 Pro 4×4 swept dimensions, spindle, dust shoe and flexible hose routing; default machine dimensions are placeholders.
 - Mounting of the proposed hinge axes with actual supplier components, track/carriage compatibility, strike/stop placement and retention, screw schedules and any supplier drilling.
@@ -39,7 +57,7 @@ These are explicit ordering blockers, not optional warnings. The supplier pack i
 
 ## Containment design and verification
 
-`containment_geometry.py` adds proposed stops, seals, infill retention, fixed-wall lap joints, roof/table gaskets and the hose collar. Revised bifold stops follow the corner-parked doors. The head has a deliberately incomplete sealing barrier, not a solid seal through the guide/arm: remaining coverage failures are retained. Flexible membrane geometry is not a deformation simulation.
+`containment_geometry.py` adds proposed stops, seals, infill retention, fixed-wall lap joints, roof/table gaskets and the hose collar. Bifold heads use exterior hoods and angled brush studies: nominal sections and their contact chain are checked, while carrier/bristle deflection remains unresolved. One-sided meeting lips are clamped only to primary leaves and disengage from secondary leaves on opening; rigid animation is not a deformation simulation.
 
 The passive inlet uses a rectangular right-wall cutout and supplier-cut wood baffles with two changes in direction. Its minimum passage is compared with a declared two-times-hose-area design allowance. Geometric obstruction and straight opening-to-exit paths are checked independently of airflow performance. There is no assumed extractor capacity, pressure loss, cooling rate or filter efficiency. See the exported seal/airflow notes and source references for the installation evidence required.
 
@@ -47,7 +65,7 @@ Containment checks subtract actual solids from mandatory barrier regions with de
 
 Fixed wood panels now overlap the full 30 mm structural border. A nominal 2 mm continuous gasket separates each panel from its frame; the roof also sits on perimeter gasket and roof-beam bearing pads. A 3 mm bottom gasket requires a continuous, flat supporting tabletop at Z = −33 mm. That tabletop is explicitly not supplied or confirmed by this model.
 
-Bifold side gaps are 5 mm, bottom gap 3 mm and guide headroom 55 mm. Sealing, brush engagement and carrier clearance still need detailing. Infill retaining beads are provisional envelopes pending selection of a compatible 4 mm panel liner/retainer. No failed sealing or hardware interaction is waived.
+Bifold side gaps are 5 mm, bottom gap 3 mm and guide headroom 55 mm. Sealing and brush engagement still need detailing. Polycarbonate infills use the provisional FSP08 slot study; other materials retain surface beads. No failed sealing or hardware interaction is waived.
 
 The right front leaf carries the exterior astragal. The enforced operating domain is: open the right leaf fully, then open the left; close the left, then close the right. Requests violating that sequence are rejected. Each bifold has an exterior flexible meeting cover whose real folding, attachment and fatigue behaviour remain unresolved; its displayed rigid transform is not a rubber-deformation simulation.
 
@@ -59,6 +77,6 @@ The roof collar is a real annulus, including the roof cutout, flange and nominal
 
 Revision C replaces the floating overhead track and dogleg with five PETG modules per default opening, directly bolted into two underside slot rows of the continuous 3060 header. Native solids cut the 23 mm cavity, M4 holes and alignment recesses; separate 4 mm keeper strips leave a 10 mm throat. The vertical GN753.1 roller axis, steel M4 axle, M6 large washer and metal spacer are modeled. The carrier now has an 18 × 8 × 75 mm exterior mounting plate, two M6 clearance holes on 30 mm centres, and a 14 × 28 × 6 mm shelf with an M4 axle hole. A further 4 mm metal spacing ring lowers the shelf beneath the rail screw-head allowance; axle head, two vendor STEP bushes, lower washer and locknut are included. Fastener/spacer envelopes and clamp/load capacity remain unconfirmed. These changes supersede the standalone study's carrier stack, not its rail-module dimensions. No updated carrier STL or manufacturing release is implied.
 
-The rear header has a supplier-machined 15.5 × 15.5 mm open corner relief through its 30 mm height. Two protruding bottom CBR3030 brackets are replaced by candidate CIB08T slot connectors using retained supplier STEP geometry; slot engagement, installation access and joint strength remain unconfirmed. This is a quotation request, not permission to omit structural connections. Rigid perimeter backing is moved behind the free-stile swing; two prepared steel tabs per opening contact the primary jamb stile at closure. Their anti-rotation fixing and impact capacity still need approval. Parked stops and catches remain unresolved.
+The rear header has a supplier-machined 15.5 × 15.5 mm open corner relief through its 30 mm height. Two protruding bottom CBR3030 brackets are replaced by candidate CIB08T slot connectors using retained supplier STEP geometry; slot engagement, installation access and joint strength remain unconfirmed. This is a quotation request, not permission to omit structural connections. Rigid perimeter backing stays clear of the free-stile/gusset swing. Two prepared steel closing tabs per opening now have two fixing stations each. Parked operating stops are modeled; stop impact capacity and catch installation remain unresolved.
 
-Prepared head covers are relieved around existing brackets and roof framing. Narrow flexible brush envelopes provide proposed wipes, not proven seals. Cover holes and corner reliefs still fail head-barrier coverage; no collision exemptions or flexible-envelope passes conceal this. Board access now checks the entire swept board up to a final position centred in the enclosure, rather than against the rear wall. This proves only the declared straight loading path, conditional on workshop approach space. Print coupons before full-door use; no printed load rating is asserted.
+Prepared exterior head hoods clear the framing without reliefs. The angled brush has an explicit unselected root/reach/drop study, not approved vendor geometry. Separate hood/wipe coverage sections and a contact chain replace the former inner-cover plane check; flexible carrier interference remains unknown. Board access checks the entire swept board up to a final position centred in the enclosure. This proves only the declared straight loading path, conditional on workshop approach space. Print coupons before full-door use; no printed load rating is asserted.

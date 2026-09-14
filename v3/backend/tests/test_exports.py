@@ -175,6 +175,11 @@ def test_pdf_and_step_are_real_documents(specification, tmp_path):
 
 
 def test_pack_separates_supplier_parts_and_includes_evidence(specification):
+    specification[0]["bifold_completion"] = {
+        "catch_requirements": [
+            {"product_code": "GBL3030.KIT", "quantity": 6, "status": "unresolved"}
+        ]
+    }
     data, _, name = export_file("pack", *specification)
     assert name.endswith("quotation-pack.zip")
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
@@ -188,11 +193,17 @@ def test_pack_separates_supplier_parts_and_includes_evidence(specification):
             "polycarbonate-panels.csv",
             "hardware.csv",
             "containment-and-airflow.txt",
+            "bifold-completion.json",
             "supplier-drawings.pdf",
             "panel-outlines.dxf",
             "assembly.step",
         }
         assert json.loads(archive.read("verification.json"))["order_ready"] is False
+        completion = json.loads(archive.read("bifold-completion.json"))
+        assert completion["revision"] == specification[0]["revision"]
+        assert "NOT RELEASED" in completion["release_status"]
+        assert completion["catch_requirements"][0]["quantity"] == 6
+        assert completion["catch_requirements"][0]["status"] == "unresolved"
         assert b"NOT RELEASED" in archive.read("README.txt")
         assert b"AST03003004" in archive.read("reiman-extrusions.csv")
         assert b"glass" not in archive.read("reiman-extrusions.csv")
