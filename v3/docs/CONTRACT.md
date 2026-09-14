@@ -1,6 +1,6 @@
 # V3 implementation contract
 
-All new implementation lives in `v3/`. Coordinates and lengths are millimetres: X right, Y toward the back, Z up; front is Y=0. No current application sources are modified.
+All new implementation lives in `v3/`. Coordinates and lengths are millimetres: X right, Y toward the back, Z up; front is Y=0. The superseded root `src/` application has been removed; v3 is the active product.
 
 Python package: `v3/backend/enclosure`. Core API: `build_model(parameters: dict | None = None) -> dict`, `build_shapes(model: dict, pose: dict | None = None) -> dict[str, cadquery.Shape]`, `default_parameters() -> dict`. Core owns `core.py` and geometry/kinematic helpers. Verification owns `verification.py`: `verify(model: dict, shapes: dict | None = None) -> dict`. Supervisor owns service and supplier exports. Frontend consumes HTTP JSON.
 

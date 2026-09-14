@@ -4,7 +4,7 @@ An enclosure planning application for a Shapeoko 5 Pro 4×4 in a Lisbon workshop
 
 **This is an engineering verification workbench, not a released fabrication design.** It generates usable quotation documents and evaluates actual geometry, but supplier hinge/mounting details, machine/hose dimensions and physical tolerances still require evidence. Reports and every ordering pack preserve those unresolved requirements. Do not order tempered glass from a pack marked `NOT RELEASED FOR ORDER`.
 
-The existing application remains outside this folder, unchanged. V3 uses native Python/CadQuery/OpenCascade as its geometry authority and a SolidJS/Three.js interface. No cloud account is required; run it locally. A static Pages site cannot perform native CAD evaluations.
+V3 is the active application; the superseded root `src/` application has been removed. V3 uses native Python/CadQuery/OpenCascade as its geometry authority and a SolidJS/Three.js interface. No cloud account is required; run it locally. A static Pages site cannot perform native CAD evaluations.
 
 ## Run
 

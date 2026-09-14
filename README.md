@@ -1,38 +1,42 @@
 # Workbench
 
-Workbench is a browser-based, parametric EnclosureV2 workbench built with Vite Plus, SolidJS, Three.js, and Replicad/OpenCascade.
+A parametric enclosure planning application for a Shapeoko 5 Pro 4×4.
+The active application lives in `v3/`:
 
-## Architecture
+- `v3/backend/enclosure/`: Python/CadQuery model, geometry verification, HTTP API, and supplier exports.
+- `v3/frontend/src/`: SolidJS/Three.js interface consuming the backend model.
+- `legacy/`: archived renderer history.
 
-- `src/domain/`: typed IDs, units, frames/anchors, EnclosureV2 model, catalogs, configurations, connections, panels, and manufacturing report/cut-plan generation.
-- `src/validation/`: deterministic constraints, kinematics, motion-envelope sampling, fit policies, Replicad solid checks, and structured reports.
-- `src/rendering/`: declarative-model to Three.js scene adapter and viewer.
-- `src/exports.ts`: JSON, CSV BOM/cut-list, and simple SVG drawing exports.
-- `src/ui/`: SolidJS authoring controls, validation display, viewer, and downloads.
-- `legacy/`: the historical renderer-facing application; it is not the active product path.
+The Python model is the source of truth. Dimensions are millimetres:
+X right, Y toward the back, Z up. The superseded root `src/` application
+was removed; its history remains in Git.
 
-The active model uses millimetres internally. Its canonical inputs are named `innerClearWidthMm`, `innerClearHeightMm`, and `innerClearDepthMm`; compatibility adapters convert older dimension records at the boundary. EnclosureV2 dimensions are parameters, not golden test values.
+## Setup and run
 
-## Commands
+Install Node.js/npm, uv, and make. From the repository root:
 
 ```sh
-npm ci
+npm run setup
 npm run dev
+```
+
+Open http://127.0.0.1:8000. This builds the frontend and starts the native
+CAD backend. For frontend hot reload, also run `npm run dev:frontend` and
+open http://127.0.0.1:5173. A static frontend alone cannot evaluate CAD.
+
+## Verification and exports
+
+```sh
 npm test
 npm run check
 npm run build
+npm run export
 ```
 
-The quality suite currently covers 31 test files / 154 tests. Build output is `dist/`.
+Root npm scripts delegate to v3; dependencies are locked in `v3/uv.lock`
+and `v3/frontend/package-lock.json`. Build output is `v3/frontend/dist/`;
+quotation packs are generated under `v3/artifacts/`.
 
-## Current limits
-
-The manufacturing report currently covers the aluminium frame and extrusion cut planning, with profile-catalog stock lengths and estimate rates. Hardware, panel cut records, full vendor catalogs, complete project-wide collision evaluation, continuous-motion proof, PDF production, and browser smoke tests are not yet implemented. The viewer applies EnclosureV2 door motion through generic assembly and motion records.
-
-Frame3DD is an optional external structural sidecar. The code can serialize inputs, parse saved results, and return an explicit `unavailable` diagnostic; Frame3DD is not installed or configured locally and is never required for rendering, ordinary validation, or exports. It is simplified screening, not engineering certification.
-
-Known non-blocking build warnings include Replicad `fs`/`path`/`crypto` browser externalization and a large WASM/JavaScript bundle.
-
-See `CAD_ROADMAP.md` for the audited implemented scope, remaining plan, and explicit blockers.
-See `DOOR_CLEARANCES.md` for the hardware-first checklist used to replace the
-provisional door gaps.
+See [v3 documentation](v3/README.md) for model limitations, supplier
+requirements, browser tests, and additional commands. `CAD_ROADMAP.md`
+and `DOOR_CLEARANCES.md` describe the retired EnclosureV2 application.

@@ -8,8 +8,8 @@ model is the source of truth for geometry, dimensions, motion, verification,
 and supplier specifications. Keep rendering as an adapter over that model
 and use millimetres internally.
 
-The root `src/` application and `legacy/` are retained history, not the active
-product. Add product features to v3. See `v3/README.md` for setup, commands,
+The superseded root `src/` application has been removed; `legacy/` is
+retained history. Add product features to v3. See `v3/README.md` for setup, commands,
 architecture, and verification limits.
 
 ## Branches, worktrees, and pull requests
@@ -37,6 +37,8 @@ task updates in the worktree and include them in the relevant PR.
 For backend model, geometry, verification, or export changes, run
 `uv run pytest` from `v3/`. For frontend or shared API changes, run
 `npm test`, `npm run check`, and `npm run build` from `v3/frontend/`.
+Root `npm test`, `npm run check`, and `npm run build` delegate to v3
+backend/frontend tests, lint/format checks, type checks, and the frontend build.
 Run relevant browser tests for interaction changes. Changes spanning the
 backend and frontend require both sets of checks. Documentation-only changes
 need review of their content, paths, and formatting, not application tests.
