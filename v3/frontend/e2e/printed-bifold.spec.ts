@@ -36,7 +36,7 @@ test("revision C prototype is served by v3 and animates without CAD requests", a
   await expect(page.getByRole("slider", { name: "Left wall · rear bifold" })).toBeVisible();
   await page.getByRole("button", { name: "Design notes", exact: true }).click();
   await expect(page.getByRole("region", { name: "Design notes", exact: true })).toBeVisible();
-  expect(data.model.parts.filter((p: { product_code?: string }) => p.product_code === "CJP3030L")).toHaveLength(16);
+  expect(data.model.parts.filter((p: { product_code?: string }) => p.product_code === "CJP3030L")).toHaveLength(28);
   for (const plate of data.model.parts.filter((p: { product_code?: string }) => p.product_code === "CJP3030L")) expect(plate.fastener_schedule.screw).toContain("ISO 7380 button head");
   expect(data.model.parts.filter((p: { product_code?: string }) => p.product_code === "BF-PARK-88")).toHaveLength(4);
   for (const stop of data.model.parts.filter((p: { product_code?: string }) => p.product_code === "BF-PARK-88")) {
@@ -112,8 +112,8 @@ test("revision C prototype is served by v3 and animates without CAD requests", a
   const hinges = data.model.parts.filter(
     (p: { cad_asset?: string }) => p.cad_asset === "CFG3030.stp",
   );
-  expect(hinges).toHaveLength(36);
-  expect(hinges.filter((p: { cad_component: string }) => p.cad_component === "pin")).toHaveLength(12);
+  expect(hinges).toHaveLength(54);
+  expect(hinges.filter((p: { cad_component: string }) => p.cad_component === "pin")).toHaveLength(18);
   for (const hinge of hinges) {
     expect(data.meshes.find((m: { id: string }) => m.id === hinge.id).positions.length).toBeGreaterThan(100);
   }

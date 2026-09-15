@@ -6,7 +6,11 @@ from enclosure.verification import check_solid_pair
 def test_completion_inventory_and_honest_procurement():
     m = build_model()
     parts = {p["id"]: p for p in m["parts"]}
-    plates = [p for p in parts.values() if p.get("product_code") == "CJP3030L"]
+    plates = [
+        p
+        for p in parts.values()
+        if p.get("product_code") == "CJP3030L" and p["assembly"] in ("left-rear", "back-right")
+    ]
     assert len(plates) == 16
     assert all(len(p["holes"]) == 5 for p in plates)
     assert (

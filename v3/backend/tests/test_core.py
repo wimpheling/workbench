@@ -159,20 +159,14 @@ def test_wall_vent_cutout_matches_supplier_rectangle():
     assert hole["y_mm"] + hole["height_mm"] / 2 - wall["size"][2] / 2 == hole["center_local_mm"][2]
 
 
-def test_packing_bridges_glass_to_continuous_retainer():
+def test_front_glass_is_slot_captured_without_surface_retainers():
     model = build_model()
     parts = {p["id"]: p for p in model["parts"]}
     pane = parts["front-left-a-infill"]
-    packing = parts["front-left-a-infill-left-packing-out"]
-    bead = parts["front-left-a-infill-left-retainer-out"]
-    assert (
-        packing["motion_local"][1] - packing["size"][1] / 2
-        == pane["motion_local"][1] + pane["size"][1] / 2
-    )
-    assert (
-        packing["motion_local"][1] + packing["size"][1] / 2
-        == bead["motion_local"][1] - bead["size"][1] / 2
-    )
+    assert pane["size"][1] == 6
+    assert pane["glazing"]["product_candidate"] != "FSP08"
+    assert "front-left-a-infill-left-slot-gasket" in parts
+    assert not any("front-left-a-infill" in pid and "retainer" in pid for pid in parts)
 
 
 def test_baffle_actual_solids_block_diagonal_opening_to_exit_rays():

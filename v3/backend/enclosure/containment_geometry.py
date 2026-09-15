@@ -80,9 +80,9 @@ def add_containment(model):
             base = 0
             span = W
             top = H
-            stopnormal = -31
-            sealnormal = -31 - c / 2
-            depth = c - 2
+            stopnormal = 13
+            sealnormal = 9
+            depth = 6
         else:
             d = doors[did]
             pivot = _add(d["pivot"], _rotate([-2.5, 8, 0], d["base_deg"]))
@@ -118,6 +118,13 @@ def add_containment(model):
                 item = add(
                     id, [ww, dd, hh], _add(pivot, _rotate([xx, nn, zz], base)), base, rubber=rubber
                 )
+                if did == "front" and side in ("left", "right") and not rubber:
+                    item["size"][2] = H - 64
+                    item["cut_length_mm"] = H - 64
+                    item["position"][2] = H / 2
+                    item["machining"] += (
+                        "; ends 32 mm clear of existing side-rail brackets; seal end support unresolved"
+                    )
                 if did != "front" and rubber:
                     if side in ("left", "right"):
                         item["size"][2] = H + 6
@@ -200,11 +207,25 @@ def add_containment(model):
                 id = f"{did}-perimeter-{side}-backing"
                 add(id, [ww, 8, hh], _add(pivot, _rotate([xx, 45, zz], base)), base)
                 ids.append(id)
+        if did == "front":
+            for side, size, pos in (
+                ("left", [30, 12, H - 64], [-15, 6, H / 2]),
+                ("right", [30, 12, H - 64], [W + 15, 6, H / 2]),
+                ("bottom", [W, 12, 30], [W / 2, 6, -15]),
+                ("top", [W, 12, 30], [W / 2, 6, H + 15]),
+            ):
+                backing = add(
+                    f"front-perimeter-{side}-backing",
+                    size,
+                    pos,
+                    machining="12 mm rigid backing on frame rear face supports closing strip. M6 slot fixings, pitch and anti-rotation detail pending; not a rated slam stop.",
+                )
+                ids.append(backing["id"])
         for side, rect in [
-            ("left", [0, c, 0, H]),
-            ("right", [span - c, span, 0, H]),
+            ("left", [0, 5 if did == "front" else c, 0, H]),
+            ("right", [span - (5 if did == "front" else c), span, 0, H]),
             ("bottom", [0, span, 0, c]),
-            ("top", [0, span, top, H]),
+            ("top", [0, span, H - c if did == "front" else top, H]),
         ]:
             if did != "front" and side == "bottom":
                 entries.append(
@@ -275,11 +296,13 @@ def add_containment(model):
     d["closing_order"] = ["front-left", "front-right"]
     d["opening_order"] = ["front-right", "front-left"]
     ids = []
-    for suffix, nn, dd, rubber in [("astragal", 20, 2, False), ("meeting-gasket", 17, 4, True)]:
-        local = [L, nn, H / 2]
+    for suffix, nn, dd, rubber in [("astragal", -10, 2, False), ("meeting-gasket", -13, 4, True)]:
+        # Offset onto the owning stile: the old centred strip hit the left
+        # handle during the first degree of opening.
+        local = [L - 10, nn, H / 2]
         item = add(
             f"front-{suffix}",
-            [40, dd, H + 8],
+            [40, dd, H - 2 * c],
             _add(d["pivot"], _rotate(local, d["base_deg"])),
             d["base_deg"],
             d["id"],
@@ -291,7 +314,13 @@ def add_containment(model):
         d["part_ids"].append(item["id"])
     entries.append(
         region(
-            "front-meeting", d["pivot"], d["base_deg"], 20, [L - c, L + c, 0, H], ids, "astragal"
+            "front-meeting",
+            d["pivot"],
+            d["base_deg"],
+            -10,
+            [L - 2.5, L + 2.5, 0, H],
+            ids,
+            "astragal",
         )
     )
     # Retail cut-to-length wipe on B's meeting stile, clear of both handles.

@@ -368,3 +368,18 @@ def test_large_hose_does_not_silently_outgrow_inlet(geometry_only_verify):
         ]
         == "fail"
     )
+
+
+@pytest.mark.parametrize("thickness,status", [(4, "pass"), (6, "pass"), (8, "fail")])
+def test_front_slot_thickness_is_checked_even_without_geometric_evidence(
+    fast_verify, thickness, status
+):
+    report = fast_verify(build_model({"glass_thickness_mm": thickness}))
+    for side in ("left", "right"):
+        assert (
+            next(
+                c for c in report["checks"] if c["id"] == f"glazing.thickness.front-{side}-a-infill"
+            )["status"]
+            == status
+        )
+    assert not report["order_ready"]

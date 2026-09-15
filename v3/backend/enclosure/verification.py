@@ -933,12 +933,52 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                     unit="mm",
                 )
 
+    # Independently measure the closed inset envelope; do not trust door annotations.
+    for door_id in ("front-left", "front-right"):
+        members = [
+            p
+            for p in model["parts"]
+            if p["assembly"] == door_id
+            and (p["category"] in ("extrusion", "glass", "panel") or p["id"] == "front-astragal")
+        ]
+        bounds = [_bbox(shapes[p["id"]]) for p in members if p["id"] in shapes]
+        front = min((b[0][1] for b in bounds), default=-math.inf)
+        add(
+            f"front.inset.{door_id}",
+            "pass" if bounds and front >= -30 - 1e-6 else "fail",
+            "assembly",
+            "Closed door profiles, infill and meeting strip behind frame front datum Y=-30; operating hardware projects",
+            [p["id"] for p in members],
+            measured=front,
+            required=-30,
+            unit="mm",
+        )
+
     # Independent nominal glazing allowance check from panel/frame dimensions.
     # Assumed 5 mm usable depth is not a vendor-certified installed dimension.
     glazing_parts = {p["id"]: p for p in model["parts"]}
     for pane in model["parts"]:
         if not pane.get("glazing"):
             continue
+        if pane["assembly"].startswith("front-"):
+            add(
+                f"glazing.thickness.{pane['id']}",
+                "pass" if pane["size"][1] <= 6 else "fail",
+                "tolerance",
+                "Thin-wall slot-holder study supports at most 6 mm; thicker infill requires redesign",
+                [pane["id"]],
+                measured=pane["size"][1],
+                required=6,
+                unit="mm",
+            )
+            if pane["material"] == "wood":
+                add(
+                    f"glazing.moisture.{pane['id']}",
+                    "unknown",
+                    "tolerance",
+                    "Wood moisture movement and edge durability require the actual sheet grade; thermal study is insufficient",
+                    [pane["id"]],
+                )
         prefix = pane["id"].removesuffix("-infill")
         for axis, low, high in ((0, "stile-a", "stile-b"), (2, "rail-low", "rail-high")):
             a = glazing_parts.get(f"{prefix}-{low}")
@@ -954,7 +994,7 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                 continue
             opening = b["motion_local"][axis] - a["motion_local"][axis] - 30
             length = pane["size"][axis]
-            growth = 0.000070 * length * 40
+            growth = (0.000009 if pane["material"] == "glass" else 0.000070) * length * 40
             allowance = opening + 10 - length
             required = growth + 2 * parameters["cut_tolerance_mm"] + 1
             bite = (length - opening) / 2

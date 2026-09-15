@@ -1,0 +1,65 @@
+# Fit the front doors inside the frame using the bifold components
+
+## Description
+
+Deliver basic inset front doors using the current bifold corner connections,
+slot-captured infill arrangement and real CFG hinges, preserving loading access,
+the completed bifolds and bottom Design notes tab.
+
+## Discussion
+
+Started from updated main at `bad45a3`, including final bifold PR #15, in the
+`fix/front-inset-doors` branch and dedicated worktree. Inspected the backend,
+CFG vendor STEP/datum notes, CJP/FSP drawing studies and latest bifold decisions.
+The former purchase-ready gasket scope is superseded for this delivery by the
+user's explicit instruction to keep gasket/material uncertainties visible.
+Outstanding supplier/physical work is retained in
+[front hardware and gasket validation](../todo/front-door-hardware-and-gasket-validation.md).
+
+The profile front faces are Y=-24, 6 mm behind the frame front face. Real CFG
+axes at Y=-38 connect via six 6 mm moving-wing spacers. Eight CJP3030L door
+plates and four fixed-frame plates replace the obsolete front connection
+arrangement; the latter remove aperture-intruding angle brackets. Default
+jamb/meeting gaps are 5 mm, top/bottom gaps 4 mm. No fixed centre post is added.
+
+The right-hand meeting strip closes last. Its 10 mm offset onto the owning
+stile corrects an actual first-degree collision with the left handle found by
+native-solid sweep sampling. Open right fully, then left; close in reverse.
+Travel is 100° per door. Handles and hinge barrels project; door profiles,
+infill and meeting strip sit behind the structural front face.
+
+Default 6 mm front glass is captured by a thickness-adapted, unselected slot
+holder study; FSP08 is not assigned to 6 mm glass. Front cuts are provisionally
+775.5 × 678 × 6 mm (two). Actual holder compound/section, glass setting support,
+wood moisture movement and physical retention are unresolved. More than 6 mm
+front infill fails the thickness check. The existing bifold PVC/Lexan uncertainty
+is preserved. All 312 bifold component records compare equal to updated main.
+
+See [front-door design](../../v3/docs/FRONT_DOORS.md) for datums, quantities,
+installation details and verification limits. Existing right-side airflow
+requirements remain tracked in [the airflow task](../todo/right-side-airflow-and-filtration.md).
+
+## Implementation plan
+
+- [x] Establish and implement the inset arrangement
+  - [x] Define profile/hinge datums, spacer geometry, gaps and corner connections
+  - [x] Adapt slot-holder geometry and cuts to front material/thickness
+  - [x] Preserve the bifold component records and bottom Design notes tab
+  - [x] Preserve a centre-post-free loading opening and enforce closing order
+- [x] Record unresolved supplier and physical evidence explicitly
+  - [x] Retain product, compound, engagement, setting-support and moisture uncertainties
+  - [x] Document rear closing strips, backing, corner/end support, fixings and unvalidated preload
+  - [x] Carry fabrication and gasket selection obligations into the linked follow-up task
+- [ ] Verify and deliver the change
+  - [x] Check closed native-solid fit and infill/holder contact against vendor extrusion slots
+  - [x] Sample complete staged opening and reverse closing paths at every degree, correcting the first-degree handle collision
+  - [ ] Record final continuous-motion and loading-prism results, including unresolved bounds
+  - [ ] Run full backend and frontend checks plus browser verification
+  - [ ] Update supplier schedules and Design notes, publish PR and leave server running
+
+## Open questions / blockers
+
+- [x] Inset/hinge arrangement: six CFG hinges and 6 mm moving-wing spacers, 100° modeled travel; physical loading/sag remains in follow-up
+- [x] No centre post: the offset right-door meeting strip carries the overlap; right opens first and closes last
+- [x] Exact gasket, latch force and adjustment: unresolved, not claimed verified; retained in the linked supplier/physical validation task
+- [x] Continuous bounds versus samples: one-degree solid sampling is additional evidence, not a proof between samples; unknown interval cases remain visible

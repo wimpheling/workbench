@@ -5,7 +5,7 @@ from enclosure.glazing import panel_axis
 
 def test_default_lexan_cuts_and_thermal_allowances():
     model = build_model()
-    panes = [p for p in model["parts"] if p.get("glazing")]
+    panes = [p for p in model["parts"] if p.get("glazing") and p["material"] == "polycarbonate"]
     assert [p["cut_size_mm"] for p in panes] == [
         [330.75, 628, 4],
         [370.75, 628, 4],
@@ -62,10 +62,12 @@ def test_inserts_and_lexan_fit_actual_frame_and_animate(fraction):
                     assert gasket.intersect(frame).Volume() < 1e-5
 
 
-def test_other_materials_and_front_doors_keep_existing_retention():
+def test_other_bifold_materials_keep_retention_and_front_uses_slot_holder():
     model = build_model({"bifold_material": "glass"})
-    assert not any(p.get("glazing") for p in model["parts"])
-    assert any("front-left-a-infill-left-retainer" in p["id"] for p in model["parts"])
+    assert not any(
+        p.get("glazing") for p in model["parts"] if p["assembly"] in ("left-rear", "back-right")
+    )
+    assert any(p["id"] == "front-left-a-infill-left-slot-gasket" for p in model["parts"])
 
 
 def test_quote_csv_uses_revised_cuts_and_keeps_material_warning():
