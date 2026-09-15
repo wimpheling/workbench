@@ -48,10 +48,20 @@ this is exposed, not waived. Actual sealing and installation remain open.
 
 Frontend: 45 unit tests, type check and production build pass. The new live
 preview browser test passes with both bifolds open and the electrical notes
-visible. An initial broad browser run timed out during cold verification before
-the repeated bounding-box work was identified and optimized. Final verification
-including shape construction takes approximately 36 seconds on this machine.
-Full backend regression result is recorded below when complete.
+visible. The existing enclosure interaction test also passes on rerun (6.1
+minutes), including manual verification, dimension changes, door controls and
+CSV download. Cold runs encountered the existing 120-second response timeout;
+the successful final rerun used the warm service cache. Final default
+verification including shape construction takes approximately 36 seconds on
+this machine after eliminating repeated closed-pair bounding-box extraction.
+Backend regression: `uv run pytest` completed with 194 passes and one stale
+service assertion expecting the previous zero-failure model. That assertion was
+updated to require exactly the two sleeve-sealing failures and the new cable-bore
+pass/installation-unknown checks. Its targeted rerun passes (1/1). Thus all 195
+cases have passing results against their final assertions; the full command was
+not repeated after the test-only expectation update. Ruff and diff checks pass.
+Implementation delivered in [PR #18](https://github.com/wimpheling/workbench/pull/18).
+Physical measurement and installation items below remain open.
 
 ## Implementation plan
 
@@ -66,7 +76,7 @@ Full backend regression result is recorded below when complete.
   - [x] Add controller envelope, mounting preparation, documented cable route and connector-access reference; pendant fit remains an explicit prototype assumption
   - [ ] Five-pose rigid hardware clearance and bearing-support tests pass; flexible cable interference, pendant retention and actual reach remain unverified
   - [x] Update supplier specifications, panel drilling, installation guide and three original STL/manifest exports
-  - [ ] Run relevant tests, checks, and builds and record the results
+  - [x] Run relevant tests, checks, builds and browser/export checks; record exact results and remaining geometric/physical limitations above
 
 ## Open questions / blockers
 
