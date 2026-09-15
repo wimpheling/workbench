@@ -82,9 +82,7 @@ def test_front_staged_sweep_against_assembly(left, right):
     s = build_shapes({**m, "parts": parts})
     for p, q in itertools.combinations(parts, 2):
         if any(
-            x["assembly"].startswith("front-")
-            or x["id"].startswith("bracket-")
-            and "-front-" in x["id"]
+            x["id"].startswith("front-") or x["id"].startswith("bracket-") and "-front-" in x["id"]
             for x in (p, q)
         ):
             r = check_solid_pair(s[p["id"]], s[q["id"]])

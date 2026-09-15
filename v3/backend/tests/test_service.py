@@ -61,8 +61,16 @@ def test_defaults_and_real_geometry(client, evaluation):
         for c in evaluation["report"]["checks"]
         if c["category"] == "integrity"
     )
-    assert evaluation["report"]["status"] == "incomplete"
-    assert evaluation["report"]["summary"]["fail"] == 0
+    assert evaluation["report"]["status"] == "invalid"
+    failures = [c for c in checks.values() if c["status"] == "fail"]
+    assert failures
+    assert all(
+        c["id"].startswith("containment.coverage.front-")
+        or c["id"] == "requirement.containment-continuity"
+        for c in failures
+    )
+    # Front corner/return coverage remains a failure, not a silent waiver or
+    # a claim that the unselected flexible sections are physically validated.
     for did in ("left-rear", "back-right"):
         assert checks[f"containment.intentional-gap.{did}-perimeter-bottom"]["status"] == "unknown"
 

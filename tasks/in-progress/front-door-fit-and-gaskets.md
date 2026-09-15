@@ -22,6 +22,14 @@ plates and four fixed-frame plates replace the obsolete front connection
 arrangement; the latter remove aperture-intruding angle brackets. Default
 jamb/meeting gaps are 5 mm, top/bottom gaps 4 mm. No fixed centre post is added.
 
+The full-model check also caught the top closing strip/backing touching the
+existing 3060 left header. Both now start 18 mm from the opening edge, leaving
+3 mm nominal header clearance. Fixed front additions are included in the
+expanded native-solid regression. Seal envelopes occupy the aperture side of
+the backing; remaining deflection against corner plates is explicitly unknown.
+Perimeter and meeting corner coverage remains a failure until real returns
+and products are designed, rather than being silently waived.
+
 The right-hand meeting strip closes last. Its 10 mm offset onto the owning
 stile corrects an actual first-degree collision with the left handle found by
 native-solid sweep sampling. Open right fully, then left; close in reverse.

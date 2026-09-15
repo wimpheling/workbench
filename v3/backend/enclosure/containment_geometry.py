@@ -125,6 +125,24 @@ def add_containment(model):
                     item["machining"] += (
                         "; ends 32 mm clear of existing side-rail brackets; seal end support unresolved"
                     )
+                if did == "front":
+                    if side == "top" and not rubber:
+                        # The left 3060 header projects 15 mm into this corner.
+                        item["size"][0] = W - 28
+                        item["position"][0] = (W + 8) / 2
+                        item["cut_length_mm"] = W - 28
+                    if rubber:
+                        item["geometry_fidelity"] = "unconfirmed-flexible-envelope"
+                        if side in ("left", "right"):
+                            item["size"] = [10, depth, H - 2 * c]
+                            item["position"] = [5 if side == "left" else W - 5, sealnormal, H / 2]
+                        else:
+                            item["size"][2] = 10
+                            item["position"][2] = 5 if side == "bottom" else H - 5
+                        item["cut_length_mm"] = max(item["size"])
+                        item["machining"] += (
+                            "; installed aperture-side envelope; corner plate deflection and end support unapproved"
+                        )
                 if did != "front" and rubber:
                     if side in ("left", "right"):
                         item["size"][2] = H + 6
@@ -212,7 +230,7 @@ def add_containment(model):
                 ("left", [30, 12, H - 64], [-15, 6, H / 2]),
                 ("right", [30, 12, H - 64], [W + 15, 6, H / 2]),
                 ("bottom", [W, 12, 30], [W / 2, 6, -15]),
-                ("top", [W, 12, 30], [W / 2, 6, H + 15]),
+                ("top", [W - 18, 12, 30], [(W + 18) / 2, 6, H + 15]),
             ):
                 backing = add(
                     f"front-perimeter-{side}-backing",
@@ -296,7 +314,7 @@ def add_containment(model):
     d["closing_order"] = ["front-left", "front-right"]
     d["opening_order"] = ["front-right", "front-left"]
     ids = []
-    for suffix, nn, dd, rubber in [("astragal", -10, 2, False), ("meeting-gasket", -13, 4, True)]:
+    for suffix, nn, dd, rubber in [("astragal", -10, 2, False), ("meeting-gasket", -12.5, 3, True)]:
         # Offset onto the owning stile: the old centred strip hit the left
         # handle during the first degree of opening.
         local = [L - 10, nn, H / 2]

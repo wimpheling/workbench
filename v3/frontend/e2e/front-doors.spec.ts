@@ -18,7 +18,6 @@ test("inset front doors retain the loading opening, sequence and bottom notes", 
   await expect(page.getByTestId("bifold-prototype-note")).toBeVisible();
   await expect(page.getByTestId("bifold-glazing")).toContainText("× 6 mm");
   await page.screenshot({ path: "../artifacts/front-inset-notes.png", fullPage: true });
-  await page.getByRole("button", { name: "Open & close", exact: true }).click();
   const left = page.getByRole("slider", { name: "Front · left leaf", exact: true });
   const right = page.getByRole("slider", { name: "Front · right leaf", exact: true });
   await expect(left).toBeDisabled();
@@ -27,12 +26,14 @@ test("inset front doors retain the loading opening, sequence and bottom notes", 
   await expect(left).toBeEnabled();
   await left.fill("1");
   await expect(right).toBeDisabled();
-  await page.screenshot({ path: "../artifacts/front-open.png", fullPage: true });
+  await page.getByRole("button", { name: "Fit view", exact: true }).click();
+  await page.locator(".preview").screenshot({ path: "../artifacts/front-open.png" });
   await left.fill("0");
   await expect(right).toBeEnabled();
   await right.fill("0");
   await expect(left).toBeDisabled();
-  await page.screenshot({ path: "../artifacts/front-closed.png", fullPage: true });
+  await page.getByRole("button", { name: "Fit view", exact: true }).click();
+  await page.locator(".preview").screenshot({ path: "../artifacts/front-closed.png" });
   expect(cadRequests).toBe(before);
   expect(errors).toEqual([]);
 });

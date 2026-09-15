@@ -41,13 +41,18 @@ the aperture; the remaining side-rail brackets are retained. Counts for the
 whole enclosure are 28 CJP3030L plates and 18 complete CFG hinges (12 bifold,
 6 front). Corner-plate radii, fasteners and joint stiffness remain unapproved.
 
-Rear closing strips use 12 mm rigid backing against the frame. Their front
+Rear closing strips use 12 mm rigid backing against the frame. The top strip
+starts 18 mm from the left opening edge, giving 3 mm nominal clearance to the
+3060 header; its backing also starts at 18 mm. Their front
 faces are Y=12; the nominal flexible seals span Y=6…12. Jamb backing/strips end
 32 mm from the top and bottom to clear the existing side-rail brackets. Seal
 end support, corner transitions, attachment pitch, compression and actual
-perimeter/meeting products remain unresolved. The meeting-seam coverage check
-retains its full-height obligation: the inset strip does not establish closed
-corner returns at the head and sill, and missing coverage remains a failure. These are chip-containment
+perimeter/meeting products remain unresolved. The perimeter and meeting coverage checks
+retain their full obligations: these strips do not establish closed corner
+returns at the head and sill, and missing coverage remains a failure. Rubber
+envelopes occupy the aperture side of the backing; deflection against the
+2 mm corner plates remains unknown. The meeting gasket has an assumed
+3 mm installed section, with its free section and preload unselected. These are chip-containment
 studies, not evidence of a hermetic enclosure or purchase-ready gaskets.
 
 ## Slot-captured front infill

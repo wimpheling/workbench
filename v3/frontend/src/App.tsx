@@ -658,7 +658,8 @@ export default function App() {
               <details data-testid="bifold-glazing" open>
                 <summary>Slot glazing studies · front infill and 4 mm Lexan</summary>
                 <p>
-                  FSP08 candidate: drawing-based section, not vendor STEP.
+                  Bifold FSP08 candidate: drawing-based section, not vendor STEP.
+                  Front holders are unselected and adapted to the actual infill thickness.
                   PVC compatibility with Lexan is unconfirmed. Corner seals,
                   minimum edge engagement and frame connectors need approval.
                   Provisional cuts below — do not order yet.
