@@ -615,6 +615,35 @@ def parked_catch_print_files(model: dict) -> dict[str, bytes]:
     return files
 
 
+def rear_electrical_print_files(model: dict) -> dict[str, bytes]:
+    from .rear_electrical import printable
+
+    files = {}
+    for row in model["parts"]:
+        if row.get("geometry", {}).get("kind") != "rear-electrical-print":
+            continue
+        shape = printable(row["geometry"]["role"])[0].rotate((0, 0, 0), (1, 0, 0), 90)
+        bb = shape.BoundingBox()
+        shape = shape.translate((-bb.xmin, -bb.ymin, -bb.zmin))
+        stem = "printed-prototypes/" + row["product_code"]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "print.stl"
+            cq.exporters.export(shape, str(path), tolerance=0.05, angularTolerance=0.1)
+            files[stem + ".stl"] = path.read_bytes()
+        files[stem + ".json"] = json.dumps(
+            dict(
+                revision=model["revision"],
+                quantity=1,
+                part_ids=[row["id"]],
+                print_spec=row["print_spec"],
+                dimensions_mm=[bb.xlen, bb.ylen, bb.zlen],
+                status="Measure hardware before printing; retention, strength and sealing unvalidated",
+            ),
+            indent=2,
+        ).encode()
+    return files
+
+
 def swing_latch_print_files(model: dict) -> dict[str, bytes]:
     from .swing_latch import component
 
@@ -768,6 +797,14 @@ def export_file(kind: str, model: dict, report: dict, shapes: dict) -> tuple[byt
                 indent=2,
             ),
         )
+        if model.get("rear_electrical"):
+            archive.writestr("rear-electrical.json", json.dumps(model["rear_electrical"], indent=2))
+            archive.writestr(
+                "rear-electrical.md",
+                (Path(__file__).resolve().parents[2] / "docs" / "REAR_ELECTRICAL.md").read_bytes(),
+            )
+            for name, content in rear_electrical_print_files(model).items():
+                archive.writestr(name, content)
         for name, content in swing_latch_print_files(model).items():
             archive.writestr(name, content)
         for name, content in closed_catch_print_files(model).items():

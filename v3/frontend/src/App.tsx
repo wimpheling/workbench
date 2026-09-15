@@ -639,6 +639,16 @@ export default function App() {
                 </For></ul>
               </details>
             </details>
+            <Show when={result()?.model.rear_electrical}>
+              <details data-testid="rear-electrical-note">
+                <summary>Rear controller, STOP holder and cable entry</summary>
+                <p>The controller mounts outside the fixed rear panel on a frame-supported steel plate and shelf. The rear-left PETG cradle holds the STOP pendant with a separate retaining strap. Measure both components before making the parts; mounting strength and reach remain unvalidated.</p>
+                <p>Connector opening: {result()?.model.rear_electrical?.cable_opening_mm} mm. Split cover bundle aperture: {result()?.model.rear_electrical?.installed_bundle_aperture_mm} mm. Fit a soft split bushing and gasket around the actual cables.</p>
+                <p>{result()?.model.rear_electrical?.route}</p>
+                <ul><For each={result()?.model.rear_electrical?.required_bought_items}>{(item) => <li>{item}</li>}</For></ul>
+                <p>The supplier ZIP includes the cradle and both cover STLs, print settings and installation instructions. Pendant fit, strap retention, controller fixing positions and cable lengths need measurement.</p>
+              </details>
+            </Show>
             <p data-testid="rail-retention-note">
               Rail retention: continuous 4 mm steel underside strips, 10 mm
               axle slot and bolted stock-angle end barriers with flush screws. Metal sleeves and bridge washers
