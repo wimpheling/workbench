@@ -7,6 +7,23 @@ button, with a defined cable route and appropriate mounting and access.
 
 ## Discussion
 
+Latest owner-approved revision: replace the tall steel mounting strips, frame
+sleeves and welded shelf with direct through-bolt mounting to the rear panel
+and local interior 12 mm plywood backing pads. Controller hole pattern and
+hardware remain pending measurement; pad stiffness and panel flex require
+physical validation. Preserve 6 mm strap clearance behind the pendant holder.
+Cables arrive from rear-right: lower the entry centre to 100 mm above the
+base, between rear-right door and controller (door → hole → controller).
+Validation for this revision: full `uv run pytest` passes all 195 tests
+(13m37s); 22 focused rear/service tests pass. Frontend 45 tests, type checks,
+production build and live rear-electrical browser test pass. Updated quotation
+and print ZIPs export successfully. Final default revision `15b842bea8ecc237`
+reports 1,713 pass / 0 fail / 124 unknown. Frame gasket sleeve failures disappear
+because those penetrations have been removed. Ruff and whitespace checks pass.
+
+Earlier steel-strip implementation notes below are superseded by this revision.
+
+
 The mounting arrangement must coexist with the rear right bifold door and
 its folded position. Component dimensions, mass, connectors, and cable
 requirements are not yet specified. Confirm where the STOP control can be
@@ -69,7 +86,7 @@ Physical measurement and installation items below remain open.
   - [ ] Identify the exact electrical block and STOP control, dimensions, mass, mounting points, and manufacturer requirements
   - [ ] Agree on locations with operating access, service access, and door movement accounted for
 - [ ] Design mounting and cable routing
-  - [x] Specify steel backing strips, controller shelf, frame sleeves and printed cradle; load path goes to rear rails, capacity remains unvalidated
+  - [x] Specify local interior plywood backing pads and through-bolt mounts for controller and printed cradle; panel stiffness and capacity remain unvalidated
   - [ ] Entry location and fixed-panel route defined; confirm actual connectors, bends, slack and cable lengths after measurement
   - [ ] Split cover and mounting passages modeled; select actual cushioned clamps, split bushing and sealing materials after measuring the harness
 - [ ] Implement and verify the arrangement in v3

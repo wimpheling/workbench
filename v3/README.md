@@ -110,7 +110,7 @@ Bifolds use the revision C A1 mini PETG guide prototype under continuous 3060 he
 
 ## Rear electrical mounting
 
-The rear controller plate/shelf, original PETG STOP pendant cradle and split cable
+The rear controller mounting pads, original PETG STOP pendant cradle and split cable
 cover are provisional mounting studies. The quotation ZIP includes three print
 STLs, revision-linked manifests, panel drilling and installation notes. Measure
 controller mounting points, pendant fit and cable lengths before manufacture;

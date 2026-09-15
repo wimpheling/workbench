@@ -40,6 +40,8 @@ test("rear electrical prototype appears in live preview and stays fixed during d
     true,
   );
   expect(data.model.rear_electrical.cable_opening_mm).toBe(60);
+  expect(data.model.rear_electrical.cable_entry_centre_mm[2]).toBe(100);
+  expect(parts.some((p: { id: string }) => p.id === "rear-controller-backing-pad")).toBe(true);
   await page.getByRole("button", { name: "Design notes", exact: true }).click();
   await page.getByTestId("rear-electrical-note").locator("summary").click();
   await expect(page.getByTestId("rear-electrical-note")).toContainText(

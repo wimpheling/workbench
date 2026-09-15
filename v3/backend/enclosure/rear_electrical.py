@@ -46,9 +46,9 @@ def add_rear_electrical(model):
     by = {q["id"]: q for q in model["parts"]}
     wall = by["panel-back-left"]
     jamb = by["post-back-middle"]["position"][0]
-    cx = min(w / 2, jamb - 140)
+    cx = min(w / 2, jamb - 200)
+    hx, hz = jamb - 65, 100
     outer = wall["position"][1] + t / 2
-    plate_front = outer + 18
 
     def part(id, size, position, material="steel", **extra):
         row = dict(
@@ -81,79 +81,43 @@ def add_rear_electrical(model):
             )
         )
 
-    # Rail-to-rail stock flat strips keep equipment weight off the wood infill.
-    for name, x, width in (("controller", cx, 210), ("pendant", 110, 140)):
-        plate = part(
-            f"rear-{name}-plate",
-            (width, 3, h + 60),
-            (x, plate_front + 1.5, h / 2),
-            cut_size_mm=[width, h + 60, 3],
+    # Local plywood pads spread through-bolt loads on the inside of the sheet.
+    for name, x, width, height in (("controller", cx, 210, 377), ("pendant", 110, 140, 160)):
+        pad = part(
+            f"rear-{name}-backing-pad",
+            (width, 12, height),
+            (x, outer - t - 6, h / 2),
+            material="wood",
+            supplier="Local timber supplier",
+            cut_size_mm=[width, height, 12],
             drawing_axes=[0, 2],
             thickness_axis=1,
-            machining="Drill declared frame/holder bores; controller case holes transfer from actual hardware only.",
-            fastener_schedule=dict(
-                quantity=4,
-                screw="M6 through plate and steel spacer, length to suit actual stack",
-                nut="BPN08M6 slot nut; confirm engagement and top-header slot position",
-            ),
+            machining="Transfer actual controller mounting pattern through pad and rear panel after measurement."
+            if name == "controller"
+            else "Four 5.5 mm through holes matching pendant holder",
+            mounting="Local 12 mm plywood load-spreading pad inside rear panel; through-bolts, broad washers and locking nuts. Panel stiffness and pad size require physical validation.",
         )
-        for xx in (-width / 2 + 20, width / 2 - 20):
-            for z, rail_face in ((-15, d + 30), (h + 15, d + 45)):
-                hole(plate, xx, z - h / 2, 6.5)
-                length = plate_front - rail_face
-                spacer = part(
-                    f"rear-{name}-spacer-{xx:g}-{z:g}",
-                    (12, length, 12),
-                    (x + xx, rail_face + length / 2, z),
-                    geometry=dict(kind="cylinder", axis=1, diameter_mm=12),
-                    machining="12 mm OD steel sleeve, 6.5 mm bore; square cut to modeled length",
-                )
-                hole(spacer, 0, 0, 6.5)
-                # Bottom sleeves pass through the fixed sheet, not through solid wood.
-                if z == -15:
-                    gasket = by["panel-back-left-perimeter-gasket-0"]
-                    hole(gasket, x + xx - gasket["position"][0], z - gasket["position"][2], 12)
-                    hole(wall, x + xx - wall["position"][0], z - wall["position"][2], 14)
         if name == "pendant":
             for xx in (-55, 55):
                 for zz in (-50, 50):
-                    hole(plate, xx, zz, 5.5)
+                    hole(pad, xx, zz, 5.5)
+                    hole(wall, x + xx - wall["position"][0], h / 2 + zz - wall["position"][2], 5.5)
 
     part(
         "rear-controller",
         (171, 89, 337),
-        (cx, plate_front + 3 + 10 + 44.5, h / 2),
+        (cx, outer + 10 + 44.5, h / 2),
         material="aluminium",
         supplier="Existing Carbide 3D Shapeoko 5 Pro",
         product_code="SHAPEOKO-5-PRO-CONTROLLER",
         geometry_fidelity="owner-measured-envelope",
-        mounting="Transfer actual four mounting points to plate after measuring. Provide 10 mm spacers; fastener size, mass and ventilation clearances pending. No case drilling.",
+        mounting="Transfer actual mounting pattern through rear panel and local backing pad after measuring. Through-bolt with broad washers and locking nuts; provide provisional 10 mm spacers. Fastener count/size, mass, panel stiffness and ventilation clearances pending. No case drilling.",
     )
-    part(
-        "rear-controller-support-shelf",
-        (210, 109, 3),
-        (cx, plate_front + 3 + 54.5, h / 2 - 170),
-        machining="3 mm steel shelf, weld to separately listed root strip; two M5 plate fixings. Weld and capacity pending.",
-    )
-    root = part(
-        "rear-controller-shelf-root",
-        (210, 3, 40),
-        (cx, plate_front + 4.5, h / 2 - 191.5),
-        mounting="Weld top edge to underside of rear-controller-support-shelf",
-        fastener_schedule=dict(
-            quantity=2,
-            screw="M5 through root and backing plate with washers and locking nuts; verify length",
-        ),
-    )
-    for xx in (-75, 75):
-        hole(root, xx, 0, 5.5)
-        plate = next(q for q in model["parts"] if q["id"] == "rear-controller-plate")
-        hole(plate, xx, -191.5, 5.5)
     # Connector/service reference is not a fabricated part or a proven cooling allowance.
     part(
         "rear-controller-connector-access",
         (191, 70, 357),
-        (cx, plate_front + 3 + 10 + 89 + 35, h / 2),
+        (cx, outer + 10 + 89 + 35, h / 2),
         material="air",
         category="service-envelope",
         physical=False,
@@ -161,9 +125,9 @@ def add_rear_electrical(model):
         geometry_fidelity="provisional-service-clearance",
     )
     for role, origin in (
-        ("pendant-cradle", (110, plate_front + 9, h / 2)),
-        ("cable-cover-left", (cx - 180, outer + 2, h / 2)),
-        ("cable-cover-right", (cx - 180, outer + 2, h / 2)),
+        ("pendant-cradle", (110, outer + 6, h / 2)),
+        ("cable-cover-left", (hx, outer + 2, hz)),
+        ("cable-cover-right", (hx, outer + 2, hz)),
     ):
         _, centre, size = printable(role)
         part(
@@ -192,7 +156,7 @@ def add_rear_electrical(model):
             spacer = part(
                 f"rear-pendant-cradle-spacer-{xx:g}-{zz:g}",
                 (12, 6, 12),
-                (110 + xx, plate_front + 6, h / 2 + zz),
+                (110 + xx, outer + 3, h / 2 + zz),
                 geometry=dict(kind="cylinder", axis=1, diameter_mm=12),
                 machining="6 mm long steel spacer, 12 mm OD, 5.5 mm bore; leaves strap access behind cradle",
             )
@@ -201,7 +165,7 @@ def add_rear_electrical(model):
     part(
         "rear-pendant-retaining-strap",
         (20, 2, 100),
-        (110, plate_front + 9 + 48, h / 2),
+        (110, outer + 6 + 48, h / 2),
         material="textile",
         supplier="Strap retailer",
         physical=False,
@@ -210,29 +174,28 @@ def add_rear_electrical(model):
         geometry_fidelity="routing-reference",
         mounting="One adjustable 20 mm strap through cradle slots around pendant body, clear of STOP/feed-hold. Fit and retention must be measured.",
     )
-    hx = cx - 180
-    hole(wall, hx - wall["position"][0], h / 2 - wall["position"][2], 60)
+    hole(wall, hx - wall["position"][0], hz - wall["position"][2], 60)
     for xx in (-38, 38):
         for zz in (-38, 38):
-            hole(wall, hx + xx - wall["position"][0], h / 2 + zz - wall["position"][2], 5.5)
+            hole(wall, hx + xx - wall["position"][0], hz + zz - wall["position"][2], 5.5)
     wall["machining"] = (
-        "Rear electrical study: 60 mm connector access, four M5 cover holes, four 14 mm bottom sleeve passages; verify against cables and frame before cutting."
+        "Rear electrical study: 60 mm connector access, four M5 cover holes, four M5 pendant-holder holes; controller mounting pattern pending; verify against cables and frame before cutting."
     )
     model["rear_electrical"] = dict(
-        controller_centre_mm=[cx, plate_front + 57.5, h / 2],
-        cable_entry_centre_mm=[hx, outer, h / 2],
+        controller_centre_mm=[cx, outer + 54.5, h / 2],
+        cable_entry_centre_mm=[hx, outer, hz],
         cable_opening_mm=60,
         installed_bundle_aperture_mm=30,
         pendant_usable_cradle_mm=[128, 40, 154],
         required_bought_items=[
             "One 20 mm adjustable pendant retaining strap",
             "Split soft cable bushing for 30 mm aperture, sized to actual bundles",
-            "2 mm split closed-cell gasket beneath cable cover; seal split and sleeve passages",
+            "2 mm split closed-cell gasket beneath cable cover; seal split and mounting penetrations",
             "Two cushioned cable clamps on fixed rear structure, one inside and one outside entry; size and fixing locations after routing",
         ],
-        route="Machine rear harness → supported loop on fixed rear structure → split rear entry → controller. Pendant lead follows fixed rear panel leftwards. Keep all cables clear of doors; lengths and bend radii unmeasured.",
+        route="Machine rear-right harness → supported loop on fixed rear structure → low split rear entry (100 mm above enclosure base) → controller. From rear-right towards left: door → hole → controller. Pendant lead follows fixed rear panel leftwards. Keep all cables clear of doors; lengths and bend radii unmeasured.",
     )
-    message = "Rear electrical mounting is a provisional study: validate controller dimensions/mass, transfer its mounting pattern, size all fasteners and sleeves, check cooling and plug access. Measure pendant before printing; cradle 128 x 40 x 154 mm usable, strap must hold it against pressing force without obscuring controls. Confirm reach from left, cable connector passage/bundle size, lengths, strain relief, split bushing and dust sealing. No wiring or stop-system changes."
+    message = "Rear electrical mounting is a provisional study: validate controller dimensions/mass, transfer its mounting pattern, size through-bolts and local backing pads; validate rear-panel stiffness, check cooling and plug access. Measure pendant before printing; cradle 128 x 40 x 154 mm usable, strap must hold it against pressing force without obscuring controls. Confirm reach from left, cable connector passage/bundle size, lengths, strain relief, split bushing and dust sealing. No wiring or stop-system changes."
     model["assumptions"].append(
         dict(
             id="rear-electrical-fit",
@@ -258,13 +221,15 @@ def verification_checks(model, shapes):
     overlap = bore.intersect(shapes[wall["id"]]).Volume()
     wall_left = wall["position"][0] - wall["size"][0] / 2
     wall_right = wall["position"][0] + wall["size"][0] / 2
-    plates = [by["rear-controller-plate"], by["rear-pendant-plate"]]
+    plates = [by["rear-controller-backing-pad"], by["rear-pendant-backing-pad"]]
     fits = all(
         q["position"][0] - q["size"][0] / 2 >= wall_left
         and q["position"][0] + q["size"][0] / 2 <= wall_right
         for q in plates
     )
     fits = fits and x - 50 > wall_left and x + 50 < wall_right
+    fits = fits and z - 50 > wall["position"][2] - wall["size"][2] / 2
+    fits = fits and z + 50 < wall["position"][2] + wall["size"][2] / 2
     return [
         dict(
             id="rear-electrical.cable-bore",
@@ -278,7 +243,7 @@ def verification_checks(model, shapes):
             id="rear-electrical.fixed-panel-fit",
             status="pass" if fits else "fail",
             category="clearance",
-            message="Electrical backing plates and cable cover fit fixed rear panel width",
+            message="Local backing pads fit fixed rear panel width; cable cover fits panel width and height",
             references=[q["id"] for q in plates],
         ),
         dict(

@@ -52,16 +52,26 @@ def test_prints_are_connected_fit_bed_and_carry_revision():
             assert manifest["quantity"] == 1
 
 
-def test_equipment_has_bearing_support_and_strap_access():
+def test_local_pads_contact_panel_and_holder_has_strap_access():
     model = build_model()
-    rows = [p for p in model["parts"] if p["assembly"] == "rear-electrical"]
+    rows = [
+        p
+        for p in model["parts"]
+        if p["assembly"] == "rear-electrical" or p["id"] == "panel-back-left"
+    ]
     shapes = build_shapes({"parts": rows})
-    assert shapes["rear-controller"].distance(shapes["rear-controller-support-shelf"]) < 1e-6
-    by = {p["id"]: p for p in rows}
+    wall = shapes["panel-back-left"]
+    for name in ("controller", "pendant"):
+        assert shapes[f"rear-{name}-backing-pad"].distance(wall) < 1e-6
     cradle = shapes["rear-pendant-cradle"]
-    assert cradle.distance(shapes["rear-pendant-plate"]) == pytest.approx(6)
+    assert cradle.distance(wall) == pytest.approx(6)
     for p in rows:
         if "cradle-spacer" in p["id"]:
             assert shapes[p["id"]].distance(cradle) < 1e-6
-            assert shapes[p["id"]].distance(shapes["rear-pendant-plate"]) < 1e-6
-    assert by["rear-controller"]["size"] == [171, 89, 337]
+            assert shapes[p["id"]].distance(wall) < 1e-6
+    by = {p["id"]: p for p in model["parts"]}
+    x, _, z = model["rear_electrical"]["cable_entry_centre_mm"]
+    assert by["rear-controller"]["position"][0] < x < by["post-back-middle"]["position"][0]
+    assert z == 100
+    assert z + 50 < by["rear-controller-backing-pad"]["position"][2] - 377 / 2
+    assert not any("shelf" in p["id"] or p["id"].endswith("-plate") for p in rows)

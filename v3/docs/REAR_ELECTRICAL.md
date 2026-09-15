@@ -1,11 +1,13 @@
 # Rear electrical mounting prototype
 
 Original Shapeoko **5 Pro**, not 5.1. Dimensions are in millimetres.
-The controller sits outside the fixed rear panel, near its right edge and the
-rear centre. Its steel backing strip spans the top/bottom rear frame rails;
-eight steel sleeves across the two strips carry clamp loads into those rails.
-The separate rear-left strip supports an original printed STOP pendant cradle.
-Neither assembly moves with a door. The user operates from the left.
+The controller and original printed STOP holder mount directly to the fixed rear
+panel with through-bolts and broad washers. Local 12 mm plywood backing pads
+inside the panel spread the loads: controller 210 × 377, pendant 140 × 160.
+These are provisional sizes, pending equipment weight and panel-flex checks.
+The holder remains rear-left, accessible from the operating side.
+The cable entry is 100 mm above the enclosure base, beside the rear-right door:
+from right to left the order is door → hole → controller.
 
 ## Evidence and limits
 
@@ -30,18 +32,15 @@ pendant or slide the strap. Confirm reach at the actual operating location.
 
 1. Verify case, pendant, connector and cable measurements. Dry-fit both bifolds
    throughout travel; inspect their handles and the operator's hand clearance.
-2. Cut the two 3 mm steel backing strips to the model's sizes. Confirm their
-   stiffness for actual equipment weight. Drill frame holes from the schedule.
-   Top/header and bottom rail rear faces differ: use the specified individual
-   sleeve lengths, then confirm the physical slot locations and M6 engagement.
-3. Bottom sleeves pass through 14 mm panel holes. Seal these penetrations around
-   the sleeves and restore the affected panel gasket locally. Do not clamp wood
-   or PETG as the structural spacer. Frame screws/nuts are scheduled, not modeled.
-4. Weld the controller shelf to its root strip and bolt the root to its backing
-   plate. Transfer the actual case mounting pattern to the backing strip. No
-   guessed controller hole pattern is released. Select case fixings and 10 mm
-   spacers after measurement, retain the case against tipping, and leave cooling
-   surfaces and plugs accessible. Weld and shelf capacity require validation.
+2. Cut the local plywood backing pads and clamp them against the inside face of
+   the 6 mm rear panel. Verify panel stiffness with actual controller weight and
+   the force of pressing STOP before accepting this mounting arrangement.
+3. Transfer the controller's actual mounting pattern through panel and backing
+   pad. No guessed controller holes are released. Select through-bolts, broad
+   washers and locking nuts after measurement; retain provisional 10 mm case
+   spacers only if they meet actual ventilation and connector requirements.
+4. Drill the four scheduled pendant holes through panel and backing pad.
+   The tall steel strips, frame sleeves and welded shelf are no longer required.
 5. Print the cradle and two cable-cover halves in PETG, flat backs on the bed,
    0.2 mm layers, five walls, 50% infill. Enable support beneath the cradle
    front lip, remove it and inspect the shelf/lip junction. Each fits the A1
@@ -63,9 +62,8 @@ pendant or slide the strap. Confirm reach at the actual operating location.
 No electrical rewiring or change to the machine stop system is included.
 The Nilfisk and right-side airflow arrangement are outside this implementation.
 Geometric clearance does not prove strength, stop performance or dust containment.
-The rear frame-gasket coverage check intentionally reports the four sleeve
-passages as uncovered until the actual sealing arrangement is modeled and
-validated; the rigid sleeve alone is not credited as a continuous seal.
+Seal the mounting penetrations as well as the cable entry. The frame perimeter
+gasket is no longer pierced by mounting sleeves. Seal performance remains unverified.
 
 ## Deliverables
 
