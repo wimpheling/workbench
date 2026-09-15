@@ -53,6 +53,30 @@ for a 1219.2 × 1219.2 × 100 mm board at Z=600. Its 61,040 moving pairs contain
 unknown interval/contact cases. The only failures are the five front perimeter/
 meeting coverage checks and their containment requirement. They remain visible
 because actual corner returns and seal installation have not been established.
+The running review server at http://127.0.0.1:8000 is warmed on revision
+`13f77b1cffb053a5`. Its actual HTTP supplier CSV confirms 28 CJP plates,
+18 complete CFG hinges, six front spacers, 676 mm jamb stops and 1646 mm top
+stop. Unselected front holder entries and `NOT RELEASED` status are retained.
+Browser captures were inspected for open/closed fit and the bottom Design notes.
+
+Final validation — 2026-09-15:
+
+- Backend: **181 passed** in 629.52 s, using
+  `uv run --with pytest-xdist==3.8.0 pytest -n 6 -v --junitxml=/tmp/front-tests-final.xml`
+  from `v3/`. The complete suite ran with an ephemeral test-worker dependency;
+  project dependencies were not changed. Twelve upstream Starlette/AnyIO
+  deprecation warnings; no failures or errors.
+- Frontend: **45 tests passed**, `npm run check` and `npm run build` passed.
+- Browser: **2 passed**, `front-doors.spec.ts` and `printed-bifold.spec.ts`,
+  against the actual local service. Opening/closing interlocks, no CAD requests
+  during pose changes, preserved bifolds and bottom notes verified.
+- Native solids: front infill/holder fit; expanded fixed-front collision checks;
+  every degree of both front opening stages and their reverse closing paths.
+- Actual HTTP CSV, revision matching, supplier quantities/cuts and unreleased
+  status checked. Full backend suite includes real supplier ZIP/PDF/STEP checks.
+- Changed Python files pass Ruff; Markdown links and `git diff --check` pass.
+- Delivered through [PR #17](https://github.com/wimpheling/workbench/pull/17).
+  Server remains running for review; no merge to main is performed.
 
 ## Implementation plan
 
@@ -65,12 +89,12 @@ because actual corner returns and seal installation have not been established.
   - [x] Retain product, compound, engagement, setting-support and moisture uncertainties
   - [x] Document rear closing strips, backing, corner/end support, fixings and unvalidated preload
   - [x] Carry fabrication and gasket selection obligations into the linked follow-up task
-- [ ] Verify and deliver the change
+- [x] Verify and deliver the change
   - [x] Check closed native-solid fit and infill/holder contact against vendor extrusion slots
   - [x] Sample complete staged opening and reverse closing paths at every degree, correcting the first-degree handle collision
   - [x] Record final continuous-motion and loading-prism results, including unresolved bounds
-  - [ ] Run full backend and frontend checks plus browser verification
-  - [ ] Update supplier schedules and Design notes, publish PR and leave server running
+  - [x] Run full backend and frontend checks plus browser verification
+  - [x] Update supplier schedules and Design notes, publish PR and leave server running
 
 ## Open questions / blockers
 

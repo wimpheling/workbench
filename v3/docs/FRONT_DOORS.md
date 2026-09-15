@@ -12,7 +12,9 @@ occupy the front aperture and extend into the enclosure, rather than standing
 forward of the frame. Handles and hinge barrels project for operation.
 
 At the default 1674 × 740 opening, each door frame is 829.5 × 732, with 5 mm
-jamb gaps, 5 mm between doors, and 4 mm top/bottom gaps. The hinge axes are
+jamb gaps, 5 mm between doors, and 4 mm top/bottom gaps. The horizontal gaps
+follow the fixed CFG mounting pitch; the clearance parameter sets the front
+top/bottom gaps. The hinge axes are
 (2.5, -38) and (1671.5, -38), with stations Z=120, 370, 620. Each CFG mounting
 face is 8 mm behind its pin axis. A 26 × 36 × 6 aluminium spacer under each
 moving wing connects that face to the inset door. Vendor solids are articulated
@@ -95,5 +97,7 @@ and a clear continuous insertion prism for a 1219.2 × 1219.2 × 100 mm board
 at Z=600. Continuous motion remains unknown: 61,040 pairs, 60,699 resolved,
 341 unresolved, no collision witnesses. The five front perimeter/meeting
 coverage checks and their containment requirement fail; no other requirement
-is claimed failed by this nominal run. See the front-door task for final test
-results and remaining physical evidence.
+is claimed failed by this nominal run. Validation: 181 backend tests, 45 frontend
+tests and two real-browser acceptance tests passed; type checking and build
+passed. See the [completed task](../../tasks/done/front-door-fit-and-gaskets.md)
+for commands and remaining physical evidence.
