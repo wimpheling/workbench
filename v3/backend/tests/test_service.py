@@ -62,7 +62,9 @@ def test_defaults_and_real_geometry(client, evaluation):
         if c["category"] == "integrity"
     )
     assert evaluation["report"]["status"] == "incomplete"
-    assert not [c for c in checks.values() if c["status"] == "fail"]
+    assert evaluation["report"]["summary"]["fail"] == 0
+    assert checks["rear-electrical.cable-bore"]["status"] == "pass"
+    assert checks["rear-electrical.installation"]["status"] == "unknown"
     coverage = [c for c in checks.values() if c["id"].startswith("containment.coverage.front-")]
     assert len(coverage) == 7 and all(c["status"] == "pass" for c in coverage)
     # Supported nominal returns close geometric obligations; physical compound,

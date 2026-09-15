@@ -773,6 +773,10 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
         from .closed_catches import engagement_checks
 
         checks.extend(engagement_checks(model, shapes))
+    from .rear_electrical import verification_checks
+
+    if model.get("rear_electrical") and shapes and "panel-back-left" in shapes:
+        checks.extend(verification_checks(model, shapes))
     physical = [
         p
         for p in parts
@@ -880,12 +884,30 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                 [a, b],
             )
 
+    # Drilled panels make repeated OpenCascade bounding-box extraction costly.
+    # Reuse bounds only within this immutable closed-pose shape set. Potential
+    # contacts still take the existing exact solid-intersection path below.
+    pair_bounds = {}
+    for part in physical:
+        try:
+            pair_bounds[part["id"]] = _bbox(shapes[part["id"]])
+        except Exception:
+            pass  # Missing/invalid geometry retains the normal unknown checks.
     pairs_checked = 0
     closed_results = {}
     for a, b in itertools.combinations(physical, 2):
         if a["id"] not in shapes or b["id"] not in shapes:
             continue
         pair = frozenset((a["id"], b["id"]))
+        if (
+            a["id"] in pair_bounds
+            and b["id"] in pair_bounds
+            and _box_distance(pair_bounds[a["id"]], pair_bounds[b["id"]])
+            > KERNEL_LENGTH_TOLERANCE_MM
+        ):
+            closed_results[pair] = "pass"
+            pairs_checked += 1
+            continue
         result = check_solid_pair(
             shapes[a["id"]],
             shapes[b["id"]],

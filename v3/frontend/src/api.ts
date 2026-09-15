@@ -35,6 +35,7 @@ export interface Evaluation {
     parameters: Parameters;
     parts: Part[];
     assumptions: { id: string; description: string; confirmed: boolean }[];
+    rear_electrical?: { cable_opening_mm: number; installed_bundle_aperture_mm: number; pendant_usable_cradle_mm: number[]; route: string; required_bought_items: string[] };
     bifold_completion?: {
       catch_requirements: { id: string; assembly: string; product_code: string; quantity: number; status: string; unresolved: string; source: string }[];
       fastener_schedule: { part_id: string; quantity: number; screw: string; nut: string }[];

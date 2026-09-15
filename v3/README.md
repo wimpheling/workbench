@@ -108,6 +108,15 @@ Verification measures nominal barrier sections, their specified connections and 
 
 Bifolds use the revision C A1 mini PETG guide prototype under continuous 3060 headers: unequal leaves, rear-corner parking, 88° travel and a default 750 mm rear opening. The default leaf height is 682 mm. Five modules per opening carry a bought GN753.1 roller and metal washer/axle; CFG hinges support the leaves. The metal carrier, corner plates, closed tabs and parked operating stops are modeled. Their capacity, catch installation, final fasteners, head sealing and physical load/wear performance remain unconfirmed. See [engineering model](docs/ENGINEERING_MODEL.md).
 
+## Rear electrical mounting
+
+The rear controller mounting pads, original PETG STOP pendant cradle and split cable
+cover are provisional mounting studies. The quotation ZIP includes three print
+STLs, revision-linked manifests, panel drilling and installation notes. Measure
+controller mounting points, pendant fit and cable lengths before manufacture;
+strap retention, structural capacity, cooling and entry sealing remain unverified.
+See [rear electrical mounting](docs/REAR_ELECTRICAL.md).
+
 ## Supplier files
 
 The ZIP pack includes:

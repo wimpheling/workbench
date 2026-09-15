@@ -540,6 +540,9 @@ def build_model(parameters=None):
     add_glazing(model)
     complete_bifolds(model)
     add_containment(model)
+    from .rear_electrical import add_rear_electrical
+
+    add_rear_electrical(model)
     model["assumptions"].append(
         dict(
             id="metal-rail-retention",
@@ -578,6 +581,7 @@ def build_model(parameters=None):
                 "closed_catches.py",
                 "stock_metalwork.py",
                 "swing_latch.py",
+                "rear_electrical.py",
                 "verification.py",
             )
         )
@@ -681,6 +685,10 @@ def build_shapes(model, pose=None):
             shape = bracket()
         else:
             shape = cq.Workplane("XY").box(sx, sy, sz).val()
+        if p.get("geometry", {}).get("kind") == "rear-electrical-print":
+            from .rear_electrical import printable
+
+            shape = printable(p["geometry"]["role"])[0]
         if p.get("geometry", {}).get("kind") == "swing-latch":
             from .swing_latch import component, fixing
 
