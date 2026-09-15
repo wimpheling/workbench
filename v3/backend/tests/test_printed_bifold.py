@@ -135,7 +135,12 @@ def test_revision_c_matches_printed_study_and_jambs():
     assert parts["back-right-b-infill"]["size"][1] == 4
     assert not any("guide-adapter" in p["id"] for p in model["parts"])
     assert not any(p.get("product_code") == "GSD082.3000KIT" for p in model["parts"])
-    hinges = [p for p in model["parts"] if p.get("product_code") == "CFG.30/30 SH-6-C33"]
+    hinges = [
+        p
+        for p in model["parts"]
+        if p.get("product_code") == "CFG.30/30 SH-6-C33"
+        and p["assembly"] in ("left-rear", "back-right")
+    ]
     assert sum(p["quantity"] for p in hinges) == 12
 
 

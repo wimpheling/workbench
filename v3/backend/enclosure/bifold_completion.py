@@ -162,6 +162,93 @@ def park_bracket():
     return shape.translate(tuple(-v for v in center)), center, [bb.xlen, bb.ylen, bb.zlen]
 
 
+def add_corner_plates(model, d, roles=("a", "b")):
+    from .core import _add, _rotate
+
+    parts = model["parts"]
+    by_id = {p["id"]: p for p in parts}
+    did = d["id"]
+    for role in roles:
+        prefix = f"{did}-{role}"
+        a, b, low, high = [
+            by_id[prefix + "-" + k] for k in ("stile-a", "stile-b", "rail-low", "rail-high")
+        ]
+        for sx, stile in ((1, a), (-1, b)):
+            for sz, rail in ((1, low), (-1, high)):
+                local = list(stile["motion_local"])
+                local[0] += sx * 31
+                local[1] += -16 if did == "front-right" else 16
+                local[2] = rail["motion_local"][2] + sz * 31
+                offset = [local[i] - stile["motion_local"][i] for i in range(3)]
+                pid = prefix + f"-corner-plate-{sx}-{sz}"
+                holes = [
+                    dict(axis="y", center=[sx * x, sz * z], diameter_mm=6.5)
+                    for x, z in ((-31, -31), (-31, -1), (-31, 29), (-1, -31), (29, -31))
+                ]
+                parts.append(
+                    dict(
+                        id=pid,
+                        name="CJP3030L standard leaf joining plate · drawing study",
+                        category="hardware",
+                        material="zinc-plated steel",
+                        supplier="Reiman Portugal / Wolweiss",
+                        product_code="CJP3030L",
+                        source="https://www.reiman.pt/pub/media/technical_data/wolweiss/datasheets/cjp.pdf",
+                        size=[88, 2, 88],
+                        position=_add(stile["position"], _rotate(offset, d["base_deg"])),
+                        rotation_deg=d["base_deg"],
+                        assembly=did,
+                        quantity=1,
+                        physical=True,
+                        geometry_fidelity="drawing-based-unconfirmed-solid",
+                        motion_leaf=role,
+                        motion_local=local,
+                        holes=holes,
+                        cutouts=[
+                            dict(
+                                kind="rectangle",
+                                normal_axis=1,
+                                width_mm=62,
+                                height_mm=62,
+                                center_local_mm=[sx * 13, 0, sz * 13],
+                            )
+                        ],
+                        fastener_schedule=dict(
+                            quantity=5,
+                            screw="M6 x 10 ISO 7380 button head (10.5 dia x 3.3 high) + 1.6 mm metal washer candidate; 2 mm plate, nut engagement pending",
+                            nut="BPN08M6 pre-assembly; exact stepped section/engagement pending",
+                        ),
+                        machining="Bought CJP3030L: 88 mm arms, 26 mm wide, 2 mm thick, five 6.5 mm holes on 30 mm pitch. Drawing study uses sharp corners; actual radii and STEP pending. Inward face leaves glazing slots free. M6 slot nuts, thread engagement, torque and joint capacity remain unvalidated.",
+                    )
+                )
+                d["part_ids"].append(pid)
+                # Actual stile/rail butt faces, in their shared leaf-local basis.
+                world = _add(
+                    rail["position"], _rotate([-sx * rail["size"][0] / 2, 0, 0], d["base_deg"])
+                )
+                la = _rotate([world[i] - stile["position"][i] for i in range(3)], -d["base_deg"])
+                lb = _rotate([world[i] - rail["position"][i] for i in range(3)], -d["base_deg"])
+                model["joints"].append(
+                    dict(
+                        id=f"{stile['id']}--{rail['id']}",
+                        part_a=stile["id"],
+                        part_b=rail["id"],
+                        local_a=la,
+                        local_b=lb,
+                        normal_a=[sx, 0, 0],
+                        normal_b=[-sx, 0, 0],
+                        feature_type="mating-plane",
+                        angular_tolerance_deg=0.01,
+                        tolerance_mm=0.01,
+                        contact=dict(
+                            type="mating", max_overlap_mm3=0.01, minimum_contact_area_mm2=1
+                        ),
+                        mounting_verified=False,
+                        connector_ids=[pid],
+                    )
+                )
+
+
 def complete_bifolds(model):
     from .core import _add, _rotate
 
@@ -173,87 +260,7 @@ def complete_bifolds(model):
             continue
         did = d["id"]
         add_handle_studies(model, d, by_id)
-        for role in ("a", "b"):
-            prefix = f"{did}-{role}"
-            a, b, low, high = [
-                by_id[prefix + "-" + k] for k in ("stile-a", "stile-b", "rail-low", "rail-high")
-            ]
-            for sx, stile in ((1, a), (-1, b)):
-                for sz, rail in ((1, low), (-1, high)):
-                    local = list(stile["motion_local"])
-                    local[0] += sx * 31
-                    local[1] += 16
-                    local[2] = rail["motion_local"][2] + sz * 31
-                    offset = [local[i] - stile["motion_local"][i] for i in range(3)]
-                    pid = prefix + f"-corner-plate-{sx}-{sz}"
-                    holes = [
-                        dict(axis="y", center=[sx * x, sz * z], diameter_mm=6.5)
-                        for x, z in ((-31, -31), (-31, -1), (-31, 29), (-1, -31), (29, -31))
-                    ]
-                    parts.append(
-                        dict(
-                            id=pid,
-                            name="CJP3030L standard leaf joining plate · drawing study",
-                            category="hardware",
-                            material="zinc-plated steel",
-                            supplier="Reiman Portugal / Wolweiss",
-                            product_code="CJP3030L",
-                            source="https://www.reiman.pt/pub/media/technical_data/wolweiss/datasheets/cjp.pdf",
-                            size=[88, 2, 88],
-                            position=_add(stile["position"], _rotate(offset, d["base_deg"])),
-                            rotation_deg=d["base_deg"],
-                            assembly=did,
-                            quantity=1,
-                            physical=True,
-                            geometry_fidelity="drawing-based-unconfirmed-solid",
-                            motion_leaf=role,
-                            motion_local=local,
-                            holes=holes,
-                            cutouts=[
-                                dict(
-                                    kind="rectangle",
-                                    normal_axis=1,
-                                    width_mm=62,
-                                    height_mm=62,
-                                    center_local_mm=[sx * 13, 0, sz * 13],
-                                )
-                            ],
-                            fastener_schedule=dict(
-                                quantity=5,
-                                screw="M6 x 10 ISO 7380 button head (10.5 dia x 3.3 high) + 1.6 mm metal washer candidate; 2 mm plate, nut engagement pending",
-                                nut="BPN08M6 pre-assembly; exact stepped section/engagement pending",
-                            ),
-                            machining="Bought CJP3030L: 88 mm arms, 26 mm wide, 2 mm thick, five 6.5 mm holes on 30 mm pitch. Drawing study uses sharp corners; actual radii and STEP pending. Inward face leaves glazing slots free. M6 slot nuts, thread engagement, torque and joint capacity remain unvalidated.",
-                        )
-                    )
-                    d["part_ids"].append(pid)
-                    # Actual stile/rail butt faces, in their shared leaf-local basis.
-                    world = _add(
-                        rail["position"], _rotate([-sx * rail["size"][0] / 2, 0, 0], d["base_deg"])
-                    )
-                    la = _rotate(
-                        [world[i] - stile["position"][i] for i in range(3)], -d["base_deg"]
-                    )
-                    lb = _rotate([world[i] - rail["position"][i] for i in range(3)], -d["base_deg"])
-                    model["joints"].append(
-                        dict(
-                            id=f"{stile['id']}--{rail['id']}",
-                            part_a=stile["id"],
-                            part_b=rail["id"],
-                            local_a=la,
-                            local_b=lb,
-                            normal_a=[sx, 0, 0],
-                            normal_b=[-sx, 0, 0],
-                            feature_type="mating-plane",
-                            angular_tolerance_deg=0.01,
-                            tolerance_mm=0.01,
-                            contact=dict(
-                                type="mating", max_overlap_mm3=0.01, minimum_contact_area_mm2=1
-                            ),
-                            mounting_verified=False,
-                            connector_ids=[pid],
-                        )
-                    )
+        add_corner_plates(model, d)
         # Two vertically separated fixings resist rotation of each closing tab.
         for i in range(2):
             stop = by_id[f"{did}-closed-stop-{i}"]

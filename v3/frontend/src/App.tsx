@@ -582,6 +582,17 @@ export default function App() {
             <section class="design-notes" aria-label="Design notes">
               <h2>Design notes & outstanding issues</h2>
               <p class="muted">Prototype details, proposed fixings and remaining validation work.</p>
+            <p data-testid="front-inset-note">
+              Front doors · inset 6 mm behind the frame front face, with no fixed centre post.
+              Six vendor CFG.30/30 hinges, six 6 mm moving-wing spacers and eight door CJP3030L corner plates; four more connect the front frame.
+              Open right fully, then left; close left fully, then right. 100° nominal travel.
+              Glass target is 4 mm, with the FSP08 slot-holder study within its documented 3–5 mm range.
+              Other front infill uses a thickness-adapted study (maximum 6 mm).
+              Relieved rear closing strips support joined perimeter seals; flexible head/sill boots connect the meeting strip to them.
+              Nominal coverage and support contacts are checked; physical sealing is unproven.
+              Glass setting support, gasket compounds,
+              compression, fixings, sag and physical stops remain unapproved. Handles and hinge barrels project.
+            </p>
             <p data-testid="bifold-prototype-note">
               Bifold prototype · A1 mini PETG guides, CFG hinges, 88° parking.
               Rear opening 750 mm by default. Metal carrier, standard CJP3030L corner plates and
@@ -648,9 +659,11 @@ export default function App() {
             </p>
             <Show when={result()?.model.parts.some((p) => p.glazing)}>
               <details data-testid="bifold-glazing" open>
-                <summary>4 mm Lexan · slot glazing study</summary>
+                <summary>Slot glazing studies · front infill and 4 mm Lexan</summary>
                 <p>
-                  FSP08 candidate: drawing-based section, not vendor STEP.
+                  Bifold FSP08 candidate: drawing-based section, not vendor STEP.
+                  Default 4 mm front glass uses the same FSP08 candidate within its documented thickness range.
+                  Other front infill uses an unselected adapted holder.
                   PVC compatibility with Lexan is unconfirmed. Corner seals,
                   minimum edge engagement and frame connectors need approval.
                   Provisional cuts below — do not order yet.
@@ -661,7 +674,7 @@ export default function App() {
                       <li>
                         <button onClick={() => setSelected(p.id)}>
                           {p.id.replace("-infill", "")}: {p.size[0].toFixed(2)} ×{" "}
-                          {p.size[2].toFixed(2)} × 4 mm
+                          {p.size[2].toFixed(2)} × {p.size[1]} mm
                         </button>
                       </li>
                     )}

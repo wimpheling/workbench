@@ -1,0 +1,48 @@
+import { test, expect } from "@playwright/test";
+
+test("inset front doors retain the loading opening, sequence and bottom notes", async ({ page }) => {
+  const errors: string[] = [];
+  let cadRequests = 0;
+  page.on("pageerror", e => errors.push(e.message));
+  page.on("request", r => { if (/\/api\/(evaluate|preview)$/.test(r.url())) cadRequests++; });
+  const evaluated = page.waitForResponse(r => r.url().endsWith("/api/evaluate"), { timeout: 300000 });
+  await page.goto("/");
+  const evaluation = await evaluated;
+  expect(evaluation.ok()).toBe(true);
+  // Read the report outside Chromium's finite inspector-body cache.
+  const reportResponse = await page.request.post("/api/export/json", { data: { parameters: {} } });
+  expect(reportResponse.ok()).toBe(true);
+  const evaluatedData = await reportResponse.json();
+  const coverage = evaluatedData.report.checks.filter((c: { id: string }) => c.id.startsWith("containment.coverage.front-"));
+  expect(coverage).toHaveLength(7);
+  expect(coverage.every((c: { status: string }) => c.status === "pass")).toBe(true);
+  const response = await page.request.post("/api/preview", { data: { parameters: {} } });
+  const { model } = await response.json();
+  const fronts = model.doors.filter((d: { type: string }) => d.type === "swing");
+  expect(model.parameters.glass_thickness_mm).toBe(4);
+  expect(fronts.map((d: { pivot: number[] }) => d.pivot[1])).toEqual([-38, -38]);
+  expect(model.parts.filter((p: { id: string }) => p.id.includes("front") && p.id.includes("centre-post"))).toHaveLength(0);
+  await page.getByRole("button", { name: "Design notes", exact: true }).click();
+  await expect(page.getByTestId("front-inset-note")).toContainText("maximum 6 mm");
+  await expect(page.getByTestId("bifold-prototype-note")).toBeVisible();
+  await expect(page.getByTestId("bifold-glazing")).toContainText("× 4 mm");
+  await page.screenshot({ path: "../artifacts/front-inset-notes.png", fullPage: true });
+  const left = page.getByRole("slider", { name: "Front · left leaf", exact: true });
+  const right = page.getByRole("slider", { name: "Front · right leaf", exact: true });
+  await expect(left).toBeDisabled();
+  const before = cadRequests;
+  await right.fill("1");
+  await expect(left).toBeEnabled();
+  await left.fill("1");
+  await expect(right).toBeDisabled();
+  await page.getByRole("button", { name: "Fit view", exact: true }).click();
+  await page.locator(".preview").screenshot({ path: "../artifacts/front-open.png" });
+  await left.fill("0");
+  await expect(right).toBeEnabled();
+  await right.fill("0");
+  await expect(left).toBeDisabled();
+  await page.getByRole("button", { name: "Fit view", exact: true }).click();
+  await page.locator(".preview").screenshot({ path: "../artifacts/front-closed.png" });
+  expect(cadRequests).toBe(before);
+  expect(errors).toEqual([]);
+});

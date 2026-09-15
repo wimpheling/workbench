@@ -12,6 +12,18 @@ An enclosure planning application for a Shapeoko 5 Pro 4×4 in a Lisbon workshop
 
 V3 is the active application. The old root EnclosureV2 application and archived renderer have been removed; their history remains in Git. V3 uses native Python/CadQuery/OpenCascade as its geometry authority and a SolidJS/Three.js interface. No cloud account is required; run it locally. A static Pages site cannot perform native CAD evaluations.
 
+## Inset front doors
+
+The front doors now sit 6 mm behind the frame front face, using six vendor CFG hinges
+with 6 mm moving-wing spacers and the bifolds’ CJP3030L corner arrangement.
+There is no fixed centre post. Open right then left to 100°; close in reverse.
+Glass now targets 4 mm, with slot-captured front panes using the FSP08 drawing
+study within its documented 3–5 mm range. Relieved closing strips support a
+joined perimeter gasket; flexible head/sill boots close the meeting ends.
+Nominal coverage is checked; glass support and physical seal performance remain
+unapproved. Other front infill uses an adapted study, maximum 6 mm.
+See [front-door geometry and remaining evidence](docs/FRONT_DOORS.md).
+
 ## Run
 
 Prerequisites: [uv](https://docs.astral.sh/uv/), Python 3.12 (uv can install it), and Node.js with npm. Dependencies are locked in `uv.lock` and `frontend/package-lock.json`.
@@ -35,7 +47,7 @@ For frontend development, start the Python service and run `npm run dev` in `v3/
 ## Use
 
 1. Set clear internal dimensions. Defaults start at 1674 × 1649 × 740 mm (width × depth × height).
-2. Choose front and bifold infill materials. Front glass remains provisional; bifolds default to 4 mm polycarbonate.
+2. Choose front and bifold infill materials. Glass defaults to 4 mm; its grade/support remain provisional. Bifolds default to 4 mm polycarbonate.
 3. Inspect the model, hide roof/walls, and open each door independently. Reference envelopes can be shown separately.
 4. Leave **Automatic verification** enabled to evaluate changes, or turn it off to update geometry previews only. Use **Verify now** when ready. Previews have no current engineering report and cannot enable exports; a prior report is hidden when its settings no longer match.
 5. Read failures and unresolved evidence. A successful constraint solve is only one piece of evidence; it does not imply clearance or order readiness.
@@ -81,14 +93,14 @@ questions. The [initial investigation](../engineering/bifold-assembly/standard-m
 is historical and its mounting-gap/head-clearance issues are corrected here.
 
 The 4 mm polycarbonate bifolds now use a slot-captured **FSP08 study** instead
-of the surface beads described below for front/alternative-material doors.
+of the surface beads described below for alternative-material bifolds.
 The 16 inserts use a downloaded vendor PDF, not vendor STEP. Revised panel cuts
 and a 40 K expansion allowance are shown in the UI and quotation schedules.
 FSP08 is PVC: Lexan compound compatibility is **not confirmed**; corners,
 minimum engagement and frame-connector interference require approval before
 cutting. See [provenance and calculations](backend/enclosure/assets/FSP.md).
 
-Front/alternative-material infills have retaining beads, edge seals and face packing; the 4 mm Lexan bifolds use the slot study above. Fixed wood panels overlap the frame borders and sit against continuous gaskets. Bifold head coverage is nominally closed by exterior hoods and angled-brush studies; physical brush/carrier deflection remains unvalidated. The right front leaf carries the overlapping meeting strip: **open right fully, then left; close left fully, then right**. The model rejects incompatible poses and the UI locks the corresponding controls. Bifold meeting wipes adhere only to secondary leaves and disengage from primary leaves; animation does not simulate flexible deformation.
+Front infills use the thickness-adapted slot study; alternative-material bifolds retain beads, edge seals and face packing. The 4 mm Lexan bifolds use the FSP08 study above. Fixed wood panels overlap the frame borders and sit against continuous gaskets. Bifold head coverage is nominally closed by exterior hoods and angled-brush studies; physical brush/carrier deflection remains unvalidated. The right front leaf carries the overlapping meeting strip: **open right fully, then left; close left fully, then right**. The model rejects incompatible poses and the UI locks the corresponding controls. Bifold meeting wipes adhere only to secondary leaves and disengage from primary leaves; animation does not simulate flexible deformation.
 
 The right wall has a supplier-cut 240 × 80 mm makeup-air opening and a cleanable external hood with staggered baffles. At default dimensions its minimum nominal passage is 16,632 mm², slightly over twice the 100 mm hose cross-sectional area. The area ratio is a design allowance, not an airflow-performance claim. Increasing hose diameter can require a larger inlet. Air enters passively; extraction is through the dust shoe and roof hose, with the vacuum and its exhaust outside the enclosure. The roof has an annular collar/gasket; the base gasket requires a flat, continuous supporting table.
 

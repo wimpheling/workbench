@@ -19,7 +19,7 @@ def default_parameters():
         depth_mm=1649.0,
         height_mm=740.0,
         panel_thickness_mm=6.0,
-        glass_thickness_mm=6.0,
+        glass_thickness_mm=4.0,
         clearance_mm=4.0,
         cut_tolerance_mm=0.5,
         workpiece_width_mm=1219.2,
@@ -389,11 +389,11 @@ def build_model(parameters=None):
 
     # Front left local Y points outward; right mirrored through basis and angle.
     for id, pivot, base, sign in [
-        ("front-left", [0, -45 - c, 0], 0, -1),
-        ("front-right", [W, -45 - c, 0], 180, 1),
+        ("front-left", [2.5, -38, 0], 0, -1),
+        ("front-right", [W - 2.5, -38, 0], 180, 1),
     ]:
-        length = W / 2
-        ids = leaf(id, "a", length, pivot, base, 0, c, H - c)
+        length = W / 2 - 2.5
+        ids = leaf(id, "a", length, pivot, base, 29 if sign == -1 else -29, c, H - c, edge_gap=2.5)
         doors.append(
             dict(
                 id=id,
@@ -402,7 +402,7 @@ def build_model(parameters=None):
                 pivot=pivot,
                 base_deg=base,
                 opening_sign=sign,
-                max_angle_deg=110,
+                max_angle_deg=100,
                 link_length_mm=length,
                 axis_offset_mm=0,
             )
@@ -410,34 +410,6 @@ def build_model(parameters=None):
     from .bifold import add_bifolds
 
     add_bifolds(part, leaf, doors, p)
-    # Hardware bodies are explicitly listed but mating and fixings require catalog selection.
-    for door in doors:
-        if door["type"] == "bifold":
-            continue
-        for kind, xx in [
-            ("frame-hinge", 0),
-            (
-                "latch",
-                door["link_length_mm"] * (2 if door["type"] == "bifold" else 1) - 20,
-            ),
-        ]:
-            for index, zz in enumerate([80, H - 100]):
-                item = part(
-                    f"{door['id']}-{kind}-{index}",
-                    [10, 10, 35],
-                    _add(door["pivot"], _rotate([xx, 0, zz], door["base_deg"])),
-                    "hardware",
-                    door["id"],
-                    door["base_deg"],
-                    product_code="GLR3030" if kind == "frame-hinge" else None,
-                    geometry_fidelity="unconfirmed-hardware-envelope",
-                )
-                if kind == "latch":
-                    item.update(
-                        motion_leaf="b" if door["type"] == "bifold" else "a",
-                        motion_local=[door["link_length_mm"] - 20, 0, zz],
-                    )
-                door["part_ids"].append(item["id"])
     part(
         "machine-envelope",
         [p["machine_width_mm"], p["machine_depth_mm"], p["machine_height_mm"]],
@@ -561,8 +533,10 @@ def build_model(parameters=None):
     )
     from .bifold_completion import complete_bifolds
     from .containment_geometry import add_containment
+    from .front_doors import complete_front_doors
     from .glazing import add_glazing
 
+    complete_front_doors(model)
     add_glazing(model)
     complete_bifolds(model)
     add_containment(model)
@@ -598,6 +572,7 @@ def build_model(parameters=None):
                 "containment_geometry.py",
                 "bifold.py",
                 "glazing.py",
+                "front_doors.py",
                 "bifold_completion.py",
                 "magnetic_catches.py",
                 "closed_catches.py",
@@ -737,7 +712,9 @@ def build_shapes(model, pose=None):
         if p.get("geometry", {}).get("kind") == "fsp08-study":
             from .glazing import gasket_shape
 
-            shape = gasket_shape(p["size"], p["geometry"]["side"])
+            shape = gasket_shape(
+                p["size"], p["geometry"]["side"], p["geometry"].get("panel_thickness_mm", 4)
+            )
         if p.get("geometry", {}).get("kind") == "closed-catch-root-fixing":
             from .closed_catches import root_fixing
 
@@ -806,8 +783,14 @@ def build_shapes(model, pose=None):
                     )
                     shape = shape.cut(pocket)
         if p.get("geometry", {}).get("kind") == "cylinder":
+            axis = p["geometry"].get("axis", 2)
+            start, direction = [0, 0, 0], [0, 0, 0]
+            start[axis], direction[axis] = -p["size"][axis] / 2, 1
             shape = cq.Solid.makeCylinder(
-                p["geometry"]["diameter_mm"] / 2, sz, cq.Vector(0, 0, -sz / 2)
+                p["geometry"]["diameter_mm"] / 2,
+                p["size"][axis],
+                cq.Vector(*start),
+                cq.Vector(*direction),
             )
         if p.get("geometry", {}).get("kind") == "annulus":
             g = p["geometry"]
@@ -857,4 +840,20 @@ def build_shapes(model, pose=None):
             tuple(p["position"])
         )
         result[p["id"]] = shape
+    # Fixed installed seal reliefs are explicit manufacturing/fit studies.
+    # Never trim moving solids or silently infer clearance from deformation.
+    by_id = {p["id"]: p for p in evaluated["parts"]}
+    for p in evaluated["parts"]:
+        for seat in p.get("installed_relief_ids", []):
+            if not p.get("deformable") or p.get("motion_leaf"):
+                raise ValueError("Installed seal relief requires a fixed flexible part")
+            if seat not in by_id or by_id[seat].get("motion_leaf") or by_id[seat].get("deformable"):
+                raise ValueError(f"Missing or non-rigid fixed seal seat: {seat}")
+            result[p["id"]] = result[p["id"]].cut(result[seat])
+        if p.get("installed_relief_ids"):
+            anchor = cq.Vector(*p["installed_body_anchor_mm"])
+            bodies = [s for s in result[p["id"]].Solids() if s.isInside(anchor)]
+            if len(bodies) != 1:
+                raise ValueError(f"Installed gasket has no unique connected body: {p['id']}")
+            result[p["id"]] = bodies[0]
     return result
