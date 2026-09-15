@@ -90,4 +90,10 @@ Unresolved bounds around hinge contact and nonrectangular parts remain unknown;
 finite samples are not a continuous collision-freedom proof. Physical flexible
 seal behaviour, tolerance stacks, sag and hardware performance remain untested.
 
-See the front-door task for the completed run results and remaining evidence.
+The full-model run reports zero rigid collision failures, passing inset checks
+and a clear continuous insertion prism for a 1219.2 × 1219.2 × 100 mm board
+at Z=600. Continuous motion remains unknown: 61,040 pairs, 60,699 resolved,
+341 unresolved, no collision witnesses. The five front perimeter/meeting
+coverage checks and their containment requirement fail; no other requirement
+is claimed failed by this nominal run. See the front-door task for final test
+results and remaining physical evidence.

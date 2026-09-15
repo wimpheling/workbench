@@ -938,7 +938,7 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
         members = [
             p
             for p in model["parts"]
-            if p["assembly"] == door_id
+            if p.get("assembly") == door_id
             and (p["category"] in ("extrusion", "glass", "panel") or p["id"] == "front-astragal")
         ]
         bounds = [_bbox(shapes[p["id"]]) for p in members if p["id"] in shapes]

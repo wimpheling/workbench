@@ -47,6 +47,13 @@ See [front-door design](../../v3/docs/FRONT_DOORS.md) for datums, quantities,
 installation details and verification limits. Existing right-side airflow
 requirements remain tracked in [the airflow task](../todo/right-side-airflow-and-filtration.md).
 
+The full-model report passes both inset checks and the continuous loading prism
+for a 1219.2 × 1219.2 × 100 mm board at Z=600. Its 61,040 moving pairs contain
+60,699 bounded-clear/rigid-invariant cases, zero collision witnesses and 341
+unknown interval/contact cases. The only failures are the five front perimeter/
+meeting coverage checks and their containment requirement. They remain visible
+because actual corner returns and seal installation have not been established.
+
 ## Implementation plan
 
 - [x] Establish and implement the inset arrangement
@@ -61,7 +68,7 @@ requirements remain tracked in [the airflow task](../todo/right-side-airflow-and
 - [ ] Verify and deliver the change
   - [x] Check closed native-solid fit and infill/holder contact against vendor extrusion slots
   - [x] Sample complete staged opening and reverse closing paths at every degree, correcting the first-degree handle collision
-  - [ ] Record final continuous-motion and loading-prism results, including unresolved bounds
+  - [x] Record final continuous-motion and loading-prism results, including unresolved bounds
   - [ ] Run full backend and frontend checks plus browser verification
   - [ ] Update supplier schedules and Design notes, publish PR and leave server running
 

@@ -310,8 +310,12 @@ def test_actual_infill_regions_expand_when_panel_shrinks():
     from enclosure.verification import actual_infill_gap_regions
 
     model = build_model()
-    before = dict(actual_infill_gap_regions(model))
     pane = next(p for p in model["parts"] if p["id"] == "front-left-a-infill")
+    # Slot engagement initially leaves no daylight gap. First remove enough
+    # panel width to disengage both edges; a second reduction must grow it.
+    assert "front-left-a.0" not in dict(actual_infill_gap_regions(model))
+    pane["size"][0] -= 20
+    before = dict(actual_infill_gap_regions(model))
     pane["size"][0] -= 20
     after = dict(actual_infill_gap_regions(model))
     for id in ("front-left-a.0", "front-left-a.1"):
