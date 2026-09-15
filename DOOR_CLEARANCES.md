@@ -1,5 +1,8 @@
 # EnclosureV2 door-clearance checklist
 
+> Historical document for the retired root EnclosureV2 application.
+> See [v3/README.md](v3/README.md) for the active product.
+
 ## Purpose and scope
 
 Define door clearances from the selected hardware, assembly method, and actual

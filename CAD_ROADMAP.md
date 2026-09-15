@@ -1,5 +1,8 @@
 # CAD Roadmap
 
+> Historical document for the retired root EnclosureV2 application.
+> See [v3/README.md](v3/README.md) for the active product.
+
 This roadmap describes how to evolve this repository from a browser-based 3D piece renderer into a small, parametric, manufacturing-aware CAD system for woodworking, aluminium extrusion, and assembled structures.
 
 It is intentionally tied to the current codebase. The goal is not to design a generic CAD kernel in one step, but to introduce a stable domain model around the existing Replicad geometry and Three.js viewer, one useful vertical slice at a time.
