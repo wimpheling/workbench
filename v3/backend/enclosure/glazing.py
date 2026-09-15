@@ -39,6 +39,8 @@ def add_glazing(model):
     for pane in panes:
         front = pane["assembly"].startswith("front-")
         thickness = pane["size"][1]
+        front_fsp = front and pane["material"] == "glass" and 3 <= thickness <= 5
+        adapted = front and not front_fsp
         coefficient = 0.000009 if pane["material"] == "glass" else 0.000070
         c = model["parameters"]["clearance_mm"]
         ow, oh = pane["size"][0] + 2 * c, pane["size"][2] + 2 * c
@@ -48,7 +50,7 @@ def add_glazing(model):
         pane["size"] = [axes[0]["cut_mm"], thickness, axes[1]["cut_mm"]]
         pane["cut_size_mm"] = [axes[0]["cut_mm"], axes[1]["cut_mm"], thickness]
         pane["glazing"] = dict(
-            product_candidate="Unselected slot-8 front holder" if front else "FSP08",
+            product_candidate="Unselected slot-8 front holder" if adapted else "FSP08",
             axes=axes,
             temperature_excursion_K=40,
             expansion_coefficient_per_K=coefficient,
@@ -62,7 +64,13 @@ def add_glazing(model):
         )
         if front:
             pane["retention"] = (
-                f"{thickness:g} mm {pane['material']} in inward 3030 slots; unapproved thin-wall holder study, NOT FSP08 for 6 mm. Maximum 6 mm infill; thicker panels require redesign. Glass setting support, wood moisture movement, compound, corners and pull-out capacity pending. Assemble frame around panel; no glass drilling."
+                f"{thickness:g} mm {pane['material']} in inward 3030 slots; "
+                + (
+                    "FSP08 drawing-based candidate within documented 3–5 mm panel range. "
+                    if front_fsp
+                    else "Unselected adapted holder study; FSP08 is not specified above 5 mm. "
+                )
+                + "Maximum studied infill 6 mm; thicker panels require redesign. Glass setting support, wood moisture movement, compound, corners and pull-out capacity pending. Assemble frame around panel; no glass drilling."
             )
         pane["machining"] = pane["retention"]
         d = doors[pane["assembly"]]
@@ -86,14 +94,16 @@ def add_glazing(model):
                 dict(
                     id=pid,
                     name=f"Front slot-holder study · {side}"
-                    if front
+                    if adapted
                     else f"FSP08 candidate · {side} glazing insert",
                     category="hardware",
                     material="EPDM candidate (section/compound unapproved)"
-                    if front
+                    if adapted
+                    else "black PVC (glass installation unapproved)"
+                    if front_fsp
                     else "black PVC (Lexan compatibility unconfirmed)",
                     supplier="Reiman Portugal",
-                    product_code=None if front else "FSP08",
+                    product_code=None if adapted else "FSP08",
                     quantity=1,
                     physical=True,
                     deformable=True,
@@ -110,7 +120,7 @@ def add_glazing(model):
                     if front
                     else dict(kind="fsp08-study", side=side),
                     source="Unselected front holder; adapted study, no vendor CAD"
-                    if front
+                    if adapted
                     else SOURCE,
                     cut_length_mm=length,
                     stock_length_mm=2000,

@@ -19,7 +19,7 @@ def default_parameters():
         depth_mm=1649.0,
         height_mm=740.0,
         panel_thickness_mm=6.0,
-        glass_thickness_mm=6.0,
+        glass_thickness_mm=4.0,
         clearance_mm=4.0,
         cut_tolerance_mm=0.5,
         workpiece_width_mm=1219.2,
@@ -783,8 +783,14 @@ def build_shapes(model, pose=None):
                     )
                     shape = shape.cut(pocket)
         if p.get("geometry", {}).get("kind") == "cylinder":
+            axis = p["geometry"].get("axis", 2)
+            start, direction = [0, 0, 0], [0, 0, 0]
+            start[axis], direction[axis] = -p["size"][axis] / 2, 1
             shape = cq.Solid.makeCylinder(
-                p["geometry"]["diameter_mm"] / 2, sz, cq.Vector(0, 0, -sz / 2)
+                p["geometry"]["diameter_mm"] / 2,
+                p["size"][axis],
+                cq.Vector(*start),
+                cq.Vector(*direction),
             )
         if p.get("geometry", {}).get("kind") == "annulus":
             g = p["geometry"]
@@ -834,4 +840,20 @@ def build_shapes(model, pose=None):
             tuple(p["position"])
         )
         result[p["id"]] = shape
+    # Fixed installed seal reliefs are explicit manufacturing/fit studies.
+    # Never trim moving solids or silently infer clearance from deformation.
+    by_id = {p["id"]: p for p in evaluated["parts"]}
+    for p in evaluated["parts"]:
+        for seat in p.get("installed_relief_ids", []):
+            if not p.get("deformable") or p.get("motion_leaf"):
+                raise ValueError("Installed seal relief requires a fixed flexible part")
+            if seat not in by_id or by_id[seat].get("motion_leaf") or by_id[seat].get("deformable"):
+                raise ValueError(f"Missing or non-rigid fixed seal seat: {seat}")
+            result[p["id"]] = result[p["id"]].cut(result[seat])
+        if p.get("installed_relief_ids"):
+            anchor = cq.Vector(*p["installed_body_anchor_mm"])
+            bodies = [s for s in result[p["id"]].Solids() if s.isInside(anchor)]
+            if len(bodies) != 1:
+                raise ValueError(f"Installed gasket has no unique connected body: {p['id']}")
+            result[p["id"]] = bodies[0]
     return result

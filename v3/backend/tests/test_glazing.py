@@ -22,7 +22,7 @@ def test_default_lexan_cuts_and_thermal_allowances():
         assert not any(
             q["id"].startswith(p["id"]) and "retainer" in q["id"] for q in model["parts"]
         )
-    assert len([p for p in model["parts"] if p.get("product_code") == "FSP08"]) == 16
+    assert len([p for p in model["parts"] if p.get("product_code") == "FSP08"]) == 24
     assert any(
         a["id"] == "bifold-slot-glazing" and not a["confirmed"] for a in model["assumptions"]
     )

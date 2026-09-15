@@ -17,8 +17,11 @@ V3 is the active application. The old root EnclosureV2 application and archived 
 The front doors now sit 6 mm behind the frame front face, using six vendor CFG hinges
 with 6 mm moving-wing spacers and the bifolds’ CJP3030L corner arrangement.
 There is no fixed centre post. Open right then left to 100°; close in reverse.
-Front infill is slot-captured with an unselected holder for its actual thickness
-(maximum studied thickness 6 mm). FSP08 is not specified for 6 mm glass.
+Glass now targets 4 mm, with slot-captured front panes using the FSP08 drawing
+study within its documented 3–5 mm range. Relieved closing strips support a
+joined perimeter gasket; flexible head/sill boots close the meeting ends.
+Nominal coverage is checked; glass support and physical seal performance remain
+unapproved. Other front infill uses an adapted study, maximum 6 mm.
 See [front-door geometry and remaining evidence](docs/FRONT_DOORS.md).
 
 ## Run
@@ -44,7 +47,7 @@ For frontend development, start the Python service and run `npm run dev` in `v3/
 ## Use
 
 1. Set clear internal dimensions. Defaults start at 1674 × 1649 × 740 mm (width × depth × height).
-2. Choose front and bifold infill materials. Front glass remains provisional; bifolds default to 4 mm polycarbonate.
+2. Choose front and bifold infill materials. Glass defaults to 4 mm; its grade/support remain provisional. Bifolds default to 4 mm polycarbonate.
 3. Inspect the model, hide roof/walls, and open each door independently. Reference envelopes can be shown separately.
 4. Leave **Automatic verification** enabled to evaluate changes, or turn it off to update geometry previews only. Use **Verify now** when ready. Previews have no current engineering report and cannot enable exports; a prior report is hidden when its settings no longer match.
 5. Read failures and unresolved evidence. A successful constraint solve is only one piece of evidence; it does not imply clearance or order readiness.

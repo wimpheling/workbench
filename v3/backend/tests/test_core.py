@@ -163,8 +163,8 @@ def test_front_glass_is_slot_captured_without_surface_retainers():
     model = build_model()
     parts = {p["id"]: p for p in model["parts"]}
     pane = parts["front-left-a-infill"]
-    assert pane["size"][1] == 6
-    assert pane["glazing"]["product_candidate"] != "FSP08"
+    assert pane["size"][1] == 4
+    assert pane["glazing"]["product_candidate"] == "FSP08"
     assert "front-left-a-infill-left-slot-gasket" in parts
     assert not any("front-left-a-infill" in pid and "retainer" in pid for pid in parts)
 

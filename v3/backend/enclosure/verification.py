@@ -116,7 +116,7 @@ def check_barrier_connection(shapes, pair):
     distance = shapes[pair[0]].distance(shapes[pair[1]])
     return dict(
         status="pass" if distance <= KERNEL_LENGTH_TOLERANCE_MM else "fail",
-        message="Nominal hood/holder/brush/leaf contact; attachment and flexible performance unvalidated",
+        message="Nominal adjacent barrier/support contact; attachment and flexible performance unvalidated",
         references=pair,
         measured=distance,
         required=KERNEL_LENGTH_TOLERANCE_MM,

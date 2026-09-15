@@ -14,6 +14,7 @@ def add_containment(model):
     H = p["height_mm"]
     c = p["clearance_mm"]
     t = p["panel_thickness_mm"]
+    front_band = max(10, c + 3)
     parts = model["parts"]
     doors = {d["id"]: d for d in model["doors"]}
     entries = []
@@ -118,31 +119,76 @@ def add_containment(model):
                 item = add(
                     id, [ww, dd, hh], _add(pivot, _rotate([xx, nn, zz], base)), base, rubber=rubber
                 )
-                if did == "front" and side in ("left", "right") and not rubber:
-                    item["size"][2] = H - 64
-                    item["cut_length_mm"] = H - 64
-                    item["position"][2] = H / 2
-                    item["machining"] += (
-                        "; ends 32 mm clear of existing side-rail brackets; seal end support unresolved"
-                    )
                 if did == "front":
-                    if side == "top" and not rubber:
-                        # The left 3060 header projects 15 mm into this corner.
-                        item["size"][0] = W - 28
-                        item["position"][0] = (W + 8) / 2
-                        item["cut_length_mm"] = W - 28
-                    if rubber:
+                    if not rubber:
+                        if side in ("left", "right"):
+                            # Continuous inner tongue supports the corner seal;
+                            # outer root is relieved around the side-rail angles.
+                            item["size"] = [30, 2, H - 2 * front_band]
+                            item["position"][2] = H / 2
+                            item["cutouts"] = [
+                                dict(
+                                    kind="rectangle",
+                                    normal_axis=1,
+                                    width_mm=20,
+                                    height_mm=32 - front_band,
+                                    center_local_mm=[-5 if side == "left" else 5, 0, z - H / 2],
+                                )
+                                for z in ((front_band + 32) / 2, H - (front_band + 32) / 2)
+                            ]
+                            item["machining"] = (
+                                f"2 mm aluminium closing strip, 30 mm wide; two 20 x {32 - front_band:g} mm open-end root reliefs leave a 10 mm inner tongue. "
+                                "Root supported by existing 12 mm backing between Z=32 and H-32. "
+                                f"Bond seal continuously to strip; {32 - front_band:g} mm tongue stiffness, adhesive and fixing pitch pending."
+                            )
+                        else:
+                            item["size"][0] = W
+                            item["position"][0] = W / 2
+                            item["size"][2] = front_band + 20
+                            item["position"][2] = (
+                                (front_band - 20) / 2
+                                if side == "bottom"
+                                else H + (20 - front_band) / 2
+                            )
+                            if side == "top":
+                                item["cutouts"] = [
+                                    dict(
+                                        kind="rectangle",
+                                        normal_axis=1,
+                                        width_mm=18,
+                                        height_mm=23,
+                                        center_local_mm=[9 - W / 2, 0, (front_band - 3) / 2],
+                                    )
+                                ]
+                                item["machining"] = (
+                                    f"2 mm aluminium head closing strip, {front_band + 20:g} mm wide. Left end 18 x 23 mm open relief "
+                                    f"leaves a {front_band - 3:g} mm inner tongue, 3 mm below 3060 header. "
+                                    "Bond seal to continuous strip; tongue stiffness, adhesive and fixing pitch pending."
+                                )
+                    else:
                         item["geometry_fidelity"] = "unconfirmed-flexible-envelope"
                         if side in ("left", "right"):
-                            item["size"] = [10, depth, H - 2 * c]
-                            item["position"] = [5 if side == "left" else W - 5, sealnormal, H / 2]
+                            item["size"] = [13, depth, H - 2 * front_band]
+                            item["position"] = [
+                                3.5 if side == "left" else W - 3.5,
+                                sealnormal,
+                                H / 2,
+                            ]
                         else:
-                            item["size"][2] = 10
-                            item["position"][2] = 5 if side == "bottom" else H - 5
-                        item["cut_length_mm"] = max(item["size"])
-                        item["machining"] += (
-                            "; installed aperture-side envelope; corner plate deflection and end support unapproved"
+                            item["size"] = [W + 6, depth, front_band + 3]
+                            item["position"] = [
+                                W / 2,
+                                sealnormal,
+                                (front_band - 3) / 2
+                                if side == "bottom"
+                                else H - (front_band - 3) / 2,
+                            ]
+                        item["machining"] = (
+                            "6 mm installed gasket study. Head/sill extend 3 mm past aperture; "
+                            f"jambs butt at Z={front_band:g} and H-{front_band:g}. Bond/vulcanise corner joints into continuous surround; "
+                            "bond roots to relieved closing strips. Free section, adhesive, compression and local corner-plate deflection pending."
                         )
+                    item["cut_length_mm"] = max(item["size"])
                 if did != "front" and rubber:
                     if side in ("left", "right"):
                         item["size"][2] = H + 6
@@ -239,6 +285,45 @@ def add_containment(model):
                     machining="12 mm rigid backing on frame rear face supports closing strip. M6 slot fixings, pitch and anti-rotation detail pending; not a rated slam stop.",
                 )
                 ids.append(backing["id"])
+        if did == "front":
+            fixed_seats = [
+                f"front-perimeter-{side}-backing" for side in ("left", "right", "bottom", "top")
+            ]
+            fixed_seats += [
+                f"bracket-{side}-front-{level}-y"
+                for side in ("left", "right")
+                for level in ("bottom", "top")
+            ]
+            fixed_seats += ["rail-left-top"]
+            for item in parts:
+                if item["id"].startswith("front-perimeter-") and item.get("deformable"):
+                    item["installed_relief_ids"] = fixed_seats
+                    # Keep the connected gasket body, never a fictitious slug
+                    # inside a closed extrusion pocket after the seat relief.
+                    side = item["id"].split("-")[-2]
+                    item["installed_body_anchor_mm"] = (
+                        [5 if side == "left" else W - 5, 9, H / 2]
+                        if side in ("left", "right")
+                        else [W / 2, 9, 5 if side == "bottom" else H - 5]
+                    )
+                    item["machining"] += (
+                        " Installed root/corner relief follows actual fixed backing, side-angle and header solids; "
+                        "supplier-cut notches and bonded joints must reproduce this seating. Keep the connected body only, without filling internal extrusion pockets. No rubber-through-metal fit is assumed."
+                    )
+            ids += [pid for pid in fixed_seats if pid not in ids]
+            # The vendor header has a 4.5 mm longitudinal channel at this
+            # corner. A separate, insertable foam plug closes it; it is not
+            # an isolated fragment of the perimeter gasket inside the metal.
+            plug = add(
+                "front-header-channel-plug",
+                [4.5, 12, 4.5],
+                [11.5, 6, H + 3.5],
+                rubber=True,
+                geometry=dict(kind="cylinder", diameter_mm=4.5, axis=1),
+                cut_length_mm=12,
+                machining="Cut 12 mm of closed-cell foam cord for the actual 4.5 mm header channel; insert from its front cut end. Nominal diameter matches vendor CAD, interference/compression and adhesive require supplier approval. Separate removable end plug, not part of the perimeter gasket blank.",
+            )
+            ids.append(plug["id"])
         for side, rect in [
             ("left", [0, 5 if did == "front" else c, 0, H]),
             ("right", [span - (5 if did == "front" else c), span, 0, H]),
@@ -300,6 +385,25 @@ def add_containment(model):
                     "door-perimeter",
                 )
             )
+    for entry in entries:
+        if not entry["id"].startswith("front-perimeter-"):
+            continue
+        side = entry["id"].removeprefix("front-perimeter-")
+        entry["nominal_contact_chain"] = [
+            [f"front-perimeter-{side}-seal", f"front-perimeter-{side}-stop"],
+            [f"front-perimeter-{side}-stop", f"front-perimeter-{side}-backing"],
+            [
+                f"front-perimeter-{side}-backing",
+                f"post-{side}-front" if side in ("left", "right") else f"rail-front-{side}",
+            ],
+        ]
+        if side == "top":
+            entry["nominal_contact_chain"].append(["front-header-channel-plug", "rail-left-top"])
+        if side in ("left", "right"):
+            entry["nominal_contact_chain"] += [
+                [f"front-perimeter-{side}-seal", f"front-perimeter-{level}-seal"]
+                for level in ("bottom", "top")
+            ]
     model["assumptions"].append(
         dict(
             id="bifold-exterior-head-brush",
@@ -330,17 +434,58 @@ def add_containment(model):
         )
         ids.append(item["id"])
         d["part_ids"].append(item["id"])
-    entries.append(
-        region(
-            "front-meeting",
-            d["pivot"],
-            d["base_deg"],
-            -10,
-            [L - 2.5, L + 2.5, 0, H],
-            ids,
-            "astragal",
+    # Fixed head/sill saddles bridge the exterior astragal to the rear seal.
+    # They lie wholly in the existing top/bottom door gaps and leave with no
+    # centre post. Their ends contact the strip and continuous perimeter gasket.
+    for level, z in (("bottom", c / 2), ("top", H - c / 2)):
+        saddle = add(
+            f"front-meeting-{level}-saddle",
+            [30, 42, c],
+            [W / 2, -9, z],
+            rubber=True,
+            machining="Cut/bond flexible end saddle, 30 mm across seam x 42 mm front-to-rear. Installed height equals door clearance. Bond to frame head/sill and perimeter seal; astragal end wipes saddle. Free height, preload and wear pending.",
         )
+        ids.append(saddle["id"])
+        apron = add(
+            f"front-meeting-{level}-apron",
+            [30, 1, c + 6],
+            [W / 2, -30.5, z],
+            rubber=True,
+            machining="1 mm flexible front apron bonded to saddle as an L-shaped end boot. Extends 3 mm beyond each end of door gap; bond to front face of frame. Rounded extrusion edge is bypassed, not filled by rigid stock. Material/adhesive and wipe wear pending.",
+        )
+        ids.append(apron["id"])
+    meeting = region(
+        "front-meeting",
+        d["pivot"],
+        d["base_deg"],
+        -10,
+        [L - 2.5, L + 2.5, c, H - c],
+        ids,
+        "astragal",
     )
+    meeting["nominal_contact_chain"] = []
+    for level, low, high in (("bottom", 0, c), ("top", H - c, H)):
+        # Preserve the entire 0..H obligation through three connected sections.
+        # The end boot wraps onto the frame front face to bypass its rounded edge.
+        end = region(
+            f"front-meeting-{level}",
+            [0, 0, 0],
+            0,
+            -30.5,
+            [W / 2 - 2.5, W / 2 + 2.5, low, high],
+            ids,
+            "astragal-end",
+        )
+        meeting["coverage_regions"] += end["coverage_regions"]
+        saddle = f"front-meeting-{level}-saddle"
+        apron = f"front-meeting-{level}-apron"
+        meeting["nominal_contact_chain"] += [
+            ["front-astragal", saddle],
+            [saddle, apron],
+            [apron, f"rail-front-{level}"],
+            [saddle, f"front-perimeter-{level}-seal"],
+        ]
+    entries.append(meeting)
     # Retail cut-to-length wipe on B's meeting stile, clear of both handles.
     # Width/stock length are catalogue data; thickness and bond layout are studies.
     for did in ["left-rear", "back-right"]:

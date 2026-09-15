@@ -91,7 +91,7 @@ test("revision C prototype is served by v3 and animates without CAD requests", a
     expect(wipe.procurement.packs_required).toBe(1);
     expect(data.meshes.find((m: { id: string }) => m.id === wipe.id).positions.length).toBeGreaterThan(0);
   }
-  const inserts = data.model.parts.filter((p: { product_code?: string }) => p.product_code === "FSP08");
+  const inserts = data.model.parts.filter((p: { product_code?: string; assembly: string }) => p.product_code === "FSP08" && ["left-rear", "back-right"].includes(p.assembly));
   expect(inserts).toHaveLength(16);
   for (const insert of inserts) {
     expect(insert.cad_asset).toBeUndefined();

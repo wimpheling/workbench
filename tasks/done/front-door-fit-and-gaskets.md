@@ -1,5 +1,9 @@
 # Fit the front doors inside the frame using the bifold components
 
+> First-delivery record: the 6 mm glass and failed front seal coverage below
+> describe commit 1348246. The [4 mm glass and seal-junction continuation](../done/front-glass-and-seal-junctions.md)
+> supersedes those details within the same PR #17.
+
 ## Description
 
 Deliver basic inset front doors using the current bifold corner connections,

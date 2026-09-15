@@ -4,7 +4,7 @@ const defaults = {
   depth_mm: 1649,
   height_mm: 740,
   panel_thickness_mm: 6,
-  glass_thickness_mm: 6,
+  glass_thickness_mm: 4,
   clearance_mm: 4,
   cut_tolerance_mm: 0.5,
 };
