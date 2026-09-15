@@ -14,7 +14,7 @@ reached from the user's operating position before fixing its location.
 This task covers mounting and routing; changes to electrical wiring or the
 machine's stop system require an explicitly defined scope.
 
-Coordinate with [the bifold task](bifold-door-mechanism.md) and
+Coordinate with [the bifold task](../in-progress/bifold-door-mechanism.md) and
 [the airflow task](right-side-airflow-and-filtration.md).
 
 ## Implementation plan

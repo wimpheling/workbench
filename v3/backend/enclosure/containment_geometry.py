@@ -85,13 +85,15 @@ def add_containment(model):
             depth = c - 2
         else:
             d = doors[did]
-            pivot = d["pivot"]
+            pivot = _add(d["pivot"], _rotate([-2.5, 8, 0], d["base_deg"]))
             base = d["base_deg"]
-            span = 2 * d["link_length_mm"]
-            top = H - 50
-            stopnormal = -1
-            sealnormal = 2
-            depth = 4
+            span = d["opening_width_mm"]
+            top = H - 55
+            # The rotating free-stile corner reaches behind the closed plane.
+            # Rigid backing stays clear; only flexible bristles occupy the wipe zone.
+            stopnormal = 40
+            sealnormal = 35
+            depth = 10
         ids = []
         specs = [
             ("left", [-5, (H) / 2], [30, H + 40]),
@@ -100,6 +102,14 @@ def add_containment(model):
             ("top", [span / 2, (top - 10 + H + 20) / 2], [span - 20, H + 30 - top]),
         ]
         for side, (xx, zz), (ww, hh) in specs:
+            if did != "front" and side == "bottom":
+                # User removed the complete bottom strip stack; keep coverage obligation below.
+                continue
+            if did != "front" and side in ("left", "right"):
+                zz, hh = top / 2, top
+            if did != "front" and side == "top":
+                # A prepared cover stays behind the roller/carrier path.
+                zz, hh = (top - 10 + H) / 2, H - top + 10
             for kind, nn, dd, rubber in [
                 ("stop", stopnormal, 2, False),
                 ("seal", sealnormal, depth, True),
@@ -108,15 +118,87 @@ def add_containment(model):
                 item = add(
                     id, [ww, dd, hh], _add(pivot, _rotate([xx, nn, zz], base)), base, rubber=rubber
                 )
+                if did != "front" and rubber:
+                    if side in ("left", "right"):
+                        item["size"][2] = H + 6
+                        item["position"] = _add(pivot, _rotate([xx, nn, H / 2], base))
+                    elif side == "bottom":
+                        item["size"][0] = span + 6
+                    elif side == "top":
+                        # Exterior hood stops 3 mm above the leaf; only the
+                        # brush wipes its top edge. No rigid cover in the sweep.
+                        item["size"] = [span + 6, 20, 24]
+                        item["position"] = _add(pivot, _rotate([span / 2, -2, top + 3], base))
+                        item["geometry"] = dict(kind="angled-head-brush-study")
+                    item.update(
+                        material="PBT brush bristles",
+                        geometry_fidelity="unconfirmed-flexible-brush-envelope",
+                        seal_spec=dict(
+                            kind="10 mm brush candidate",
+                            installed_height_mm=10,
+                            free_height_mm=10,
+                            compression_range="Flexing wipe; not compression gasket",
+                            attachment="Channel mechanically fixed to rigid backing; drag and corner closure pending",
+                        ),
+                    )
+                    if side == "top":
+                        item["seal_spec"].update(
+                            kind="Angled head brush study: 20 mm horizontal reach, 12 mm drop, 12 mm root band",
+                            installed_height_mm=math.hypot(20, 12),
+                            free_height_mm=None,
+                            attachment="Root band held on inward face of bonded exterior-hood holder, above leaf. Actual angled brush/root profile, adhesive, drag and corner returns require supplier approval",
+                        )
                 ids.append(id)
+                if did != "front" and side == "bottom" and not rubber:
+                    # Keep rigid backing below the 3 mm leaf bottom. The brush
+                    # alone wipes the moving lower corner/gusset through travel.
+                    item["size"][2] = 22
+                    item["position"] = _add(pivot, _rotate([xx, nn, -9], base))
+                if did != "front" and side == "left" and not rubber:
+                    # Keep the rigid strip above the retained bottom corner bracket.
+                    item["size"][2] = top - 31
+                    item["position"] = _add(pivot, _rotate([xx, nn, (top + 31) / 2], base))
+                if did != "front" and side == "top" and not rubber:
+                    # 3060 exterior mounting face is opening-local Y=-15.
+                    # Direct-mounted exterior hood avoids roof beams entirely.
+                    item["size"] = [span + 40, 2, 82]
+                    item["position"] = _add(pivot, _rotate([span / 2, -16, H - 11], base))
+                    item["holes"] = [
+                        dict(axis="y", center=[x - span / 2, 26], diameter_mm=6.5)
+                        for x in (50, span / 2, span - 50)
+                    ]
+                    item["machining"] = (
+                        "Exterior 2 mm aluminium head hood, 82 mm high; lower edge 3 mm above leaf. Three M6 slot fixings at header mid-height. No beam reliefs. Select fasteners and bonded brush holder; corner sealing and adhesive require approval."
+                    )
+                    item["fastener_schedule"] = dict(
+                        quantity=3,
+                        screw="M6; 2 mm hood plus washer, length/locking pending",
+                        nut="M6 slot-8",
+                    )
+                    model["bifold_completion"]["fastener_schedule"].append(
+                        dict(part_id=id, assembly=did, **item["fastener_schedule"])
+                    )
+                    return_id = f"{did}-head-brush-return"
+                    add(
+                        return_id,
+                        [span + 6, 3, 14],
+                        _add(pivot, _rotate([span / 2, -13.5, top + 10], base)),
+                        base,
+                        machining="Nominal bonded brush-holder envelope, no through-holes in sealing region; supplier root section and adhesive system pending",
+                    )
+                    ids.append(return_id)
         if did != "front":
             # The shared jamb stop mounts onto the overlapping fixed wood panel.
             # Other sides use cut backing strips to reach the same stop plane.
             for side, (xx, zz), (ww, hh) in specs:
-                if side == "left":
+                if side in ("left", "top", "bottom"):
                     continue
+                if side == "right":
+                    zz, hh = (top - 10) / 2, top - 10
+                elif side == "bottom":
+                    zz, hh = -9, 22
                 id = f"{did}-perimeter-{side}-backing"
-                add(id, [ww, 8, hh], _add(pivot, _rotate([xx, -6, zz], base)), base)
+                add(id, [ww, 8, hh], _add(pivot, _rotate([xx, 45, zz], base)), base)
                 ids.append(id)
         for side, rect in [
             ("left", [0, c, 0, H]),
@@ -124,11 +206,69 @@ def add_containment(model):
             ("bottom", [0, span, 0, c]),
             ("top", [0, span, top, H]),
         ]:
+            if did != "front" and side == "bottom":
+                entries.append(
+                    dict(
+                        id=f"{did}-perimeter-bottom",
+                        kind="intentional-bottom-gap",
+                        part_ids=[],
+                        nominal_height_mm=3,
+                        opening_width_mm=span,
+                        performance_confirmed=False,
+                        description="User accepts an unsealed bottom for a simple enclosure; no continuous bottom barrier required.",
+                    )
+                )
+                continue
+            if did != "front" and side == "top":
+                # The outer hood and inward/downward brush form a connected,
+                # non-planar barrier. Test both physical sections, retaining the
+                # same full head-height obligation and overlap/cut allowances.
+                head = region(
+                    f"{did}-perimeter-top",
+                    pivot,
+                    base,
+                    -16,
+                    [0, span, top + 6, H],
+                    ids,
+                    "door-perimeter",
+                )
+                wipe = region(
+                    f"{did}-head-wipe",
+                    pivot,
+                    base,
+                    0,
+                    [0, span, top, top + 3],
+                    ids,
+                    "door-perimeter",
+                )
+                head["coverage_regions"] += wipe["coverage_regions"]
+                head["nominal_contact_chain"] = [
+                    [f"{did}-perimeter-top-stop", f"{did}-head-brush-return"],
+                    [f"{did}-head-brush-return", f"{did}-perimeter-top-seal"],
+                    [f"{did}-perimeter-top-seal", f"{did}-a-rail-high"],
+                    [f"{did}-perimeter-top-seal", f"{did}-b-rail-high"],
+                ]
+                entries.append(head)
+                continue
             entries.append(
                 region(
-                    f"{did}-perimeter-{side}", pivot, base, sealnormal, rect, ids, "door-perimeter"
+                    f"{did}-perimeter-{side}",
+                    pivot,
+                    base,
+                    -16 if did != "front" and side == "top" else sealnormal,
+                    rect,
+                    ids,
+                    "door-perimeter",
                 )
             )
+    model["assumptions"].append(
+        dict(
+            id="bifold-exterior-head-brush",
+            confirmed=False,
+            description="Exterior hood and bonded holder have nominal clearance. Angled bristle envelope assumes 20 mm inward projection, 12 mm downward offset and 12 mm root band; no matching vendor profile or adhesive has been approved. Bristles intersect the moving carrier and require unvalidated deflection. Nominal section coverage/contact does not establish bristle density, drag, root retention, corner closure or particulate sealing.",
+            references=[f"{did}-perimeter-top-seal" for did in ("left-rear", "back-right")],
+        )
+    )
     # The right front leaf carries an exterior meeting astragal and closes last.
     d = doors["front-right"]
     L = d["link_length_mm"]
@@ -154,39 +294,102 @@ def add_containment(model):
             "front-meeting", d["pivot"], d["base_deg"], 20, [L - c, L + c, 0, H], ids, "astragal"
         )
     )
-    # Flexible external seam cover follows leaf A; its deformation is not a rigid-motion claim.
+    # Retail cut-to-length wipe on B's meeting stile, clear of both handles.
+    # Width/stock length are catalogue data; thickness and bond layout are studies.
     for did in ["left-rear", "back-right"]:
         d = doors[did]
-        L = d["link_length_mm"]
-        local = [L, 35, H / 2 - 25]
+        L = d["primary_link_mm"][0]
+        local = [9, -39.5, (3 + H - 55) / 2]
+        origin = _add(d["pivot"], _rotate(d["primary_link_mm"], d["base_deg"]))
         item = add(
             f"{did}-meeting-cover",
-            [40, 2, H - 50 + 8],
-            _add(d["pivot"], _rotate(local, d["base_deg"])),
+            [38, 3, H - 55 + 3],
+            _add(origin, _rotate(local, d["base_deg"])),
             d["base_deg"],
             did,
             True,
-            motion_leaf="a",
+            motion_leaf="b",
             motion_local=local,
+            name=f"{did} self-adhesive meeting wipe (Tesa 05422 candidate)",
+            material="PP film / PU foam (manufacturer datasheet)",
+            supplier="Retail: Leroy Merlin Portugal / Tesa",
+            product_code="TESA-05422",
+            source="https://www.tesa.com/pt-pt/files/download/10756818,2,tesamoll-universal-doortofloor-foam-copiw-pt-pt.pdf",
+            purchase_url="https://www.leroymerlin.pt/produtos/veda-porta-adesivo-1m-branco-tesa-universal-310485.html",
+            procurement=dict(
+                status="retail-candidate-fit-unconfirmed",
+                stock_length_mm=1000,
+                stock_width_mm=38,
+                packs_required=math.ceil((H - 52) / 1000),
+                price_eur_per_pack=3.49,
+                price_checked="2026-09-14",
+                availability="Listed for sale; local stock/delivery must be checked",
+            ),
+            machining="Cut to length with scissors; no custom clamp bars, drilling or seal fixings. Bond only to secondary meeting stile, leaving the wiping edge non-adhesive. Actual adhesive band, slot bridging and section must be checked before fitting.",
             seal_spec=dict(
-                kind="flexible folding membrane",
+                kind="off-the-shelf self-adhesive meeting wipe candidate",
                 free_height_mm=None,
-                installed_height_mm=2,
-                compression_range="Not a compression seal; bend allowance pending",
-                material="Reinforced EPDM candidate",
-                attachment="Continuous clamp bars on both leaves; flex path requires confirmation",
+                installed_height_mm=3,
+                compression_range="Nominal closed contact only; free-lip preload and wear pending",
+                material="PP film / PU foam; not EPDM or a glass-retaining gasket",
+                attachment="Self-adhesive root on secondary leaf only. Free edge wipes primary leaf at closure and disengages on opening; no tensile bridge between leaves. Handles mount directly to frame, independently of seal.",
+                section_status="38 mm width sourced; 3 mm thickness and 25.5 mm root footprint are provisional, not vendor CAD. Confirm adhesive band fits the slotted face and leaves a non-sticky free lip; no bonding to primary leaf.",
             ),
         )
+        latch_z = H / 2 - 150
+        gap_low, gap_high = latch_z - 68, latch_z + 53
+        item["cutouts"] = [
+            dict(
+                kind="rectangle",
+                normal_axis=1,
+                width_mm=40,
+                height_mm=gap_high - gap_low,
+                center_local_mm=[0, 0, (gap_low + gap_high) / 2 - local[2]],
+            )
+        ]
+        item["cut_lengths_mm"] = [gap_low, H - 52 - gap_high]
+        item["cut_length_mm"] = sum(item["cut_lengths_mm"])
+        item["procurement"]["packs_required"] = math.ceil(item["cut_length_mm"] / 1000)
+        item["machining"] += (
+            " Cut into two pieces and leave a 121 mm break around the manual swing latch; do not trap wipe under its pivot or keeper. One inventory kit contains both wipe pieces."
+        )
         d["part_ids"].append(item["id"])
+        model["ordering"]["unresolved"].append(
+            f"{did}: Tesa 05422 meeting wipe is a retail candidate, not approved for this bifold use; verify section, adhesive band/slot support, non-sticky free edge, preload, end joints and peel/wear life."
+        )
+        if max(item["cut_lengths_mm"]) > 1000:
+            model["ordering"]["unresolved"].append(
+                f"{did}: a meeting-wipe piece exceeds 1 m retail length; longer stock or a splice remains to be selected"
+            )
+        covered = region(
+            f"{did}-meeting",
+            d["pivot"],
+            d["base_deg"],
+            6,
+            [L - 2.5, L + 2.5, 3, gap_low - 3],
+            [item["id"]],
+            "flexible-fold-cover",
+        )
+        upper = region(
+            f"{did}-meeting-upper",
+            d["pivot"],
+            d["base_deg"],
+            6,
+            [L - 2.5, L + 2.5, gap_high + 3, H - 55],
+            [item["id"]],
+            "flexible-fold-cover",
+        )
+        covered["coverage_regions"] += upper["coverage_regions"]
+        entries.append(covered)
         entries.append(
-            region(
-                f"{did}-meeting",
-                d["pivot"],
-                d["base_deg"],
-                35,
-                [L - c, L + c, 0, H - 50],
-                [item["id"]],
-                "flexible-fold-cover",
+            dict(
+                id=f"{did}-latch-access-gap",
+                kind="intentional-latch-gap",
+                part_ids=[item["id"]],
+                nominal_height_mm=121,
+                opening_width_mm=5,
+                performance_confirmed=False,
+                description="Intentional local break in adhesive wipe around manually operated latch; no seal preload.",
             )
         )
     # Replace isolated clips by continuous opposing retaining beads with edge gaskets.
@@ -195,6 +398,10 @@ def add_containment(model):
     for d in doors.values():
         d["part_ids"][:] = [id for id in d["part_ids"] if id not in removed]
     for pane in [q for q in parts if q["id"].endswith("-infill")]:
+        if pane.get("glazing"):
+            # Slot-captured study has its own inserts; no surface beads/packing.
+            # Physical corner/compound sealing remains an explicit unknown.
+            continue
         did = pane["assembly"]
         d = doors[did]
         leaf = pane["motion_leaf"]
@@ -202,7 +409,11 @@ def add_containment(model):
         center = pane["motion_local"]
         pw, pt, ph = pane["size"]
         ids = []
-        origin = d["pivot"] if leaf == "a" else _add(d["pivot"], _rotate([L, 0, 0], d["base_deg"]))
+        origin = (
+            d["pivot"]
+            if leaf == "a"
+            else _add(d["pivot"], _rotate(d.get("primary_link_mm", [L, 0, 0]), d["base_deg"]))
+        )
         for side, xx, zz, ww, hh in [
             ("left", center[0] - pw / 2 - c / 2, center[2], c + 10, ph + 2 * c + 20),
             ("right", center[0] + pw / 2 + c / 2, center[2], c + 10, ph + 2 * c + 20),
@@ -299,6 +510,11 @@ def add_containment(model):
         axes = panel["drawing_axes"]
         for axis in axes:
             panel["size"][axis] += 60
+        if wall_id in ("panel-left-front", "panel-back-left"):
+            # The 3060 header projects farther outward: end the fixed sheet at
+            # its underside instead of lapping through its actual extrusion.
+            panel["size"][2] -= 30
+            panel["position"][2] -= 15
         sign = 1 if wall_id in ("panel-right", "panel-back-left") else -1
         panel["position"][normal] += 2 * sign
         panel["cut_size_mm"] = [
@@ -556,7 +772,7 @@ def add_containment(model):
     model["requirements"].append(
         dict(
             id="containment-continuity",
-            description="Closed nominal barriers cover door, infill, table and hose interfaces; only intentional baffled makeup air path remains.",
+            description="Simple enclosure with intentional bifold bottom gaps, local latch-access breaks in meeting wipes and baffled makeup air. Check fitted barriers at other interfaces; no hermetic seal is required.",
             category="containment",
             references=[e["id"] for e in entries],
         )
@@ -579,6 +795,6 @@ def add_containment(model):
         "Seal profiles, compression and attachment",
         "Continuous glazing beads and setting/packing compatibility",
         "Front astragal closing sequence and latch details",
-        "Bifold membrane fold and clamp layout",
+        "Bifold retail meeting wipe section, adhesive layout and folding wear",
         "Baffle fasteners, table sealing and hose clamp",
     ]

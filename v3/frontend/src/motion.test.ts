@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { poseTransform, type MotionDoor } from "./motion";
+import { applyPoseToMesh, poseTransform, type MotionDoor } from "./motion";
 
 const doors: MotionDoor[] = [
   {
@@ -88,4 +88,14 @@ describe("client door motion", () => {
     const closed = poseTransform({ motion_leaf: "a" }, doors[3], -1);
     expect(point(closed, [871, 1708, 347])).toEqual([871, 1708, 347]);
   });
+});
+
+it("releases the manual latch about its pivot before applying the door transform", () => {
+  const part = { motion_leaf: "a" as const, latch_pivot_world: [10, 20, 30], latch_axis_world: [0, 1, 0] };
+  const mesh = new THREE.Mesh();
+  applyPoseToMesh(mesh, part, doors[0], 0);
+  expect(new THREE.Vector3(50, 20, 30).applyMatrix4(mesh.matrix).toArray()).toEqual([50, 20, 30]);
+  applyPoseToMesh(mesh, part, doors[0], 0.5);
+  const expected = new THREE.Vector3(10, 20, 70).applyMatrix4(poseTransform(part, doors[0], 0.5));
+  expect(new THREE.Vector3(50, 20, 30).applyMatrix4(mesh.matrix).distanceTo(expected)).toBeLessThan(1e-8);
 });

@@ -1,0 +1,206 @@
+{
+  "base_revision": "629b576e77187fd6",
+  "status": "candidate screen only; no fixing/tool/tolerance/load approval",
+  "results": [
+    {
+      "fraction": 1,
+      "rigid_interferences": [],
+      "flexible_interferences": [
+        [
+          "left-rear-keeper-strip-continuous-1",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780556,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478064,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-0",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-1",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-keeper-strip-continuous-1",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780584,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478066,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-0",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-1",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-stock-angle",
+          "left-rear-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 204.5473893635964,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-stock-angle",
+          "back-right-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 204.93772052266223,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed-M4-candidate--15",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383305145,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed-M4-candidate--15",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383304846,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ]
+      ]
+    }
+  ],
+  "capture_witnesses": [
+    {
+      "door": "left-rear",
+      "witness": "parked washer displaced down 4 mm",
+      "side": -1,
+      "overlap_mm3": 46.31706201663821
+    },
+    {
+      "door": "left-rear",
+      "witness": "parked washer displaced down 4 mm",
+      "side": 1,
+      "overlap_mm3": 46.31706201663794
+    },
+    {
+      "door": "left-rear",
+      "witness": "roller centre displaced to end barrier centre",
+      "end": "park",
+      "overlap_mm3": 389.58680923497894
+    },
+    {
+      "door": "left-rear",
+      "witness": "roller centre displaced to end barrier centre",
+      "end": "closed",
+      "overlap_mm3": 389.5868092349789
+    },
+    {
+      "door": "back-right",
+      "witness": "parked washer displaced down 4 mm",
+      "side": -1,
+      "overlap_mm3": 46.31706201663458
+    },
+    {
+      "door": "back-right",
+      "witness": "parked washer displaced down 4 mm",
+      "side": 1,
+      "overlap_mm3": 46.317062016634615
+    },
+    {
+      "door": "back-right",
+      "witness": "roller centre displaced to end barrier centre",
+      "end": "park",
+      "overlap_mm3": 389.58680923497786
+    },
+    {
+      "door": "back-right",
+      "witness": "roller centre displaced to end barrier centre",
+      "end": "closed",
+      "overlap_mm3": 389.5868092349772
+    }
+  ]
+}

@@ -107,6 +107,24 @@ def check_barrier_region(shapes, region, required_overlap_mm=0.0, cut_tolerance_
     }
 
 
+def check_barrier_connection(shapes, pair):
+    """Nominal connected barrier chain; not adhesive or bristle performance."""
+    if any(pid not in shapes for pid in pair):
+        return dict(
+            status="fail", message="Required barrier connection is missing", references=pair
+        )
+    distance = shapes[pair[0]].distance(shapes[pair[1]])
+    return dict(
+        status="pass" if distance <= KERNEL_LENGTH_TOLERANCE_MM else "fail",
+        message="Nominal hood/holder/brush/leaf contact; attachment and flexible performance unvalidated",
+        references=pair,
+        measured=distance,
+        required=KERNEL_LENGTH_TOLERANCE_MM,
+        unit="mm",
+        method="OpenCascade minimum distance of adjacent barrier solids",
+    )
+
+
 def check_solid_pair(a, b, clearance_mm=0.0, permitted_overlap_mm3=0.0):
     """Zero required clearance still prohibits positive-volume penetration."""
     if not math.isfinite(clearance_mm) or clearance_mm < 0:
@@ -241,6 +259,43 @@ def swept_box(part, door, low=0.0, high=1.0):
     angle = math.radians(door["max_angle_deg"] * door["opening_sign"])
     base = math.radians(door["base_deg"])
     cb, sb = math.cos(base), math.sin(base)
+    if door.get("mechanism") == "printed-guide-revision-c":
+        # Independent interval bounds, not sampled extrema and not the old
+        # equal-link solver. Asin is monotone on the selected closure branch.
+        px, py, _ = door["primary_link_mm"]
+        qx, qy, _ = door["secondary_link_mm"]
+        lo, hi = sorted((low * angle, high * angle))
+        ey = _trig_range(py, px, lo, hi)
+        radius = math.hypot(qx, qy)
+        phi = [
+            math.asin(max(-1, min(1, (door["guide_normal_mm"] - y) / radius))) - math.atan2(qy, qx)
+            for y in reversed(ey)
+        ]
+        pworld = [(cb * px - sb * py, -cb * py - sb * px), (sb * px + cb * py, -sb * py + cb * px)]
+        minimum, maximum = [math.inf] * 3, [-math.inf] * 3
+        for delta in itertools.product(*[(-v / 2, v / 2) for v in part["size"]]):
+            x, y, z = [part["motion_local"][i] + delta[i] for i in range(3)]
+            leaf = part["motion_leaf"]
+            if leaf == "slider":
+                # Slider centre is B+R(phi)q; its body remains at base angle.
+                coeff = [
+                    (cb * qx - sb * qy, -cb * qy - sb * qx),
+                    (sb * qx + cb * qy, -sb * qy + cb * qx),
+                ]
+                extra = [cb * x - sb * y, sb * x + cb * y]
+            else:
+                coeff = [(cb * x - sb * y, -cb * y - sb * x), (sb * x + cb * y, -sb * y + cb * x)]
+                extra = [0, 0]
+            for axis in range(2):
+                a, b = _trig_range(*coeff[axis], *((lo, hi) if leaf == "a" else phi))
+                if leaf != "a":
+                    ea, eb = _trig_range(*pworld[axis], lo, hi)
+                    a, b = a + ea, b + eb
+                minimum[axis] = min(minimum[axis], door["pivot"][axis] + extra[axis] + a)
+                maximum[axis] = max(maximum[axis], door["pivot"][axis] + extra[axis] + b)
+            minimum[2] = min(minimum[2], door["pivot"][2] + z)
+            maximum[2] = max(maximum[2], door["pivot"][2] + z)
+        return tuple(minimum), tuple(maximum)
     length = door["link_length_mm"]
     minima, maxima = [math.inf] * 3, [-math.inf] * 3
     for delta in itertools.product(*[(-v / 2, v / 2) for v in part["size"]]):
@@ -714,6 +769,10 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
         except Exception as exc:  # noqa: BLE001 - kernel failures must retain unknown evidence
             add("geometry.build", "unknown", "geometry", f"Geometry unavailable: {exc}")
     shapes = shapes or {}
+    if model.get("bifold_completion"):
+        from .closed_catches import engagement_checks
+
+        checks.extend(engagement_checks(model, shapes))
     physical = [
         p
         for p in parts
@@ -874,6 +933,52 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                     unit="mm",
                 )
 
+    # Independent nominal glazing allowance check from panel/frame dimensions.
+    # Assumed 5 mm usable depth is not a vendor-certified installed dimension.
+    glazing_parts = {p["id"]: p for p in model["parts"]}
+    for pane in model["parts"]:
+        if not pane.get("glazing"):
+            continue
+        prefix = pane["id"].removesuffix("-infill")
+        for axis, low, high in ((0, "stile-a", "stile-b"), (2, "rail-low", "rail-high")):
+            a = glazing_parts.get(f"{prefix}-{low}")
+            b = glazing_parts.get(f"{prefix}-{high}")
+            if not a or not b:
+                add(
+                    f"glazing.allowance.{prefix}.{axis}",
+                    "unknown",
+                    "tolerance",
+                    "Missing glazing frame member",
+                    [pane["id"]],
+                )
+                continue
+            opening = b["motion_local"][axis] - a["motion_local"][axis] - 30
+            length = pane["size"][axis]
+            growth = 0.000070 * length * 40
+            allowance = opening + 10 - length
+            required = growth + 2 * parameters["cut_tolerance_mm"] + 1
+            bite = (length - opening) / 2
+            add(
+                f"glazing.lip_engagement.{prefix}.{axis}",
+                "pass" if bite >= 2.8 else "fail",
+                "tolerance",
+                "Nominal pane edge reaches assumed installed lip end; impact retention remains unapproved",
+                [pane["id"]],
+                measured=bite,
+                required=2.8,
+                unit="mm",
+            )
+            add(
+                f"glazing.allowance.{prefix}.{axis}",
+                "pass" if allowance >= required and bite > 0 else "fail",
+                "tolerance",
+                "Nominal slot capture and expansion allowance under assumed 5 mm depth/40 K excursion; not retention approval",
+                [pane["id"], a["id"], b["id"]],
+                measured=allowance,
+                required=required,
+                unit="mm",
+            )
+
     # Confirmation alone does not manufacture evidence: these are physical declarations,
     # with the source assumption copied into the result for traceability.
     assumptions = {a["id"]: a for a in model.get("assumptions", [])}
@@ -926,6 +1031,10 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                     "max_angle_deg",
                     "link_length_mm",
                     "guide_travel_mm",
+                    "mechanism",
+                    "primary_link_mm",
+                    "secondary_link_mm",
+                    "guide_normal_mm",
                 )
             )
         )
@@ -937,6 +1046,25 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
             refs,
         )
         if door.get("type") == "bifold":
+            if door.get("mechanism") == "printed-guide-revision-c":
+                add(
+                    f"kinematics.native.{door['id']}",
+                    "unknown",
+                    "kinematics",
+                    "Offset unequal-link prototype uses analytic closure and independent interval motion bounds; native constraint cross-check and physical hinge mounting remain pending",
+                    refs,
+                )
+                add(
+                    f"kinematics.space.{door['id']}",
+                    "pass" if door["remaining_outward_space_mm"] >= 0 else "fail",
+                    "kinematics",
+                    "Sampled bare-frame sweep plus 15 mm provisional fittings allowance; not a full hardware collision proof",
+                    refs,
+                    measured=door["reserved_sweep_mm"],
+                    required=door["available_outward_space_mm"],
+                    unit="mm",
+                )
+                continue
             try:
                 from .constraints import solve_bifold_axes
 
@@ -1056,10 +1184,15 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                 unit="mm",
             )
         else:
+            # Insert onto the centred machine/work area, not until the leading
+            # edge touches the rear wall. Both the swept approach and complete
+            # final board remain checked against every physical solid.
+            final_center_y = D / 2
+            leading_edge_y = final_center_y + d / 2
             prism = (
                 cq.Workplane("XY")
-                .box(w, d + D, h)
-                .translate((W / 2, (D - d) / 2, zlo + h / 2))
+                .box(w, d + leading_edge_y, h)
+                .translate((W / 2, (leading_edge_y - d) / 2, zlo + h / 2))
                 .val()
             )
             conflicts = []
@@ -1082,9 +1215,14 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                 "access.workpiece",
                 access_status,
                 "access",
-                "Straight horizontal board insertion with both front doors fully open; workshop approach space must be available",
+                "Straight horizontal board insertion to the centred work area with both front doors fully open; workshop approach space must be available",
                 conflicts,
-                measured={"board_mm": [w, d, h], "bottom_height_mm": zlo},
+                measured={
+                    "board_mm": [w, d, h],
+                    "bottom_height_mm": zlo,
+                    "final_center_y_mm": final_center_y,
+                    "leading_edge_y_mm": leading_edge_y,
+                },
                 method="continuous swept rectangular prism against all physical solids",
             )
     except Exception as exc:  # noqa: BLE001 - kernel failures must retain unknown evidence
@@ -1123,6 +1261,21 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                     "containment",
                     f"Barrier coverage could not be established: {exc}",
                     region.get("part_ids", []),
+                )
+        for index, pair in enumerate(entry.get("nominal_contact_chain", [])):
+            try:
+                add(
+                    f"containment.connection.{id}.{index}",
+                    category="containment",
+                    **check_barrier_connection(shapes, pair),
+                )
+            except Exception as exc:  # noqa: BLE001 - missing kernel evidence is never a pass
+                add(
+                    f"containment.connection.{id}.{index}",
+                    "unknown",
+                    "containment",
+                    f"Barrier connection could not be established: {exc}",
+                    pair,
                 )
         if entry.get("kind") == "annular-collar":
             try:
@@ -1179,6 +1332,18 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                     f"Collar coverage unavailable: {exc}",
                     entry.get("part_ids", []),
                 )
+        elif entry.get("kind") in ("intentional-bottom-gap", "intentional-latch-gap"):
+            add(
+                f"containment.intentional-gap.{id}",
+                "unknown",
+                "containment",
+                "Intentional unsealed opening accepted for a simple enclosure; chip escape in use is unvalidated, not a missing-seal failure",
+                measured={
+                    "nominal_height_mm": entry["nominal_height_mm"],
+                    "opening_width_mm": entry["opening_width_mm"],
+                },
+                method="Declared design intent; no hermetic-seal requirement",
+            )
         elif not entry.get("coverage_regions"):
             add(
                 f"containment.coverage.{id}",

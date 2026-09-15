@@ -44,31 +44,45 @@ export default function Viewer(props: {
     for (const data of result.meshes) {
       const part = parts.get(data.id);
       if (!part) continue;
-      const reference = part.category.endsWith("-envelope") || part.physical === false;
+      const reference =
+        part.category.endsWith("-envelope") || part.physical === false;
       if (reference && !props.references) continue;
       if (!props.roof && /roof|top-panel/.test(part.id)) continue;
       if (
         !props.walls &&
         ["panel", "glass"].includes(part.category) &&
-        !/door|front-left|front-right|left-rear|back-right/.test(`${part.assembly} ${part.id}`)
+        !/door|front-left|front-right|left-rear|back-right/.test(
+          `${part.assembly} ${part.id}`,
+        )
       )
         continue;
       const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute("position", new THREE.Float32BufferAttribute(data.positions, 3));
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(data.positions, 3),
+      );
       geometry.setIndex(data.indices);
       geometry.computeVertexNormals();
-      const transparent = reference || part.category === "glass";
+      const glazing =
+        part.category === "glass" || part.material === "polycarbonate";
+      const transparent = reference || glazing;
       const material = new THREE.MeshStandardMaterial({
         color:
           props.selected === part.id
             ? "#f6c85f"
-            : /rubber|epdm/i.test(part.material)
+            : /rubber|epdm|black PVC/i.test(part.material)
               ? "#28312d"
-              : (colors[part.category] ?? "#7d9792"),
+              : part.material === "PETG"
+                ? "#df8a42"
+                : glazing
+                  ? colors.glass
+                  : part.material.includes("RAL 7040")
+                    ? "#9da1aa"
+                    : (colors[part.category] ?? "#7d9792"),
         metalness: part.category === "extrusion" ? 0.5 : 0.05,
         roughness: 0.58,
         transparent,
-        opacity: reference ? 0.12 : part.category === "glass" ? 0.28 : 1,
+        opacity: reference ? 0.12 : glazing ? 0.28 : 1,
         depthWrite: !transparent,
         side: THREE.DoubleSide,
       });
@@ -90,7 +104,12 @@ export default function Viewer(props: {
     for (const child of group.children) {
       const mesh = child as THREE.Mesh;
       const part = mesh.userData.part;
-      applyPoseToMesh(mesh, part, mesh.userData.door, currentPose[part?.assembly] ?? 0);
+      applyPoseToMesh(
+        mesh,
+        part,
+        mesh.userData.door,
+        currentPose[part?.assembly] ?? 0,
+      );
     }
   }
   function fit() {
@@ -99,7 +118,9 @@ export default function Viewer(props: {
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const span = Math.max(size.x, size.y, size.z, 100);
-    camera.position.copy(center).add(new THREE.Vector3(span * 1.25, -span * 1.55, span * 1.1));
+    camera.position
+      .copy(center)
+      .add(new THREE.Vector3(span * 1.25, -span * 1.55, span * 1.1));
     // Millimetre-scale near clipping preserves depth precision between thin
     // panel faces and seals when viewing the metre-scale assembly.
     camera.near = Math.max(1, span / 200);
@@ -148,7 +169,8 @@ export default function Viewer(props: {
       down = [event.clientX, event.clientY];
     };
     const pick = (event: PointerEvent) => {
-      if (Math.hypot(event.clientX - down[0], event.clientY - down[1]) > 5) return;
+      if (Math.hypot(event.clientX - down[0], event.clientY - down[1]) > 5)
+        return;
       const rect = renderer.domElement.getBoundingClientRect();
       const ray = new THREE.Raycaster();
       ray.setFromCamera(
@@ -162,8 +184,10 @@ export default function Viewer(props: {
         .intersectObjects(group.children)
         .find(
           (hit) =>
-            (hit.object as THREE.Mesh).material instanceof THREE.MeshStandardMaterial &&
-            ((hit.object as THREE.Mesh).material as THREE.MeshStandardMaterial).opacity > 0.15,
+            (hit.object as THREE.Mesh).material instanceof
+              THREE.MeshStandardMaterial &&
+            ((hit.object as THREE.Mesh).material as THREE.MeshStandardMaterial)
+              .opacity > 0.15,
         );
       props.onSelect(hit?.object.userData.id ?? "");
     };
@@ -237,7 +261,9 @@ export default function Viewer(props: {
         <span>FRONT · Y = 0</span>
         <button onClick={fit}>Fit view</button>
       </div>
-      <div class="viewer-help">Drag to orbit · Scroll to zoom · Click a part to inspect</div>
+      <div class="viewer-help">
+        Drag to orbit · Scroll to zoom · Click a part to inspect
+      </div>
     </div>
   );
 }

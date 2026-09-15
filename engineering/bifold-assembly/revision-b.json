@@ -1,0 +1,445 @@
+{
+  "revision": "B",
+  "status": "sampled-design-study-not-manufacturing-release",
+  "enclosureEnvelopeSnapshotMm": {
+    "width": 1674,
+    "depth": 1649
+  },
+  "limitations": [
+    "Leaf rectangles sampled every 0.25 degrees; no continuous-motion or supplier-solid collision proof.",
+    "15 mm envelope allowance is reserved for fittings, not a verified hardware envelope.",
+    "Frame, rail, handle, seal and bracket solids, tolerances, sag and loading remain to be verified.",
+    "Current application still displays the previous mechanism; this is a separate engineering study."
+  ],
+  "studies": [
+    {
+      "name": "Left rear",
+      "status": "sampled-design-study-not-manufacturing-release",
+      "input": {
+        "leafHeightMm": 702,
+        "frameDepthMm": 30,
+        "jambGapMm": 5,
+        "meetingGapMm": 5,
+        "pivotToMountingPlaneMm": 8,
+        "secondaryExtraWidthMm": 40,
+        "guideInsetFromFreeEdgeMm": 15,
+        "parkedAngleDeg": 88,
+        "sampleStepDeg": 0.25,
+        "hardwareEnvelopeAllowanceMm": 15,
+        "openingWidthMm": 824.5,
+        "availableOutwardSpaceMm": 800,
+        "targetOutwardSweepMm": 500
+      },
+      "primaryWidthMm": 384.75,
+      "secondaryWidthMm": 424.75,
+      "guideLineYmm": -15,
+      "primaryLinkMm": {
+        "x": 389.75,
+        "y": -46
+      },
+      "secondaryLinkMm": {
+        "x": 412.25,
+        "y": 23
+      },
+      "bareLeafSweepMm": 395.0177016172251,
+      "reservedSweepMm": 410.0177016172251,
+      "remainingOutwardSpaceMm": 389.9822983827749,
+      "meetsSweepTarget": true,
+      "minimumSampledLeafClearanceMm": 5,
+      "parkedObstructionMm": 133.1223935631719,
+      "parkedUsableWidthMm": 691.377606436828,
+      "guideTravelMinMm": 102.5009927827833,
+      "guideTravelMaxMm": 807.5167337525888,
+      "sampleCount": 353,
+      "parkedFoldAngleDeg": 175.57436187526395,
+      "closedGuideCentreMm": {
+        "x": 804.5,
+        "y": -15
+      },
+      "parkedGuideCentreMm": {
+        "x": 102.5009927827833,
+        "y": -15
+      },
+      "worldXEnvelopeMm": {
+        "min": -410.0177016172251,
+        "max": 51.21320174492968
+      },
+      "selectedPoses": [
+        {
+          "primaryAngleDeg": 0,
+          "foldAngleDeg": 0,
+          "framePivot": {
+            "x": 2.5,
+            "y": 8
+          },
+          "interleafPivot": {
+            "x": 392.25,
+            "y": -38
+          },
+          "guideCentre": {
+            "x": 804.5,
+            "y": -15
+          },
+          "primaryPolygon": [
+            {
+              "x": 5,
+              "y": -30
+            },
+            {
+              "x": 389.75,
+              "y": -30
+            },
+            {
+              "x": 389.75,
+              "y": 0
+            },
+            {
+              "x": 5,
+              "y": 0
+            }
+          ],
+          "secondaryPolygon": [
+            {
+              "x": 394.75,
+              "y": -30
+            },
+            {
+              "x": 819.5,
+              "y": -30
+            },
+            {
+              "x": 819.5,
+              "y": 0
+            },
+            {
+              "x": 394.75,
+              "y": 0
+            }
+          ],
+          "leafClearanceMm": 5
+        },
+        {
+          "primaryAngleDeg": 45,
+          "foldAngleDeg": 88.3141737319633,
+          "framePivot": {
+            "x": 2.5,
+            "y": 8
+          },
+          "interleafPivot": {
+            "x": 310.6217799020381,
+            "y": 251.06795603287568
+          },
+          "guideCentre": {
+            "x": 626.3541115890032,
+            "y": -15.000000000000028
+          },
+          "primaryPolygon": [
+            {
+              "x": 31.13782463805517,
+              "y": -17.102290732122437
+            },
+            {
+              "x": 303.19715869957935,
+              "y": 254.9570433294017
+            },
+            {
+              "x": 281.9839552639829,
+              "y": 276.1702467649981
+            },
+            {
+              "x": 9.924621202458749,
+              "y": 4.110912703473988
+            }
+          ],
+          "secondaryPolygon": [
+            {
+              "x": 317.92877453605547,
+              "y": 255.17378474562554
+            },
+            {
+              "x": 626.9781822644717,
+              "y": -36.204021689104735
+            },
+            {
+              "x": 647.5581332781078,
+              "y": -14.375929324531484
+            },
+            {
+              "x": 338.5087255496915,
+              "y": 277.0018771101988
+            }
+          ],
+          "leafClearanceMm": 14.733210172770253
+        },
+        {
+          "primaryAngleDeg": 88,
+          "foldAngleDeg": 175.57436187526395,
+          "framePivot": {
+            "x": 2.5,
+            "y": 8
+          },
+          "interleafPivot": {
+            "x": 62.0740568826782,
+            "y": 395.9071979823775
+          },
+          "guideCentre": {
+            "x": 102.5009927827833,
+            "y": -15
+          },
+          "primaryPolygon": [
+            {
+              "x": 40.56410016848189,
+              "y": 9.172296192852698
+            },
+            {
+              "x": 53.99168152476918,
+              "y": 393.68791688844976
+            },
+            {
+              "x": 24.00995671419631,
+              "y": 394.7349017895248
+            },
+            {
+              "x": 10.582375357909019,
+              "y": 10.21928109392773
+            }
+          ],
+          "secondaryPolygon": [
+            {
+              "x": 70.17269563533769,
+              "y": 393.74801981605543
+            },
+            {
+              "x": 88.14927380356431,
+              "y": -30.62140078038857
+            },
+            {
+              "x": 118.1223935631719,
+              "y": -29.35171897921896
+            },
+            {
+              "x": 100.14581539494527,
+              "y": 395.0177016172251
+            }
+          ],
+          "leafClearanceMm": 16.181125733654135
+        }
+      ]
+    },
+    {
+      "name": "Back right",
+      "status": "sampled-design-study-not-manufacturing-release",
+      "input": {
+        "leafHeightMm": 702,
+        "frameDepthMm": 30,
+        "jambGapMm": 5,
+        "meetingGapMm": 5,
+        "pivotToMountingPlaneMm": 8,
+        "secondaryExtraWidthMm": 40,
+        "guideInsetFromFreeEdgeMm": 15,
+        "parkedAngleDeg": 88,
+        "sampleStepDeg": 0.25,
+        "hardwareEnvelopeAllowanceMm": 15,
+        "openingWidthMm": 750,
+        "availableOutwardSpaceMm": 450,
+        "targetOutwardSweepMm": 400
+      },
+      "primaryWidthMm": 347.5,
+      "secondaryWidthMm": 387.5,
+      "guideLineYmm": -15,
+      "primaryLinkMm": {
+        "x": 352.5,
+        "y": -46
+      },
+      "secondaryLinkMm": {
+        "x": 375,
+        "y": 23
+      },
+      "bareLeafSweepMm": 357.80084999168173,
+      "reservedSweepMm": 372.80084999168173,
+      "remainingOutwardSpaceMm": 77.19915000831827,
+      "meetsSweepTarget": true,
+      "minimumSampledLeafClearanceMm": 5,
+      "parkedObstructionMm": 130.3524419373788,
+      "parkedUsableWidthMm": 619.6475580626212,
+      "guideTravelMinMm": 99.72709995652698,
+      "guideTravelMaxMm": 733.3301323454557,
+      "sampleCount": 353,
+      "parkedFoldAngleDeg": 175.5586252297034,
+      "closedGuideCentreMm": {
+        "x": 730,
+        "y": -15
+      },
+      "parkedGuideCentreMm": {
+        "x": 99.72709995652698,
+        "y": -15
+      },
+      "worldXEnvelopeMm": {
+        "min": 909.228449863189,
+        "max": 1684
+      },
+      "selectedPoses": [
+        {
+          "primaryAngleDeg": 0,
+          "foldAngleDeg": 0,
+          "framePivot": {
+            "x": 2.5,
+            "y": 8
+          },
+          "interleafPivot": {
+            "x": 355,
+            "y": -38
+          },
+          "guideCentre": {
+            "x": 730,
+            "y": -15
+          },
+          "primaryPolygon": [
+            {
+              "x": 5,
+              "y": -30
+            },
+            {
+              "x": 352.5,
+              "y": -30
+            },
+            {
+              "x": 352.5,
+              "y": 0
+            },
+            {
+              "x": 5,
+              "y": 0
+            }
+          ],
+          "secondaryPolygon": [
+            {
+              "x": 357.5,
+              "y": -30
+            },
+            {
+              "x": 745,
+              "y": -30
+            },
+            {
+              "x": 745,
+              "y": 0
+            },
+            {
+              "x": 357.5,
+              "y": 0
+            }
+          ],
+          "leafClearanceMm": 5
+        },
+        {
+          "primaryAngleDeg": 45,
+          "foldAngleDeg": 88.15826415176815,
+          "framePivot": {
+            "x": 2.5,
+            "y": 8
+          },
+          "interleafPivot": {
+            "x": 284.2820523028392,
+            "y": 224.72822843367678
+          },
+          "guideCentre": {
+            "x": 573.5645725007435,
+            "y": -14.999999999999943
+          },
+          "primaryPolygon": [
+            {
+              "x": 31.13782463805517,
+              "y": -17.102290732122437
+            },
+            {
+              "x": 276.85743110038044,
+              "y": 228.61731573020282
+            },
+            {
+              "x": 255.644227664784,
+              "y": 249.83051916579925
+            },
+            {
+              "x": 9.924621202458749,
+              "y": 4.110912703473988
+            }
+          ],
+          "secondaryPolygon": [
+            {
+              "x": 291.5778473817462,
+              "y": 228.85392524350127
+            },
+            {
+              "x": 574.2463398108862,
+              "y": -36.20224500695193
+            },
+            {
+              "x": 594.7668175076956,
+              "y": -14.31823268985724
+            },
+            {
+              "x": 312.0983250785555,
+              "y": 250.73793756059598
+            }
+          ],
+          "leafClearanceMm": 14.722317737315747
+        },
+        {
+          "primaryAngleDeg": 88,
+          "foldAngleDeg": 175.5586252297034,
+          "framePivot": {
+            "x": 2.5,
+            "y": 8
+          },
+          "interleafPivot": {
+            "x": 60.77405063051003,
+            "y": 358.6798896759162
+          },
+          "guideCentre": {
+            "x": 99.72709995652698,
+            "y": -15
+          },
+          "primaryPolygon": [
+            {
+              "x": 40.56410016848189,
+              "y": 9.172296192852698
+            },
+            {
+              "x": 52.69167527260102,
+              "y": 356.4606085819884
+            },
+            {
+              "x": 22.709950462028143,
+              "y": 357.5075934830635
+            },
+            {
+              "x": 10.582375357909019,
+              "y": 10.21928109392773
+            }
+          ],
+          "secondaryPolygon": [
+            {
+              "x": 68.87328210953656,
+              "y": 356.5229359329848
+            },
+            {
+              "x": 85.3796720343721,
+              "y": -30.625341980851886
+            },
+            {
+              "x": 115.35244193737881,
+              "y": -29.347427922154907
+            },
+            {
+              "x": 98.84605201254328,
+              "y": 357.80084999168173
+            }
+          ],
+          "leafClearanceMm": 16.181726870882517
+        }
+      ]
+    }
+  ],
+  "sampledMutualXSeparationMm": 858.0152481182593
+}

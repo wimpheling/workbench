@@ -1,0 +1,572 @@
+[
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0,
+    "leaf": "a",
+    "closed": [-15.000000000000068, 1274.25, 344.0],
+    "expected": [-15.000000000000068, 1274.25, 344.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0,
+    "leaf": "b",
+    "closed": [-15.000000000000146, 844.5, 344.0],
+    "expected": [-15.000000000000146, 844.5, 344.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0,
+    "leaf": "slider",
+    "closed": [-15.000000000000146, 844.5, 725.0],
+    "expected": [-15.000000000000146, 844.5, 725.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.25,
+    "leaf": "a",
+    "closed": [-15.000000000000068, 1274.25, 344.0],
+    "expected": [-156.12207574403723, 1292.7398584889474, 344.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.25,
+    "leaf": "b",
+    "closed": [-15.000000000000146, 844.5, 344.0],
+    "expected": [-15.000000000000114, 874.8153511352889, 344.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.25,
+    "leaf": "slider",
+    "closed": [-15.000000000000146, 844.5, 725.0],
+    "expected": [-15.000000000000142, 874.8153511352889, 725.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.5,
+    "leaf": "a",
+    "closed": [-15.000000000000068, 1274.25, 344.0],
+    "expected": [-280.04176299557275, 1362.7486168033802, 344.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.5,
+    "leaf": "b",
+    "closed": [-15.000000000000146, 844.5, 344.0],
+    "expected": [-14.99999999999983, 1013.9661769377366, 344.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.5,
+    "leaf": "slider",
+    "closed": [-15.000000000000146, 844.5, 725.0],
+    "expected": [-15.000000000000117, 1013.9661769377365, 725.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.75,
+    "leaf": "a",
+    "closed": [-15.000000000000068, 1274.25, 344.0],
+    "expected": [-368.71235381671477, 1474.0807390892535, 344.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.75,
+    "leaf": "b",
+    "closed": [-15.000000000000146, 844.5, 344.0],
+    "expected": [-15.000000000000227, 1244.3801358579456, 344.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.75,
+    "leaf": "slider",
+    "closed": [-15.000000000000146, 844.5, 725.0],
+    "expected": [-15.000000000000075, 1244.3801358579458, 725.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 1,
+    "leaf": "a",
+    "closed": [-15.000000000000068, 1274.25, 344.0],
+    "expected": [-409.2205469337009, 1610.5226733310549, 344.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 1,
+    "leaf": "b",
+    "closed": [-15.000000000000146, 844.5, 344.0],
+    "expected": [-15.000000000000057, 1546.4990072172166, 344.0]
+  },
+  {
+    "door": {
+      "id": "left-rear",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [-38.0, 1646.5, 0],
+      "base_deg": 270,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 392.4551725993683,
+      "primary_link_mm": [389.75, 46, 0],
+      "secondary_link_mm": [412.25, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 1,
+    "leaf": "slider",
+    "closed": [-15.000000000000146, 844.5, 725.0],
+    "expected": [-15.000000000000018, 1546.4990072172168, 725.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0,
+    "leaf": "a",
+    "closed": [1336.5, 1664.0, 344.0],
+    "expected": [1336.5, 1664.0, 344.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0,
+    "leaf": "b",
+    "closed": [944.0, 1664.0, 344.0],
+    "expected": [944.0, 1664.0, 344.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0,
+    "leaf": "slider",
+    "closed": [944.0, 1664.0, 725.0],
+    "expected": [944.0, 1664.0, 725.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.25,
+    "leaf": "a",
+    "closed": [1336.5, 1664.0, 344.0],
+    "expected": [1352.2774570715603, 1791.1679801392945, 344.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.25,
+    "leaf": "b",
+    "closed": [944.0, 1664.0, 344.0],
+    "expected": [968.9380792931478, 1664.0000000000002, 344.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.25,
+    "leaf": "slider",
+    "closed": [944.0, 1664.0, 725.0],
+    "expected": [968.9380792931477, 1664.0, 725.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.5,
+    "leaf": "a",
+    "closed": [1336.5, 1664.0, 344.0],
+    "expected": [1414.544024365995, 1903.165738695975, 344.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.5,
+    "leaf": "b",
+    "closed": [944.0, 1664.0, 344.0],
+    "expected": [1092.6636702377573, 1664.0, 344.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.5,
+    "leaf": "slider",
+    "closed": [944.0, 1664.0, 725.0],
+    "expected": [1092.6636702377573, 1664.0, 725.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.75,
+    "leaf": "a",
+    "closed": [1336.5, 1664.0, 344.0],
+    "expected": [1514.2316790438272, 1983.682785519528, 344.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.75,
+    "leaf": "b",
+    "closed": [944.0, 1664.0, 344.0],
+    "expected": [1299.8964590174905, 1664.0, 344.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 0.75,
+    "leaf": "slider",
+    "closed": [944.0, 1664.0, 725.0],
+    "expected": [1299.8964590174905, 1664.0, 725.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 1,
+    "leaf": "a",
+    "closed": [1336.5, 1664.0, 344.0],
+    "expected": [1636.822679583223, 2020.9932386272396, 344.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 1,
+    "leaf": "b",
+    "closed": [944.0, 1664.0, 344.0],
+    "expected": [1574.2729000434733, 1664.0, 344.0]
+  },
+  {
+    "door": {
+      "id": "back-right",
+      "type": "bifold",
+      "mechanism": "printed-guide-revision-c",
+      "pivot": [1671.5, 1687.0, 0],
+      "base_deg": 180,
+      "opening_sign": -1,
+      "max_angle_deg": 88,
+      "link_length_mm": 355.4887480638452,
+      "primary_link_mm": [352.5, 46, 0],
+      "secondary_link_mm": [375.0, -23, 0],
+      "guide_normal_mm": 23.0
+    },
+    "fraction": 1,
+    "leaf": "slider",
+    "closed": [944.0, 1664.0, 725.0],
+    "expected": [1574.272900043473, 1664.0, 725.0]
+  }
+]

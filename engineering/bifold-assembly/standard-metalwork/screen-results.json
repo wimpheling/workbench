@@ -1,0 +1,1230 @@
+{
+  "base_revision": "629b576e77187fd6",
+  "status": "candidate screen only; no fixing/tool/tolerance/load approval",
+  "results": [
+    {
+      "fraction": 0,
+      "rigid_interferences": [],
+      "flexible_interferences": [
+        [
+          "left-rear-keeper-strip-continuous-1",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780556,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478064,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-0",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-1",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-keeper-strip-continuous-1",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780584,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478066,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-0",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-1",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-stock-angle",
+          "left-rear-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1296.0000000000036,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-stock-angle",
+          "back-right-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1296.0000000000045,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed-M4-candidate--15",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383305145,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed-M4-candidate--15",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383304846,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ]
+      ]
+    },
+    {
+      "fraction": 0.001,
+      "rigid_interferences": [],
+      "flexible_interferences": [
+        [
+          "left-rear-keeper-strip-continuous-1",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780556,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478064,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-0",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-1",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-keeper-strip-continuous-1",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780584,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478066,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-0",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-1",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-stock-angle",
+          "left-rear-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1295.9999999999975,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-stock-angle",
+          "back-right-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1296.0000000000289,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed-M4-candidate--15",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383305145,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed-M4-candidate--15",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383304846,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ]
+      ]
+    },
+    {
+      "fraction": 0.01,
+      "rigid_interferences": [],
+      "flexible_interferences": [
+        [
+          "left-rear-keeper-strip-continuous-1",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780556,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478064,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-0",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-1",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-keeper-strip-continuous-1",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780584,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478066,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-0",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-1",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-stock-angle",
+          "left-rear-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1295.9999999999952,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-stock-angle",
+          "back-right-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1296.000000000032,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed-M4-candidate--15",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383305145,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed-M4-candidate--15",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383304846,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ]
+      ]
+    },
+    {
+      "fraction": 0.05,
+      "rigid_interferences": [],
+      "flexible_interferences": [
+        [
+          "left-rear-keeper-strip-continuous-1",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780556,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478064,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-0",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-1",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-keeper-strip-continuous-1",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780584,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478066,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-0",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-1",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-stock-angle",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 12.36582151501273,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-stock-angle",
+          "left-rear-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1295.9999999999857,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-stock-angle",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 15.659908673360782,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-stock-angle",
+          "back-right-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1295.999999999991,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed-M4-candidate--15",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383305145,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed-M4-candidate--15",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383304846,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ]
+      ]
+    },
+    {
+      "fraction": 0.25,
+      "rigid_interferences": [],
+      "flexible_interferences": [
+        [
+          "left-rear-keeper-strip-continuous-1",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780556,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478064,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-0",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-1",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-keeper-strip-continuous-1",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780584,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478066,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-0",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-1",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-stock-angle",
+          "left-rear-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1295.9999999999857,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-stock-angle",
+          "back-right-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1296.0000000000416,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed-M4-candidate--15",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383305145,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed-M4-candidate--15",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383304846,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ]
+      ]
+    },
+    {
+      "fraction": 0.5,
+      "rigid_interferences": [],
+      "flexible_interferences": [
+        [
+          "left-rear-keeper-strip-continuous-1",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780556,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478064,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-0",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-1",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-keeper-strip-continuous-1",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780584,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478066,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-0",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-1",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-stock-angle",
+          "left-rear-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1293.0402091255905,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-stock-angle",
+          "back-right-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1293.5915402945766,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed-M4-candidate--15",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383305145,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed-M4-candidate--15",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383304846,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ]
+      ]
+    },
+    {
+      "fraction": 0.75,
+      "rigid_interferences": [],
+      "flexible_interferences": [
+        [
+          "left-rear-keeper-strip-continuous-1",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780556,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478064,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-0",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-1",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-keeper-strip-continuous-1",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780584,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478066,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-0",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-1",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-stock-angle",
+          "left-rear-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 790.339031529099,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-stock-angle",
+          "back-right-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 794.875941482836,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed-M4-candidate--15",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383305145,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed-M4-candidate--15",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383304846,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ]
+      ]
+    },
+    {
+      "fraction": 1,
+      "rigid_interferences": [],
+      "flexible_interferences": [
+        [
+          "left-rear-keeper-strip-continuous-1",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780556,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478064,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-0",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-closed-stop-1",
+          "left-rear-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.901565578745,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-keeper-strip-continuous-1",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 239.30479784780584,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 1439.3047978478066,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-0",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-closed-stop-1",
+          "back-right-perimeter-left-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 5020.90156557875,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-stock-angle",
+          "left-rear-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 204.5473893635964,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-stock-angle",
+          "back-right-perimeter-top-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 204.93772052266223,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "left-rear-rail-end-stop-closed-M4-candidate--15",
+          "left-rear-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383305145,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ],
+        [
+          "back-right-rail-end-stop-closed-M4-candidate--15",
+          "back-right-perimeter-right-seal",
+          {
+            "status": "fail",
+            "message": "Prohibited solid penetration",
+            "measured": 14.740436383304846,
+            "required": 0.0,
+            "unit": "mm\u00b3",
+            "method": "OpenCascade solid intersection"
+          }
+        ]
+      ]
+    }
+  ]
+}

@@ -169,11 +169,12 @@ def test_undersized_declared_box_blocks_motion(monkeypatch):
     assert report["coverage"]["continuous_motion"] == "unknown"
 
 
-def test_real_board_obstruction_is_failure(monkeypatch):
+@pytest.mark.parametrize("blocker_y", [0, 824.5, 1400])
+def test_real_board_obstruction_is_failure(monkeypatch, blocker_y):
     model = build_model()
     part = next(p for p in model["parts"] if p["id"] == "panel-right")
-    part.update(size=[20, 20, 20], position=[800, 0, 650])
-    blocker = cq.Workplane("XY").box(20, 20, 20).translate((800, 0, 650)).val()
+    part.update(size=[20, 20, 20], position=[800, blocker_y, 650])
+    blocker = cq.Workplane("XY").box(20, 20, 20).translate((800, blocker_y, 650)).val()
     monkeypatch.setattr(
         "enclosure.core.build_shapes", lambda *args, **kwargs: {part["id"]: blocker}
     )

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .profiles import ASSET_SHA256
 
-SCHEMA_VERSION = "3.0.2"
+SCHEMA_VERSION = "3.1.0"
 
 
 def default_parameters():
@@ -30,7 +30,8 @@ def default_parameters():
         machine_height_mm=600.0,
         hose_diameter_mm=100.0,
         door_material="glass",
-        bifold_material="wood",
+        bifold_material="polycarbonate",
+        back_opening_width_mm=750.0,
     )
 
 
@@ -45,6 +46,7 @@ def _parameters(inputs):
         p.update(inputs)
     bounds = {
         "width_mm": (1300, 2500),
+        "back_opening_width_mm": (650, 800),
         "depth_mm": (1300, 2500),
         "height_mm": (650, 1500),
         "panel_thickness_mm": (3, 18),
@@ -70,8 +72,10 @@ def _parameters(inputs):
             raise ValueError(f"{key} must be finite and between {lo} and {hi} mm")
         p[key] = float(value)
     for key in ("door_material", "bifold_material"):
-        if p[key] not in ("wood", "glass"):
-            raise ValueError(f"{key} must be wood or glass")
+        if p[key] not in (
+            ("wood", "glass", "polycarbonate") if key == "bifold_material" else ("wood", "glass")
+        ):
+            raise ValueError(f"Unsupported {key} material")
     return p
 
 
@@ -89,12 +93,18 @@ def build_model(parameters=None):
     p = _parameters(parameters)
     W, D, H = (p[k] for k in ("width_mm", "depth_mm", "height_mm"))
     c = p["clearance_mm"]
+    rear_jamb = W - p["back_opening_width_mm"] - 15
+    left_jamb = D / 2 - 15
     t = p["panel_thickness_mm"]
     parts = []
     joints = []
     doors = []
 
     def part(id, size, pos, category="extrusion", assembly="frame", rotation=0, **extra):
+        if id in ("rail-left-top", "rail-back-top"):
+            size = list(size)
+            size[0 if id == "rail-left-top" else 1] = 60
+            extra["product_code"] = "AST03006006"
         item = dict(
             id=id,
             name=id.replace("-", " "),
@@ -121,6 +131,20 @@ def build_model(parameters=None):
                 end_treatment="Square cut; deburr; tolerance to be confirmed",
                 machining="Mounting machining unresolved",
             )
+            if id == "rail-back-top":
+                # Supplier-machined open corner relief, not overlapping headers.
+                item["cutouts"] = [
+                    dict(
+                        kind="rectangle",
+                        normal_axis=2,
+                        width_mm=15.5,
+                        height_mm=15.5,
+                        center_local_mm=[-size[0] / 2 + 7.75, -22.25, 0],
+                    )
+                ]
+                item["machining"] = (
+                    "Supplier mill open 15.5 x 15.5 mm corner relief through 30 mm height at left/front edge; 0.5 mm clearance to left header. Confirm remaining section and joint strength."
+                )
         if category in ("panel", "glass"):
             thickness_axis = min(range(3), key=lambda i: size[i])
             axes = [i for i in range(3) if i != thickness_axis]
@@ -144,21 +168,21 @@ def build_model(parameters=None):
         for side, x in [("left", -15), ("right", W + 15)]:
             part(f"rail-{side}-{level}", [30, D, 30], [x, D / 2, z])
     for index, y in enumerate([D / 3, 2 * D / 3]):
-        part(f"beam-roof-{index + 1}", [W, 30, 30], [W / 2, y, H + 15], assembly="roof")
-    part("post-left-middle", [30, 30, H], [-15, D / 2, H / 2])
-    part("post-back-middle", [30, 30, H], [W / 2, D + 15, H / 2])
+        part(f"beam-roof-{index + 1}", [W - 15, 30, 30], [(W + 15) / 2, y, H + 15], assembly="roof")
+    part("post-left-middle", [30, 30, H], [-15, left_jamb, H / 2])
+    part("post-back-middle", [30, 30, H], [rear_jamb, D + 15, H / 2])
     part("panel-right", [t, D, H], [W + 30 + t / 2, D / 2, H / 2], "panel", "walls")
     part(
         "panel-left-front",
-        [t, D / 2 - 15, H],
-        [-30 - t / 2, (D / 2 - 15) / 2, H / 2],
+        [t, left_jamb - 15, H],
+        [-30 - t / 2, (left_jamb - 15) / 2, H / 2],
         "panel",
         "walls",
     )
     part(
         "panel-back-left",
-        [W / 2 - 15, t, H],
-        [(W / 2 - 15) / 2, D + 30 + t / 2, H / 2],
+        [rear_jamb - 15, t, H],
+        [(rear_jamb - 15) / 2, D + 30 + t / 2, H / 2],
         "panel",
         "walls",
     )
@@ -228,6 +252,32 @@ def build_model(parameters=None):
                     ("x", [15 if side == "left" else W - 15, y, zz], 0),
                     ("y", [x, 15 if end == "front" else D - 15, zz], 90),
                 ]:
+                    if (
+                        level == "bottom"
+                        and end == "back"
+                        and ((side == "left" and face == "y") or (side == "right" and face == "x"))
+                    ):
+                        # Candidate hidden L connector in the inward-facing slots;
+                        # the purchased part remains present, not deleted to pass.
+                        hidden = [-5, D + 15 - 31.3 / 2, -15 + 21.7792841 / 2]
+                        if side == "right":
+                            hidden = [W - 0.65, D + 5, hidden[2]]
+                        part(
+                            f"bracket-{side}-{end}-{level}-{face}",
+                            [13, 31.3, 21.7792841],
+                            hidden,
+                            "hardware",
+                            "frame",
+                            -90 if side == "right" else 0,
+                            product_code="CIB08T",
+                            supplier="Reiman Portugal",
+                            geometry_fidelity="supplier-step-unconfirmed-slot-envelope",
+                            cad_asset="CIB08T.step",
+                            mounting_orientation_confirmed=False,
+                            source="https://reiman.pt/en/wlw-cib08t-cib08t-slot-8-type-t-inner-bracket/",
+                            machining="Candidate slot-mounted joint replaces protruding CBR3030; confirm slot engagement, screw access and load capacity before release",
+                        )
+                        continue
                     part(
                         f"bracket-{side}-{end}-{level}-{face}",
                         [29.122, 26, 29.122],
@@ -242,27 +292,30 @@ def build_model(parameters=None):
                         mounting_orientation_confirmed=False,
                     )
     for mid, rail, x, y in [
-        ("post-left-middle", "left", -15, D / 2),
-        ("post-back-middle", "back", W / 2, D + 15),
+        ("post-left-middle", "left", -15, left_jamb),
+        ("post-back-middle", "back", rear_jamb, D + 15),
     ]:
         for level, z in [("bottom", 0), ("top", H)]:
             joint(mid, f"rail-{rail}-{level}", [x, y, z])
     for index, y in enumerate([D / 3, 2 * D / 3]):
-        for side, x in [("left", 0), ("right", W)]:
+        for side, x in [("left", 15), ("right", W)]:
             joint(f"beam-roof-{index + 1}", f"rail-{side}-top", [x, y, H + 15])
 
-    def leaf(door, leaf_id, length, pivot, base_deg, normal_offset, zlo, zhi):
+    def leaf(
+        door, leaf_id, length, pivot, base_deg, normal_offset, zlo, zhi, edge_gap=None, start=0
+    ):
         # Local X along hinge-axis link. Local Y is left normal; sign handled in base rotation.
         bh = zhi - zlo
-        width = length - 2 * c
+        gap = c if edge_gap is None else edge_gap
+        width = length - 2 * gap
         created = []
-        outward = -1 if door == "front-left" else 1
+        outward = 1 if door == "front-right" else -1
         for suffix, size, local in [
-            ("stile-a", [30, 30, bh], [c + 15, normal_offset, (zlo + zhi) / 2]),
+            ("stile-a", [30, 30, bh], [gap + 15, normal_offset, (zlo + zhi) / 2]),
             (
                 "stile-b",
                 [30, 30, bh],
-                [length - c - 15, normal_offset, (zlo + zhi) / 2],
+                [length - gap - 15, normal_offset, (zlo + zhi) / 2],
             ),
             ("rail-low", [width - 60, 30, 30], [length / 2, normal_offset, zlo + 15]),
             ("rail-high", [width - 60, 30, 30], [length / 2, normal_offset, zhi - 15]),
@@ -278,7 +331,13 @@ def build_model(parameters=None):
             )
             created.append(item)
         material = p["door_material"] if door.startswith("front-") else p["bifold_material"]
-        th = p["glass_thickness_mm"] if material == "glass" else t
+        th = (
+            4
+            if material == "polycarbonate"
+            else p["glass_thickness_mm"]
+            if material == "glass"
+            else t
+        )
         local = [length / 2, normal_offset, (zlo + zhi) / 2]
         item = part(
             f"{door}-{leaf_id}-infill",
@@ -323,6 +382,9 @@ def build_model(parameters=None):
                 motion_local=local,
             )
         )
+        for item in created:
+            item["motion_local"][0] += start
+            item["position"] = _add(pivot, _rotate(item["motion_local"], base_deg))
         return [v["id"] for v in created]
 
     # Front left local Y points outward; right mirrored through basis and angle.
@@ -345,148 +407,13 @@ def build_model(parameters=None):
                 axis_offset_mm=0,
             )
         )
-    for id, pivot, base, span in [
-        ("left-rear", [-40, D / 2 + 15, 0], 90, D / 2 - 15),
-        ("back-right", [W / 2 + 15, D + 40, 0], 0, W / 2 - 15),
-    ]:
-        # Local left normal is outward for these bases. Hinge axes at Y=0,
-        # frame centre planes offset +19 mm. Slider lies along local X.
-        length = span / 2
-        ids = leaf(id, "a", length, pivot, base, 19, c, H - 50)
-        ids += leaf(
-            id,
-            "b",
-            length,
-            _add(pivot, _rotate([length, 0, 0], base)),
-            base,
-            19,
-            c,
-            H - 50,
-        )
-        track = part(
-            f"{id}-track",
-            [span + 20, 16, 20],
-            _add(pivot, _rotate([span / 2, 0, H + 80], base)),
-            "hardware",
-            id,
-            base,
-            product_code="GSD082.3000KIT",
-            geometry_fidelity="unconfirmed-track-envelope",
-        )
-        slider = part(
-            f"{id}-carriage",
-            [12, 12, 12],
-            _add(pivot, _rotate([span, 0, H + 63], base)),
-            "hardware",
-            id,
-            base,
-            motion_leaf="slider",
-            motion_local=[0, 0, H + 63],
-            geometry_fidelity="unconfirmed-carriage-envelope",
-        )
-        ids += [track["id"], slider["id"]]
-        # Prefabricated overhead dogleg reaches the ideal slider axis without
-        # driving any rigid link through the closed header barrier. Four cut
-        # stock elements butt at their interfaces; a supplier must detail fixings.
-        for suffix, size, local in [
-            ("foot", [20, 4, 10], [length - 19, 36, H - 75]),
-            ("lower-return", [28, 122, 6], [length - 8, 99, H - 73]),
-            ("outer-leg", [6, 30, 121], [length, 145, H - 9.5]),
-            ("upper-return", [6, 163, 6], [length, 78.5, H + 54]),
-        ]:
-            item = part(
-                f"{id}-guide-adapter-{suffix}",
-                size,
-                _add(pivot, _rotate(_add([length, 0, 0], local), base)),
-                "hardware",
-                id,
-                base,
-                motion_leaf="b",
-                motion_local=local,
-                geometry_fidelity="nominal-solid",
-                material="aluminium",
-                supplier="Supplier-fabricated adapter quotation required",
-                cut_length_mm=max(size),
-                machining="Supplier must detail bolted/welded joints, pivot bearing, track supports and load capacity; no customer fabrication assumed",
-            )
-            ids.append(item["id"])
+    from .bifold import add_bifolds
 
-        adapter_parts = {q["id"]: q for q in parts}
-        for first, second, feature, normal in [
-            (f"{id}-b-stile-b", f"{id}-guide-adapter-foot", [length - 19, 34, H - 75], [0, 1, 0]),
-            (
-                f"{id}-guide-adapter-foot",
-                f"{id}-guide-adapter-lower-return",
-                [length - 19, 38, H - 73],
-                [0, 1, 0],
-            ),
-            (
-                f"{id}-guide-adapter-lower-return",
-                f"{id}-guide-adapter-outer-leg",
-                [length, 145, H - 70],
-                [0, 0, 1],
-            ),
-            (
-                f"{id}-guide-adapter-outer-leg",
-                f"{id}-guide-adapter-upper-return",
-                [length, 145, H + 51],
-                [0, 0, 1],
-            ),
-        ]:
-            pa = adapter_parts[first]
-            pb = adapter_parts[second]
-            joints.append(
-                dict(
-                    id=f"{first}--{second}",
-                    part_a=first,
-                    part_b=second,
-                    local_a=[feature[i] - pa["motion_local"][i] for i in range(3)],
-                    local_b=[feature[i] - pb["motion_local"][i] for i in range(3)],
-                    normal_a=normal,
-                    normal_b=[-v for v in normal],
-                    feature_type="mating-plane",
-                    angular_tolerance_deg=0.01,
-                    tolerance_mm=0.01,
-                    contact=dict(type="mating", max_overlap_mm3=0.01, minimum_contact_area_mm2=1.0),
-                    mounting_verified=False,
-                )
-            )
-        joints.append(
-            dict(
-                id=f"{id}-adapter-carriage",
-                part_a=f"{id}-guide-adapter-upper-return",
-                part_b=f"{id}-carriage",
-                local_a=[0, -78.5, 3],
-                local_b=[0, 0, -6],
-                normal_a=[0, 0, 1],
-                normal_b=[0, 0, -1],
-                feature_type="mating-plane",
-                angular_tolerance_deg=0.01,
-                tolerance_mm=0.01,
-                contact=dict(type="mating", max_overlap_mm3=0.01, minimum_contact_area_mm2=1.0),
-                mounting_verified=False,
-            )
-        )
-        doors.append(
-            dict(
-                id=id,
-                type="bifold",
-                part_ids=ids,
-                pivot=pivot,
-                base_deg=base,
-                opening_sign=1,
-                max_angle_deg=85,
-                link_length_mm=length,
-                axis_offset_mm=19,
-                guide_travel_mm=[0, span],
-                track_id=track["id"],
-                guide_height_mm=H + 80,
-                carriage_height_mm=H + 63,
-                adapter_outer_normal_mm=145,
-            )
-        )
+    add_bifolds(part, leaf, doors, p)
     # Hardware bodies are explicitly listed but mating and fixings require catalog selection.
     for door in doors:
+        if door["type"] == "bifold":
+            continue
         for kind, xx in [
             ("frame-hinge", 0),
             (
@@ -510,22 +437,6 @@ def build_model(parameters=None):
                         motion_leaf="b" if door["type"] == "bifold" else "a",
                         motion_local=[door["link_length_mm"] - 20, 0, zz],
                     )
-                door["part_ids"].append(item["id"])
-        if door["type"] == "bifold":
-            for index, zz in enumerate([80, H - 100]):
-                local = [door["link_length_mm"], 0, zz]
-                item = part(
-                    f"{door['id']}-interleaf-hinge-{index}",
-                    [10, 10, 35],
-                    _add(door["pivot"], _rotate(local, door["base_deg"])),
-                    "hardware",
-                    door["id"],
-                    door["base_deg"],
-                    product_code="CFG.30/30",
-                    motion_leaf="a",
-                    motion_local=local,
-                    geometry_fidelity="unconfirmed-hardware-envelope",
-                )
                 door["part_ids"].append(item["id"])
     part(
         "machine-envelope",
@@ -648,24 +559,52 @@ def build_model(parameters=None):
         schema_version=SCHEMA_VERSION,
         profile_asset_sha256=ASSET_SHA256,
     )
+    from .bifold_completion import complete_bifolds
     from .containment_geometry import add_containment
+    from .glazing import add_glazing
 
+    add_glazing(model)
+    complete_bifolds(model)
     add_containment(model)
     model["assumptions"].append(
         dict(
-            id="overhead-guide-adapter",
-            description="Supplier-fabricated overhead dogleg adapter, bearings, connections, fixed track supports, stiffness and load capacity require engineering confirmation; nominal clearance is checked but no fabrication by customer is assumed.",
+            id="metal-rail-retention",
+            confirmed=False,
+            description="Continuous 20 x 4 stock steel keepers and bolted notched-angle end barriers and metal sleeve/bridge-washer clamp path are geometric proposals, not rated retention. Confirm stock roots/bevels/countersinks, fastener grade/engagement/locking, slot nut and washer strength, tolerances, impact loads and tilt/side escape tests. Rail end bars are backup overtravel stops; light closed retention uses manual printed swing latches and operating-stop capacity remains unvalidated.",
+            references=["left-rear-rail-end-stop-park", "back-right-rail-end-stop-park"],
+        )
+    )
+    model["ordering"]["unresolved"].append(
+        "Cut/drilled bolted stock-steel retainers, bridge washers and compression sleeves: stock preparation and clamp/impact/retention validation pending"
+    )
+    model["assumptions"].append(
+        dict(
+            id="printed-guide-prototype",
+            description="PETG A1 mini guide prototype with stock-metal carrier and keepers: fasteners, operating-stop capacity, catch installation, CFG mounting, polycarbonate retention, seal clearance, creep and wear remain unvalidated. Doors remain hinge-supported; geometric retention does not establish a rated assembly.",
             confirmed=False,
             references=["left-rear-track", "back-right-track"],
         )
     )
     model["ordering"]["unresolved"].append(
-        "Supplier-prefabricated overhead dogleg guide adapters and fixed track supports, pivot bearings and stiffness/load confirmation"
+        "Cut/drilled stock-steel carrier, provisional axle/spacers/fasteners, 3060 header mounting, stop capacity, catch installation, seals and physical load/wear tests"
     )
     model["engineering_source_sha256"] = hashlib.sha256(
         b"".join(
             (Path(__file__).parent / name).read_bytes()
-            for name in ("core.py", "profiles.py", "constraints.py", "containment_geometry.py")
+            for name in (
+                "core.py",
+                "profiles.py",
+                "constraints.py",
+                "containment_geometry.py",
+                "bifold.py",
+                "glazing.py",
+                "bifold_completion.py",
+                "magnetic_catches.py",
+                "closed_catches.py",
+                "stock_metalwork.py",
+                "swing_latch.py",
+                "verification.py",
+            )
         )
     ).hexdigest()
     model["revision"] = hashlib.sha256(
@@ -700,6 +639,13 @@ def pose_model(model, pose=None):
         pivot = d["pivot"]
         elbow = _add(pivot, _rotate([L, 0, 0], base + theta))
         slider = _add(pivot, _rotate([2 * L * math.cos(math.radians(theta)), 0, 0], base))
+        second_angle = -theta
+        if d.get("mechanism") == "printed-guide-revision-c":
+            from .bifold import local_pose
+
+            elbow_local, slider_local, second_angle = local_pose(d, theta)
+            elbow = _add(pivot, _rotate(elbow_local, base))
+            slider = _add(pivot, _rotate(slider_local, base))
         for id in d["part_ids"]:
             item = lookup[id]
             leaf = item.get("motion_leaf")
@@ -709,12 +655,14 @@ def pose_model(model, pose=None):
             angle = base + theta
             if leaf == "b":
                 origin = elbow
-                angle = base - theta
+                angle = base + second_angle
             if leaf == "slider":
                 origin = slider
                 angle = base
             item["position"] = _add(origin, _rotate(item["motion_local"], angle))
             item["rotation_deg"] = angle
+            if item.get("latch_pivot_offset"):
+                item["latch_release_deg"] = 90 if pose.get(d["id"], 0) > 0 else 0
         d["pose_fraction"] = pose.get(d["id"], 0)
         d["kinematics"] = dict(elbow=elbow, slider=slider, theta_deg=theta)
     result["pose"] = dict(pose)
@@ -731,13 +679,136 @@ def build_shapes(model, pose=None):
         if p["category"] == "extrusion":
             from .profiles import extrusion
 
-            shape = extrusion(p["cut_length_mm"], p["length_axis"])
+            shape = extrusion(p["cut_length_mm"], p["length_axis"], p["product_code"])
+        elif p.get("cad_asset") in ("GN_753.1-22-B5-ZL-1.stp", "GN_753.2-4-5-3-AE-NI.stp"):
+            from .profiles import roller_component
+
+            shape = roller_component(p["cad_asset"], p.get("cad_reversed_axis", False))
+        elif p.get("cad_asset") == "CFG3030.stp":
+            from .profiles import hinge_component
+
+            shape = hinge_component(p["cad_component"], p["hinge_exterior"])[0]
+        elif p.get("cad_asset") == "CIB08T.step":
+            from .profiles import inner_bracket
+
+            shape = inner_bracket()
+        elif p.get("cad_asset") == "GN_4470-50-A1-L2-SR.step":
+            from .closed_catches import vendor
+
+            shape = vendor(p["geometry"]["role"])[0]
+        elif p.get("cad_asset") == "GN_4470-50-C2-L3-SR.step":
+            from .magnetic_catches import installed_component
+
+            shape = installed_component(p["geometry"]["role"])[0]
         elif p.get("cad_asset"):
             from .profiles import bracket
 
             shape = bracket()
         else:
             shape = cq.Workplane("XY").box(sx, sy, sz).val()
+        if p.get("geometry", {}).get("kind") == "swing-latch":
+            from .swing_latch import component, fixing
+
+            role = p["geometry"]["role"]
+            shape = (
+                component(role)
+                if role in ("lever", "keeper")
+                else fixing("pivot" if role == "pivot" else "root")
+            )[0]
+            if role == "lever" and p.get("latch_release_deg"):
+                pivot = p["latch_pivot_offset"]
+                shape = shape.rotate(
+                    tuple(pivot), tuple(_add(pivot, [0, 1, 0])), -p["latch_release_deg"]
+                )
+        if p.get("geometry", {}).get("kind", "").startswith("stock-"):
+            from . import stock_metalwork
+
+            kind = p["geometry"]["kind"]
+            if kind == "stock-carrier":
+                shape = stock_metalwork.carrier()
+            elif kind == "stock-end-angle":
+                shape = stock_metalwork.end_angle()
+            elif kind == "stock-keeper":
+                shape = stock_metalwork.keeper(p["size"])
+            elif kind == "stock-end-screw":
+                shape = stock_metalwork.end_screw()
+            elif kind == "stock-carrier-screw":
+                shape = stock_metalwork.carrier_screw()
+        if p.get("geometry", {}).get("kind") == "fsp08-study":
+            from .glazing import gasket_shape
+
+            shape = gasket_shape(p["size"], p["geometry"]["side"])
+        if p.get("geometry", {}).get("kind") == "closed-catch-root-fixing":
+            from .closed_catches import root_fixing
+
+            shape = root_fixing(p["geometry"]["role"], p["geometry"]["index"])[0]
+        if p.get("geometry", {}).get("kind") == "closed-catch-fixing":
+            from .closed_catches import fixing
+
+            shape = fixing(p["geometry"]["role"], p["geometry"]["index"])[0]
+        if p.get("geometry", {}).get("kind") == "closed-catch-holder":
+            from .closed_catches import holder
+
+            shape = holder(p["geometry"]["role"])[0]
+        if p.get("geometry", {}).get("kind") == "park-stop-bracket":
+            from .bifold_completion import park_bracket
+
+            shape = park_bracket()[0]
+        if p.get("geometry", {}).get("kind") == "parked-catch-holder":
+            from .magnetic_catches import holder_component
+
+            shape = holder_component(p["geometry"]["role"])[0]
+        if p.get("geometry", {}).get("kind") == "parked-catch-fixing":
+            from .magnetic_catches import fixing_component
+
+            shape = fixing_component(p["geometry"]["role"], p["geometry"]["index"])[0]
+        if p.get("geometry", {}).get("kind") == "park-stop-washer":
+            shape = cq.Solid.makeCylinder(6, 1.6, cq.Vector(0, -0.8, 0), cq.Vector(0, 1, 0))
+            shape = shape.cut(
+                cq.Solid.makeCylinder(3.2, 3.6, cq.Vector(0, -1.8, 0), cq.Vector(0, 1, 0))
+            )
+        if p.get("geometry", {}).get("kind") == "ghd9008b-study":
+            from .bifold_completion import handle_shape
+
+            shape = handle_shape()
+        if p.get("geometry", {}).get("kind") == "angled-head-brush-study":
+            # Installed bristle envelope, not solid rubber or vendor CAD.
+            shape = (
+                cq.Workplane("YZ")
+                .polyline([(-10, 0), (-10, 12), (10, 0), (10, -12)])
+                .close()
+                .extrude(sx)
+                .val()
+                .translate((-sx / 2, 0, 0))
+            )
+        if p.get("geometry", {}).get("kind") == "printed-guide-body":
+            channel = cq.Workplane("XY").box(sx + 2, 23, 21).val().translate((0, 0, -2))
+            shape = shape.cut(channel)
+            # Open the unprintable 0.4 mm webs at the mounting sleeves instead
+            # of leaving fragile skins between each bore and the roller channel.
+            # Roller bridging across these local recesses needs coupon testing.
+            for hole in p.get("holes", []):
+                xx, yy = hole["center"]
+                web = (
+                    cq.Workplane("XY")
+                    .box(6.4, 1.4, 21)
+                    .val()
+                    .translate((xx, math.copysign(11.9, yy), -2))
+                )
+                shape = shape.cut(web)
+            for end in (-1, 1):
+                for row in (-20, 20):
+                    pocket = (
+                        cq.Workplane("XY")
+                        .box(15.2, 3.4, 2)
+                        .val()
+                        .translate((end * (sx / 2 - 7.6), row, 11.5))
+                    )
+                    shape = shape.cut(pocket)
+        if p.get("geometry", {}).get("kind") == "cylinder":
+            shape = cq.Solid.makeCylinder(
+                p["geometry"]["diameter_mm"] / 2, sz, cq.Vector(0, 0, -sz / 2)
+            )
         if p.get("geometry", {}).get("kind") == "annulus":
             g = p["geometry"]
             shape = cq.Solid.makeCylinder(
@@ -761,9 +832,26 @@ def build_shapes(model, pose=None):
                 shape = shape.cut(cutter)
         for hole in p.get("holes", []):
             x, y = hole["center"]
-            cutter = cq.Solid.makeCylinder(
-                hole["diameter_mm"] / 2, sz + 2, cq.Vector(x, y, -sz / 2 - 1)
-            )
+            if hole.get("counterbore_top_diameter_mm"):
+                depth = hole["counterbore_top_depth_mm"]
+                shape = shape.cut(
+                    cq.Solid.makeCylinder(
+                        hole["counterbore_top_diameter_mm"] / 2,
+                        depth + 1,
+                        cq.Vector(x, y, sz / 2 - depth),
+                    )
+                )
+            if hole.get("axis") == "y":
+                cutter = cq.Solid.makeCylinder(
+                    hole["diameter_mm"] / 2,
+                    sy + 2,
+                    cq.Vector(x, -sy / 2 - 1, y),
+                    cq.Vector(0, 1, 0),
+                )
+            else:
+                cutter = cq.Solid.makeCylinder(
+                    hole["diameter_mm"] / 2, sz + 2, cq.Vector(x, y, -sz / 2 - 1)
+                )
             shape = shape.cut(cutter)
         shape = shape.rotate((0, 0, 0), (0, 0, 1), p["rotation_deg"]).translate(
             tuple(p["position"])

@@ -1,4 +1,12 @@
-import { createSignal, createMemo, createEffect, onMount, For, Show, onCleanup } from "solid-js";
+import {
+  createSignal,
+  createMemo,
+  createEffect,
+  onMount,
+  For,
+  Show,
+  onCleanup,
+} from "solid-js";
 import Viewer from "./Viewer";
 import { playbackPhases } from "./playback";
 import {
@@ -28,7 +36,9 @@ const doors = [
 ];
 export default function App() {
   const [parameters, setParameters] = createSignal<Parameters>({});
-  const [pose, setPose] = createSignal<Pose>(Object.fromEntries(doors.map(([id]) => [id, 0])));
+  const [pose, setPose] = createSignal<Pose>(
+    Object.fromEntries(doors.map(([id]) => [id, 0])),
+  );
   const [result, setResult] = createSignal<Evaluation>();
   const [evaluated, setEvaluated] = createSignal("");
   const [busy, setBusy] = createSignal(false);
@@ -56,9 +66,13 @@ export default function App() {
   let playbackStart = 0;
   const current = createMemo(() => signature(parameters(), {}));
   const stale = createMemo(() => current() !== evaluated());
-  const report = createMemo(() => (!stale() && !invalidFields().length ? result()?.report : null));
+  const report = createMemo(() =>
+    !stale() && !invalidFields().length ? result()?.report : null,
+  );
   const exportAllowed = createMemo(
-    () => !invalidFields().length && canExport(result(), busy(), current(), evaluated()),
+    () =>
+      !invalidFields().length &&
+      canExport(result(), busy(), current(), evaluated()),
   );
   const status = createMemo(() =>
     invalidFields().length
@@ -90,7 +104,10 @@ export default function App() {
     try {
       const next = await evaluate(input, angles, verify, controller.signal);
       if (!disposed && key === current() && requestEpoch === epoch) {
-        if (verify && (!next.report || next.model.revision !== next.report.revision))
+        if (
+          verify &&
+          (!next.report || next.model.revision !== next.report.revision)
+        )
           throw new Error(
             "The geometry and verification revisions do not match. Please evaluate again.",
           );
@@ -142,7 +159,9 @@ export default function App() {
   async function load() {
     try {
       setError("");
-      const defaults = await readResponse<Parameters>(await fetch("/api/defaults"));
+      const defaults = await readResponse<Parameters>(
+        await fetch("/api/defaults"),
+      );
       setParameters(defaults);
       setLoaded(true);
     } catch (e) {
@@ -186,7 +205,8 @@ export default function App() {
       const progress = Math.min(1, (now - playbackStart) / current.duration);
       const next = { ...current.from };
       for (const id of current.ids) {
-        next[id] = current.from[id] + (current.to[id] - current.from[id]) * progress;
+        next[id] =
+          current.from[id] + (current.to[id] - current.from[id]) * progress;
       }
       setPose(next);
       if (progress >= 1) {
@@ -206,7 +226,9 @@ export default function App() {
     const n = Number(value);
     const valid = !!value.trim() && Number.isFinite(n);
     setInvalidFields((fields) =>
-      valid ? fields.filter((field) => field !== id) : [...new Set([...fields, id])],
+      valid
+        ? fields.filter((field) => field !== id)
+        : [...new Set([...fields, id])],
     );
     if (valid) setParameters((p) => ({ ...p, [id]: n }));
   }
@@ -214,7 +236,12 @@ export default function App() {
     if (!exportAllowed() || exporting()) return;
     setExporting(format);
     try {
-      await download(format, { ...parameters() }, { ...pose() }, result()!.model.revision);
+      await download(
+        format,
+        { ...parameters() },
+        { ...pose() },
+        result()!.model.revision,
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -231,8 +258,12 @@ export default function App() {
             { fail: 0, unknown: 1, pass: 2 }[b.status],
         ) ?? [],
   );
-  const groups = createMemo(() => [...new Set(result()?.model.parts.map((p) => p.category) ?? [])]);
-  const selectedPart = createMemo(() => result()?.model.parts.find((p) => p.id === selected()));
+  const groups = createMemo(() => [
+    ...new Set(result()?.model.parts.map((p) => p.category) ?? []),
+  ]);
+  const selectedPart = createMemo(() =>
+    result()?.model.parts.find((p) => p.id === selected()),
+  );
   return (
     <>
       <header>
@@ -249,13 +280,20 @@ export default function App() {
           <div>
             <div class="eyebrow">DESIGN & ASSEMBLY</div>
             <h1>A place for the work.</h1>
-            <p>Configure your enclosure. Inspect the fit. Know what remains to be confirmed.</p>
+            <p>
+              Configure your enclosure. Inspect the fit. Know what remains to be
+              confirmed.
+            </p>
           </div>
           <div
             class={`status-pill ${report()?.order_ready ? "pass" : report()?.status === "invalid" ? "fail" : "unknown"}`}
             role="status"
           >
-            {busy() ? (verifying() ? "◌ Verifying enclosure…" : "◌ Updating preview…") : status()}
+            {busy()
+              ? verifying()
+                ? "◌ Verifying enclosure…"
+                : "◌ Updating preview…"
+              : status()}
           </div>
         </div>
         <Show when={invalidFields().length}>
@@ -269,7 +307,10 @@ export default function App() {
         </Show>
         <Show when={error()}>
           <div class="error" role="alert">
-            {error()} <button onClick={() => (loaded() ? void run() : void load())}>Retry</button>
+            {error()}{" "}
+            <button onClick={() => (loaded() ? void run() : void load())}>
+              Retry
+            </button>
           </div>
         </Show>
         <div class="workspace">
@@ -284,7 +325,11 @@ export default function App() {
                 Automatic verification
               </label>
               <button
-                disabled={!loaded() || !!invalidFields().length || (busy() && verifying())}
+                disabled={
+                  !loaded() ||
+                  !!invalidFields().length ||
+                  (busy() && verifying())
+                }
                 onClick={verifyNow}
               >
                 Verify now
@@ -299,7 +344,9 @@ export default function App() {
               <h2>Your enclosure</h2>
               <span>mm</span>
             </div>
-            <p class="muted">Clear internal dimensions. All measurements in millimetres.</p>
+            <p class="muted">
+              Clear internal dimensions. All measurements in millimetres.
+            </p>
             <For each={fields}>
               {([id, label]) => (
                 <label class="field">
@@ -318,13 +365,14 @@ export default function App() {
             <details>
               <summary>Machine, loading & allowances</summary>
               <p class="muted">
-                Reference envelopes are assumptions until matched to your machine, dust shoe and
-                hose.
+                Reference envelopes are assumptions until matched to your
+                machine, dust shoe and hose.
               </p>
               <For
                 each={Object.entries(parameters()).filter(
                   ([id, value]) =>
-                    typeof value === "number" && !fields.some(([field]) => field === id),
+                    typeof value === "number" &&
+                    !fields.some(([field]) => field === id),
                 )}
               >
                 {([id, value]) => (
@@ -342,7 +390,9 @@ export default function App() {
               </For>
             </details>
             <For
-              each={Object.entries(parameters()).filter(([, value]) => typeof value === "string")}
+              each={Object.entries(parameters()).filter(
+                ([, value]) => typeof value === "string",
+              )}
             >
               {([id, value]) => (
                 <label class="field">
@@ -360,6 +410,11 @@ export default function App() {
                   >
                     <option value="wood">Wood</option>
                     <option value="glass">Glass</option>
+                    <Show when={id === "bifold_material"}>
+                      <option value="polycarbonate">
+                        Polycarbonate · 4 mm
+                      </option>
+                    </Show>
                   </select>
                 </label>
               )}
@@ -408,38 +463,32 @@ export default function App() {
                     value={pose()[id]}
                     disabled={
                       id === "front-left"
-                        ? pose()["front-right"] < 1 && pose()["front-left"] === 0
+                        ? pose()["front-right"] < 1 &&
+                          pose()["front-left"] === 0
                         : id === "front-right"
                           ? pose()["front-left"] > 0
                           : false
                     }
-                    aria-describedby={id.startsWith("front-") ? "front-door-sequence" : undefined}
-                    onInput={(e) => changePose(id, Number(e.currentTarget.value))}
+                    aria-describedby={
+                      id.startsWith("front-")
+                        ? "front-door-sequence"
+                        : undefined
+                    }
+                    onInput={(e) =>
+                      changePose(id, Number(e.currentTarget.value))
+                    }
                   />
                 </label>
               )}
             </For>
             <p class="muted" id="front-door-sequence">
-              Open the right front leaf fully before opening the left. Close the left completely
-              before closing the right.
+              Open the right front leaf fully before opening the left. Close the
+              left completely before closing the right.
             </p>
             <p class="muted">
-              Preview poses update after adjustment. See the report for verified motion coverage.
+              Preview poses update after adjustment. See the report for verified
+              motion coverage.
             </p>
-            <details class="containment-note">
-              <summary>Dust containment & airflow intent</summary>
-              <p class="muted">
-                Rubber seals bridge the assembly clearances when doors close. Close the left front
-                leaf first, then the right leaf with its overlapping meeting strip. Open the right
-                leaf fully first, then the left. Seal compression and hardware fit remain
-                installation checks.
-              </p>
-              <p class="muted">
-                A baffled makeup-air inlet supplies the dust-shoe extraction path. Vacuum selection
-                and measured airflow must establish whether extraction is adequate. Seal fit and
-                dust containment require installation checks.
-              </p>
-            </details>
           </aside>
           <section class="preview">
             <div class="preview-heading">
@@ -516,21 +565,140 @@ export default function App() {
                 ["checks", "Fit & confidence"],
                 ["parts", "Parts & materials"],
                 ["exports", "Supplier files"],
+                ["notes", "Design notes"],
               ]}
             >
               {([id, label]) => (
-                <button class={tab() === id ? "active" : ""} onClick={() => setTab(id)}>
+                <button
+                  class={tab() === id ? "active" : ""}
+                  onClick={() => setTab(id)}
+                >
                   {label}
                 </button>
               )}
             </For>
           </nav>
+          <Show when={tab() === "notes"}>
+            <section class="design-notes" aria-label="Design notes">
+              <h2>Design notes & outstanding issues</h2>
+              <p class="muted">Prototype details, proposed fixings and remaining validation work.</p>
+            <p data-testid="bifold-prototype-note">
+              Bifold prototype · A1 mini PETG guides, CFG hinges, 88° parking.
+              Rear opening 750 mm by default. Metal carrier, standard CJP3030L corner plates and
+              two-fixing closing tabs modeled; vendor STEP hinges, rollers
+              and bushes fitted. Head sealing, bottom gaps and physical
+              load/wear validation remain pending. Not released for manufacture.
+            </p>
+            <p data-testid="printed-park-stop-note">
+              Four ribbed PETG parked stops · A1 mini prototype. Metal M6
+              screws, washers and slot nuts; replaceable rubber contact pads.
+              Gentle 88° travel limit only, not a slam stop or parked latch.
+              Print strength, clamp creep and pad adhesion remain unvalidated.
+              The quotation ZIP includes the body STL and print notes under
+              printed-prototypes/BF-PARK-88.
+            </p>
+            <details class="bifold-completion" data-testid="bifold-completion">
+              <summary>Bifold hardware · design status and fixings</summary>
+              <p>Four GHD9008B handles use catalogue dimensions, not vendor STEP.
+                Grip contours and recessed screw seats remain unconfirmed.
+                Both bifolds omit bottom seals, backing and rigid strips, plus the complete
+                closed catches, strikes, adapters and dedicated fixings. Lower openings
+                are intentionally unsealed. One printed swing latch across each folding joint keeps the pair shut: lift the lever, hold it clear and fold. The viewer shows levers released whenever doors are open. A short break in the adhesive meeting wipe clears each latch. No hermetic seal is required.
+                Sixteen CJP3030L corner plates use the supplier drawing; end interleaf
+                hinges move 25 mm inward. Slot glazing cuts remain unchanged.</p>
+              <p data-testid="parked-catch-note">Parked magnets and their holders have been removed to simplify the doors. The 88° stops limit travel but do not hold doors open. Consider a simple retaining strap only if the doors drift in use.</p>
+              <ul>
+                <For each={result()?.model.bifold_completion?.catch_requirements}>
+                  {(r) => <li><a href={r.source} target="_blank" rel="noreferrer">{r.product_code}</a>
+                    {" · "}{r.quantity} × {r.id}: {r.unresolved}</li>}
+                </For>
+              </ul>
+              <p>Partial dead-load screening only; omitted hardware, impact,
+                hinge capacity and guide reactions are not validated.</p>
+              <ul>
+                <For each={result()?.model.doors.filter((d) => d.load_screening)}>
+                  {(d) => <li>{d.id}: included mass {d.load_screening!.included_mass_kg.toFixed(2)} kg;
+                    closed frame moment {d.load_screening!.closed_frame_moment_Nm.toFixed(2)} N·m;
+                    interleaf moment {d.load_screening!.closed_interleaf_moment_Nm.toFixed(2)} N·m.</li>}
+                </For>
+              </ul>
+              <details><summary>Proposed fixing schedule — engagement pending</summary>
+                <ul><For each={result()?.model.bifold_completion?.fastener_schedule}>
+                  {(r) => <li>{r.part_id}: {r.quantity} × {r.screw}; {r.nut}</li>}
+                </For></ul>
+              </details>
+            </details>
+            <p data-testid="rail-retention-note">
+              Rail retention: continuous 4 mm steel underside strips, 10 mm
+              axle slot and bolted stock-angle end barriers with flush screws. Metal sleeves and bridge washers
+              carry the bolt clamp load. Backup overtravel stops only;
+              Stock-cut steel carriers and 4 mm closing tabs need drilling and finishing.
+              Stock sections, fasteners, impact and tilt retention remain unvalidated.
+            </p>
+            <p data-testid="bifold-head-note">
+              Exterior head hoods clear the moving leaves. Angled brush sections
+              bridge to the leaf tops; nominal coverage is not seal approval.
+              Brush deflection around the carrier, profile selection, bonded
+              holder attachment and corner returns remain unvalidated.
+              Meeting wipes use cut-to-length self-adhesive Tesa 05422 candidates
+              on the secondary leaves: no custom clamps or seal screws. Handles
+              mount directly to the frames. The free lips disengage on opening;
+              actual section, adhesive fit and wear remain unconfirmed.
+              {" "}<a href="https://www.leroymerlin.pt/produtos/veda-porta-adesivo-1m-branco-tesa-universal-310485.html" target="_blank" rel="noreferrer">Retail seal candidate</a>
+            </p>
+            <Show when={result()?.model.parts.some((p) => p.glazing)}>
+              <details data-testid="bifold-glazing" open>
+                <summary>4 mm Lexan · slot glazing study</summary>
+                <p>
+                  FSP08 candidate: drawing-based section, not vendor STEP.
+                  PVC compatibility with Lexan is unconfirmed. Corner seals,
+                  minimum edge engagement and frame connectors need approval.
+                  Provisional cuts below — do not order yet.
+                </p>
+                <ul>
+                  <For each={result()?.model.parts.filter((p) => p.glazing)}>
+                    {(p) => (
+                      <li>
+                        <button onClick={() => setSelected(p.id)}>
+                          {p.id.replace("-infill", "")}: {p.size[0].toFixed(2)} ×{" "}
+                          {p.size[2].toFixed(2)} × 4 mm
+                        </button>
+                      </li>
+                    )}
+                  </For>
+                </ul>
+                <p>
+                  40 K thermal excursion allowance; at default dimensions,
+                  3 mm nominal slot engagement and 2 mm reserve per edge.
+                  Frame assembled around the panel; no Lexan drilling.
+                </p>
+              </details>
+            </Show>
+            <details class="containment-note">
+              <summary>Dust containment & airflow intent</summary>
+              <p class="muted">
+                Rubber seals bridge the assembly clearances when doors close.
+                Close the left front leaf first, then the right leaf with its
+                overlapping meeting strip. Open the right leaf fully first, then
+                the left. Seal compression and hardware fit remain installation
+                checks.
+              </p>
+              <p class="muted">
+                A baffled makeup-air inlet supplies the dust-shoe extraction
+                path. Vacuum selection and measured airflow must establish
+                whether extraction is adequate. Seal fit and dust containment
+                require installation checks.
+              </p>
+            </details>
+            </section>
+          </Show>
           <Show when={tab() === "checks"}>
             <div class="evidence-top">
               <div>
                 <h2>Evidence, before confidence.</h2>
                 <p class="muted">
-                  An unresolved requirement cannot earn a pass. Review assumptions before ordering.
+                  An unresolved requirement cannot earn a pass. Review
+                  assumptions before ordering.
                 </p>
               </div>
               <div class="counts">
@@ -576,7 +744,11 @@ export default function App() {
                     <details class={`check ${check.status}`}>
                       <summary>
                         <span class="check-symbol">
-                          {check.status === "pass" ? "✓" : check.status === "fail" ? "×" : "?"}
+                          {check.status === "pass"
+                            ? "✓"
+                            : check.status === "fail"
+                              ? "×"
+                              : "?"}
                         </span>
                         <span>
                           {check.message}
@@ -584,7 +756,11 @@ export default function App() {
                             {check.category} · {check.id}
                           </small>
                         </span>
-                        <b>{check.status === "unknown" ? "Unresolved" : check.status}</b>
+                        <b>
+                          {check.status === "unknown"
+                            ? "Unresolved"
+                            : check.status}
+                        </b>
                       </summary>
                       <div class="check-detail">
                         <Show when={check.method}>
@@ -592,20 +768,28 @@ export default function App() {
                         </Show>
                         <Show when={check.measured !== undefined}>
                           <p>
-                            Measured: {JSON.stringify(check.measured)} {check.unit}
+                            Measured: {JSON.stringify(check.measured)}{" "}
+                            {check.unit}
                           </p>
                         </Show>
                         <Show when={check.required !== undefined}>
                           <p>Required: {JSON.stringify(check.required)}</p>
                         </Show>
-                        <p>References: {check.references?.join(", ") || "Assembly"}</p>
+                        <p>
+                          References:{" "}
+                          {check.references?.join(", ") || "Assembly"}
+                        </p>
                       </div>
                     </details>
                   )}
                 </For>
                 <Show when={checks().length > checkLimit()}>
-                  <button class="more-checks" onClick={() => setCheckLimit((n) => n + 50)}>
-                    Show more checks ({checks().length - checkLimit()} remaining)
+                  <button
+                    class="more-checks"
+                    onClick={() => setCheckLimit((n) => n + 50)}
+                  >
+                    Show more checks ({checks().length - checkLimit()}{" "}
+                    remaining)
                   </button>
                 </Show>
               </div>
@@ -614,7 +798,10 @@ export default function App() {
                 <For each={result()?.model.assumptions ?? []}>
                   {(a) => (
                     <p>
-                      <strong>{a.confirmed ? "Confirmed" : "Unconfirmed"}:</strong> {a.description}
+                      <strong>
+                        {a.confirmed ? "Confirmed" : "Unconfirmed"}:
+                      </strong>{" "}
+                      {a.description}
                     </p>
                   )}
                 </For>
@@ -627,8 +814,8 @@ export default function App() {
               <div>
                 <h2>Every piece accounted for.</h2>
                 <p class="muted">
-                  Select a component to locate it in the preview. Reference envelopes are not
-                  purchased parts.
+                  Select a component to locate it in the preview. Reference
+                  envelopes are not purchased parts.
                 </p>
               </div>
             </div>
@@ -647,14 +834,21 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody>
-                        <For each={result()?.model.parts.filter((p) => p.category === category)}>
+                        <For
+                          each={result()?.model.parts.filter(
+                            (p) => p.category === category,
+                          )}
+                        >
                           {(part) => (
                             <tr
                               class={selected() === part.id ? "selected" : ""}
                               onClick={() => setSelected(part.id)}
                             >
                               <td>
-                                <button class="text-button" onClick={() => setSelected(part.id)}>
+                                <button
+                                  class="text-button"
+                                  onClick={() => setSelected(part.id)}
+                                >
                                   {part.name}
                                 </button>
                                 <small>{part.id}</small>
@@ -663,7 +857,9 @@ export default function App() {
                                 {part.material}
                                 <small>{part.product_code}</small>
                               </td>
-                              <td>{part.size.map((v) => v.toFixed(1)).join(" × ")}</td>
+                              <td>
+                                {part.size.map((v) => v.toFixed(1)).join(" × ")}
+                              </td>
                               <td>{part.supplier || "To confirm"}</td>
                             </tr>
                           )}
@@ -680,12 +876,14 @@ export default function App() {
               <div>
                 <h2>From design to supplier.</h2>
                 <p class="muted">
-                  Reiman Portugal for extrusions. Separate specifications for panels, glass and
-                  hardware.
+                  Reiman Portugal for extrusions. Separate specifications for
+                  panels, glass and hardware.
                 </p>
               </div>
               <span class="status-pill unknown">
-                {report()?.order_ready ? "Ready to order" : "REQUEST FOR QUOTATION"}
+                {report()?.order_ready
+                  ? "Ready to order"
+                  : "REQUEST FOR QUOTATION"}
               </span>
             </div>
             <p class="export-note">
@@ -702,11 +900,31 @@ export default function App() {
                     "Complete supplier pack",
                     "All drawings, lists and verification evidence.",
                   ],
-                  ["pdf", "Dimensioned drawings", "Printable supplier specifications and status."],
-                  ["csv", "Order list", "Component quantities and cutting dimensions."],
-                  ["dxf", "Panel outlines", "Flat geometry for supplier review."],
-                  ["step", "Assembly geometry", "Solid model for technical coordination."],
-                  ["json", "Design & evidence", "Parameters, component inventory and report."],
+                  [
+                    "pdf",
+                    "Dimensioned drawings",
+                    "Printable supplier specifications and status.",
+                  ],
+                  [
+                    "csv",
+                    "Order list",
+                    "Component quantities and cutting dimensions.",
+                  ],
+                  [
+                    "dxf",
+                    "Panel outlines",
+                    "Flat geometry for supplier review.",
+                  ],
+                  [
+                    "step",
+                    "Assembly geometry",
+                    "Solid model for technical coordination.",
+                  ],
+                  [
+                    "json",
+                    "Design & evidence",
+                    "Parameters, component inventory and report.",
+                  ],
                 ]}
               >
                 {([format, title, description]) => (
@@ -716,7 +934,9 @@ export default function App() {
                     onClick={() => void save(format)}
                   >
                     <span>{format.toUpperCase()} ↗</span>
-                    <strong>{exporting() === format ? "Preparing file…" : title}</strong>
+                    <strong>
+                      {exporting() === format ? "Preparing file…" : title}
+                    </strong>
                     <small>{description}</small>
                   </button>
                 )}
@@ -724,14 +944,18 @@ export default function App() {
             </div>
             <Show when={!exportAllowed()}>
               <p class="muted">
-                Evaluate the current design before downloading matching supplier files.
+                Evaluate the current design before downloading matching supplier
+                files.
               </p>
             </Show>
           </Show>
         </section>
         <footer>
           WORKBENCH / ENCLOSURE 03{" "}
-          <span>Fit and motion evidence · Physical installation checks remain necessary.</span>
+          <span>
+            Fit and motion evidence · Physical installation checks remain
+            necessary.
+          </span>
         </footer>
       </main>
     </>

@@ -8,9 +8,9 @@ model is the source of truth for geometry, dimensions, motion, verification,
 and supplier specifications. Keep rendering as an adapter over that model
 and use millimetres internally.
 
-The root `src/` application and `legacy/` are retained history, not the active
-product. Add product features to v3. See `v3/README.md` for setup, commands,
-architecture, and verification limits.
+The former root `src/` and `legacy/` applications have been removed; their
+history remains in Git. Add product features to v3. See `v3/README.md` for
+setup, commands, architecture, and verification limits.
 
 ## Branches, worktrees, and pull requests
 
@@ -45,3 +45,9 @@ Report what was checked and any remaining limitations in the PR. A passing
 geometric check does not prove a buildable assembly or physical performance.
 Keep unresolved hardware, tolerances, installation, and measurement evidence
 explicit; do not treat assumptions as verified facts.
+
+## Standalone engineering studies
+
+`engineering/` contains standalone, unreleased design studies and prototype
+parts. They are not integrated into v3 unless explicitly wired into its model.
+Run `npm run test:engineering` when changing these calculations.

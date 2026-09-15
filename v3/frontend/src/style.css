@@ -182,15 +182,28 @@ h2 {
   background: #fbfcf9;
   font-variant-numeric: tabular-nums;
 }
-.settings details {
+.settings details,
+.design-notes details {
   border-top: 1px solid #e6eae2;
   padding-top: 16px;
   margin-top: 18px;
 }
-.settings summary {
+.settings summary,
+.design-notes summary {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
+}
+.design-notes {
+  padding: 24px;
+  max-width: 960px;
+  line-height: 1.6;
+}
+.design-notes > p {
+  margin: 16px 0;
+}
+.design-notes li + li {
+  margin-top: 8px;
 }
 .doors-heading {
   margin-top: 25px;

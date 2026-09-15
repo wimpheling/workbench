@@ -76,6 +76,26 @@ def test_csv_preserves_cut_dimensions_quantities_and_pending_state(specification
     assert rows[0]["nominal_envelope_x_mm"] == "500"
 
 
+def test_centred_header_relief_is_converted_to_drawing_origin(specification):
+    model, report, shapes = specification
+    rail = model["parts"][0]
+    rail["size"] = [500, 60, 30]
+    rail["cutouts"] = [
+        dict(
+            kind="rectangle",
+            normal_axis=2,
+            width_mm=15.5,
+            height_mm=15.5,
+            center_local_mm=[-242.25, -22.25, 0],
+        )
+    ]
+    data, _, _ = export_file("pdf", model, report, shapes)
+    text = " ".join(page.extract_text() for page in PdfReader(io.BytesIO(data)).pages)
+    assert "lower-left (0, 0) mm" in text
+    assert "part-centred XYZ" in text
+    assert "NOT RELEASED" in text
+
+
 def test_seal_quote_preserves_section_and_compression_request(specification):
     model, report, shapes = specification
     model["parts"].append(
@@ -155,23 +175,41 @@ def test_pdf_and_step_are_real_documents(specification, tmp_path):
 
 
 def test_pack_separates_supplier_parts_and_includes_evidence(specification):
+    specification[0]["bifold_completion"] = {
+        "catch_requirements": [
+            {"product_code": "GBL3030.KIT", "quantity": 6, "status": "unresolved"}
+        ]
+    }
     data, _, name = export_file("pack", *specification)
     assert name.endswith("quotation-pack.zip")
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         assert set(archive.namelist()) == {
             "README.txt",
+            "standard-bifold-hardware.md",
+            "standard-metalwork.md",
+            "stock-metalwork.json",
             "model.json",
             "verification.json",
             "reiman-extrusions.csv",
             "glass-panels.csv",
             "wood-panels.csv",
+            "polycarbonate-panels.csv",
             "hardware.csv",
             "containment-and-airflow.txt",
+            "bifold-completion.json",
             "supplier-drawings.pdf",
             "panel-outlines.dxf",
             "assembly.step",
         }
+        stock = json.loads(archive.read("stock-metalwork.json"))
+        assert stock["revision"] == specification[0]["revision"]
+        assert stock["parts"] == []  # This fixture has no stock metalwork.
         assert json.loads(archive.read("verification.json"))["order_ready"] is False
+        completion = json.loads(archive.read("bifold-completion.json"))
+        assert completion["revision"] == specification[0]["revision"]
+        assert "NOT RELEASED" in completion["release_status"]
+        assert completion["catch_requirements"][0]["quantity"] == 6
+        assert completion["catch_requirements"][0]["status"] == "unresolved"
         assert b"NOT RELEASED" in archive.read("README.txt")
         assert b"AST03003004" in archive.read("reiman-extrusions.csv")
         assert b"glass" not in archive.read("reiman-extrusions.csv")

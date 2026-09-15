@@ -35,8 +35,36 @@ def test_defaults_and_real_geometry(client, evaluation):
         assert len(mesh["indices"]) % 3 == 0
         assert max(mesh["indices"]) < len(mesh["positions"]) / 3
     assert evaluation["report"]["order_ready"] is False
-    assert evaluation["report"]["summary"]["fail"] == 0
+    # Revision C is explicitly a prototype, not the prior ideal-axis design.
+    # Exterior hood clears the framing; nominal coverage is not seal approval.
+    checks = {c["id"]: c for c in evaluation["report"]["checks"]}
+    assert checks["containment.coverage.left-rear-perimeter-top.0"]["status"] == "pass"
+    assert checks["containment.coverage.left-rear-perimeter-top.1"]["status"] == "pass"
+    assert checks["assumption.bifold-exterior-head-brush"]["status"] == "unknown"
+    assert any(
+        c["status"] == "unknown"
+        and {"left-rear-perimeter-top-seal", "left-rear-carrier-upright"}.issubset(
+            c.get("references", [])
+        )
+        for c in checks.values()
+    )
+    assert not any(
+        c["status"] == "fail" for c in checks.values() if c["id"].startswith("collision.")
+    )
+    access = checks["access.workpiece"]
+    assert access["status"] == "pass"
+    assert access["measured"]["final_center_y_mm"] == 1649 / 2
+    assert access["measured"]["leading_edge_y_mm"] == (1649 + 1219.2) / 2
+    assert checks["kinematics.native.left-rear"]["status"] == "unknown"
+    assert not any(
+        c["status"] == "fail"
+        for c in evaluation["report"]["checks"]
+        if c["category"] == "integrity"
+    )
     assert evaluation["report"]["status"] == "incomplete"
+    assert evaluation["report"]["summary"]["fail"] == 0
+    for did in ("left-rear", "back-right"):
+        assert checks[f"containment.intentional-gap.{did}-perimeter-bottom"]["status"] == "unknown"
 
 
 @pytest.mark.parametrize(

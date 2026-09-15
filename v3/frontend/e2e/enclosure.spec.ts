@@ -9,7 +9,7 @@ test("actual enclosure evaluates, moves doors, exports and rejects bad dimension
   });
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
-  await expect(page.getByRole("status")).toContainText("Quotation draft", {
+  await expect(page.getByRole("status")).toContainText("Design needs correction", {
     timeout: 120000,
   });
   await expect(page.locator("canvas")).toBeVisible();
@@ -28,7 +28,7 @@ test("actual enclosure evaluates, moves doors, exports and rejects bad dimension
     await page.getByRole("slider", { name: label }).fill(opening);
     // Pose motion is rendered from canonical meshes in the browser; slider
     // frames must not queue a native CAD request.
-    await expect(page.getByRole("status")).toContainText("Quotation draft", {
+    await expect(page.getByRole("status")).toContainText("Design needs correction", {
       timeout: 120000,
     });
   }
@@ -60,14 +60,14 @@ test("actual enclosure evaluates, moves doors, exports and rejects bad dimension
   expect(manual.ok()).toBe(true);
   expect(manual.headers()["x-design-revision"]).toBe(previewRevision);
   expect(manual.headers()["x-verification-state"]).toBe("evaluated");
-  await expect(page.getByRole("status")).toContainText("Quotation draft", {
+  await expect(page.getByRole("status")).toContainText("Design needs correction", {
     timeout: 120000,
   });
   await expect(page.getByRole("button", { name: /Order list/ })).toBeEnabled();
   const automaticResponse = page.waitForResponse((r) => r.url().endsWith("/api/evaluate"));
   await page.getByRole("checkbox", { name: "Automatic verification" }).check();
   expect((await automaticResponse).ok()).toBe(true);
-  await expect(page.getByRole("status")).toContainText("Quotation draft", {
+  await expect(page.getByRole("status")).toContainText("Design needs correction", {
     timeout: 120000,
   });
   await page.getByRole("button", { name: "Supplier files", exact: true }).click();
@@ -86,7 +86,7 @@ test("actual enclosure evaluates, moves doors, exports and rejects bad dimension
   const changed = page.waitForResponse((r) => r.url().endsWith("/api/evaluate"));
   await page.getByRole("spinbutton", { name: "Internal width", exact: true }).fill("1700");
   expect((await changed).ok()).toBe(true);
-  await expect(page.getByRole("status")).toContainText("Quotation draft", {
+  await expect(page.getByRole("status")).toContainText("Design needs correction", {
     timeout: 120000,
   });
   const rejected = page.waitForResponse((r) => r.url().endsWith("/api/evaluate"));
@@ -95,7 +95,7 @@ test("actual enclosure evaluates, moves doors, exports and rejects bad dimension
   await expect(page.getByRole("alert")).toContainText("width_mm");
   await expect(page.getByRole("button", { name: /Complete supplier pack/ })).toBeDisabled();
   await page.getByRole("spinbutton", { name: "Internal width", exact: true }).fill("1674");
-  await expect(page.getByRole("status")).toContainText("Quotation draft", {
+  await expect(page.getByRole("status")).toContainText("Design needs correction", {
     timeout: 120000,
   });
   await page.setViewportSize({ width: 390, height: 844 });
