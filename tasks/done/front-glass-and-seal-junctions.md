@@ -63,4 +63,4 @@ follow-up task; no order release or physical sealing proof is claimed.
 
 ## Open questions / blockers
 
-- [x] Physical material/hardware approval remains in [the validation task](../todo/front-door-hardware-and-gasket-validation.md); this task resolves nominal geometry only.
+- [x] Physical material/hardware approval remains in [the validation task](../todo/enclosure-detailed-validation.md); this task resolves nominal geometry only.
