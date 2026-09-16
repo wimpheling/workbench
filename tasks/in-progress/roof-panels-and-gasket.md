@@ -25,6 +25,15 @@ See [roof design](../../v3/docs/SIX_PANEL_ROOF.md). Detailed product/physical
 validation remains separate from the accepted layout, per the owner's two-axis
 workflow. Do not equate an approved layout with released fabrication.
 
+Implementation: [PR #21](https://github.com/wimpheling/workbench/pull/21).
+Validation: 208 backend tests passed; 45 frontend tests, TypeScript check and
+production build passed; the six-panel browser test passed. Final default
+revision `53126a0f69ef8357` reports 1828 pass / 0 fail / 122 unknown. The quotation
+ZIP was checked for six roof cuts and matching layout metadata. The front
+connection clears the door backing and all tested door poses; all new roof
+connectors clear rigid parts in the closed assembly. Physical performance
+and the outstanding detailed design decisions below remain unresolved.
+
 ## Implementation plan
 
 - [x] Agree on the roof layout and handling concept
@@ -36,10 +45,10 @@ workflow. Do not equate an approved layout with released fabrication.
   - [x] Identify EMKA 1016-16 as a real candidate; retain compression and compatibility as unvalidated
   - [x] Model perimeter strips, panel-seam strips and non-stacked butt junctions
   - [x] Update the offset hose collar, gasket and explicit panel/bore verification
-- [ ] Implement and verify the agreed roof in v3
+- [x] Implement and verify the agreed roof in v3
   - [x] Update the parametric layout, support geometry, gasket checks and provisional hose clearance checks
   - [x] Update panel cuts, support machining, gasket lengths, candidate reference and assembly instructions
-  - [ ] Run relevant tests, checks and builds and record the results
+  - [x] Run relevant tests, checks and builds and record the results
 
 ## Open questions / blockers
 
