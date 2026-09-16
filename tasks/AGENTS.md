@@ -25,6 +25,21 @@ moving a task between folders so its history remains easy to follow.
    record why; if deferred, link a new task in `todo/`. Do not mark unfinished
    implementation as completed.
 
+## Design and validation axes
+
+Horizontal tasks settle major layout and mechanism choices for individual sides
+or assemblies and implement the agreed design. Vertical validation covers
+cross-enclosure supplier details, tolerances, alignment, sag, loads, sealing,
+wear and physical commissioning. Track that work in
+[todo/enclosure-detailed-validation.md](todo/enclosure-detailed-validation.md).
+
+A horizontal task may close when its design outcome is delivered and its
+remaining detailed or physical obligations are explicitly transferred and
+linked. Check the transfer as complete; do not check unperformed validation as
+passed. Design completion does not release fabrication or purchasing. Keep
+unresolved major design choices in their horizontal tasks. If later validation
+requires a design change, create or reopen the corresponding task.
+
 ## Required contents and formatting
 
 Each task has a title and the sections **Description**, **Discussion**,

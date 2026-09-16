@@ -18,7 +18,7 @@ CFG vendor STEP/datum notes, CJP/FSP drawing studies and latest bifold decisions
 The former purchase-ready gasket scope is superseded for this delivery by the
 user's explicit instruction to keep gasket/material uncertainties visible.
 Outstanding supplier/physical work is retained in
-[front hardware and gasket validation](../todo/front-door-hardware-and-gasket-validation.md).
+[front hardware and gasket validation](../todo/enclosure-detailed-validation.md).
 
 The profile front faces are Y=-24, 6 mm behind the frame front face. Real CFG
 axes at Y=-38 connect via six 6 mm moving-wing spacers. Eight CJP3030L door
