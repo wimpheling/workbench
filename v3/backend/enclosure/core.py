@@ -101,10 +101,10 @@ def build_model(parameters=None):
     doors = []
 
     def part(id, size, pos, category="extrusion", assembly="frame", rotation=0, **extra):
-        if id in ("rail-left-top", "rail-back-top"):
-            size = list(size)
-            size[0 if id == "rail-left-top" else 1] = 60
-            extra["product_code"] = "AST03006006"
+        if id == "rail-front-top":
+            size = [size[0], 30, 60]
+            pos = [pos[0], pos[1], H]
+            extra.update(product_code="AST03006006", section_rotation_deg=90)
         item = dict(
             id=id,
             name=id.replace("-", " "),
@@ -131,20 +131,6 @@ def build_model(parameters=None):
                 end_treatment="Square cut; deburr; tolerance to be confirmed",
                 machining="Mounting machining unresolved",
             )
-            if id == "rail-back-top":
-                # Supplier-machined open corner relief, not overlapping headers.
-                item["cutouts"] = [
-                    dict(
-                        kind="rectangle",
-                        normal_axis=2,
-                        width_mm=15.5,
-                        height_mm=15.5,
-                        center_local_mm=[-size[0] / 2 + 7.75, -22.25, 0],
-                    )
-                ]
-                item["machining"] = (
-                    "Supplier mill open 15.5 x 15.5 mm corner relief through 30 mm height at left/front edge; 0.5 mm clearance to left header. Confirm remaining section and joint strength."
-                )
         if category in ("panel", "glass"):
             thickness_axis = min(range(3), key=lambda i: size[i])
             axes = [i for i in range(3) if i != thickness_axis]
@@ -168,7 +154,7 @@ def build_model(parameters=None):
         for side, x in [("left", -15), ("right", W + 15)]:
             part(f"rail-{side}-{level}", [30, D, 30], [x, D / 2, z])
     for index, y in enumerate([D / 3, 2 * D / 3]):
-        part(f"beam-roof-{index + 1}", [W - 15, 30, 30], [(W + 15) / 2, y, H + 15], assembly="roof")
+        part(f"beam-roof-{index + 1}", [W, 30, 30], [W / 2, y, H + 15], assembly="roof")
     part("post-left-middle", [30, 30, H], [-15, left_jamb, H / 2])
     part("post-back-middle", [30, 30, H], [rear_jamb, D + 15, H / 2])
     part("panel-right", [t, D, H], [W + 30 + t / 2, D / 2, H / 2], "panel", "walls")
@@ -298,7 +284,7 @@ def build_model(parameters=None):
         for level, z in [("bottom", 0), ("top", H)]:
             joint(mid, f"rail-{rail}-{level}", [x, y, z])
     for index, y in enumerate([D / 3, 2 * D / 3]):
-        for side, x in [("left", 15), ("right", W)]:
+        for side, x in [("left", 0), ("right", W)]:
             joint(f"beam-roof-{index + 1}", f"rail-{side}-top", [x, y, H + 15])
 
     def leaf(
@@ -393,11 +379,14 @@ def build_model(parameters=None):
         ("front-right", [W - 2.5, -38, 0], 180, 1),
     ]:
         length = W / 2 - 2.5
-        ids = leaf(id, "a", length, pivot, base, 29 if sign == -1 else -29, c, H - c, edge_gap=2.5)
+        ids = leaf(
+            id, "a", length, pivot, base, 29 if sign == -1 else -29, c, H - 30 - c, edge_gap=2.5
+        )
         doors.append(
             dict(
                 id=id,
                 type="swing",
+                opening_height_mm=H - 30,
                 part_ids=ids,
                 pivot=pivot,
                 base_deg=base,
@@ -543,6 +532,9 @@ def build_model(parameters=None):
     from .rear_electrical import add_rear_electrical
 
     add_rear_electrical(model)
+    from .header_layout import add_header_assessment
+
+    add_header_assessment(model)
     model["assumptions"].append(
         dict(
             id="metal-rail-retention",
@@ -563,7 +555,7 @@ def build_model(parameters=None):
         )
     )
     model["ordering"]["unresolved"].append(
-        "Cut/drilled stock-steel carrier, provisional axle/spacers/fasteners, 3060 header mounting, stop capacity, catch installation, seals and physical load/wear tests"
+        "Cut/drilled stock-steel carrier, provisional axle/spacers/fasteners, 3030 header adapters, stop capacity, catch installation, seals and physical load/wear tests"
     )
     model["engineering_source_sha256"] = hashlib.sha256(
         b"".join(
@@ -582,6 +574,7 @@ def build_model(parameters=None):
                 "stock_metalwork.py",
                 "swing_latch.py",
                 "rear_electrical.py",
+                "header_layout.py",
                 "verification.py",
             )
         )
@@ -659,6 +652,11 @@ def build_shapes(model, pose=None):
             from .profiles import extrusion
 
             shape = extrusion(p["cut_length_mm"], p["length_axis"], p["product_code"])
+            if p.get("section_rotation_deg"):
+                axis = [0, 0, 0]
+                axis[p["length_axis"]] = 1
+                shape = shape.rotate((0, 0, 0), tuple(axis), p["section_rotation_deg"])
+
         elif p.get("cad_asset") in ("GN_753.1-22-B5-ZL-1.stp", "GN_753.2-4-5-3-AE-NI.stp"):
             from .profiles import roller_component
 
@@ -823,6 +821,15 @@ def build_shapes(model, pose=None):
                 shape = shape.cut(cutter)
         for hole in p.get("holes", []):
             x, y = hole["center"]
+            if hole.get("countersink_bottom_diameter_mm"):
+                shape = shape.cut(
+                    cq.Solid.makeCone(
+                        hole["countersink_bottom_diameter_mm"] / 2,
+                        hole["diameter_mm"] / 2,
+                        (hole["countersink_bottom_diameter_mm"] - hole["diameter_mm"]) / 2,
+                        cq.Vector(x, y, -sz / 2),
+                    )
+                )
             if hole.get("counterbore_top_diameter_mm"):
                 depth = hole["counterbore_top_depth_mm"]
                 shape = shape.cut(
