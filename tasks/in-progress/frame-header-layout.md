@@ -45,7 +45,7 @@ header assessment checked; Ruff and whitespace checks pass.
 - [x] Adapt guide mounting and check motion and load-path geometry
 - [x] Assess and model the upright front beam and affected door/seal clearances
 - [x] Update supplier output, documentation, tests and preview
-- [ ] Run required checks and submit a new PR
+- [x] Run required checks and submit [PR #19](https://github.com/wimpheling/workbench/pull/19)
 
 ## Open questions / blockers
 
