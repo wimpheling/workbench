@@ -11,7 +11,7 @@ positive Y. Both door profile fronts are Y=-24 (6 mm inset), backs Y=6. They
 occupy the front aperture and extend into the enclosure, rather than standing
 forward of the frame. Handles and hinge barrels project for operation.
 
-At the default 1674 × 740 opening, each door frame is 829.5 × 732, with 5 mm
+At the default 1674 × 710 opening, each door frame is 829.5 × 702, with 5 mm
 jamb gaps, 5 mm between doors, and 4 mm top/bottom gaps. The horizontal gaps
 follow the fixed CFG mounting pitch; the clearance parameter sets the front
 top/bottom gaps. The hinge axes are
@@ -47,20 +47,17 @@ Rear closing strips use 12 mm rigid backing against the frame. Their front
 faces are Y=12; the nominal flexible seals span Y=6…12. The rigid strips now
 continue around the corners instead of leaving unsupported seal ends:
 
-- Each default jamb strip is 720 × 30 × 2 mm. Two 20 × 22 mm open-end
+- Each default jamb strip is 690 × 30 × 2 mm. Two 20 × 22 mm open-end
   reliefs clear the side-rail brackets while retaining 10 mm inner tongues.
-  The existing backing remains 676 mm long; each tongue cantilevers 22 mm.
-- Head and sill strips are each 1674 × 30 × 2 mm. The head's left end has
-  an 18 × 23 mm relief, retaining a 7 mm inner tongue **3 mm below the 3060
-  header**. This joins the jamb support without intruding into the header.
-- Gasket blanks are two 720 × 13 × 6 mm jambs and two 1680 × 13 × 6 mm
+  The existing backing remains 646 mm long; each tongue cantilevers 22 mm.
+- Head and sill strips are each 1674 × 30 × 2 mm, with no left-header notch.
+  The front opening is now 710 mm beneath the upright beam; see [headers](FRAME_HEADERS.md).
+- Gasket blanks are two 690 × 13 × 6 mm jambs and two 1680 × 13 × 6 mm
   horizontal strips. Bond/vulcanise their butt joints into a continuous surround.
   Root/corner reliefs follow actual fixed backing, bracket and header solids;
   the installed gasket does not occupy those metal volumes or fill inaccessible
-  extrusion pockets. A separate **4.5 mm diameter × 12 mm foam end plug** closes
-  the small exposed channel in the left header; insert it from the front cut end.
-  Its nominal diameter is checked against vendor CAD; compression and retention
-  are unapproved. Deflection around moving corner plates remains unvalidated.
+  extrusion pockets. The square left-header junction no longer needs the former
+  separate foam end plug. Deflection around moving corner plates remains unvalidated.
 
 The rear perimeter and exterior meeting strip sit at different depths. Two
 fixed **L-shaped flexible end boots** connect them at the head and sill. Each
@@ -93,7 +90,7 @@ or approval of glass retention. The default bifolds remain 4 mm polycarbonate;
 selecting glass for them also uses the shared 4 mm glass target, while retaining
 the alternative-material bifold retention arrangement.
 
-Default front cuts are **775.5 × 678 × 4 mm**, two panels. Each has nominal
+Default front cuts are **775.5 × 648 × 4 mm**, two panels. Each has nominal
 3 mm slot engagement and 2 mm reserve per edge, based on an assumed 5 mm usable
 slot depth. Glass uses a provisional 9×10⁻⁶/K expansion coefficient over 40 K;
 confirm the actual grade and environment. The default inventory includes 24

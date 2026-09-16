@@ -16,6 +16,9 @@ preventing the enclosure's planned ventilation.
 
 ## Discussion
 
+Current header revision: [frame header layout](frame-header-layout.md) replaces the flat 3060 guide headers with square 3030 rails and 8 mm steel adapters. Guide/carrier and leaf tops drop 8 mm; the front receives an upright 3060 beam. Earlier header and leaf-height dimensions below are historical. Physical stiffness and connection validation remain open.
+
+
 Acceptance completed 2026-09-15: live `02edfb1d248ce451`, 466 parts, 1,625 pass / 0 fail / 112 unknown. Two original PETG swing latches; 20.2 mm raised-handle clearance. Intentional bottom gaps and 121 mm local wipe breaks, no magnetic or parked catches. Final quotation pack matches model/print revisions and notes; STEP re-imports valid with 470 solids. Browser acceptance passed on the final geometry (5.7 minutes); the later source-only wipe-procurement correction was checked at three heights and leaves default model data identical except the fingerprint. Full `npm run check`: 165 backend tests passed (19m01s) before the final 20 mm mounting adjustment; the 33 affected backend cases passed afterward via scoped `npm run check` (6m47s). An additional final 4 mm driver-envelope test passed. Both check runs passed Ruff, 45 frontend tests, TypeScript and build. `npm test` passed 11 engineering + 45 frontend tests; explicit build passed. Evidence: `v3/artifacts/swing-latch/acceptance.json`, `final-quotation.zip` and logs. Physical print fit, friction/loosening, slot-nut engagement and gentle hand-pull/cycling remain outside digital acceptance.
 
 

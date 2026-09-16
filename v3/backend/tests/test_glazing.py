@@ -7,10 +7,10 @@ def test_default_lexan_cuts_and_thermal_allowances():
     model = build_model()
     panes = [p for p in model["parts"] if p.get("glazing") and p["material"] == "polycarbonate"]
     assert [p["cut_size_mm"] for p in panes] == [
-        [330.75, 628, 4],
-        [370.75, 628, 4],
-        [293.5, 628, 4],
-        [333.5, 628, 4],
+        [330.75, 620, 4],
+        [370.75, 620, 4],
+        [293.5, 620, 4],
+        [333.5, 620, 4],
     ]
     for p in panes:
         for axis in p["glazing"]["axes"]:
@@ -82,7 +82,7 @@ def test_quote_csv_uses_revised_cuts_and_keeps_material_warning():
     rows = {r["part_id"]: r for r in csv.DictReader(io.StringIO(data.decode("utf-8-sig")))}
     pane = rows["left-rear-a-infill"]
     assert float(pane["width_mm"]) == 330.75
-    assert float(pane["height_mm"]) == 628
+    assert float(pane["height_mm"]) == 620
     assert "PVC compound compatibility" in pane["machining"]
     assert "NOT RELEASED" in pane["release_status"]
     gasket = rows["left-rear-a-infill-left-slot-gasket"]

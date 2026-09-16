@@ -584,6 +584,7 @@ export default function App() {
               <p class="muted">Prototype details, proposed fixings and remaining validation work.</p>
             <p data-testid="front-inset-note">
               Front doors · inset 6 mm behind the frame front face, with no fixed centre post.
+              The upright 30×60 front beam shares the roof level and lowers the front opening by 30 mm.
               Six vendor CFG.30/30 hinges, six 6 mm moving-wing spacers and eight door CJP3030L corner plates; four more connect the front frame.
               Open right fully, then left; close left fully, then right. 100° nominal travel.
               Glass target is 4 mm, with the FSP08 slot-holder study within its documented 3–5 mm range.
@@ -595,6 +596,8 @@ export default function App() {
             </p>
             <p data-testid="bifold-prototype-note">
               Bifold prototype · A1 mini PETG guides, CFG hinges, 88° parking.
+              Left and rear top rails are 30×30 with square corners. Steel adapters use the single underside slot and lower the guide and leaf tops by 8 mm.
+              Header stiffness and adapter fixings still need validation.
               Rear opening 750 mm by default. Metal carrier, standard CJP3030L corner plates and
               two-fixing closing tabs modeled; vendor STEP hinges, rollers
               and bushes fitted. Head sealing, bottom gaps and physical

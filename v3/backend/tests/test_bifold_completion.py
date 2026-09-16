@@ -205,7 +205,7 @@ def test_retail_meeting_wipe_has_no_clamps_and_disengages():
             assert lip["motion_leaf"] == "b"
             assert "disengages" in lip["seal_spec"]["attachment"]
             assert lip["product_code"] == "TESA-05422" and "cad_asset" not in lip
-            assert lip["size"] == [38, 3, 688]
+            assert lip["size"] == [38, 3, 680]
             assert lip["procurement"]["packs_required"] == 1
             assert "provisional" in lip["seal_spec"]["section_status"]
             assert s[lip["id"]].distance(s[did + "-b-stile-a"]) < 1e-5

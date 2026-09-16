@@ -9,7 +9,7 @@ Two continuous 304 stainless strips, 18 mm wide x 4 mm thick, replace the
 segmented PETG keepers. Weld a 4 x 46 x 25 mm end bar to both strips at each
 end, forming one removable underside assembly. End bars occupy the first/last
 4 mm of rail; the PETG end relief is 4.2 mm inboard (0.2 mm clearance).
-Top remains the printed channel roof backed by the 3060 header. Side guidance
+Top remains the printed channel roof backed by the 8 mm steel adapter under the 3030 header. Side guidance
 remains PETG. This is not an all-metal fail-safe housing or a door-drop rating.
 
 Custom prepared geometry is labelled nominal-solid, NOT vendor STEP. Supplier

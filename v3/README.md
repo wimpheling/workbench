@@ -106,7 +106,7 @@ The right wall has a supplier-cut 240 × 80 mm makeup-air opening and a cleanabl
 
 Verification measures nominal barrier sections, their specified connections and inlet passages. Supplier seal grade, free section, installed compression, glass setting support, attachment details and wipe-lip preload remain unresolved. An assembled test must establish inward leakage, sufficient extraction and cooling with the actual vacuum, hose, shoe and filter. The model does not certify a completely sealed boundary or fine-dust capture.
 
-Bifolds use the revision C A1 mini PETG guide prototype under continuous 3060 headers: unequal leaves, rear-corner parking, 88° travel and a default 750 mm rear opening. The default leaf height is 682 mm. Five modules per opening carry a bought GN753.1 roller and metal washer/axle; CFG hinges support the leaves. The metal carrier, corner plates, closed tabs and parked operating stops are modeled. Their capacity, catch installation, final fasteners, head sealing and physical load/wear performance remain unconfirmed. See [engineering model](docs/ENGINEERING_MODEL.md).
+Bifolds use the revision C A1 mini PETG guide prototype under steel adapters on continuous 3030 headers: unequal leaves, rear-corner parking, 88° travel and a default 750 mm rear opening. The default leaf height is 674 mm. Five modules per opening carry a bought GN753.1 roller and metal washer/axle; CFG hinges support the leaves. The metal carrier, corner plates, closed tabs and parked operating stops are modeled. Their capacity, catch installation, final fasteners, head sealing and physical load/wear performance remain unconfirmed. See [engineering model](docs/ENGINEERING_MODEL.md).
 
 ## Rear electrical mounting
 
@@ -186,3 +186,5 @@ backend/tests/                    Engineering and HTTP regression tests
 frontend/                         SolidJS / Three.js browser application
 docs/                             Contract, sources and review notes
 ```
+
+Frame headers: square 30×30 left/rear rails and an upright 30×60 front beam share the roof level. See [frame headers and beam assessment](docs/FRAME_HEADERS.md).

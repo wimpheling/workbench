@@ -122,7 +122,7 @@ def test_revision_c_matches_printed_study_and_jambs():
     assert rear["primary_width_mm"] == 347.5
     assert rear["secondary_width_mm"] == 387.5
     assert rear["opening_width_mm"] == 750
-    assert rear["leaf_height_mm"] == 682
+    assert rear["leaf_height_mm"] == 674
     assert rear["reserved_sweep_mm"] == pytest.approx(372.80085, abs=1e-4)
     assert left["reserved_sweep_mm"] == pytest.approx(410.01770, abs=1e-4)
     assert rear["guide"]["module_length_mm"] == pytest.approx(133.84)
@@ -144,7 +144,7 @@ def test_revision_c_matches_printed_study_and_jambs():
     assert sum(p["quantity"] for p in hinges) == 12
 
 
-def test_rail_section_matches_real_print_and_wide_header():
+def test_rail_section_matches_real_print_and_square_header():
     model = build_model()
     wanted = {"left-rear-track", "rail-left-top", "rail-back-top"}
     parts = [p for p in model["parts"] if p["id"] in wanted]
@@ -152,8 +152,8 @@ def test_rail_section_matches_real_print_and_wide_header():
     assert all(s.isValid() and s.Volume() > 0 for s in shapes.values())
     left = shapes["rail-left-top"].BoundingBox()
     rear = shapes["rail-back-top"].BoundingBox()
-    assert (left.xlen, left.zlen) == pytest.approx((60, 30))
-    assert (rear.ylen, rear.zlen) == pytest.approx((60, 30))
+    assert (left.xlen, left.zlen) == pytest.approx((30, 30))
+    assert (rear.ylen, rear.zlen) == pytest.approx((30, 30))
     body = next(p for p in parts if p["id"] == "left-rear-track")
     # Channel, bolt holes and key recesses are cut, not displayed as a solid bar.
     assert shapes[body["id"]].Volume() < body["size"][0] * (46 * 25 - 23 * 21)
@@ -190,15 +190,12 @@ def test_new_mechanism_is_not_given_old_native_solver_pass():
     assert not report["order_ready"]
 
 
-def test_header_relief_removes_real_overlap_without_a_collision_waiver():
+def test_square_headers_need_no_corner_notch():
     model = build_model()
     parts = [p for p in model["parts"] if p["id"] in ("rail-left-top", "rail-back-top")]
     shapes = build_shapes({**model, "parts": parts})
     assert shapes["rail-left-top"].intersect(shapes["rail-back-top"]).Volume() < 1e-5
-    rear = next(p for p in parts if p["id"] == "rail-back-top")
-    rear.pop("cutouts")
-    uncut = build_shapes({**model, "parts": parts})
-    assert uncut["rail-left-top"].intersect(uncut["rail-back-top"]).Volume() > 1000
+    assert all(p["product_code"] == "AST03003004" and not p.get("cutouts") for p in parts)
 
 
 @pytest.mark.parametrize(

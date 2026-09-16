@@ -6,7 +6,7 @@ def complete_front_doors(model):
     from .core import _add, _rotate
     from .profiles import hinge_component
 
-    H = model["parameters"]["height_mm"]
+    H = next(d["opening_height_mm"] for d in model["doors"] if d["type"] == "swing")
     for d in model["doors"]:
         if d["type"] != "swing":
             continue
