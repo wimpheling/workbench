@@ -119,7 +119,7 @@ def test_pose_changes_keep_canonical_meshes_without_changing_design_or_report(cl
     before = {m["id"]: m["positions"] for m in evaluation["meshes"]}
     after = {m["id"]: m["positions"] for m in opened["meshes"]}
     assert after == before
-    assert before["panel-roof"] == after["panel-roof"]
+    assert all(before[pid] == after[pid] for pid in evaluation["model"]["roof_layout"]["panel_ids"])
 
 
 def test_revision_mismatch_blocks_export(client):

@@ -20,7 +20,7 @@ servicing, and duct connections. Assess an alternative outlet location or
 remotely accessible equipment before choosing a right-side assembly.
 Coordinate with [front-door seals](front-door-fit-and-gaskets.md),
 [bifold seals](../in-progress/bifold-door-mechanism.md),
-[the roof and hose interface](roof-panels-and-gasket.md), and
+[the roof and hose interface](../in-progress/roof-panels-and-gasket.md), and
 [rear electrical mounting](../in-progress/back-electrical-mounting-and-cables.md).
 
 ## Implementation plan

@@ -172,22 +172,9 @@ def build_model(parameters=None):
         "panel",
         "walls",
     )
-    part(
-        "panel-roof",
-        [W + 60, D + 60, t],
-        [W / 2, D / 2, H + 30 + t / 2],
-        "panel",
-        "roof",
-        holes=[
-            dict(
-                center=[0, 0],
-                diameter_mm=p["hose_diameter_mm"] + 10,
-                x_mm=(W + 60) / 2,
-                y_mm=(D + 60) / 2,
-                axis="z",
-            )
-        ],
-    )
+    from .roof import add_roof
+
+    roof_layout = add_roof(part, p)
     # Frame joints meet at face centres; all values are local to each physical member.
     lookup = {v["id"]: v for v in parts}
 
@@ -286,6 +273,25 @@ def build_model(parameters=None):
     for index, y in enumerate([D / 3, 2 * D / 3]):
         for side, x in [("left", 0), ("right", W)]:
             joint(f"beam-roof-{index + 1}", f"rail-{side}-top", [x, y, H + 15])
+
+    for i, (a, b, lo, hi) in enumerate(
+        (
+            ("rail-front-top", "beam-roof-1", 0, D / 3 - 15),
+            ("beam-roof-1", "beam-roof-2", D / 3 + 15, 2 * D / 3 - 15),
+            ("beam-roof-2", "rail-back-top", 2 * D / 3 + 15, D),
+        )
+    ):
+        centre = f"beam-roof-centre-{i + 1}"
+        joint(centre, a, [W / 2, lo, H + 15])
+        joint(centre, b, [W / 2, hi, H + 15])
+        connectors = [
+            "roof-joint-front-angle",
+            "roof-joint-strap-cross-1",
+            "roof-joint-strap-cross-2",
+            "roof-joint-strap-rear",
+        ]
+        joints[-2]["connector_ids"] = [connectors[i]]
+        joints[-1]["connector_ids"] = [connectors[i + 1]]
 
     def leaf(
         door, leaf_id, length, pivot, base_deg, normal_offset, zlo, zhi, edge_gap=None, start=0
@@ -415,7 +421,7 @@ def build_model(parameters=None):
             p["hose_diameter_mm"],
             H - p["machine_height_mm"] if H > p["machine_height_mm"] else 1,
         ],
-        [W / 2, D / 2, (H + p["machine_height_mm"]) / 2],
+        [*roof_layout["hose_centre_mm"], (H + p["machine_height_mm"]) / 2],
         "hose-envelope",
         "references",
         physical=False,
@@ -446,8 +452,10 @@ def build_model(parameters=None):
             ),
             (
                 "roof-support",
-                "Confirm roof panel load and extrusion deflection; roof is not a shelf and hose requires independent support.",
-                ["panel-roof", "beam-roof-1", "beam-roof-2"],
+                "Six-panel roof: confirm panel clamps/edge relief, flat strap and front-angle joints, panel load and extrusion deflection, gasket compression and access. Roof is not a shelf; hose needs independent support and measured routing/diameter.",
+                roof_layout["panel_ids"]
+                + roof_layout["centre_support_ids"]
+                + ["beam-roof-1", "beam-roof-2"],
             ),
             (
                 "panel-specification",
@@ -501,6 +509,7 @@ def build_model(parameters=None):
     model = dict(
         units="mm",
         parameters=p,
+        roof_layout=roof_layout,
         parts=parts,
         joints=joints,
         doors=doors,
@@ -575,6 +584,7 @@ def build_model(parameters=None):
                 "swing_latch.py",
                 "rear_electrical.py",
                 "header_layout.py",
+                "roof.py",
                 "verification.py",
             )
         )
@@ -657,6 +667,10 @@ def build_shapes(model, pose=None):
                 axis[p["length_axis"]] = 1
                 shape = shape.rotate((0, 0, 0), tuple(axis), p["section_rotation_deg"])
 
+        elif p.get("geometry", {}).get("kind") == "roof-front-angle":
+            from .roof import front_angle_shape
+
+            shape = front_angle_shape()
         elif p.get("cad_asset") in ("GN_753.1-22-B5-ZL-1.stp", "GN_753.2-4-5-3-AE-NI.stp"):
             from .profiles import roller_component
 

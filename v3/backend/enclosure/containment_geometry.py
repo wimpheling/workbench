@@ -735,33 +735,9 @@ def add_containment(model):
                 performance_confirmed=False,
             )
         )
-    roof = next(q for q in parts if q["id"] == "panel-roof")
-    roof["position"][2] += 2
-    roofids = []
-    roofregions = []
-    for index, (x0, x1, y0, y1) in enumerate(
-        [
-            (-25, W + 25, -25, -5),
-            (-25, W + 25, D + 5, D + 25),
-            (-25, -5, -5, D + 5),
-            (W + 5, W + 25, -5, D + 5),
-        ]
-    ):
-        id = f"roof-perimeter-gasket-{index}"
-        add(id, [x1 - x0, y1 - y0, 2], [(x0 + x1) / 2, (y0 + y1) / 2, H + 31], rubber=True)
-        roofids.append(id)
-        roofregions.append(
-            dict(
-                normal_axis=2,
-                plane_mm=H + 31,
-                min_mm=[x0 + 3, y0 + 3],
-                max_mm=[x1 - 3, y1 - 3],
-                part_ids=[id],
-                required_overlap_mm=1,
-            )
-        )
-    for index, y in enumerate([D / 3, 2 * D / 3]):
-        add(f"roof-beam-bearing-{index}", [W, 30, 2], [W / 2, y, H + 31], rubber=True)
+    from .roof import add_roof_seals
+
+    roof, roofids, roofregions = add_roof_seals(model, add)
     entries.append(
         dict(
             id="roof-frame-seal",
@@ -828,16 +804,17 @@ def add_containment(model):
     outer = hole + 40
     inner = p["hose_diameter_mm"]
     roofz = roof["position"][2] + roof["size"][2] / 2
+    hx, hy = model["roof_layout"]["hose_centre_mm"]
     add(
         "roof-hose-collar",
         [outer, outer, 8],
-        [W / 2, D / 2, roofz + 6],
+        [hx, hy, roofz + 6],
         geometry=dict(kind="annulus", inner_diameter_mm=inner, outer_diameter_mm=outer),
     )
     add(
         "roof-hose-collar-gasket",
         [outer, outer, 2],
-        [W / 2, D / 2, roofz + 1],
+        [hx, hy, roofz + 1],
         rubber=True,
         geometry=dict(kind="annulus", inner_diameter_mm=inner, outer_diameter_mm=outer),
     )
@@ -847,7 +824,8 @@ def add_containment(model):
             kind="annular-collar",
             part_ids=["roof-hose-collar", "roof-hose-collar-gasket"],
             axis=2,
-            center_mm=[W / 2, D / 2],
+            center_mm=[hx, hy],
+            panel_id=roof["id"],
             plane_mm=roofz + 6,
             inner_diameter_mm=inner,
             opening_diameter_mm=hole,

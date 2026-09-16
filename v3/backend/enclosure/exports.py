@@ -764,6 +764,15 @@ def export_file(kind: str, model: dict, report: dict, shapes: dict) -> tuple[byt
         raise ValueError(f"Unsupported export format: {kind}")
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, "w", zipfile.ZIP_DEFLATED) as archive:
+        if "roof_layout" in model:
+            archive.writestr(
+                "roof-layout.json",
+                json.dumps(dict(revision=model["revision"], **model["roof_layout"]), indent=2),
+            )
+            archive.writestr(
+                "six-panel-roof.md",
+                (Path(__file__).resolve().parents[2] / "docs" / "SIX_PANEL_ROOF.md").read_bytes(),
+            )
         if "header_layout" in model:
             archive.writestr(
                 "header-layout.json",

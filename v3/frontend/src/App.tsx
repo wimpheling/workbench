@@ -642,6 +642,16 @@ export default function App() {
                 </For></ul>
               </details>
             </details>
+            <Show when={result()?.model.roof_layout}>
+              <details data-testid="roof-layout-note">
+                <summary>Six removable roof panels</summary>
+                <p>A 2×3 grid retains both full-width crossbars and adds three short 30×30 centre supports. All top surfaces are level; panel seams have 2 mm gaps over supported gasket strips.</p>
+                <p>The hose opening is in the middle-left panel. Its diameter is provisional; measure the actual hose and fittings and check full machine travel.</p>
+                <p>{result()?.model.roof_layout?.removal}</p>
+                <p>EMKA 1016-16 EPDM sponge, 15×3 mm, is the gasket candidate. Nominal 2 mm installed height, panel clamps, joint capacity and access remain unvalidated.</p>
+                <ul><For each={result()?.model.parts.filter(p => result()?.model.roof_layout?.panel_ids.includes(p.id))}>{(p) => <li>{p.id}: {p.size[0].toFixed(1)} × {p.size[1].toFixed(1)} × {p.size[2]} mm</li>}</For></ul>
+              </details>
+            </Show>
             <Show when={result()?.model.rear_electrical}>
               <details data-testid="rear-electrical-note">
                 <summary>Rear controller, STOP holder and cable entry</summary>

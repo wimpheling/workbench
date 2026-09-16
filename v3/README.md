@@ -188,3 +188,7 @@ docs/                             Contract, sources and review notes
 ```
 
 Frame headers: square 30×30 left/rear rails and an upright 30×60 front beam share the roof level. See [frame headers and beam assessment](docs/FRAME_HEADERS.md).
+
+## Six-panel roof
+
+The roof uses a 2×3 panel grid over the existing crossbars and three short 30×30 centre supports. Default panel cuts are 866×578.667 mm (four) and 866×547.667 mm (two), in the current 6 mm wood study. The hose opening moves into the middle-left panel. Gasket compression, panel clamps, connection capacity and actual hose routing remain unvalidated. See [six-panel roof](docs/SIX_PANEL_ROOF.md).
