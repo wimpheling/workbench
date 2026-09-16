@@ -15,10 +15,11 @@ def test_continuous_metal_retention_inventory_and_stack():
             did + "-retention-sleeve-1-0--1",
             did + "-retention-bridge-washer-1-0--1",
             did + "-keeper-strip-continuous--1",
+            did + "-header-adapter-1",
             "rail-left-top" if did == "left-rear" else "rail-back-top",
         ]
         shapes = build_shapes({**model, "parts": [parts[i] for i in ids]})
-        for a, b in ((0, 1), (0, 2), (1, 3)):
+        for a, b in ((0, 1), (0, 2), (1, 3), (3, 4)):
             assert shapes[ids[a]].distance(shapes[ids[b]]) < 1e-5
             assert shapes[ids[a]].intersect(shapes[ids[b]]).Volume() < 1e-5
 

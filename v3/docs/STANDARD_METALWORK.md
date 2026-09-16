@@ -38,8 +38,8 @@ for provenance; they are not the fitted stock parts.
 ## Carrier and closing tabs
 
 The carrier is one native metal solid, cut from an 80×40×6 angle to 18 mm
-width. Two Ø6.5 root holes remain at H−75 and H−105; the Ø4.5 axle hole stays
-at the existing roller datum, and the shelf top remains H−36.1.
+width. Two Ø6.5 root holes remain at H−83 and H−113; the Ø4.5 axle hole stays
+at the existing roller datum, and the shelf top remains H−44.1.
 For stock preparation: both root holes are at mid-cut-width (9 mm),
 38.9 and 68.9 mm below the outer shelf top. The axle hole is at mid-cut-width
 and 21 mm from the outside back face of the long leg (15 mm from its inside

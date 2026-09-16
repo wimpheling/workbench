@@ -3,7 +3,7 @@
 import math
 
 GAP = 5.0
-HEAD = 55.0
+HEAD = 63.0
 BOTTOM = 3.0
 
 
@@ -95,8 +95,8 @@ def add_bifolds(part, leaf, doors, parameters):
         d.update(
             guide_travel_mm=[min(travel), max(travel)],
             track_id=f"{did}-track",
-            guide_height_mm=H - 15,
-            carriage_height_mm=H - 15,
+            guide_height_mm=H - 23,
+            carriage_height_mm=H - 23,
             guide=dict(
                 material="PETG",
                 printer="Bambu A1 mini",
@@ -106,6 +106,8 @@ def add_bifolds(part, leaf, doors, parameters):
                 rail_end_mm=width,
                 mounting_screw_count=count * 6,
                 mounting_rows_mm=[-15, 15],
+                header_mounting_rows_mm=[0],
+                adapter_thickness_mm=8,
                 roller="GN 753.1-22-B5-ZL-1",
                 keeper_washer="M6 DIN 9021",
                 retention="bolted stock-steel keepers and notched angle ends; connection and impact validation pending",
@@ -117,6 +119,26 @@ def add_bifolds(part, leaf, doors, parameters):
         )
 
         def add(suffix, size, local, motion=None, **kwargs):
+            # Preserve leaf/hinge datums; lower the complete guide/carrier stack
+            # by the adapter thickness. Carrier fixes farther down the free stile.
+            if (
+                suffix.startswith(
+                    (
+                        "track",
+                        "retention-",
+                        "alignment-",
+                        "keeper-",
+                        "rail-end-",
+                        "retainer-end-",
+                        "carrier-",
+                        "bearing-",
+                        "axle",
+                        "stem-",
+                    )
+                )
+                or suffix == "carriage"
+            ):
+                local = [local[0], local[1], local[2] - 8]
             anchor = pivot
             if motion == "b":
                 anchor = _add(pivot, _rotate(closed_elbow, base))
@@ -149,6 +171,33 @@ def add_bifolds(part, leaf, doors, parameters):
                 for xx in stations
                 for yy in (-15, 15)
             ]
+            add(
+                f"header-adapter-{i + 1}",
+                [module_length, 46, 8],
+                [x, 23, H - 4],
+                material="steel",
+                product_code="PREPARED-FLAT-46x8-HEADER-ADAPTER",
+                holes=[
+                    dict(
+                        center=[xx, yy],
+                        diameter_mm=4.0,
+                        tap_drill_mm=3.3,
+                        thread="M4 tapped through",
+                    )
+                    for xx in stations
+                    for yy in (-15, 15)
+                ]
+                + [
+                    dict(center=[xx, 0], diameter_mm=5.5, countersink_bottom_diameter_mm=10.5)
+                    for xx in (-module_length / 4, module_length / 4)
+                ],
+                machining="8 mm steel adapter, 46 mm wide. Tap six M4 outer holes; two central M5 countersunk fixings into 3030 underside slot. Fit adapter first, then guide. Threads represented by major-diameter envelopes; tap drill 3.3 mm; engagement, anti-rotation, clamp load and capacity pending.",
+                fastener_schedule=dict(
+                    quantity=2,
+                    screw="M5 countersunk, length to suit 8 mm plate and slot nut; flush underside",
+                    nut="M5 slot-8, supplier confirmation pending",
+                ),
+            )
             reliefs = []
             if i == 0:
                 reliefs.append(-module_length / 2 + 2)
@@ -173,11 +222,11 @@ def add_bifolds(part, leaf, doors, parameters):
                     )
                     for xx in reliefs
                 ],
-                mounting="Six M4 bolts through continuous steel keepers, 23 mm sleeves and 2 mm steel bridge washers into two 3060 underside slot rows",
+                mounting="Six M4 bolts through continuous steel keepers, 23 mm sleeves and 2 mm steel bridge washers into tapped outer rows of the steel adapter; adapter bolts into the single 3030 underside slot",
                 fastener_schedule=dict(
                     quantity=4 if i in (0, count - 1) else 6,
                     screw="M4 x 35 provisional; end positions scheduled on steel end angles",
-                    nut="M4 slot-8; exact section and engagement pending",
+                    nut="M4 tapped steel adapter; confirm engagement and locking",
                 ),
             )
             for j, xx in enumerate(stations):
@@ -255,7 +304,7 @@ def add_bifolds(part, leaf, doors, parameters):
                 fastener_schedule=dict(
                     quantity=2,
                     screw="M4 x 40 DIN7991, 8 mm head, flush countersink; modeled nominal",
-                    nut="M4 slot-8; exact nut/engagement pending",
+                    nut="M4 tapped steel adapter; confirm engagement and locking",
                 ),
             )
             if end == "closed":
@@ -383,7 +432,7 @@ def add_bifolds(part, leaf, doors, parameters):
             cut_length_mm=18,
             holes=[dict(axis="y", center=[0, zz], diameter_mm=6.5) for zz in (1.1, -28.9)]
             + [dict(axis="z", center=[0, 1], diameter_mm=4.5)],
-            mounting="Inside vertical leg seats directly on exterior free-stile face; two M6 holes at H-75 and H-105. M4 axle shelf top H-36.1 retained.",
+            mounting="Inside vertical leg seats directly on exterior free-stile face; two M6 holes at H-83 and H-113. M4 axle shelf top H-44.1 retained.",
             machining="Saw 18 mm slice from 80x40x6 S275JR angle; drill two 6.5 mm root holes and one 4.5 mm axle hole, deburr and protect finish. R7 root modeled, square toes conservative. No milling or welding. Confirm section, washer seats and connection capacity.",
             mass_kg=5.410 * 0.018,
             fastener_schedule=dict(

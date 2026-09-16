@@ -56,7 +56,7 @@ six bars and sixteen M6 fixing sets across both doors. Each secondary leaf's
 meeting stile carries its strip; the free edge wipes the primary stile and
 disengages on opening. Both handles mount directly to their frames.
 
-Buy two 1 m × 38 mm packs and cut each to 688 mm at default height. The
+Buy two 1 m × 38 mm packs and cut each to 680 mm at default height. The
 [manufacturer datasheet](https://www.tesa.com/pt-pt/files/download/10756818,2,tesamoll-universal-doortofloor-foam-copiw-pt-pt.pdf)
 specifies PP film / PU foam and synthetic-rubber adhesive, not EPDM. The
 [manufacturer catalogue](https://www.tesa.com/it-it/files/download/11112368,4,pdf-web-consumercatalogue-lowres.pdf)
@@ -141,8 +141,8 @@ weight nor an upper bound for hinge selection.
 ## Exterior head hood and angled brush study
 
 Moving the former inner cover 6 mm farther inward was rejected because it
-intersects roof beams/brackets. The replacement is an 82 mm high, 2 mm thick
-hood directly on the exterior vertical face of the 3060 header. Its lower edge
+intersects roof beams/brackets. The replacement is a 90 mm high, 2 mm thick
+hood mounted with 15 mm steel spacers to the exterior face of the 3030 header. Its lower edge
 is 3 mm above the leaf top. It needs no beam reliefs; its three M6 fixing holes
 remain at header mid-height, above the protected head gap.
 
