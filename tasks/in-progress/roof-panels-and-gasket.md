@@ -26,13 +26,31 @@ validation remains separate from the accepted layout, per the owner's two-axis
 workflow. Do not equate an approved layout with released fabrication.
 
 Implementation: [PR #21](https://github.com/wimpheling/workbench/pull/21).
-Validation: 208 backend tests passed; 45 frontend tests, TypeScript check and
-production build passed; the six-panel browser test passed. Final default
+Initial 740 mm validation: 208 backend tests passed; 45 frontend tests, TypeScript check and
+production build passed; the six-panel browser test passed. Initial default
 revision `53126a0f69ef8357` reports 1828 pass / 0 fail / 122 unknown. The quotation
 ZIP was checked for six roof cuts and matching layout metadata. The front
 connection clears the door backing and all tested door poses; all new roof
 connectors clear rigid parts in the closed assembly. Physical performance
 and the outstanding detailed design decisions below remain unresolved.
+
+The owner subsequently selected 900 mm as the next frame-height candidate
+(previously 740 mm) for a Makita router, standard Sweepy V2 and Nilfisk AERO
+21-21 PC. Additional height is a design allowance, not verified hose clearance.
+The proposed supported loop/router guide still needs detailed design and
+travel testing; the final hose passage depends on actual outside/fitting sizes.
+
+900 mm validation: the full backend run completed with 207 passes and two
+stale test failures (former wall/roof dimensions and an artificial seal notch
+at the previous roof height). After correcting these tests, `uv run pytest
+--lf -q` passed both; the broader affected-test rerun passed 28 tests. All 209
+backend cases are covered across those runs. Frontend: 45 tests, type check
+and production build pass; two browser tests pass. Model `f5b091170e013fbc`
+reports 1828 pass / 0 fail / 122 unknown, and its supplier ZIP was checked.
+Taller polycarbonate cuts are 779.8 mm high with a 0.8024 mm conservative
+minimum-engagement bound under the existing thermal assumptions. This is a
+reduced margin, not approved retention; no production verifier threshold was
+relaxed. Preview at `http://127.0.0.1:8019` now defaults to 900 mm.
 
 ## Implementation plan
 
@@ -50,6 +68,10 @@ and the outstanding detailed design decisions below remain unresolved.
   - [x] Update panel cuts, support machining, gasket lengths, candidate reference and assembly instructions
   - [x] Run relevant tests, checks and builds and record the results
 
+- [x] Raise the default enclosure to the accepted 900 mm candidate
+  - [x] Propagate taller frame, doors and panel cuts; update current dimension references
+  - [x] Verify the taller assembly and update the local preview and PR
+
 ## Open questions / blockers
 
 - [x] Which panel layout is preferred? Six panels in a 2×3 grid; compact pieces replace the rejected long/four-panel alternatives.
@@ -58,4 +80,4 @@ and the outstanding detailed design decisions below remain unresolved.
 - [ ] Select actual panel clamps, their positions and any edge relief; verify independent release and physical access from the front/left
 - [ ] Confirm wood grade/thickness, panel and beam stiffness, strap/angle details, fasteners and joint capacity
 - [ ] Confirm gasket compression, adhesive, clamp pitch, butt-junction preparation and physical sealing
-- [ ] Measure actual hose/connector dimensions, independent support, bend radius, slack and full machine travel before releasing its cut
+- [ ] Measure actual hose/connector dimensions, independent support, bend radius, slack and full machine travel before releasing its cut; confirm the 900 mm height with supported-loop routing and reassess taller-door loads

@@ -704,8 +704,8 @@ export default function App() {
                   </For>
                 </ul>
                 <p>
-                  40 K thermal excursion allowance; at default dimensions,
-                  3 mm nominal slot engagement and 2 mm reserve per edge.
+                  40 K thermal excursion allowance. Slot engagement and expansion
+                  reserves recalculate for each pane; retention remains unapproved.
                   Frame assembled around the panel; no Lexan drilling.
                 </p>
               </details>

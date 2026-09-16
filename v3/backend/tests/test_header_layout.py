@@ -5,8 +5,9 @@ from enclosure.profiles import extrusion
 from enclosure.verification import check_solid_pair
 
 
-def test_header_sections_are_unscaled_and_roof_is_level():
-    m = build_model()
+@pytest.mark.parametrize("height", [740, 900])
+def test_header_sections_are_unscaled_and_roof_is_level(height):
+    m = build_model({"height_mm": height})
     by = {p["id"]: p for p in m["parts"]}
     ids = ["rail-front-top", "rail-left-top", "rail-back-top", "rail-right-top"]
     shapes = build_shapes({"parts": [by[i] for i in ids]})
@@ -20,7 +21,7 @@ def test_header_sections_are_unscaled_and_roof_is_level():
         )
         assert not p.get("cutouts")
     assert by["rail-front-top"]["size"][1:] == [30, 60]
-    assert m["doors"][0]["opening_height_mm"] == 710
+    assert m["doors"][0]["opening_height_mm"] == height - 30
 
 
 @pytest.mark.parametrize("fraction", [0, 0.25, 0.5, 0.75, 1])

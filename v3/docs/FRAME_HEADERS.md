@@ -5,7 +5,7 @@ The front member is an intact AST03006006 section rotated upright: 30 mm
 front-to-back and 60 mm tall. All top surfaces remain at enclosure height +30.
 The front clear opening is therefore height −30; its doors, hinges, frame
 corner plates, closing strips and meeting boots follow that opening datum.
-Default front opening: 710 mm. Roof crossbars now meet both side rails directly.
+Default front opening: 870 mm. Roof crossbars now meet both side rails directly.
 Left/rear fixed panels lap the full 30 mm top frame border. The former rear
 corner notch and front left-header foam plug are removed.
 
@@ -24,7 +24,7 @@ Each guide module mounts beneath a 46 mm wide, 8 mm thick steel adapter:
   rotation; stiffness and connection capacity remain unvalidated.
 
 The entire roller/carrier stack is 8 mm lower. Leaf tops are also 8 mm lower
-so the stock-angle root clears the stile; default leaf height is 674 mm.
+so the stock-angle root clears the stile; default leaf height is 834 mm.
 The guide cavity, print geometry and horizontal linkage remain unchanged.
 The exterior head hood becomes 90 mm high with three 15 mm steel spacers to
 the narrower header face. It retains 3 mm clearance above the leaf and the

@@ -17,7 +17,7 @@ def default_parameters():
     return dict(
         width_mm=1674.0,
         depth_mm=1649.0,
-        height_mm=740.0,
+        height_mm=900.0,
         panel_thickness_mm=6.0,
         glass_thickness_mm=4.0,
         clearance_mm=4.0,

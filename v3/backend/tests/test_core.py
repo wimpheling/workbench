@@ -132,12 +132,12 @@ def test_front_astragal_sequence_is_enforced():
 def test_fixed_panels_lap_frame_and_roof_has_gasket_bearing():
     model = build_model()
     parts = {p["id"]: p for p in model["parts"]}
-    assert parts["panel-right"]["size"][1:] == [1709, 800]
+    assert parts["panel-right"]["size"][1:] == [1709, 960]
     assert parts["panel-right"]["position"][0] - parts["panel-right"]["size"][0] / 2 == 1706
     assert (
         parts["panel-roof-left-front"]["position"][2]
         - parts["panel-roof-left-front"]["size"][2] / 2
-        == 772
+        == 932
     )
     assert len([p for p in parts if p.startswith("roof-perimeter-gasket-")]) == 4
 

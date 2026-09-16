@@ -9,6 +9,8 @@ test("six-panel roof appears with its cuts and can be hidden", async ({ page }) 
   expect((await preview).ok()).toBe(true);
   await expect(page.getByRole("status")).toContainText("Preview only", { timeout: 120000 });
   const { model } = await (await page.request.post("/api/preview", { data: { parameters: { width_mm: 1680 } } })).json();
+  expect(model.parameters.height_mm).toBe(900);
+  await expect(page.getByRole("spinbutton", { name: "Internal height", exact: true })).toHaveValue("900");
   expect(model.roof_layout.panel_ids).toHaveLength(6);
   expect(model.roof_layout.centre_support_ids).toHaveLength(3);
   expect(model.roof_layout.hose_panel_id).toBe("panel-roof-left-middle");

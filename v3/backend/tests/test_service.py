@@ -27,6 +27,7 @@ def evaluation(client):
 def test_defaults_and_real_geometry(client, evaluation):
     assert client.get("/api/health").json()["status"] == "ok"
     assert client.get("/api/defaults").json()["width_mm"] == 1674
+    assert client.get("/api/defaults").json()["height_mm"] == 900
     assert evaluation["model"]["revision"] == evaluation["report"]["revision"]
     assert evaluation["mesh_pose"] == "closed"
     assert len(evaluation["meshes"]) == len(evaluation["model"]["parts"])

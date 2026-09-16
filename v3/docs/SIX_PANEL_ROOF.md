@@ -9,7 +9,7 @@ crossbars or outer frame rather than crossing another extrusion. Every beam
 top stays at H+30; all six panel undersides are at H+32 in the nominal gasket
 study. The outer frame and upright 30×60 front beam are unchanged.
 
-Default enclosure: W=1674, D=1649, H=740, panel thickness 6 mm. Keep the current
+Default enclosure: W=1674, D=1649, H=900, panel thickness 6 mm. Keep the current
 wood material study; grade, flatness and stiffness require confirmation.
 Panel-to-panel seams have 2 mm gaps centred on supporting beams.
 
@@ -23,6 +23,28 @@ Panel-to-panel seams have 2 mm gaps centred on supporting beams.
 These are model dimensions, not rounding or fabrication-tolerance instructions.
 The quotation includes six separate panel drawings/cut entries and the three
 additional profile lengths. Cuts recalculate with enclosure dimensions.
+
+## Height and hose routing
+
+The owner selected a 900 mm frame-height candidate, 160 mm above the earlier
+740 mm design, for additional hose-routing space. Frame tops are at 930 mm;
+panel undersides are at 932 mm and panel tops at 938 mm with the default gasket
+and panel thickness. Crossbar undersides are at 900 mm; underside straps
+extend to 897 mm. The deeper front header has an 870 mm clear opening.
+
+The actual setup is an original Shapeoko 5 Pro with a Makita trim router,
+standard Sweepy V2 and Nilfisk AERO 21-21 PC. Keep the current 600 mm machine
+envelope as an explicit unconfirmed assumption; the additional space is not
+a verified hose-motion allowance. A supported loop and guide near the router
+are the proposed routing concept, but support hardware and flexible hose
+geometry are not modeled. Validate X/Y/Z travel, homing and tool-change
+positions for tension, bending, droop and contact before approving the height.
+The taller doors also need renewed mass, hinge/guide load and sag assessment.
+The polycarbonate infill cuts are 779.8 mm high: the thermal study increases
+vertical edge reserve to 2.1 mm, leaving 2.9 mm nominal engagement and a
+0.8024 mm conservative minimum-engagement bound. This is less than the earlier
+1 mm test margin; physical retention remains unapproved. No verification
+threshold or assumed slot depth has been relaxed to accept the taller panes.
 
 ## Support joints and removal
 
