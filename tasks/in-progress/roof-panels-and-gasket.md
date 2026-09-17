@@ -54,6 +54,12 @@ relaxed. Preview at `http://127.0.0.1:8019` now defaults to 900 mm.
 
 ## Implementation plan
 
+- [ ] Integrate shared bridge clamps into the roof
+  - [x] Research Reiman hardware, alternative panel retainers and drawing/STEP availability; record [supplier findings](../../v3/docs/ROOF_CLAMP_SOURCING.md)
+  - [ ] Detail the proposed fabricated bridge plate, sourced slot nuts and fasteners
+  - [ ] Model clamp stations, panel reliefs, sealed screw passages and perimeter retention
+  - [ ] Verify removal access, geometry and updated sealing assumptions; update drawings and supplier pack
+
 - [x] Agree on the roof layout and handling concept
   - [x] Select six compact panels while retaining both existing crossbars
   - [x] Define supported seams, three centre members and nominal joint connections

@@ -68,6 +68,11 @@ released. Plan to remove left panels first so the open roof provides access
 towards the right, which is against a wall. Actual reach and removal clearance
 need a physical check; six small panels do not prove access to every fixing.
 
+The requested shared bridge-clamp integration is at the supplier-research
+stage. See [clamp sourcing and integration requirements](ROOF_CLAMP_SOURCING.md)
+for Reiman references, CAD availability and the proposed fabricated-plate
+direction. Clamp geometry and its sealed fixing passages remain pending.
+
 ## Gasket grid
 
 Candidate: [EMKA 1016-16](https://www.emka.com/products/1016-16), self-adhesive
