@@ -19,7 +19,10 @@ submit them through a pull request targeting `main`. This includes code,
 documentation, and task updates. Do not commit or push changes directly to
 `main`.
 
-Start each worktree from up-to-date `main`. Give concurrent tasks or agents
+Keep follow-up changes in the current open PR and its worktree. Do not create
+a new PR until the current one is closed, unless the user explicitly asks.
+
+Start each new worktree from up-to-date `main`. Give concurrent tasks or agents
 separate branches and worktrees. Keep changes scoped to the assigned task,
 commit and push the branch, and include the outcome and validation results
 in the PR. Merge when the user authorizes it, then update local `main`.
