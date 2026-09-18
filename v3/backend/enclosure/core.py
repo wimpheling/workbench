@@ -154,7 +154,13 @@ def build_model(parameters=None):
         for side, x in [("left", -15), ("right", W + 15)]:
             part(f"rail-{side}-{level}", [30, D, 30], [x, D / 2, z])
     for index, y in enumerate([D / 3, 2 * D / 3]):
-        part(f"beam-roof-{index + 1}", [W, 30, 30], [W / 2, y, H + 15], assembly="roof")
+        part(
+            f"beam-roof-{index + 1}",
+            [W, 60, 30],
+            [W / 2, y, H + 15],
+            assembly="roof",
+            product_code="AST03006006",
+        )
     part("post-left-middle", [30, 30, H], [-15, left_jamb, H / 2])
     part("post-back-middle", [30, 30, H], [rear_jamb, D + 15, H / 2])
     part("panel-right", [t, D, H], [W + 30 + t / 2, D / 2, H / 2], "panel", "walls")
@@ -276,9 +282,9 @@ def build_model(parameters=None):
 
     for i, (a, b, lo, hi) in enumerate(
         (
-            ("rail-front-top", "beam-roof-1", 0, D / 3 - 15),
-            ("beam-roof-1", "beam-roof-2", D / 3 + 15, 2 * D / 3 - 15),
-            ("beam-roof-2", "rail-back-top", 2 * D / 3 + 15, D),
+            ("rail-front-top", "beam-roof-1", 0, D / 3 - 30),
+            ("beam-roof-1", "beam-roof-2", D / 3 + 30, 2 * D / 3 - 30),
+            ("beam-roof-2", "rail-back-top", 2 * D / 3 + 30, D),
         )
     ):
         centre = f"beam-roof-centre-{i + 1}"
@@ -446,7 +452,7 @@ def build_model(parameters=None):
             ),
             (
                 "roof-support",
-                "Six-panel roof: confirm panel clamps/edge relief, flat strap and front-angle joints, panel load and extrusion deflection, gasket compression and access. Roof is not a shelf; hose needs independent support and measured routing/diameter.",
+                "Six-panel roof: confirm independent panel fixings, purchased support-bracket joints, panel load and extrusion deflection, gasket compression and access. Roof is not a shelf; hose needs independent support and measured routing/diameter.",
                 roof_layout["panel_ids"]
                 + roof_layout["centre_support_ids"]
                 + ["beam-roof-1", "beam-roof-2"],

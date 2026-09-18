@@ -8,30 +8,32 @@ reference and specify the vacuum-hose opening and its interface.
 
 ## Discussion
 
-The owner chose six panels after comparing a 2×2 arrangement with the existing
-roof structure. Keep both full-width crossbars and add three short front-to-back
-30×30 members at the centreline. No extrusions cross at the same height.
-Default panel cuts: four 866×578.667×6 and two 866×547.667×6 mm, with 2 mm seams.
-The middle-left panel carries the offset hose opening; actual hose dimensions
-and full-travel routing remain unconfirmed. The old 100 mm hose parameter is
-explicitly a placeholder, not a Nilfisk specification.
+The roof uses six rectangular wood panels in a 2×3 grid. Default panel cuts
+remain four 866×578.667×6 and two 866×547.667×6 mm, with 2 mm seams. The hose
+opening is in the middle-left panel; the 100 mm hose parameter remains an
+explicit placeholder pending real measurements.
 
-The owner requires metal parts to arrive ready to assemble: no metal cutting or
-drilling. Six intact Reiman CBR3030 brackets now replace the earlier custom
-straps/front angle. OBO 3403092 stock washers form the shared/perimeter clamps,
-with Reiman BTN08M6 nuts and standard M6 screw candidates. Default layout is
-25 shared and 34 perimeter clamps; 71 nuts/screws include the support brackets.
-The 7 mm wood holes/edge reliefs are modeled. Fasteners are scheduled but their
-solids, final lengths and installed engagement remain unvalidated.
+The owner rejected shared washer clamps and accepted independent panel
+fastenings. Staggering alone cannot put ordinary through-holes from both
+panels over a single slot. The two crossbars and three short centre members
+therefore change to horizontal 60×30 AST03006006 profiles with two upward
+slots, one per adjacent panel. The outer frame and roof height are unchanged.
+The centre pieces shorten to 519.667 / 489.667 / 519.667 mm. The complete frame
+now has six 30×60 extrusions including the existing upright front header.
 
-The seal changed from a central 15×3 mm strip to six individual loops of
-6×3 mm adhesive EPDM sponge (Rubber & Sponge 200-3-6-10-2), nominally compressed
-to 2 mm. Screw axes stay outside the loops. Straight runs bear on the supplier
-extrusion's flat lands; open corner-post ends and 2 mm radiused beam butt joints
-remain explicit gasket-bridging studies. Clamp force, washer bending, wood
-bearing, compression and physical reach remain unvalidated. Removal uses a
-tool and releases neighboring edges at shared stations; this is not independent
-quick-release retention. No custom metalwork is required for the roof hardware.
+There are 84 individual panel fixings (14 per panel), with fully contained
+7 mm bores and no seam notches. Every washer bears on one panel only; removing
+one panel leaves neighboring fixings installed. Six purchased CBR3030 brackets
+connect the centre members. Catalogue-specified M6×14 screws and ISO 7089 M6
+washers replace the former bracket screw candidate. No roof metal cutting,
+drilling or tab removal is required by the owner.
+
+Six 6×3 mm EPDM gasket loops follow the separate fixing slots, nominally
+compressed to 2 mm. Screw passages remain outside the loops. Open corner-post
+ends and 2 mm radiused butt joints remain explicit gasket-bridging studies.
+Physical screw/nut seating, wood bearing, pressure distribution and access
+remain unvalidated. Wider supports and more hardware are the cost of genuinely
+independent panel retention.
 See [roof design](../../v3/docs/SIX_PANEL_ROOF.md). Detailed product/physical
 validation remains separate from the accepted layout, per the owner's two-axis
 workflow. Do not equate an approved layout with released fabrication.
@@ -63,7 +65,7 @@ minimum-engagement bound under the existing thermal assumptions. This is a
 reduced margin, not approved retention; no production verifier threshold was
 relaxed. Preview at `http://127.0.0.1:8019` now defaults to 900 mm.
 
-2026-09-18 stock-hardware validation: full `uv run pytest` completed with
+Previous shared-clamp prototype validation (2026-09-18): full `uv run pytest` completed with
 208 passes and two failures in tests corrected during that run (the former
 single-hole volume assertion and an empty-result CAD subtraction in the new
 bearing test). Final roof/core/export rerun: **44 passed**, including a new
@@ -78,12 +80,27 @@ for hitting the slot floor; M6×16 roof and M6×12 bracket candidates clear it.
 Actual nut engagement, head seating and tolerance stacks still need approval.
 Local preview refreshed at `http://127.0.0.1:8019`.
 
+Independent-fixing validation (2026-09-18): full `uv run pytest` passed all
+212 tests (two dependency deprecation warnings). Ruff and diff checks pass.
+The default model
+`d54b8f96487b8692` reports **2143 pass / 0 fail / 122 unknown**. Each of the
+six panels has 14 individual fixings and clears neighboring installed washers
+in the upward-removal test. All wood bores are fully inside the rectangular
+blanks. The supplier pack includes updated quantities, the intact 30×60
+profile STEP and Wolweiss catalogue page 168 specifying bracket M6×14 screws
+with ISO 7089 M6 washers. This supersedes the earlier M6×12 bracket candidate.
+Frontend: 45 tests, TypeScript check and production build pass; the updated
+roof browser test passes. Drawings, source-file contents and revision
+consistency were checked. Physical seating, sealing, reach and the nominal
+1 mm washer-to-neighbor clearance still require assembly validation.
+
 ## Implementation plan
 
-- [ ] Integrate shared bridge clamps into the roof
+- [ ] Integrate independently removable roof panels
   - [x] Research Reiman hardware, alternative panel retainers and drawing/STEP availability; record [supplier findings](../../v3/docs/ROOF_CLAMP_SOURCING.md)
   - [x] Replace the rejected custom plate with stock OBO washers, Reiman nuts and standard screw candidates; retain source drawings and CAD provenance
-  - [x] Model shared/perimeter clamp stations and wood reliefs; route closed gasket loops beside the screw passages
+  - [x] Replace shared clamps/edge reliefs with individual full wood bores and two-slot internal supports
+  - [x] Verify independent lifting, updated frame geometry, gasket loops, exports and preview
   - [x] Replace custom roof support metalwork with six intact vendor-STEP CBR3030 brackets
   - [x] Verify geometry and updated sealing assumptions; update drawings, supplier pack and browser preview
   - [ ] Validate physical reach, removal sequence and installed screw/nut seating
@@ -109,10 +126,10 @@ Local preview refreshed at `http://127.0.0.1:8019`.
 ## Open questions / blockers
 
 - [x] Which panel layout is preferred? Six panels in a 2×3 grid; compact pieces replace the rejected long/four-panel alternatives.
-- [x] What are the initial material and support choices? Retain the current 6 mm wood study, both crossbars and three additional 30×30 members.
+- [x] What are the initial material and support choices? Retain the current 6 mm wood study, both crossbars and three centre members, now horizontal 60×30 for separate slots.
 - [x] Where is the provisional hose opening? Middle-left panel, clear of the frame and seams.
-- [x] Select stock clamp candidates, nominal stations and wood reliefs; shared washers release both adjacent edges
-- [ ] Verify physical access from the front/left, neighboring-panel support and repeated nut handling
+- [x] Select individual fixings and full wood bores; one panel per fastener
+- [ ] Verify physical access from the front/left, independent lifting and repeated nut handling
 - [ ] Confirm wood grade/thickness, panel and beam stiffness, purchased bracket capacity, fasteners and joint capacity
 - [ ] Confirm gasket compression, adhesive, clamp pitch, butt-junction preparation, bridging over post ends/radiused beam joints and physical sealing
 - [ ] Measure actual hose/connector dimensions, independent support, bend radius, slack and full machine travel before releasing its cut; confirm the 900 mm height with supported-loop routing and reassess taller-door loads

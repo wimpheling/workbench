@@ -793,7 +793,13 @@ def export_file(kind: str, model: dict, report: dict, shapes: dict) -> tuple[byt
                     indent=2,
                 ),
             )
-            for source_file in ("OBO-3403092.pdf", "BTN.pdf", "CBR3030.step"):
+            for source_file in (
+                "OBO-3403092.pdf",
+                "BTN.pdf",
+                "CBR3030.step",
+                "AST03006006.step",
+                "Wolweiss-bracket-fasteners.pdf",
+            ):
                 archive.write(
                     Path(__file__).parent / "assets" / source_file,
                     f"roof-supplier-sources/{source_file}",

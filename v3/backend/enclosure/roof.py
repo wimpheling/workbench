@@ -11,6 +11,8 @@ WASHER_SOURCE = "https://www.obo.pt/datasheet/?file=WS_M6_G30_G-3403092-pt_PT.pd
 NUT_SOURCE = "https://reiman.pt/pt/wlw-btn08m6-btn08m6-m6-slot-8-t-nut/"
 BRACKET_SOURCE = "https://reiman.pt/pt/wlw-cbr3030-cbr3030-30x30-bracket/"
 CLAMP_PITCH = 250.0
+SLOT_OFFSET = 15.0
+STAGGER = 12.0
 BRACKET_SEAT = 12.43933982822  # measured mounting planes in intact supplier STEP
 
 
@@ -33,13 +35,14 @@ def add_roof(part, p):
     ]
     supports = []
     for i, (a, b) in enumerate(
-        ((0, d / 3 - 15), (d / 3 + 15, 2 * d / 3 - 15), (2 * d / 3 + 15, d))
+        ((0, d / 3 - 30), (d / 3 + 30, 2 * d / 3 - 30), (2 * d / 3 + 30, d))
     ):
         row = part(
             f"beam-roof-centre-{i + 1}",
-            [30, b - a, 30],
+            [60, b - a, 30],
             [w / 2, (a + b) / 2, h + 15],
             assembly="roof",
+            product_code="AST03006006",
         )
         supports.append(row["id"])
     panels = []
@@ -54,7 +57,7 @@ def add_roof(part, p):
                 "roof",
             )
             row["mounting"] = (
-                "Remove stock M6 washer clamps before lifting. Shared clamps retain both adjacent edges; support neighboring panels during removal. Perimeter screws pass through wood only. No metal drilling or cutting."
+                "Remove this panel’s own screws and washers, then lift vertically. Every fixing bears on one panel only. Wood holes are wholly inside the rectangular blank. No neighboring fasteners need releasing; no metal drilling or cutting."
             )
             panels.append(row["id"])
             panel_rows.append(row)
@@ -72,7 +75,7 @@ def add_roof(part, p):
     # Intact purchased brackets in plan, on the right side of each centre beam.
     joint_ids = []
     for i, (lo, hi) in enumerate(
-        ((0, d / 3 - 15), (d / 3 + 15, 2 * d / 3 - 15), (2 * d / 3 + 15, d))
+        ((0, d / 3 - 30), (d / 3 + 30, 2 * d / 3 - 30), (2 * d / 3 + 30, d))
     ):
         ends = []
         for end, y, turn in (("front", lo, -90), ("rear", hi, 90)):
@@ -81,7 +84,7 @@ def add_roof(part, p):
                 pid,
                 [29.12132034356, 29.12132034356, 26],
                 [
-                    w / 2 + 15 + BRACKET_SEAT,
+                    w / 2 + 30 + BRACKET_SEAT,
                     y + (BRACKET_SEAT if end == "front" else -BRACKET_SEAT),
                     h + 15,
                 ],
@@ -96,7 +99,8 @@ def add_roof(part, p):
                 machining="Purchased complete; no drilling, cutting or tab removal. Side-slot mounting; verify tool access and joint capacity.",
                 fastener_schedule=dict(
                     quantity=2,
-                    screw="ISO 4762 M6x12 candidate",
+                    screw="ISO 4762 M6x14 with ISO 7089 M6 washer (Wolweiss catalogue p168)",
+                    washer="ISO 7089 M6",
                     nut="Wolweiss BTN08M6",
                     status="Length, seating and thread engagement require assembly check; fasteners not modeled",
                 ),
@@ -104,24 +108,26 @@ def add_roof(part, p):
             ends.append(pid)
         joint_ids.append(ends)
 
-    # Circular stock washers bridge each shared seam; identical washers retain
-    # the perimeter via holes through wood. All fixing axes lie outside seals.
-    xs, ys = [-15, w / 2, w + 15], [-15, d / 3, 2 * d / 3, d + 15]
-    fixing_points = []
-    for y in ys:
-        for a, b in zip(xs, xs[1:]):
-            fixing_points += [(x, y) for x in stations(a, b)]
-    for x in xs:
-        for a, b in zip(ys, ys[1:]):
-            fixing_points += [(x, y) for y in stations(a, b)]
+    # Each rectangular panel gets its own slot on the 60 mm internal members.
+    # Along a seam, the two independent rows are staggered by 24 mm.
     clamps = []
-    for index, (x, y) in enumerate(fixing_points, 1):
-        retained = []
-        for row in panel_rows:
-            px, py = row["position"][:2]
-            sx, sy = row["size"][:2]
-            if abs(x - px) <= sx / 2 + 3.5 and abs(y - py) <= sy / 2 + 3.5:
-                retained.append(row["id"])
+    for col, side in enumerate(("left", "right")):
+        for bay_index, bay in enumerate(("front", "middle", "rear")):
+            row = next(q for q in panel_rows if q["id"] == f"panel-roof-{side}-{bay}")
+            x0, x1 = ((-15, w / 2 - SLOT_OFFSET), (w / 2 + SLOT_OFFSET, w + 15))[col]
+            y0, y1 = (
+                (-15, d / 3 - SLOT_OFFSET),
+                (d / 3 + SLOT_OFFSET, 2 * d / 3 - SLOT_OFFSET),
+                (2 * d / 3 + SLOT_OFFSET, d + 15),
+            )[bay_index]
+            row["roof_slot_bounds_mm"] = [x0, x1, y0, y1]
+            points = [(x - STAGGER, y0) for x in stations(x0, x1)]
+            points += [(x + STAGGER, y1) for x in stations(x0, x1)]
+            points += [(x0, y - STAGGER) for y in stations(y0, y1)]
+            points += [(x1, y + STAGGER) for y in stations(y0, y1)]
+            for x, y in points:
+                px, py = row["position"][:2]
+                sx, sy = row["size"][:2]
                 row.setdefault("holes", []).append(
                     dict(
                         center=[x - px, y - py],
@@ -129,46 +135,45 @@ def add_roof(part, p):
                         diameter_mm=7,
                         x_mm=x - px + sx / 2,
                         y_mm=y - py + sy / 2,
-                        purpose="M6 fixing clearance; circle intersecting panel edge defines local relief",
+                        purpose="Independent M6 panel fixing; full bore in wood",
                     )
                 )
                 row["machining"] = (
-                    "Wood only: 7 mm fixing holes and edge reliefs at declared centres. Edge circles may have centres outside the rectangular blank; remove only their intersection with wood. Hose cut only where specified. No metalwork."
+                    "Rectangular wood panel: 7 mm through-holes for individual fixings; no seam notches. Hose cut only where specified. No metalwork."
                 )
-        pid = f"roof-clamp-{index:02d}"
-        part(
-            pid,
-            [30, 30, 1.3],
-            [x, y, h + 30 + GASKET_INSTALLED + t + 0.65],
-            "hardware",
-            "roof",
-            material="zinc-plated steel",
-            supplier="OBO Bettermann Portugal / distributor",
-            product_code="3403092",
-            source=WASHER_SOURCE,
-            geometry=dict(kind="annulus", outer_diameter_mm=30, inner_diameter_mm=6.4),
-            geometry_fidelity="supplier-dimensions-reconstruction",
-            retained_panel_ids=retained,
-            machining="Purchased WS M6 G30 G washer, 30 x 6.4 x 1.3 mm; no metal machining. Light-duty clamp application requires bearing/stiffness and tightening validation.",
-            fastener_schedule=dict(
-                quantity=1,
-                screw="ISO 4762 M6; M6x16 candidate for 6 mm wood",
-                nut="Wolweiss BTN08M6",
-                nut_source=NUT_SOURCE,
-                status="Select length for actual wood/gasket stack and nut seating; fasteners not modeled",
-            ),
-        )
-        clamps.append(
-            dict(
-                part_id=pid,
-                centre_mm=[x, y],
-                panel_ids=retained,
-                kind="shared" if len(retained) == 2 else "perimeter",
-            )
-        )
+                pid = f"roof-clamp-{len(clamps) + 1:02d}"
+                part(
+                    pid,
+                    [30, 30, 1.3],
+                    [x, y, h + 30 + GASKET_INSTALLED + t + 0.65],
+                    "hardware",
+                    "roof",
+                    material="zinc-plated steel",
+                    supplier="OBO Bettermann Portugal / distributor",
+                    product_code="3403092",
+                    source=WASHER_SOURCE,
+                    geometry=dict(kind="annulus", outer_diameter_mm=30, inner_diameter_mm=6.4),
+                    geometry_fidelity="supplier-dimensions-reconstruction",
+                    retained_panel_ids=[row["id"]],
+                    machining="Purchased 30 x 6.4 x 1.3 mm load-spreading washer. Bears on this panel only; no metal machining. Tightening and wood bearing require validation.",
+                    fastener_schedule=dict(
+                        quantity=1,
+                        screw="ISO 4762 M6; M6x16 candidate for 6 mm wood",
+                        nut="Wolweiss BTN08M6",
+                        nut_source=NUT_SOURCE,
+                        status="Select length for actual wood/gasket stack and nut seating; fasteners not modeled",
+                    ),
+                )
+                clamps.append(
+                    dict(part_id=pid, centre_mm=[x, y], panel_ids=[row["id"]], kind="individual")
+                )
     return dict(
         panel_ids=panels,
         centre_support_ids=supports,
+        internal_support_ids=["beam-roof-1", "beam-roof-2"] + supports,
+        internal_support_section_mm=[60, 30],
+        fixing_method="One panel per fixing; separate upward slots in horizontal 60x30 internal supports",
+        fixing_stagger_mm=2 * STAGGER,
         support_connector_ids=joint_ids,
         clamps=clamps,
         clamp_pitch_limit_mm=CLAMP_PITCH,
@@ -178,7 +183,7 @@ def add_roof(part, p):
                 quantity=len(clamps),
                 supplier="OBO Bettermann",
                 source=WASHER_SOURCE,
-                status="Stock washer used as clamp; application unvalidated",
+                status="Individual panel load-spreading washer; tightening/wood bearing unvalidated",
             ),
             dict(
                 product_code="CBR3030",
@@ -201,10 +206,16 @@ def add_roof(part, p):
                 status="M6x16 candidate only at 6 mm wood; length/grade to confirm",
             ),
             dict(
+                product_code="ISO7089-M6",
+                quantity=12,
+                supplier="Fastener retailer",
+                status="One stock flat washer per support-bracket screw; Wolweiss catalogue p168",
+            ),
+            dict(
                 product_code="ISO4762-M6-BRACKETS",
                 quantity=12,
                 supplier="Fastener retailer",
-                status="M6x12 candidate; length/grade to confirm",
+                status="M6x14 plus ISO 7089 M6 washer per Wolweiss catalogue p168; installed seating/engagement to confirm",
             ),
         ],
         grid=[2, 3],
@@ -225,7 +236,7 @@ def add_roof(part, p):
                 "post-right-back",
             ],
         ),
-        removal="Remove screws and washers, then lift panels; a circular washer cannot rotate clear. Remove left panels first to access right-panel fixings from the open roof. Shared clamps release both neighboring edges; support panels during removal. Retrieve and reseat loose slot nuts. Disconnect/support the hose before removing the middle-left panel. Actual reach and fixing access require measurement.",
+        removal="Remove only the selected panel’s screws and washers, then lift it vertically. Neighboring panels remain fastened. Remove left panels first to reach right-panel fixings from the open roof. Retrieve and reseat loose slot nuts. Disconnect/support the hose before removing the middle-left panel. Physical reach and nut handling require validation.",
         status="Design prototype; panel clamping, connections, stiffness, seal compression and actual hose routing remain unvalidated",
     )
 
@@ -237,15 +248,15 @@ def add_roof_seals(model, add):
     offsets 6..12 on a 15 mm half-face. Screw bores (radius 3.5) stay outside.
     """
     p = model["parameters"]
-    w, d, h = (p[k] for k in ("width_mm", "depth_mm", "height_mm"))
-    xs, ys = [-15, w / 2, w + 15], [-15, d / 3, 2 * d / 3, d + 15]
+    h = p["height_mm"]
     ids, regions = [], []
     loops = []
     for col, side in enumerate(("left", "right")):
         for row, bay in enumerate(("front", "middle", "rear")):
-            x0, x1 = xs[col] + 6, xs[col + 1] - 6
-            y0, y1 = ys[row] + 6, ys[row + 1] - 6
             panel_id = f"panel-roof-{side}-{bay}"
+            panel = next(q for q in model["parts"] if q["id"] == panel_id)
+            xa, xb, ya, yb = panel["roof_slot_bounds_mm"]
+            x0, x1, y0, y1 = xa + 6, xb - 6, ya + 6, yb - 6
             loop = []
             strips = [
                 ("front", x0, x1, y0, y0 + GASKET_WIDTH),

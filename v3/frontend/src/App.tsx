@@ -645,7 +645,7 @@ export default function App() {
             <Show when={result()?.model.roof_layout}>
               <details data-testid="roof-layout-note">
                 <summary>Six removable roof panels</summary>
-                <p>A 2×3 grid retains both full-width crossbars and adds three short 30×30 centre supports. All top surfaces are level; panel seams have 2 mm gaps. Stock M6 washers bridge shared seams and secure perimeter edges.</p>
+                <p>The five internal roof supports are horizontal 60×30 profiles with two upward slots. Each rectangular panel uses its own slot and through-hole fixings; no washer clamps two panels. The outer frame and roof height stay unchanged, with 2 mm panel seams.</p>
                 <p>The hose opening is in the middle-left panel. Its diameter is provisional; measure the actual hose and fittings and check full machine travel.</p>
                 <p>{result()?.model.roof_layout?.removal}</p>
                 <p>Each panel has an 6×3 mm EPDM sponge gasket loop beside the slots, clear of the screws. Reiman CBR3030 brackets connect the centre supports without metal machining. Nominal 2 mm gasket height, clamp pitch, fastener lengths, joint capacity and access require validation.</p>

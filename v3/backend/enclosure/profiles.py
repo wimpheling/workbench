@@ -9,6 +9,7 @@ ASSET_SHA256 = hashlib.sha256(
     ASSET.read_bytes()
     + (ASSET.parent / "CJP.pdf").read_bytes()
     + (ASSET.parent / "BTN.pdf").read_bytes()
+    + (ASSET.parent / "Wolweiss-bracket-fasteners.pdf").read_bytes()
     + (ASSET.parent / "OBO-3403092.pdf").read_bytes()
     + (ASSET.parent / "GN_4470-50-A1-L2-SR.step").read_bytes()
     + (ASSET.parent / "CBR3030.step").read_bytes()

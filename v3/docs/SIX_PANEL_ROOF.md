@@ -2,12 +2,13 @@
 
 ## Layout
 
-The accepted transport layout is two columns by three rows. Retain the two
-full-width 30×30 crossbars at one-third and two-thirds of the enclosure depth.
-Add three short 30×30 centreline members, each ending against the existing
-crossbars or outer frame rather than crossing another extrusion. Every beam
-top stays at H+30; all six panel undersides are at H+32 in the nominal gasket
-study. The outer frame and upright 30×60 front beam are unchanged.
+The transport layout is two columns by three rows. Two full-width crossbars
+and three short centreline members now use **horizontal 60×30 profiles**
+(Reiman AST03006006), giving adjacent panels separate upward-facing slots.
+The wider members stay 30 mm high; beam tops remain H+30 and panel undersides
+H+32 in the gasket study. Perimeter left/right/rear rails remain 30×30 and the
+front header remains upright 30×60. The complete frame therefore has six
+30×60 profiles: the front header plus these five internal roof members.
 
 Default enclosure: W=1674, D=1649, H=900, panel thickness 6 mm. Keep the current
 wood material study; grade, flatness and stiffness require confirmation.
@@ -17,12 +18,12 @@ Panel-to-panel seams have 2 mm gaps centred on supporting beams.
 | --- | ---: | --- |
 | Left/right front and rear panels | 4 | 866 × 578.667 × 6 |
 | Left/right middle panels | 2 | 866 × 547.667 × 6 |
-| Front/rear centreline members | 2 | 534.667 long, 30×30 |
-| Middle centreline member | 1 | 519.667 long, 30×30 |
+| Front/rear centreline members | 2 | 519.667 long, horizontal 60×30 |
+| Middle centreline member | 1 | 489.667 long, horizontal 60×30 |
 
 These are model dimensions, not rounding or fabrication-tolerance instructions.
 The quotation includes six separate panel drawings/cut entries and the three
-additional profile lengths. Cuts recalculate with enclosure dimensions.
+centre profile lengths and updated crossbar sections. Cuts recalculate with enclosure dimensions.
 
 ## Height and hose routing
 
@@ -49,51 +50,57 @@ threshold or assumed slot depth has been relaxed to accept the taller panes.
 ## Support joints and removal
 
 Six purchased **Reiman / Wolweiss CBR3030** brackets connect the three centre
-supports to the front, crossbars and rear. Each is placed in plan on the right
-side of the centre member, engaging its side slot and the adjoining beam's
-side slot. The intact supplier STEP is rotated and translated, without cutting
-its locating tabs. This replaces all custom roof straps and the custom front
-angle. Two M6 slot fixings per bracket are scheduled; M6×12 is a candidate,
-with thread engagement, screw-head seating and tool access still to validate.
+members to the front, crossbars and rear. Each is on the right side of the
+centre member, engaging its side slot and the adjoining beam's side slot.
+The intact supplier STEP is transformed without trimming locating tabs.
+The wider crossbars shorten the centre pieces to avoid any crossed extrusion.
+Wolweiss catalogue page 168 specifies two M6×14 socket screws, two ISO 7089 M6
+washers and two slot-8 M6 nuts per bracket. These replace the earlier M6×12
+candidate; installed seating, engagement and tool access remain to validate.
 
-**OBO 3403092 washers**, 30 mm OD × 6.4 mm ID × 1.3 mm, act as circular bridge
-clamps. One M6 screw and Reiman BTN08M6 slot nut anchor each washer. At shared
-seams the washer bears on both panels; at the perimeter it bears on one panel.
-All metal hardware is bought ready to assemble. The wood needs 7 mm fixing
-holes and local edge reliefs, which are included in the model and hole schedule.
-Where a circle crosses an edge, only its intersection with the wood is removed;
-the circle centre may lie outside the rectangular blank. The 2 mm seam remains
-unchanged elsewhere. Purchased washer STEP was not obtained: its annular model
-is reconstructed from the manufacturer's dimensions, not a manufacturing order.
+Each panel uses **its own through-hole screws and OBO 3403092 washers**
+(30 mm OD × 6.4 mm ID × 1.3 mm). No washer bears on two panels. The internal
+support's two slot axes are 30 mm apart; each screw is 14 mm inside its panel's
+edge at a 2 mm seam. All 7 mm wood holes are full bores inside rectangular
+blanks: no edge notches, interlocking tabs or special metal plates are needed.
+At a seam a washer projects 1 mm beyond its own panel edge, leaving 1 mm nominal
+clearance to the neighboring wood; dimensional variation still needs checking.
+The two rows are staggered by 24 mm along each shared support so washers do
+not touch one another. Simply staggering screws on the former single-slot
+30×30 supports could not have provided this independent mounting.
 
-Default layout: **25 shared clamps + 34 perimeter clamps = 59 washers**, plus
-71 slot nuts and 71 M6 screws including the 12 bracket fixings. Each panel has
-14 retaining stations. Clamp pitch is at most 250 mm along each beam bay,
-with stations 75 mm from beam intersections. This pitch is a design study,
-not a validated panel-bending or gasket-pressure result. Quantities recalculate
-with enclosure size. M6×16 is a candidate for the default 6 mm wood stack;
-changing wood thickness requires reselection of length. A nominal 6 mm shank
-probe clears the extrusion with M6×16; M6×18 and M6×20 hit the slot floor.
-M6×12 bracket candidates clear the side-slot floor; M6×16 does not. These
-probes do not establish nut thread engagement or screw-head seating. Screws and slot nuts
-are scheduled, not modeled; their fit is not established by washer clearance.
-The dedicated hardware schedule includes those otherwise unmodeled items.
+Default hardware: **84 individual panel fixings**, 14 per panel. Include
+84 OBO washers, 96 slot nuts and 96 M6 screws (84 roof + 12 bracket), plus
+12 ISO 7089 bracket washers. The greater hardware count and wider internal
+members are the tradeoff for independent retention. Panel dimensions and
+roof height are unchanged. Fixing pitch is at most 250 mm, with station
+patterns offset ±12 mm from nominal 75 mm end setbacks. This pitch is a
+study, not a panel-bending or gasket-pressure approval. Quantities recalculate
+with enclosure size.
 
-Remove screws and washers before lifting a panel: a circular washer cannot
-rotate clear. Releasing a shared clamp frees both neighboring panel edges;
-support the neighboring panels. Remove left panels first for access to the
-right side against the wall. Retrieve/reseat loose slot nuts on reassembly.
-This arrangement is removable with a tool, not quick-release. Physical reach,
-screw access and nut handling still need a mock-up. Disconnect/support the
-hose before removing the middle-left panel.
+M6×16 roof screws are candidates for the default 6 mm wood stack: nominal
+shank probes clear the slot floor, while M6×18/M6×20 hit it. Changing wood
+thickness requires reselection. Bracket probes include the 1.6 mm ISO 7089
+washer under an M6×14 screw. Nut threads, actual screw-head seating and
+installation are not proved by a shank-clearance check. Screws and nuts are
+scheduled rather than represented by invented supplier CAD.
 
-See [supplier evidence and CAD status](ROOF_CLAMP_SOURCING.md).
+Remove only a selected panel's own screws and washers, then lift vertically.
+**All neighboring fixings stay installed.** Tests check an upward panel sweep
+against neighboring washers. Remove left panels first to reach the right
+side from the opening; actual reach against the wall remains to check. Retrieve
+and reseat loose slot nuts. Disconnect/support the hose before lifting the
+middle-left panel. This is tool-removable, not quick-release.
+
+All roof metal parts are purchased complete or supplier-cut extrusions. Wood
+boring and soft-gasket cutting remain necessary. See [supplier evidence and CAD
+status](ROOF_CLAMP_SOURCING.md).
 
 ## Individual gasket loops
 
 Candidate: [Rubber & Sponge 200-3-6-10-2](https://rubberandsponge.co.uk/product/3mm-thick-x-6mm-wide-adhesive-epdm-sponge-strip/),
 6×3 mm adhesive closed-cell EPDM sponge, supplied in 10 m rolls. Delivery to
-Portugal requires a supplier quote. Default net length is 16.508 m across 24
+Portugal requires a supplier quote. Default net length is 16.088 m across 24
 strips, before cutting waste. The proposed installed thickness remains 2 mm;
 compression, adhesion and panel flatness require physical validation.
 
@@ -101,8 +108,9 @@ Each panel has a separate closed gasket loop. Straight strips occupy offsets
 6–12 mm from their supporting slot axes, on the extrusion's flat lands. The
 supplier STEP has flat lands approximately 4.9–13 mm from the slot centre;
 this is why the earlier 15 mm central strip, and an 8 mm offset study, were
-replaced. There are two parallel strips at shared beams. Screws and 7 mm wood
-reliefs lie outside both loops, so they do not pierce the seals. Cutting the
+replaced. Each internal beam carries two separate gasket runs, each inward of its own
+slot. Screws and 7 mm wood bores lie outside the loops, so they do not pierce
+the seals. Cutting the
 soft gasket to length and bonding/sealing its butt corners remain necessary.
 
 At the four outer frame corners, the loops cross open upright end sections.
