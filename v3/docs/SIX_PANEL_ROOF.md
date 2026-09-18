@@ -133,6 +133,8 @@ the actual hose outside diameter, connector, dust-shoe interface and bend radius
 before releasing the cut. The maximum modeled hose diameter also clears the
 support layout at the tested parameter limits.
 
+See the [hose-routing assessment](HOSE_ROUTING_STUDY.md) for support comparisons,
+clearance limits and measurements required before choosing the connection.
 Support the hose independently; check slack and full machine travel. Disconnect
 and support it before removing this panel. A split quick-removal hose fitting
 is not modeled or selected. Roof members and panels are not a shelf.

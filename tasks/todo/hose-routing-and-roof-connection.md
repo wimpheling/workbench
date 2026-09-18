@@ -53,12 +53,37 @@ running. Observe sag, twist, kink, connector slip and carriage load; measure
 clearance margins. Repeat with different starting hose shapes and inspect wear.
 Define test counts and acceptance criteria before claiming validated performance.
 
+### Assessment update — 2026-09-19
+
+See the [arrangement and sourcing study](../../v3/docs/HOSE_ROUTING_STUDY.md).
+The nominal space above the unconfirmed machine box is 300 mm below roof
+supports, before suspension and hose allowances. The existing straight hose
+reference does not represent XYZ motion. No hardware or cutout has been selected.
+
+The provisional preference is a frame-supported XY sliding suspension with
+separate managed loops, X-carriage strain relief and a short Z section. A single
+sliding hanger does not constrain both axes. A two-link boom remains the simpler
+fallback, subject to swept clearance, free-running joints and singularity checks.
+The study compares retail hardware and records drawing/CAD access, a removable
+frame-held duct concept, measurement requests and proposed physical test counts.
+Reiman GN 482 clamping joints are not established as cycling boom bearings.
+
+This remains a design discussion in `todo/`; move to `in-progress/` when the
+selected arrangement enters implementation. Actual-clearance assessment, hardware
+selection, force limits and physical acceptance remain open. Documentation paths,
+source claims and arithmetic reviewed; `git diff --check` passed. No application
+or engineering calculation code changed, so application tests were not run.
+
 ## Implementation plan
 
 - [x] Carry over the setup, sources, proposed concept and verification limits
 - [ ] Confirm hose/cuff dimensions, usable length, bend radius and Sweepy interface
 - [ ] Compare support arrangements within the actual machine/roof clearance
+  - [x] Compare support topologies against the provisional model and document limits
+  - [ ] Replace provisional machine height and footprint with measured travel geometry
 - [ ] Select retail support hardware and source drawings/STEP files
+  - [x] Record supplier shortlist, available drawings, existing STEP assets and CAD access limits
+  - [ ] Select compatible hardware and archive its configured drawing/STEP evidence
 - [ ] Agree on support placement, mounting and roof connection
 - [ ] Separate nominal hose bore, outside diameter and roof cutout in the model
 - [ ] Implement the selected design, supplier schedule and assembly instructions
