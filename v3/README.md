@@ -49,7 +49,7 @@ For frontend development, start the Python service and run `npm run dev` in `v3/
 1. Set clear internal dimensions. Defaults start at 1674 × 1649 × 740 mm (width × depth × height).
 2. Choose front and bifold infill materials. Glass defaults to 4 mm; its grade/support remain provisional. Bifolds default to 4 mm polycarbonate.
 3. Inspect the model, hide roof/walls, and open each door independently. Reference envelopes can be shown separately.
-4. Leave **Automatic verification** enabled to evaluate changes, or turn it off to update geometry previews only. Use **Verify now** when ready. Previews have no current engineering report and cannot enable exports; a prior report is hidden when its settings no longer match.
+4. The 3D preview loads first, then verification runs while you inspect it. Leave **Automatic verification** enabled to evaluate changes, or turn it off to update geometry previews only. Use **Verify now** when ready. Previews have no current engineering report and cannot enable exports; a prior report is hidden when its settings no longer match.
 5. Read failures and unresolved evidence. A successful constraint solve is only one piece of evidence; it does not imply clearance or order readiness.
 6. Export a supplier quotation pack for review. All dimensions, geometry and evidence share one design revision. Changing parameters invalidates the previous export selection until evaluation finishes.
 

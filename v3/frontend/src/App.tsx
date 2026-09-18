@@ -95,25 +95,34 @@ export default function App() {
     }
     running = true;
     setBusy(true);
-    setVerifying(verify);
+    setVerifying(false);
     controller = new AbortController();
     const requestEpoch = epoch;
     const key = current();
     const input = { ...parameters() },
       angles = { ...pose() };
     try {
-      const next = await evaluate(input, angles, verify, controller.signal);
-      if (!disposed && key === current() && requestEpoch === epoch) {
+      const isCurrent = () =>
+        !disposed && key === current() && requestEpoch === epoch;
+      const preview = await evaluate(input, angles, false, controller.signal);
+      if (!isCurrent()) return;
+      setResult(preview);
+      setEvaluated(key);
+      setError("");
+      if (verify) {
+        setVerifying(true);
+        const next = await evaluate(input, angles, true, controller.signal);
+        if (!isCurrent()) return;
         if (
-          verify &&
-          (!next.report || next.model.revision !== next.report.revision)
+          !next.report ||
+          next.model.revision !== next.report.revision ||
+          next.model.revision !== preview.model.revision
         )
           throw new Error(
             "The geometry and verification revisions do not match. Please evaluate again.",
           );
-        setResult(next);
-        setEvaluated(key);
-        setError("");
+        // Keep the displayed geometry stable as its matching report arrives.
+        setResult({ ...preview, report: next.report });
       }
     } catch (e) {
       if (
@@ -291,7 +300,7 @@ export default function App() {
           >
             {busy()
               ? verifying()
-                ? "◌ Verifying enclosure…"
+                ? "◌ Preview ready · verifying enclosure…"
                 : "◌ Updating preview…"
               : status()}
           </div>
