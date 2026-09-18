@@ -80,7 +80,12 @@ def test_roof_hole_matches_order_drawing():
     w, h, t = roof["cut_size_mm"]
     hole = roof["holes"][0]
     assert (hole["x_mm"], hole["y_mm"]) == (w / 2, h / 2)
-    assert shape.Volume() == pytest.approx((w * h - math.pi * (hole["diameter_mm"] / 2) ** 2) * t)
+    # Compare with the same panel's fastening cuts present, isolating the hose bore.
+    no_hose = {**roof, "holes": roof["holes"][1:]}
+    before = build_shapes({"parts": [no_hose]})[roof["id"]]
+    assert before.Volume() - shape.Volume() == pytest.approx(
+        math.pi * (hole["diameter_mm"] / 2) ** 2 * t
+    )
 
 
 def test_native_solver_finds_second_angle_from_constraints():
@@ -139,7 +144,7 @@ def test_fixed_panels_lap_frame_and_roof_has_gasket_bearing():
         - parts["panel-roof-left-front"]["size"][2] / 2
         == 932
     )
-    assert len([p for p in parts if p.startswith("roof-perimeter-gasket-")]) == 4
+    assert len([p for p in parts if p.startswith("roof-gasket-")]) == 24
 
 
 def test_roof_collar_is_a_real_annulus():

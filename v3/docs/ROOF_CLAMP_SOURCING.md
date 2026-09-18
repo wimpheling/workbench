@@ -1,50 +1,55 @@
-# Shared roof clamp sourcing
+# Ready-to-assemble roof hardware
 
-Research date: 2026-09-17. This is the supplier-research stage of the requested
-roof-clamp integration. No clamp geometry or panel fixing cuts are released yet.
+Research updated 2026-09-18. The owner cannot cut or drill metal. The previous
+40×20×3 mm custom plate proposal is rejected, as are the custom roof support
+straps and angle. The model now uses purchased hardware; only wood reliefs
+and soft-gasket cutting remain.
 
-## Supplier evidence
+## Selected prototype components
 
-| Candidate | Evidence and CAD status | Assessment |
+| Component | Supplier evidence | CAD/model status |
 | --- | --- | --- |
-| Reiman / Wolweiss BTN08M6 | [Product](https://reiman.pt/pt/wlw-btn08m6-btn08m6-m6-slot-8-t-nut/), [dimensioned BTN drawing](https://www.reiman.pt/pub/media/technical_data/wolweiss/datasheets/btn.pdf). M6, slot 8, nickel-plated steel; insertable after frame assembly. Drawing downloaded and inspected; CAD link requires account login, so no supplier STEP obtained. | Candidate anchor for a fabricated bridge plate. Verify against the actual extrusion section and check that nuts remain manageable during repeated removal. |
-| Wolweiss FMB panel mounting block | [Manufacturer catalogue](https://wolweiss.com/wp-content/uploads/2019/03/Catalogo-final-online.pdf), printed page 125. | A panel mounting block, not evidence of a shared top clamp for our two adjacent roof panels. Not selected. |
-| Reiman / Wolweiss FMS mounting strip | [Product](https://reiman.pt/en/wlw-fms-fms-panel-mounting-strip/). FMS085 is a slot-8 strip for 5 mm panels. | Different mounting arrangement and panel thickness from our 6 mm roof. Not selected. |
-| MiniTec 20.1018 double panel clamping profile | [Manufacturer product and CAD links](https://www.minitecframing.com/Products/Panels_And_Attachment_Hardware/Panels_And_Attachment_Cat/20.1018_Double_Panel_Clamping_Profile.html). For 1–10 mm panels; anodized aluminium, M5×12 set screws, nominal 6 m stock. STEP link advertised, but download unsuccessful in this research. | Retains adjacent panels, but manufacturer notes limited gripping force. Wolweiss slot compatibility and gasket compression are unverified; not selected as a drop-in replacement. |
+| OBO 3403092, WS M6 G30 G | [Portuguese manufacturer datasheet](https://www.obo.pt/datasheet/?file=WS_M6_G30_G-3403092-pt_PT.pdf); galvanized steel washer, 30 mm outside, 6.4 mm bore, 1.3 mm thick. [Bürklin retail listing](https://www.buerklin.com/en/p/obo-bettermann/nuts-washers-rings/3403092/46P2285/). | Datasheet retained locally. Annular solid reconstructed from published dimensions; supplier STEP not obtained. Using it as a bridge clamp is our application study, not a manufacturer-rated clamp assembly. |
+| Reiman / Wolweiss BTN08M6 | [Product](https://reiman.pt/pt/wlw-btn08m6-btn08m6-m6-slot-8-t-nut/), [BTN drawing](https://www.reiman.pt/pub/media/technical_data/wolweiss/datasheets/btn.pdf). M6, slot 8, nickel-plated steel; insertable after frame assembly. | Drawing retained locally; CAD link requires login. Nuts are included in the hardware schedule, not represented by invented supplier STEP geometry. Nut rotation, engagement and repeated removal remain to check. |
+| Reiman / Wolweiss CBR3030 | [Product](https://reiman.pt/pt/wlw-cbr3030-cbr3030-30x30-bracket/), [series-30 connector guide](https://reiman.pt/en/blog/technical-article/what-connectors-are-compatible-with-the-30-series-aluminium-profiles). Die-cast aluminium bracket for slot-8 profiles. | Existing `CBR3030.step` vendor asset used intact. Six plan-oriented brackets replace the custom support metalwork. CAD establishes nominal contact and absence of penetration; screw/tool access and capacity still need validation. |
+| Stock M6 socket screws | Standard full-thread ISO 4762 / DIN 912 family. [Accu M6×16](https://accu-components.com/us/metric-cap-head-screws/386809-SSCF-M6-16-12-9-Z) and [M6×12](https://accu-components.com/us/metric-cap-head-screws/386807-SSCF-M6-12-12-9-Z) examples. Ask Reiman/local fastener retailer for the finally confirmed size and finish. | Scheduled only. M6×16 roof and M6×12 bracket candidates require seating/engagement checks before ordering. The 16 mm roof length is not valid for every configurable wood thickness. |
+| Rubber & Sponge 200-3-6-10-2 | [6×3 mm adhesive EPDM sponge](https://rubberandsponge.co.uk/product/3mm-thick-x-6mm-wide-adhesive-epdm-sponge-strip/), 10 m rolls. Overseas delivery is by quotation. | Nominal compressed rectangular strips. The 2 mm installed thickness, adhesive and butt-corner sealing remain physical-validation items. |
 
-No suitable ready-made shared top bridge clamp was established in the Reiman
-products reviewed. This is a search result, not a claim that none exists.
-The Wolweiss catalogue notes reduced stability/tightening capability for
-insertable BTN nuts compared with preassembly nuts; ease of insertion alone
-does not establish suitability for repeated panel removal.
+Availability, shipping and final screw choices are not confirmed orders. No
+supplier was contacted on the owner's behalf. The manufacturer's minimum
+sale unit for the OBO washer is 100; distributor pack sizes may differ.
 
-## Recommended design direction
+## Geometry and assembly
 
-Use a fabricated metal plate spanning the seam, with one central M6 fastener
-into a Reiman slot-8 nut. A **40×20×3 mm plate with a 6.5 mm central bore** is
-an initial design study, not a supplier product or validated specification.
-Orient the 40 mm dimension across the seam to bear on both panels. Define
-material, edge radii, bearing pads and fabrication drawing during integration.
-Any STEP generated for this plate will be project-generated custom-part CAD.
+The washer bridges a 2 mm seam and locally enlarged 7 mm screw passage. It
+bears on both wood panels and is pulled down by one slot fixing. Perimeter
+washers use ordinary holes through the wood. No metal modification is required.
+Six individual gasket loops sit beside the slots, with the screw axes outside
+the seals. The four outer post ends and 2 mm radiused beam butt junctions remain explicit
+support/sealing studies.
+See [roof design, quantities and removal procedure](SIX_PANEL_ROOF.md).
 
-Keep the six-panel layout and existing frame. Integration must resolve:
+This application is not load-rated. The 1.3 mm washer stiffness, wood bearing,
+gasket pressure, maximum clamp pitch, nut stability and hand access require
+validation. The Wolweiss catalogue notes that insertable BTN nuts provide less
+stability/tightening capability than preassembly nuts. Remove/retrieve the nuts
+carefully when releasing the circular washer clamps.
 
-- Local clearance at the existing 2 mm seams: an M6 screw cannot pass through
-  them. Paired edge reliefs are preferable to widening every seam, subject to
-  machining and removal checks.
-- A sealed screw passage. The current gasket occupies the same centreline;
-  piercing it changes the sealing design and invalidates any assumption of
-  uninterrupted gasket coverage at that station.
-- Perimeter retention. Shared seam clamps alone are not a complete fastening
-  arrangement for the outer panel edges.
-- Clamp stations, nut access, bolt length, thread engagement and clearance
-  from crossbar joints. Do not select a bolt length solely from panel thickness.
-- Left-first removal with only 20–30 cm access at the right wall. Releasing a
-  shared clamp also releases the neighboring panel edge; the removal sequence
-  must account for this rather than claiming independent retention.
-- Gasket compression, panel bending and bearing pressure. Clamp pitch remains
-  a design variable until these are assessed.
+## Alternatives reviewed
 
-The current roof model and quotation cuts still omit these fasteners and
-reliefs. Existing roof coverage checks describe the unpierced gasket study;
-they do not verify the proposed clamp/sealed-fastener arrangement.
+Reiman FMB mounting blocks and FMS085 strips did not establish a ready-made
+shared top clamp for this 6 mm roof. The [MiniTec 20.1018 double-panel profile](https://www.minitecframing.com/Products/Panels_And_Attachment_Hardware/Panels_And_Attachment_Cat/20.1018_Double_Panel_Clamping_Profile.html)
+has advertised STEP links, but download was unsuccessful; Wolweiss slot fit
+and compression force remain unverified. It is not selected.
+
+## Retained source files
+
+Files are under `v3/backend/enclosure/assets/`; STEP exports distinguish vendor
+brackets from dimension-derived washers. The source PDFs, intact bracket STEP and this note are
+included in the quotation pack.
+
+| File | SHA-256 |
+| --- | --- |
+| `OBO-3403092.pdf` | `20192cbba477e57e440d8501a5337b4d862965bf61ae96f9092570315d8ecf88` |
+| `BTN.pdf` | `1b12fdc9fb86170b6507d23bff116dbfa5d1c64aaf046c70e59a90194b3c59ef` |
+| `CBR3030.step` | `42d2a157d72d72eb3d369cf2a11d030ea9c56652630607b14b7046324e7742ae` |

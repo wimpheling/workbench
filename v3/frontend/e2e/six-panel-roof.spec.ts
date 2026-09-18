@@ -13,6 +13,10 @@ test("six-panel roof appears with its cuts and can be hidden", async ({ page }) 
   await expect(page.getByRole("spinbutton", { name: "Internal height", exact: true })).toHaveValue("900");
   expect(model.roof_layout.panel_ids).toHaveLength(6);
   expect(model.roof_layout.centre_support_ids).toHaveLength(3);
+  expect(model.roof_layout.clamps).toHaveLength(59);
+  expect(model.roof_layout.clamps.filter((c: { kind: string }) => c.kind === "shared")).toHaveLength(25);
+  expect(model.roof_layout.gasket_loops).toHaveLength(6);
+  expect(model.parts.filter((p: { id: string; product_code: string }) => p.id.startsWith("roof-joint-") && p.product_code === "CBR3030")).toHaveLength(6);
   expect(model.roof_layout.hose_panel_id).toBe("panel-roof-left-middle");
   const panels = model.parts.filter((p: { id: string }) => model.roof_layout.panel_ids.includes(p.id));
   expect(panels.every((p: { size: number[] }) => p.size[0] === 869)).toBe(true);
@@ -21,6 +25,8 @@ test("six-panel roof appears with its cuts and can be hidden", async ({ page }) 
   await note.locator("summary").click();
   await expect(note.locator("li")).toHaveCount(6);
   await expect(note).toContainText("middle-left");
+  await expect(note).toContainText("6×3 mm EPDM");
+  await expect(note).toContainText("without metal machining");
   await page.getByRole("checkbox", { name: "Roof", exact: true }).check();
   await page.screenshot({ path: "../artifacts/six-panel-roof.png", fullPage: true });
   await page.getByRole("checkbox", { name: "Roof", exact: true }).uncheck();

@@ -284,14 +284,8 @@ def build_model(parameters=None):
         centre = f"beam-roof-centre-{i + 1}"
         joint(centre, a, [W / 2, lo, H + 15])
         joint(centre, b, [W / 2, hi, H + 15])
-        connectors = [
-            "roof-joint-front-angle",
-            "roof-joint-strap-cross-1",
-            "roof-joint-strap-cross-2",
-            "roof-joint-strap-rear",
-        ]
-        joints[-2]["connector_ids"] = [connectors[i]]
-        joints[-1]["connector_ids"] = [connectors[i + 1]]
+        joints[-2]["connector_ids"] = [f"roof-joint-{i + 1}-front"]
+        joints[-1]["connector_ids"] = [f"roof-joint-{i + 1}-rear"]
 
     def leaf(
         door, leaf_id, length, pivot, base_deg, normal_offset, zlo, zhi, edge_gap=None, start=0
@@ -667,10 +661,10 @@ def build_shapes(model, pose=None):
                 axis[p["length_axis"]] = 1
                 shape = shape.rotate((0, 0, 0), tuple(axis), p["section_rotation_deg"])
 
-        elif p.get("geometry", {}).get("kind") == "roof-front-angle":
-            from .roof import front_angle_shape
+        elif p.get("geometry", {}).get("kind") == "roof-stock-bracket":
+            from .roof import stock_bracket_shape
 
-            shape = front_angle_shape()
+            shape = stock_bracket_shape(p["geometry"]["turn_deg"])
         elif p.get("cad_asset") in ("GN_753.1-22-B5-ZL-1.stp", "GN_753.2-4-5-3-AE-NI.stp"):
             from .profiles import roller_component
 

@@ -16,11 +16,22 @@ The middle-left panel carries the offset hose opening; actual hose dimensions
 and full-travel routing remain unconfirmed. The old 100 mm hose parameter is
 explicitly a placeholder, not a Nilfisk specification.
 
-New supports use underside steel joint straps and a front angle connecting
-upper side slots above the front-door backing. These nominal connections still need fixing and
-load approval. The current wood thickness remains a study. EMKA 1016-16
-15×3 mm EPDM sponge is the proposed gasket; 2 mm installed height and a proposed
-removable clamp arrangement are not physically validated.
+The owner requires metal parts to arrive ready to assemble: no metal cutting or
+drilling. Six intact Reiman CBR3030 brackets now replace the earlier custom
+straps/front angle. OBO 3403092 stock washers form the shared/perimeter clamps,
+with Reiman BTN08M6 nuts and standard M6 screw candidates. Default layout is
+25 shared and 34 perimeter clamps; 71 nuts/screws include the support brackets.
+The 7 mm wood holes/edge reliefs are modeled. Fasteners are scheduled but their
+solids, final lengths and installed engagement remain unvalidated.
+
+The seal changed from a central 15×3 mm strip to six individual loops of
+6×3 mm adhesive EPDM sponge (Rubber & Sponge 200-3-6-10-2), nominally compressed
+to 2 mm. Screw axes stay outside the loops. Straight runs bear on the supplier
+extrusion's flat lands; open corner-post ends and 2 mm radiused beam butt joints
+remain explicit gasket-bridging studies. Clamp force, washer bending, wood
+bearing, compression and physical reach remain unvalidated. Removal uses a
+tool and releases neighboring edges at shared stations; this is not independent
+quick-release retention. No custom metalwork is required for the roof hardware.
 See [roof design](../../v3/docs/SIX_PANEL_ROOF.md). Detailed product/physical
 validation remains separate from the accepted layout, per the owner's two-axis
 workflow. Do not equate an approved layout with released fabrication.
@@ -52,13 +63,30 @@ minimum-engagement bound under the existing thermal assumptions. This is a
 reduced margin, not approved retention; no production verifier threshold was
 relaxed. Preview at `http://127.0.0.1:8019` now defaults to 900 mm.
 
+2026-09-18 stock-hardware validation: full `uv run pytest` completed with
+208 passes and two failures in tests corrected during that run (the former
+single-hole volume assertion and an empty-result CAD subtraction in the new
+bearing test). Final roof/core/export rerun: **44 passed**, including a new
+screw-bottoming regression. All 211 current backend cases are covered across
+these runs. Frontend: 45 tests, TypeScript check and production build passed;
+the updated roof browser test passed. Ruff and diff checks pass.
+
+Default model `55fe8c8bf8e6036c`: 2068 pass / 0 fail / 122 unknown. The quotation
+pack was regenerated and checked for hardware quantities, wood reliefs, source
+PDFs and the intact bracket STEP. Nominal shank probes reject M6×20 roof screws
+for hitting the slot floor; M6×16 roof and M6×12 bracket candidates clear it.
+Actual nut engagement, head seating and tolerance stacks still need approval.
+Local preview refreshed at `http://127.0.0.1:8019`.
+
 ## Implementation plan
 
 - [ ] Integrate shared bridge clamps into the roof
   - [x] Research Reiman hardware, alternative panel retainers and drawing/STEP availability; record [supplier findings](../../v3/docs/ROOF_CLAMP_SOURCING.md)
-  - [ ] Detail the proposed fabricated bridge plate, sourced slot nuts and fasteners
-  - [ ] Model clamp stations, panel reliefs, sealed screw passages and perimeter retention
-  - [ ] Verify removal access, geometry and updated sealing assumptions; update drawings and supplier pack
+  - [x] Replace the rejected custom plate with stock OBO washers, Reiman nuts and standard screw candidates; retain source drawings and CAD provenance
+  - [x] Model shared/perimeter clamp stations and wood reliefs; route closed gasket loops beside the screw passages
+  - [x] Replace custom roof support metalwork with six intact vendor-STEP CBR3030 brackets
+  - [x] Verify geometry and updated sealing assumptions; update drawings, supplier pack and browser preview
+  - [ ] Validate physical reach, removal sequence and installed screw/nut seating
 
 - [x] Agree on the roof layout and handling concept
   - [x] Select six compact panels while retaining both existing crossbars
@@ -66,8 +94,8 @@ relaxed. Preview at `http://127.0.0.1:8019` now defaults to 900 mm.
   - [x] Document left-first panel removal and the hose-panel disconnection requirement; actual reach remains to be checked
   - [x] Locate the provisional hose opening clear of supports and panel joints
 - [x] Specify the nominal roof seal arrangement
-  - [x] Identify EMKA 1016-16 as a real candidate; retain compression and compatibility as unvalidated
-  - [x] Model perimeter strips, panel-seam strips and non-stacked butt junctions
+  - [x] Source 6×3 mm EPDM sponge for the offset loops; supersedes the earlier EMKA 1016-16 central-strip candidate
+  - [x] Model six individual gasket loops and non-stacked butt junctions
   - [x] Update the offset hose collar, gasket and explicit panel/bore verification
 - [x] Implement and verify the agreed roof in v3
   - [x] Update the parametric layout, support geometry, gasket checks and provisional hose clearance checks
@@ -83,7 +111,8 @@ relaxed. Preview at `http://127.0.0.1:8019` now defaults to 900 mm.
 - [x] Which panel layout is preferred? Six panels in a 2×3 grid; compact pieces replace the rejected long/four-panel alternatives.
 - [x] What are the initial material and support choices? Retain the current 6 mm wood study, both crossbars and three additional 30×30 members.
 - [x] Where is the provisional hose opening? Middle-left panel, clear of the frame and seams.
-- [ ] Select actual panel clamps, their positions and any edge relief; verify independent release and physical access from the front/left
-- [ ] Confirm wood grade/thickness, panel and beam stiffness, strap/angle details, fasteners and joint capacity
-- [ ] Confirm gasket compression, adhesive, clamp pitch, butt-junction preparation and physical sealing
+- [x] Select stock clamp candidates, nominal stations and wood reliefs; shared washers release both adjacent edges
+- [ ] Verify physical access from the front/left, neighboring-panel support and repeated nut handling
+- [ ] Confirm wood grade/thickness, panel and beam stiffness, purchased bracket capacity, fasteners and joint capacity
+- [ ] Confirm gasket compression, adhesive, clamp pitch, butt-junction preparation, bridging over post ends/radiused beam joints and physical sealing
 - [ ] Measure actual hose/connector dimensions, independent support, bend radius, slack and full machine travel before releasing its cut; confirm the 900 mm height with supported-loop routing and reassess taller-door loads

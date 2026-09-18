@@ -645,10 +645,10 @@ export default function App() {
             <Show when={result()?.model.roof_layout}>
               <details data-testid="roof-layout-note">
                 <summary>Six removable roof panels</summary>
-                <p>A 2×3 grid retains both full-width crossbars and adds three short 30×30 centre supports. All top surfaces are level; panel seams have 2 mm gaps over supported gasket strips.</p>
+                <p>A 2×3 grid retains both full-width crossbars and adds three short 30×30 centre supports. All top surfaces are level; panel seams have 2 mm gaps. Stock M6 washers bridge shared seams and secure perimeter edges.</p>
                 <p>The hose opening is in the middle-left panel. Its diameter is provisional; measure the actual hose and fittings and check full machine travel.</p>
                 <p>{result()?.model.roof_layout?.removal}</p>
-                <p>EMKA 1016-16 EPDM sponge, 15×3 mm, is the gasket candidate. Nominal 2 mm installed height, panel clamps, joint capacity and access remain unvalidated.</p>
+                <p>Each panel has an 6×3 mm EPDM sponge gasket loop beside the slots, clear of the screws. Reiman CBR3030 brackets connect the centre supports without metal machining. Nominal 2 mm gasket height, clamp pitch, fastener lengths, joint capacity and access require validation.</p>
                 <ul><For each={result()?.model.parts.filter(p => result()?.model.roof_layout?.panel_ids.includes(p.id))}>{(p) => <li>{p.id}: {p.size[0].toFixed(1)} × {p.size[1].toFixed(1)} × {p.size[2]} mm</li>}</For></ul>
               </details>
             </Show>

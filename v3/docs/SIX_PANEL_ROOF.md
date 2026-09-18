@@ -29,8 +29,8 @@ additional profile lengths. Cuts recalculate with enclosure dimensions.
 The owner selected a 900 mm frame-height candidate, 160 mm above the earlier
 740 mm design, for additional hose-routing space. Frame tops are at 930 mm;
 panel undersides are at 932 mm and panel tops at 938 mm with the default gasket
-and panel thickness. Crossbar undersides are at 900 mm; underside straps
-extend to 897 mm. The deeper front header has an 870 mm clear opening.
+and panel thickness. Crossbar undersides are at 900 mm; purchased support brackets stay
+between 902 and 928 mm. The deeper front header has an 870 mm clear opening.
 
 The actual setup is an original Shapeoko 5 Pro with a Makita trim router,
 standard Sweepy V2 and Nilfisk AERO 21-21 PC. Keep the current 600 mm machine
@@ -48,45 +48,71 @@ threshold or assumed slot depth has been relaxed to accept the taller panes.
 
 ## Support joints and removal
 
-Two 150×30×3 mm underside steel straps bridge the centreline/crossbar joints,
-with five M6 countersunk fixing stations each. A 90×30×3 mm rear strap uses
-three stations. Each station aligns with an underside slot in the corresponding
-member. Nominal countersinks are 90°, 12 mm diameter over 6.5 mm holes.
+Six purchased **Reiman / Wolweiss CBR3030** brackets connect the three centre
+supports to the front, crossbars and rear. Each is placed in plan on the right
+side of the centre member, engaging its side slot and the adjoining beam's
+side slot. The intact supplier STEP is rotated and translated, without cutting
+its locating tabs. This replaces all custom roof straps and the custom front
+angle. Two M6 slot fixings per bracket are scheduled; M6×12 is a candidate,
+with thread engagement, screw-head seating and tool access still to validate.
 
-The front beam is 30 mm deeper than the centre member. A proposed 30 mm tall,
-3 mm steel angle with 30×30 mm legs in plan connects the centre member's side
-slot to the front beam's inner face/upper slot row. Its two fixings use M6
-screws/slot nuts. This keeps the connection above the front-door seal backing.
-The model uses square-root nominal geometry: real root radius, washers, access,
-fastener lengths, clamping stiffness and load capacity need approval. These
-connections are supplier-prepared studies, not sourced rated assemblies.
+**OBO 3403092 washers**, 30 mm OD × 6.4 mm ID × 1.3 mm, act as circular bridge
+clamps. One M6 screw and Reiman BTN08M6 slot nut anchor each washer. At shared
+seams the washer bears on both panels; at the perimeter it bears on one panel.
+All metal hardware is bought ready to assemble. The wood needs 7 mm fixing
+holes and local edge reliefs, which are included in the model and hole schedule.
+Where a circle crosses an edge, only its intersection with the wood is removed;
+the circle centre may lie outside the rectangular blank. The 2 mm seam remains
+unchanged elsewhere. Purchased washer STEP was not obtained: its annular model
+is reconstructed from the manufacturer's dimensions, not a manufacturing order.
 
-Panels lift off after releasing their clamps. Perimeter/seam clamp tabs into
-the frame's top slots are proposed; actual clamp products, positions, bolt
-lengths and panel-edge reliefs remain unresolved. No guessed fixing holes are
-released. Plan to remove left panels first so the open roof provides access
-towards the right, which is against a wall. Actual reach and removal clearance
-need a physical check; six small panels do not prove access to every fixing.
+Default layout: **25 shared clamps + 34 perimeter clamps = 59 washers**, plus
+71 slot nuts and 71 M6 screws including the 12 bracket fixings. Each panel has
+14 retaining stations. Clamp pitch is at most 250 mm along each beam bay,
+with stations 75 mm from beam intersections. This pitch is a design study,
+not a validated panel-bending or gasket-pressure result. Quantities recalculate
+with enclosure size. M6×16 is a candidate for the default 6 mm wood stack;
+changing wood thickness requires reselection of length. A nominal 6 mm shank
+probe clears the extrusion with M6×16; M6×18 and M6×20 hit the slot floor.
+M6×12 bracket candidates clear the side-slot floor; M6×16 does not. These
+probes do not establish nut thread engagement or screw-head seating. Screws and slot nuts
+are scheduled, not modeled; their fit is not established by washer clearance.
+The dedicated hardware schedule includes those otherwise unmodeled items.
 
-The requested shared bridge-clamp integration is at the supplier-research
-stage. See [clamp sourcing and integration requirements](ROOF_CLAMP_SOURCING.md)
-for Reiman references, CAD availability and the proposed fabricated-plate
-direction. Clamp geometry and its sealed fixing passages remain pending.
+Remove screws and washers before lifting a panel: a circular washer cannot
+rotate clear. Releasing a shared clamp frees both neighboring panel edges;
+support the neighboring panels. Remove left panels first for access to the
+right side against the wall. Retrieve/reseat loose slot nuts on reassembly.
+This arrangement is removable with a tool, not quick-release. Physical reach,
+screw access and nut handling still need a mock-up. Disconnect/support the
+hose before removing the middle-left panel.
 
-## Gasket grid
+See [supplier evidence and CAD status](ROOF_CLAMP_SOURCING.md).
 
-Candidate: [EMKA 1016-16](https://www.emka.com/products/1016-16), self-adhesive
-EPDM sponge strip, 15 mm wide and 3 mm free thickness, supplied in 10 m lengths.
-The model assumes **2 mm installed height**, which is a provisional compression
-study, not manufacturer approval. Adhesion, clamp spacing, panel flatness and
-compression require detailed validation.
+## Individual gasket loops
 
-Four perimeter strips, two transverse strips and three centreline segments
-form a single-height grid. Butt junctions meet without stacked foam. Centreline
-segments stop at transverse-strip edges; transverse strips join the side seals.
-Each panel has gasket contact on all four sides. Continuous coverage checks
-span the panel seams and their junctions; removing a centre segment fails them.
-Bonded junctions, actual compression and leakage still need physical testing.
+Candidate: [Rubber & Sponge 200-3-6-10-2](https://rubberandsponge.co.uk/product/3mm-thick-x-6mm-wide-adhesive-epdm-sponge-strip/),
+6×3 mm adhesive closed-cell EPDM sponge, supplied in 10 m rolls. Delivery to
+Portugal requires a supplier quote. Default net length is 16.508 m across 24
+strips, before cutting waste. The proposed installed thickness remains 2 mm;
+compression, adhesion and panel flatness require physical validation.
+
+Each panel has a separate closed gasket loop. Straight strips occupy offsets
+6–12 mm from their supporting slot axes, on the extrusion's flat lands. The
+supplier STEP has flat lands approximately 4.9–13 mm from the slot centre;
+this is why the earlier 15 mm central strip, and an 8 mm offset study, were
+replaced. There are two parallel strips at shared beams. Screws and 7 mm wood
+reliefs lie outside both loops, so they do not pierce the seals. Cutting the
+soft gasket to length and bonding/sealing its butt corners remain necessary.
+
+At the four outer frame corners, the loops cross open upright end sections.
+At beam butt joints, the gasket also bridges the adjoining member’s 2 mm
+edge radius. These small unsupported areas require a physical sealing/support check;
+no hidden filler or solid end cap is assumed. Tests establish full nominal
+bearing along the other runs and expressly exclude the four post-end footprints
+and 2 mm radiused butt-junction zones from that bearing claim. Continuous
+gasket-stock coverage is checked through all butt joints; a missing strip or a corner notch fails. These checks do not
+prove pressure distribution, leakage performance or end-section support.
 
 ## Hose interface
 
@@ -105,9 +131,10 @@ is not modeled or selected. Roof members and panels are not a shelf.
 
 ## Validation boundary
 
-The backend checks real panel gaps, support contacts, gasket bearing/seam
-coverage and the offset opening, including minimum/maximum enclosure dimensions.
+The backend checks real panel gaps, support contacts, gasket-loop
+coverage, straight-run bearing and the offset opening. Layout and hardware
+quantities also have minimum/maximum enclosure-size regression cases.
 Supplier packs include `roof-layout.json`, this guide and ordinary panel/profile
-schedules. Connection strength, panel retention, physical reach, sag, seals and
+schedules. Connection strength, clamp force/washer bending, physical reach, sag, seals and
 hose motion remain unresolved. The roof design task tracks those outstanding
 details separately from the accepted six-panel layout.

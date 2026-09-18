@@ -57,32 +57,118 @@ def test_six_panels_and_supports_fit_without_crossed_extrusions(params):
             ) == pytest.approx(2)
 
 
-def test_each_panel_has_four_gasket_bearings_and_continuous_seams():
+def test_panel_gasket_loops_are_continuous_and_fixings_stay_outside():
+    import cadquery as cq
+
     m = build_model()
+    roof = m["roof_layout"]
     entry = next(e for e in m["containment"] if e["id"] == "roof-frame-seal")
-    ids = m["roof_layout"]["panel_ids"] + entry["part_ids"]
+    ids = roof["panel_ids"] + entry["part_ids"]
+    ids += [
+        p["id"]
+        for p in m["parts"]
+        if p["assembly"] == "roof"
+        or p["id"].endswith("-top")
+        or p["id"] in m["roof_layout"]["gasket"]["corner_post_ids"]
+    ]
     s = build_shapes({"parts": [p for p in m["parts"] if p["id"] in ids]})
-    for side in ("left", "right"):
-        for i, bay in enumerate(("front", "middle", "rear")):
-            panel = s[f"panel-roof-{side}-{bay}"]
-            bearings = [
-                f"roof-perimeter-gasket-{2 if side == 'left' else 3}",
-                f"roof-centre-gasket-{i + 1}",
-                "roof-perimeter-gasket-0" if i == 0 else f"roof-crossbar-gasket-{i}",
-                "roof-perimeter-gasket-1" if i == 2 else f"roof-crossbar-gasket-{i + 1}",
+    h = m["parameters"]["height_mm"]
+    supports = [p["id"] for p in m["parts"] if p["id"] in s and p["category"] == "extrusion"]
+    for loop in roof["gasket_loops"]:
+        panel = s[loop["panel_id"]]
+        assert len(loop["gasket_ids"]) == 4
+        for pid in loop["gasket_ids"]:
+            assert panel.distance(s[pid]) < 1e-5
+            assert panel.intersect(s[pid]).Volume() < 1e-5
+            # Long runs bear on actual metal. At the four outer corners the
+            # loop crosses the open post end section: explicitly unvalidated.
+            probe = s[pid].translate((0, 0, -0.01))
+            thin = (
+                cq.Workplane("XY").box(10000, 10000, 0.01).translate((0, 0, h + 30 - 0.005)).val()
+            )
+            unsupported = probe.intersect(thin)
+            for q in supports:
+                if unsupported.Volume() < 1e-7:
+                    break
+                unsupported = unsupported.cut(s[q])
+            for post_id in roof["gasket"]["corner_post_ids"]:
+                bb = s[post_id].BoundingBox()
+                end = (
+                    cq.Workplane("XY")
+                    .box(30, 30, 0.1)
+                    .translate(((bb.xmin + bb.xmax) / 2, (bb.ymin + bb.ymax) / 2, h + 30))
+                    .val()
+                )
+                if unsupported.Volume() < 1e-7:
+                    break
+                unsupported = unsupported.cut(end)
+            # Butt interfaces meet a 2 mm outside radius on the cross-member.
+            # Bound this local bridging exception to actual member junctions.
+            w, d = (m["parameters"][k] for k in ("width_mm", "depth_mm"))
+            junctions = [
+                (w / 2, y, 30, 4)
+                for y in (0, d / 3 - 15, d / 3 + 15, 2 * d / 3 - 15, 2 * d / 3 + 15, d)
             ]
-            for pid in bearings:
-                assert panel.distance(s[pid]) < 1e-5
-                assert panel.intersect(s[pid]).Volume() < 1e-5
+            junctions += [(x, y, 4, 30) for x in (0, w) for y in (d / 3, 2 * d / 3)]
+            for x, y, dx, dy in junctions:
+                if unsupported.Volume() < 1e-7:
+                    break
+                rounded_joint = cq.Workplane("XY").box(dx, dy, 0.1).translate((x, y, h + 30)).val()
+                unsupported = unsupported.cut(rounded_joint)
+            assert unsupported.Volume() < 1e-5
     for region in entry["coverage_regions"]:
-        assert (
-            check_barrier_region(s, region, region["required_overlap_mm"], 0.5)["status"] == "pass"
-        )
-    broken = {k: v for k, v in s.items() if k != "roof-centre-gasket-2"}
+        assert check_barrier_region(s, region, 1, 0.5)["status"] == "pass"
+    missing = roof["gasket_loops"][0]["gasket_ids"][2]
+    broken = {k: v for k, v in s.items() if k != missing}
     assert any(
-        check_barrier_region(broken, r, r["required_overlap_mm"], 0.5)["status"] == "fail"
+        check_barrier_region(broken, r, 1, 0.5)["status"] == "fail"
         for r in entry["coverage_regions"]
     )
+    # A notch at a butt corner must fail too, not just a missing whole strip.
+    corner_id = roof["gasket_loops"][0]["gasket_ids"][0]
+    bounds = s[corner_id].BoundingBox()
+    notch = (
+        cq.Workplane("XY").box(3, 20, 10).translate((bounds.xmin + 4, bounds.ymax, h + 31)).val()
+    )
+    broken = dict(s, **{corner_id: s[corner_id].cut(notch)})
+    assert any(
+        check_barrier_region(broken, r, 1, 0.5)["status"] == "fail"
+        for r in entry["coverage_regions"]
+    )
+    for clamp in roof["clamps"]:
+        x, y = clamp["centre_mm"]
+        passage = cq.Solid.makeCylinder(3.5, 30, cq.Vector(x, y, h + 20))
+        for pid in roof["panel_ids"] + entry["part_ids"]:
+            assert passage.intersect(s[pid]).Volume() < 1e-5, (clamp["part_id"], pid)
+        assert len(clamp["panel_ids"]) == (2 if clamp["kind"] == "shared" else 1)
+        for pid in clamp["panel_ids"]:
+            assert s[clamp["part_id"]].distance(s[pid]) < 1e-5
+            assert s[clamp["part_id"]].intersect(s[pid]).Volume() < 1e-5
+
+
+def test_stock_clamp_schedule_and_wood_reliefs_follow_parameter_changes():
+    for params in (
+        None,
+        {"width_mm": 1300, "depth_mm": 1300},
+        {"width_mm": 2500, "depth_mm": 2500, "panel_thickness_mm": 18},
+    ):
+        m = build_model(params)
+        roof = m["roof_layout"]
+        by = {p["id"]: p for p in m["parts"]}
+        schedule = {p["product_code"]: p for p in roof["hardware_schedule"]}
+        assert schedule["3403092"]["quantity"] == len(roof["clamps"])
+        assert schedule["BTN08M6"]["quantity"] == len(roof["clamps"]) + 12
+        for pid in roof["panel_ids"]:
+            attached = [c for c in roof["clamps"] if pid in c["panel_ids"]]
+            assert any(c["kind"] == "shared" for c in attached)
+            assert any(c["kind"] == "perimeter" for c in attached)
+            holes = [q for q in by[pid]["holes"] if q["diameter_mm"] == 7]
+            assert len(holes) == len(attached)
+        assert not any(
+            "PREPARED" in (p.get("product_code") or "")
+            for p in m["parts"]
+            if p["assembly"] == "roof"
+        )
 
 
 def test_joining_hardware_contacts_actual_members():
@@ -123,3 +209,26 @@ def test_hose_opening_clear_of_structure_and_cut_list_has_six_panels():
         assert float(rows[pid]["width_mm"]) == 866
         assert float(rows[pid]["height_mm"]) == pytest.approx(expected)
         assert float(rows[pid]["thickness_mm"]) == 6
+
+
+def test_candidate_screw_shanks_clear_slot_floors_and_longer_screws_do_not():
+    import cadquery as cq
+
+    m = build_model()
+    w, d, h = (m["parameters"][k] for k in ("width_mm", "depth_mm", "height_mm"))
+    ids = ["rail-front-top", "beam-roof-centre-1", "beam-roof-1"]
+    shapes = build_shapes({"parts": [p for p in m["parts"] if p["id"] in ids]})
+    under_head = h + 30 + 2 + 6 + 1.3
+    for pid, x, y in ((ids[0], 60, -15), (ids[1], w / 2, 100), (ids[2], 100, d / 3)):
+        for length in (16, 18, 20):
+            shank = cq.Solid.makeCylinder(3, length, cq.Vector(x, y, under_head - length))
+            overlap = shank.intersect(shapes[pid]).Volume()
+            assert (overlap < 1e-5) == (length == 16)
+    # Six mm purchased bracket leg; test member clearance independently of
+    # unresolved nut threads and head seating. Longer screws bottom out.
+    for length in (12, 16):
+        shank = cq.Solid.makeCylinder(
+            3, length, cq.Vector(w / 2 + 15 + 6 - length, 14, h + 15), cq.Vector(1, 0, 0)
+        )
+        overlap = shank.intersect(shapes["beam-roof-centre-1"]).Volume()
+        assert (overlap < 1e-5) == (length == 12)
