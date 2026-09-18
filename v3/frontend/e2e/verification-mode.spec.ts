@@ -115,3 +115,34 @@ test("disabling during verification cancels queued verification and ignores late
   await page.getByRole("button", { name: "Supplier files", exact: true }).click();
   await expect(page.getByRole("button", { name: /Order list/ })).toBeDisabled();
 });
+
+test("preview survives verification failure and mismatched revisions", async ({ page }) => {
+  let release!: () => void;
+  let blocked = false;
+  let mismatch = false;
+  await page.route("**/api/defaults", route => route.fulfill({ json: defaults }));
+  await page.route("**/api/preview", route => route.fulfill({ json: response(route.request().postDataJSON().parameters, false) }));
+  await page.route("**/api/evaluate", async route => {
+    blocked = true;
+    await new Promise<void>(resolve => { release = resolve; });
+    await route.fulfill(mismatch
+      ? { json: response({ width_mm: 999 }, true) }
+      : { status: 500, json: { detail: "Verification unavailable" } });
+  });
+  await page.goto("/");
+  await expect.poll(() => blocked).toBe(true);
+  await expect(page.getByRole("status")).toContainText("Preview ready");
+  await expect(page.locator(".preview-footer")).toContainText("0 components");
+  await page.getByRole("button", { name: "Supplier files", exact: true }).click();
+  await expect(page.getByRole("button", { name: /Order list/ })).toBeDisabled();
+  release();
+  await expect(page.getByRole("alert")).toContainText("Verification unavailable");
+  await expect(page.getByRole("status")).toContainText("Preview only");
+  mismatch = true;
+  blocked = false;
+  await page.getByRole("button", { name: "Verify now", exact: true }).click();
+  await expect.poll(() => blocked).toBe(true);
+  release();
+  await expect(page.getByRole("alert")).toContainText("revisions do not match");
+  await expect(page.getByRole("button", { name: /Order list/ })).toBeDisabled();
+});

@@ -122,7 +122,7 @@ def test_revision_c_matches_printed_study_and_jambs():
     assert rear["primary_width_mm"] == 347.5
     assert rear["secondary_width_mm"] == 387.5
     assert rear["opening_width_mm"] == 750
-    assert rear["leaf_height_mm"] == 674
+    assert rear["leaf_height_mm"] == 834
     assert rear["reserved_sweep_mm"] == pytest.approx(372.80085, abs=1e-4)
     assert left["reserved_sweep_mm"] == pytest.approx(410.01770, abs=1e-4)
     assert rear["guide"]["module_length_mm"] == pytest.approx(133.84)

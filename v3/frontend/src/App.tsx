@@ -95,25 +95,34 @@ export default function App() {
     }
     running = true;
     setBusy(true);
-    setVerifying(verify);
+    setVerifying(false);
     controller = new AbortController();
     const requestEpoch = epoch;
     const key = current();
     const input = { ...parameters() },
       angles = { ...pose() };
     try {
-      const next = await evaluate(input, angles, verify, controller.signal);
-      if (!disposed && key === current() && requestEpoch === epoch) {
+      const isCurrent = () =>
+        !disposed && key === current() && requestEpoch === epoch;
+      const preview = await evaluate(input, angles, false, controller.signal);
+      if (!isCurrent()) return;
+      setResult(preview);
+      setEvaluated(key);
+      setError("");
+      if (verify) {
+        setVerifying(true);
+        const next = await evaluate(input, angles, true, controller.signal);
+        if (!isCurrent()) return;
         if (
-          verify &&
-          (!next.report || next.model.revision !== next.report.revision)
+          !next.report ||
+          next.model.revision !== next.report.revision ||
+          next.model.revision !== preview.model.revision
         )
           throw new Error(
             "The geometry and verification revisions do not match. Please evaluate again.",
           );
-        setResult(next);
-        setEvaluated(key);
-        setError("");
+        // Keep the displayed geometry stable as its matching report arrives.
+        setResult({ ...preview, report: next.report });
       }
     } catch (e) {
       if (
@@ -291,7 +300,7 @@ export default function App() {
           >
             {busy()
               ? verifying()
-                ? "◌ Verifying enclosure…"
+                ? "◌ Preview ready · verifying enclosure…"
                 : "◌ Updating preview…"
               : status()}
           </div>
@@ -642,6 +651,16 @@ export default function App() {
                 </For></ul>
               </details>
             </details>
+            <Show when={result()?.model.roof_layout}>
+              <details data-testid="roof-layout-note">
+                <summary>Six removable roof panels</summary>
+                <p>The five internal roof supports are horizontal 60×30 profiles with two upward slots. Each rectangular panel uses its own slot and through-hole fixings; no washer clamps two panels. The outer frame and roof height stay unchanged, with 2 mm panel seams.</p>
+                <p>The hose opening is in the middle-left panel. Its diameter is provisional; measure the actual hose and fittings and check full machine travel.</p>
+                <p>{result()?.model.roof_layout?.removal}</p>
+                <p>Each panel has an 6×3 mm EPDM sponge gasket loop beside the slots, clear of the screws. Reiman CBR3030 brackets connect the centre supports without metal machining. Nominal 2 mm gasket height, clamp pitch, fastener lengths, joint capacity and access require validation.</p>
+                <ul><For each={result()?.model.parts.filter(p => result()?.model.roof_layout?.panel_ids.includes(p.id))}>{(p) => <li>{p.id}: {p.size[0].toFixed(1)} × {p.size[1].toFixed(1)} × {p.size[2]} mm</li>}</For></ul>
+              </details>
+            </Show>
             <Show when={result()?.model.rear_electrical}>
               <details data-testid="rear-electrical-note">
                 <summary>Rear controller, STOP holder and cable entry</summary>
@@ -694,8 +713,8 @@ export default function App() {
                   </For>
                 </ul>
                 <p>
-                  40 K thermal excursion allowance; at default dimensions,
-                  3 mm nominal slot engagement and 2 mm reserve per edge.
+                  40 K thermal excursion allowance. Slot engagement and expansion
+                  reserves recalculate for each pane; retention remains unapproved.
                   Frame assembled around the panel; no Lexan drilling.
                 </p>
               </details>

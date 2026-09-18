@@ -201,9 +201,13 @@ class PartDrawing(Flowable):
         for hole in p.get("holes", []):
             hx, hy, d = hole["x_mm"], hole["y_mm"], hole["diameter_mm"]
             c.circle(x + hx * scale, y + hy * scale, d * scale / 2)
-            c.drawString(
-                x, y + h * scale + 13, f"Hole: diameter {d:g} mm; centre ({hx:g}, {hy:g}) mm"
+        if p.get("holes"):
+            label = (
+                f"Hole: diameter {d:g} mm; centre ({hx:g}, {hy:g}) mm"
+                if len(p["holes"]) == 1
+                else f"{len(p['holes'])} holes / edge reliefs: see coordinate schedule"
             )
+            c.drawString(x, y + h * scale + 13, label)
         for cutout in p.get("cutouts", []):
             if cutout.get("kind") != "rectangle":
                 raise ValueError(f"Unsupported supplier cutout: {cutout.get('kind')}")
@@ -764,6 +768,42 @@ def export_file(kind: str, model: dict, report: dict, shapes: dict) -> tuple[byt
         raise ValueError(f"Unsupported export format: {kind}")
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, "w", zipfile.ZIP_DEFLATED) as archive:
+        if "roof_layout" in model:
+            archive.writestr(
+                "roof-layout.json",
+                json.dumps(dict(revision=model["revision"], **model["roof_layout"]), indent=2),
+            )
+            archive.writestr(
+                "six-panel-roof.md",
+                (Path(__file__).resolve().parents[2] / "docs" / "SIX_PANEL_ROOF.md").read_bytes(),
+            )
+            archive.writestr(
+                "roof-clamp-sourcing.md",
+                (
+                    Path(__file__).resolve().parents[2] / "docs" / "ROOF_CLAMP_SOURCING.md"
+                ).read_bytes(),
+            )
+            archive.writestr(
+                "roof-hardware-schedule.json",
+                json.dumps(
+                    dict(
+                        revision=model["revision"],
+                        items=model["roof_layout"].get("hardware_schedule", []),
+                    ),
+                    indent=2,
+                ),
+            )
+            for source_file in (
+                "OBO-3403092.pdf",
+                "BTN.pdf",
+                "CBR3030.step",
+                "AST03006006.step",
+                "Wolweiss-bracket-fasteners.pdf",
+            ):
+                archive.write(
+                    Path(__file__).parent / "assets" / source_file,
+                    f"roof-supplier-sources/{source_file}",
+                )
         if "header_layout" in model:
             archive.writestr(
                 "header-layout.json",

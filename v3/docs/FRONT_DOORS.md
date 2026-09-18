@@ -11,11 +11,11 @@ positive Y. Both door profile fronts are Y=-24 (6 mm inset), backs Y=6. They
 occupy the front aperture and extend into the enclosure, rather than standing
 forward of the frame. Handles and hinge barrels project for operation.
 
-At the default 1674 × 710 opening, each door frame is 829.5 × 702, with 5 mm
+At the default 1674 × 870 opening, each door frame is 829.5 × 862, with 5 mm
 jamb gaps, 5 mm between doors, and 4 mm top/bottom gaps. The horizontal gaps
 follow the fixed CFG mounting pitch; the clearance parameter sets the front
 top/bottom gaps. The hinge axes are
-(2.5, -38) and (1671.5, -38), with stations Z=120, 370, 620. Each CFG mounting
+(2.5, -38) and (1671.5, -38), with stations Z=120, 435, 750. Each CFG mounting
 face is 8 mm behind its pin axis. A 26 × 36 × 6 aluminium spacer under each
 moving wing connects that face to the inset door. Vendor solids are articulated
 without scaling or modifying their shape; the fixed wing and pin stay fixed.
@@ -47,12 +47,12 @@ Rear closing strips use 12 mm rigid backing against the frame. Their front
 faces are Y=12; the nominal flexible seals span Y=6…12. The rigid strips now
 continue around the corners instead of leaving unsupported seal ends:
 
-- Each default jamb strip is 690 × 30 × 2 mm. Two 20 × 22 mm open-end
+- Each default jamb strip is 850 × 30 × 2 mm. Two 20 × 22 mm open-end
   reliefs clear the side-rail brackets while retaining 10 mm inner tongues.
-  The existing backing remains 646 mm long; each tongue cantilevers 22 mm.
+  The existing backing remains 806 mm long; each tongue cantilevers 22 mm.
 - Head and sill strips are each 1674 × 30 × 2 mm, with no left-header notch.
-  The front opening is now 710 mm beneath the upright beam; see [headers](FRAME_HEADERS.md).
-- Gasket blanks are two 690 × 13 × 6 mm jambs and two 1680 × 13 × 6 mm
+  The front opening is now 870 mm beneath the upright beam; see [headers](FRAME_HEADERS.md).
+- Gasket blanks are two 850 × 13 × 6 mm jambs and two 1680 × 13 × 6 mm
   horizontal strips. Bond/vulcanise their butt joints into a continuous surround.
   Root/corner reliefs follow actual fixed backing, bracket and header solids;
   the installed gasket does not occupy those metal volumes or fill inaccessible
@@ -90,7 +90,7 @@ or approval of glass retention. The default bifolds remain 4 mm polycarbonate;
 selecting glass for them also uses the shared 4 mm glass target, while retaining
 the alternative-material bifold retention arrangement.
 
-Default front cuts are **775.5 × 648 × 4 mm**, two panels. Each has nominal
+Default front cuts are **775.5 × 808 × 4 mm**, two panels. Each has nominal
 3 mm slot engagement and 2 mm reserve per edge, based on an assumed 5 mm usable
 slot depth. Glass uses a provisional 9×10⁻⁶/K expansion coefficient over 40 K;
 confirm the actual grade and environment. The default inventory includes 24

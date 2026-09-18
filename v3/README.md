@@ -46,10 +46,10 @@ For frontend development, start the Python service and run `npm run dev` in `v3/
 
 ## Use
 
-1. Set clear internal dimensions. Defaults start at 1674 × 1649 × 740 mm (width × depth × height).
+1. Set clear internal dimensions. Defaults start at 1674 × 1649 × 900 mm (width × depth × height).
 2. Choose front and bifold infill materials. Glass defaults to 4 mm; its grade/support remain provisional. Bifolds default to 4 mm polycarbonate.
 3. Inspect the model, hide roof/walls, and open each door independently. Reference envelopes can be shown separately.
-4. Leave **Automatic verification** enabled to evaluate changes, or turn it off to update geometry previews only. Use **Verify now** when ready. Previews have no current engineering report and cannot enable exports; a prior report is hidden when its settings no longer match.
+4. The 3D preview loads first, then verification runs while you inspect it. Leave **Automatic verification** enabled to evaluate changes, or turn it off to update geometry previews only. Use **Verify now** when ready. Previews have no current engineering report and cannot enable exports; a prior report is hidden when its settings no longer match.
 5. Read failures and unresolved evidence. A successful constraint solve is only one piece of evidence; it does not imply clearance or order readiness.
 6. Export a supplier quotation pack for review. All dimensions, geometry and evidence share one design revision. Changing parameters invalidates the previous export selection until evaluation finishes.
 
@@ -106,7 +106,7 @@ The right wall has a supplier-cut 240 × 80 mm makeup-air opening and a cleanabl
 
 Verification measures nominal barrier sections, their specified connections and inlet passages. Supplier seal grade, free section, installed compression, glass setting support, attachment details and wipe-lip preload remain unresolved. An assembled test must establish inward leakage, sufficient extraction and cooling with the actual vacuum, hose, shoe and filter. The model does not certify a completely sealed boundary or fine-dust capture.
 
-Bifolds use the revision C A1 mini PETG guide prototype under steel adapters on continuous 3030 headers: unequal leaves, rear-corner parking, 88° travel and a default 750 mm rear opening. The default leaf height is 674 mm. Five modules per opening carry a bought GN753.1 roller and metal washer/axle; CFG hinges support the leaves. The metal carrier, corner plates, closed tabs and parked operating stops are modeled. Their capacity, catch installation, final fasteners, head sealing and physical load/wear performance remain unconfirmed. See [engineering model](docs/ENGINEERING_MODEL.md).
+Bifolds use the revision C A1 mini PETG guide prototype under steel adapters on continuous 3030 headers: unequal leaves, rear-corner parking, 88° travel and a default 750 mm rear opening. The default leaf height is 834 mm. Five modules per opening carry a bought GN753.1 roller and metal washer/axle; CFG hinges support the leaves. The metal carrier, corner plates, closed tabs and parked operating stops are modeled. Their capacity, catch installation, final fasteners, head sealing and physical load/wear performance remain unconfirmed. See [engineering model](docs/ENGINEERING_MODEL.md).
 
 ## Rear electrical mounting
 
@@ -188,3 +188,7 @@ docs/                             Contract, sources and review notes
 ```
 
 Frame headers: square 30×30 left/rear rails and an upright 30×60 front beam share the roof level. See [frame headers and beam assessment](docs/FRAME_HEADERS.md).
+
+## Six-panel roof
+
+The roof uses a 2×3 panel grid over the existing crossbars and three short 30×30 centre supports. Default panel cuts are 866×578.667 mm (four) and 866×547.667 mm (two), in the current 6 mm wood study. The hose opening moves into the middle-left panel. Gasket compression, panel clamps, connection capacity and actual hose routing remain unvalidated. See [six-panel roof](docs/SIX_PANEL_ROOF.md).

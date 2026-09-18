@@ -75,12 +75,17 @@ def test_supplier_section_swept_without_scaling():
 
 def test_roof_hole_matches_order_drawing():
     m = build_model()
-    roof = next(p for p in m["parts"] if p["id"] == "panel-roof")
-    shape = build_shapes({**m, "parts": [roof]})["panel-roof"]
+    roof = next(p for p in m["parts"] if p["id"] == m["roof_layout"]["hose_panel_id"])
+    shape = build_shapes({**m, "parts": [roof]})[roof["id"]]
     w, h, t = roof["cut_size_mm"]
     hole = roof["holes"][0]
     assert (hole["x_mm"], hole["y_mm"]) == (w / 2, h / 2)
-    assert shape.Volume() == pytest.approx((w * h - math.pi * (hole["diameter_mm"] / 2) ** 2) * t)
+    # Compare with the same panel's fastening cuts present, isolating the hose bore.
+    no_hose = {**roof, "holes": roof["holes"][1:]}
+    before = build_shapes({"parts": [no_hose]})[roof["id"]]
+    assert before.Volume() - shape.Volume() == pytest.approx(
+        math.pi * (hole["diameter_mm"] / 2) ** 2 * t
+    )
 
 
 def test_native_solver_finds_second_angle_from_constraints():
@@ -132,10 +137,14 @@ def test_front_astragal_sequence_is_enforced():
 def test_fixed_panels_lap_frame_and_roof_has_gasket_bearing():
     model = build_model()
     parts = {p["id"]: p for p in model["parts"]}
-    assert parts["panel-right"]["size"][1:] == [1709, 800]
+    assert parts["panel-right"]["size"][1:] == [1709, 960]
     assert parts["panel-right"]["position"][0] - parts["panel-right"]["size"][0] / 2 == 1706
-    assert parts["panel-roof"]["position"][2] - parts["panel-roof"]["size"][2] / 2 == 772
-    assert len([p for p in parts if p.startswith("roof-perimeter-gasket-")]) == 4
+    assert (
+        parts["panel-roof-left-front"]["position"][2]
+        - parts["panel-roof-left-front"]["size"][2] / 2
+        == 932
+    )
+    assert len([p for p in parts if p.startswith("roof-gasket-")]) == 24
 
 
 def test_roof_collar_is_a_real_annulus():

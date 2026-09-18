@@ -13,7 +13,7 @@ test("square side headers and upright front beam appear in live preview", async 
   expect(by["rail-front-top"].size).toEqual([1680, 30, 60]);
   expect(by["rail-left-top"].size[0]).toBe(30);
   expect(by["rail-back-top"].size[1]).toBe(30);
-  expect(model.header_layout.front_opening_height_mm).toBe(710);
+  expect(model.header_layout.front_opening_height_mm).toBe(870);
   expect(by["left-rear-header-adapter-1"].size[2]).toBe(8);
   await expect(page.getByRole("status")).toContainText("Preview only", { timeout: 120000 });
   await page.getByRole("button", { name: "Design notes", exact: true }).click();

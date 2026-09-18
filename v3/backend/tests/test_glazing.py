@@ -7,16 +7,21 @@ def test_default_lexan_cuts_and_thermal_allowances():
     model = build_model()
     panes = [p for p in model["parts"] if p.get("glazing") and p["material"] == "polycarbonate"]
     assert [p["cut_size_mm"] for p in panes] == [
-        [330.75, 620, 4],
-        [370.75, 620, 4],
-        [293.5, 620, 4],
-        [333.5, 620, 4],
+        [330.75, 779.8, 4],
+        [370.75, 779.8, 4],
+        [293.5, 779.8, 4],
+        [333.5, 779.8, 4],
     ]
     for p in panes:
-        for axis in p["glazing"]["axes"]:
-            assert axis["engagement_mm"] == 3
-            assert axis["edge_reserve_mm"] == 2
-            assert axis["minimum_engagement_bound_mm"] > 1
+        for index, axis in enumerate(p["glazing"]["axes"]):
+            assert axis["engagement_mm"] == (3 if index == 0 else 2.9)
+            assert axis["edge_reserve_mm"] == (2 if index == 0 else 2.1)
+            if index == 0:
+                assert axis["minimum_engagement_bound_mm"] > 1
+            else:
+                # Taller PC panes need more expansion room; this reduced bound
+                # is recorded explicitly, not treated as approved retention.
+                assert axis["minimum_engagement_bound_mm"] == pytest.approx(0.8024)
             assert 2 * axis["edge_reserve_mm"] > axis["thermal_growth_bound_mm"] + 2
         assert not p["glazing"]["approved"]
         assert not any(
@@ -82,7 +87,7 @@ def test_quote_csv_uses_revised_cuts_and_keeps_material_warning():
     rows = {r["part_id"]: r for r in csv.DictReader(io.StringIO(data.decode("utf-8-sig")))}
     pane = rows["left-rear-a-infill"]
     assert float(pane["width_mm"]) == 330.75
-    assert float(pane["height_mm"]) == 620
+    assert float(pane["height_mm"]) == 779.8
     assert "PVC compound compatibility" in pane["machining"]
     assert "NOT RELEASED" in pane["release_status"]
     gasket = rows["left-rear-a-infill-left-slot-gasket"]

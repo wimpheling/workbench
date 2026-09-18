@@ -1369,19 +1369,20 @@ def verify(model: dict, shapes: dict | None = None) -> dict:
                     unit="mm² uncovered",
                     method="OpenCascade annular target subtraction",
                 )
-                roof = by_id["panel-roof"]
+                roof_id = entry["panel_id"]
+                roof = by_id[roof_id]
                 bore = cq.Solid.makeCylinder(
                     entry["opening_diameter_mm"] / 2 - 1e-5,
                     roof["size"][2] + 0.02,
                     cq.Vector(x, y, roof["position"][2] - roof["size"][2] / 2 - 0.01),
                 )
-                overlap = bore.intersect(shapes["panel-roof"]).Volume()
+                overlap = bore.intersect(shapes[roof_id]).Volume()
                 add(
                     f"airflow.roof_bore.{id}",
                     "pass" if overlap < 1e-5 else "fail",
                     "airflow",
                     "Declared roof hose opening is present in actual panel geometry",
-                    ["panel-roof"],
+                    [roof_id],
                     measured=overlap,
                     required=0,
                     unit="mm³ obstruction",

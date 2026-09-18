@@ -34,7 +34,7 @@ def test_front_inventory_datum_vendor_axes_and_quote():
     assert "FSP08 drawing-based candidate" in rows["front-left-a-infill"]["machining"]
     assert float(rows["front-left-a-infill"]["thickness_mm"]) == 4
     assert rows["front-left-hinge-spacer-0"]["product_code"] == "FRONT-HINGE-SPACER-6"
-    assert float(rows["front-perimeter-left-stop"]["cut_length_mm"]) == 690
+    assert float(rows["front-perimeter-left-stop"]["cut_length_mm"]) == 850
 
 
 @pytest.mark.parametrize("material,thickness", [("glass", 4), ("glass", 6), ("wood", 6)])
@@ -221,7 +221,12 @@ def test_front_junction_evidence_rejects_removed_shifted_and_perforated_seals():
     assert check_barrier_region(broken, region, 2, 0.5)["status"] == "fail"
     # Removing a head return exposes the corner despite the remaining jamb.
     seal = "front-perimeter-top-seal"
-    notch = cq.Workplane("XY").box(20, 20, 20).translate((5, 9, 708)).val()
+    notch = (
+        cq.Workplane("XY")
+        .box(20, 20, 20)
+        .translate((5, 9, m["doors"][0]["opening_height_mm"] - 2))
+        .val()
+    )
     broken = {**shapes, seal: shapes[seal].cut(notch)}
     region = by_id["front-perimeter-top"]["coverage_regions"][0]
     assert check_barrier_region(broken, region, 2, 0.5)["status"] == "fail"
