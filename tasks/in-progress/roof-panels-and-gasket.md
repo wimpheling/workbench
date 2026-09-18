@@ -94,6 +94,10 @@ roof browser test passes. Drawings, source-file contents and revision
 consistency were checked. Physical seating, sealing, reach and the nominal
 1 mm washer-to-neighbor clearance still require assembly validation.
 
+Hose routing, the final roof connection/cutout and full-travel confidence are
+now tracked in [the dedicated hose task](../todo/hose-routing-and-roof-connection.md),
+started after PR #21 merged. The current hose dimensions remain placeholders.
+
 ## Implementation plan
 
 - [ ] Integrate independently removable roof panels
